@@ -1,0 +1,27 @@
+.env
+.env.*
+!.env.example
+MASTER_CONTEXT.md
+.claude/skills/
+.claude/worktrees/
+.claude/settings.local.json
+.cursor/skills/
+.DS_Store
+*.log
+__pycache__/
+*.pyc
+outputs/
+output/
+
+# All reference media is local-only (face photos, product shots, style boards).
+# Drop your refs into references/influencers/, references/products/,
+# references/aesthetics/, etc. — they stay on your machine.
+references/
+!references/README.md
+
+
+# Disposable one-off thumbnail iteration scripts (not the canonical skill script)
+scripts/generate-thumbnails.sh
+scripts/generate-thumbnails-*.sh
+scripts/generate-ab-variants*.sh
+scripts/regen-*.sh

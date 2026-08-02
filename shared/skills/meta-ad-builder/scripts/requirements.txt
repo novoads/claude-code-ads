@@ -1,0 +1,4 @@
+# Python dependencies for the meta-ad-builder skill.
+# Install:  python3 -m pip install -r requirements.txt
+requests>=2.31.0
+python-dotenv>=1.0.0
