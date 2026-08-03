@@ -49,7 +49,8 @@ mkdir -p "$TMP_DIR"
 # ─── REFERENCE IMAGES ───────────────────────────────────────────────────────
 # Use absolute paths (filenames with spaces are fine).
 #
-# HARD CAP: 4 references per generation. Every Novoads image model enforces it.
+# Aim for 5+ face references for good likeness alignment. nano-banana-pro takes
+# up to 14; gpt-image-2 is capped at 4.
 # You may UPLOAD more than 4 (assetIds are durable and cost nothing to keep) and
 # pick the best 4 per prompt — but a single call may reference at most 4.
 # For likeness work, spend those 4 on: one straight-on headshot, one 3/4 angle,
@@ -60,12 +61,18 @@ declare -a COMMON_REFS=(
   "${REF_BASE}/face/headshot.png"
   "${REF_BASE}/face/three-quarter.png"
   "${REF_BASE}/face/close-up.png"
+  "${REF_BASE}/face/smiling.png"
+  "${REF_BASE}/face/neutral.png"
   "${REF_BASE}/logos/brand-1.png"
 )
 
-if [ "${#COMMON_REFS[@]}" -gt 4 ]; then
-  echo "ERROR: ${#COMMON_REFS[@]} references configured; the API cap is 4 per generation." >&2
-  echo "Trim COMMON_REFS to the 4 that matter most for this batch." >&2
+# nano-banana-pro takes 14 (fal's published ceiling for the /edit arm, probed
+# 2026-08-03). gpt-image-2 is still 4 and reve-2.1 is 8, so this guard tracks
+# the model this script actually calls.
+REF_CAP=14
+if [ "${#COMMON_REFS[@]}" -gt "$REF_CAP" ]; then
+  echo "ERROR: ${#COMMON_REFS[@]} references configured; nano-banana-pro caps at $REF_CAP." >&2
+  echo "Trim COMMON_REFS to the $REF_CAP that matter most for this batch." >&2
   exit 1
 fi
 
