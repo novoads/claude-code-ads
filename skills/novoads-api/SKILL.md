@@ -230,11 +230,22 @@ Count the words in the spoken line and round **up**. A dense product script runs
 | 26–35 words | 13–15s |
 | **36+ words** | **Too long** — offer to split |
 
-**Seedance front-loads dead air, so budget `duration ≈ speech + 4s` as a FLOOR.** Measured across six `seedance-2.0` renders: leading silence ran **3.2–3.7s in `en`**, and in `es` it came back **5.24s, 0.97s and 4.80s on three byte-identical prompts** (2026-08-02/03). Read that spread as what it is — **the number is not stable, and the budget is insurance against the bad draw, not a prediction.** On the worst of them 40% of a 13s ad was gone before the hook landed; on the best, the silence moved to the tail instead. The eye-contact-break beat (`looks just off-lens, comes back to camera`) is what the model spends it on.
+**Seedance spends time on dead air, and how much is a draw, not a constant. Reserve room for it because you MIGHT get it — not because you will.**
 
-So when the line is tight, do the arithmetic rather than reading the table alone: **`words ÷ 2.5`, plus 4, rounded up into the grid.** The table is the shortcut; this is the check. If the result runs past 15s, the fix is a shorter line or a split, not a longer clip.
+Measured across six `seedance-2.0` renders: leading silence ran **3.2–3.7s in `en`**, and in `es` it came back **5.24s, 0.97s and 4.80s on three byte-identical prompts** (2026-08-02/03). Same body, same duration, same language, three different answers. On the worst, 40% of a 13s ad was gone before the hook landed; on the best, the silence moved to the *tail* instead.
 
-**Round up generously outside `en`.** The first `es` render fit only because rounding up took 12.4s to 13s, and the line finished at 12.88s of 13.07s — a fifth of a second of margin. `+4` is the floor, not the answer, and because the silence is drawn fresh on every render, the only thing that tells you what you actually got is the QA step in §7.
+**So this is a distribution to budget against, not a number to add.** Reserve the worst plausible draw and accept that most renders will not use it:
+
+| Language | Reserve on top of speech |
+|---|---|
+| `en` | **+4s** (observed 3.2–3.7s) |
+| `es`, and any language nobody has measured | **+5s** (observed up to 5.24s) |
+
+When the line is tight, do the arithmetic rather than reading the table alone: **`words ÷ 2.5`, plus the reservation, rounded up into the grid.** The table is the shortcut; this is the check. If the result runs past 15s, the fix is a shorter line or a split, not a longer clip.
+
+A render that comes back with 1s of silence instead of 5s has not wasted the reservation — it has spent it on air at the end, which is trimmable in post. A render that draws 5s against a 4s budget has clipped the line, which is not.
+
+**How close this gets is not theoretical.** The first `es` render fit only because rounding up took 12.4s to 13s, and the line finished at **12.88s of 13.07s** — a fifth of a second of margin, on a budget that happened to draw near its worst. Because the silence is drawn fresh every time, **the only thing that tells you what you actually got is the QA step in §7.** Check the first `silence_end` on every render; do not assume the reservation held.
 
 If the hook has to land in the first second, drop the eye-contact-break beat from the prompt — that is the beat being paid for. `sora-2` measured **no leading silence at all** on the same prompt, so it is the other way out.
 
