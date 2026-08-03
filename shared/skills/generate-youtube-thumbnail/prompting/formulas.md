@@ -24,7 +24,7 @@ For each formula:
 - Dark navy gradient background
 
 **Reference images needed:**
-- Face references: headshot + 3/4 + close-up (3 of your 4 reference slots)
+- 5+ face references (headshot + 3/4 + close-ups)
 - Brand logo 1 (clean PNG/JPEG)
 - Brand logo 2 (clean PNG/JPEG)
 
@@ -88,7 +88,7 @@ logos, illegible text.
 - Title text at top or bottom
 
 **Reference images needed:**
-- Face references: headshot + 3/4 + close-up (3 of your 4 reference slots)
+- 5+ face references (headshot + 3/4 + close-ups)
 - Real ad screenshot (the source material)
 - AI-generated ad image (the recreation)
 - Brand logos for the corners
@@ -164,7 +164,7 @@ illegible phone screen content.
 - Title at the top
 
 **Reference images needed:**
-- Face references: headshot + 3/4 + close-up (3 of your 4 reference slots)
+- 5+ face references (headshot + 3/4 + close-ups)
 - Input image (real ad / source material)
 - Output image (AI-generated result)
 - Claude logo and/or your brand logo for corners
@@ -240,7 +240,7 @@ input/output images, generic face.
 - Big curiosity-gap title at the top
 
 **Reference images needed:**
-- Face references: headshot + 3/4 + a shocked/surprised expression if you have one (3 of your 4 slots)
+- 5+ face references (especially shocked/surprised expressions if you have them)
 - 1-2 supporting visual elements
 
 **Prompt template:**

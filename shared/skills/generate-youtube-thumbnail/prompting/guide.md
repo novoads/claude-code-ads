@@ -4,7 +4,7 @@ This guide covers **likeness alignment**, **expressions**, and **prompt structur
 
 ## The Big Three
 
-1. **Likeness alignment** — spend all 4 reference slots well, and lean hard on an explicit CRITICAL block
+1. **Likeness alignment** — use 5+ face references and an explicit CRITICAL block
 2. **Expression** — pick from the cheat sheet below, be specific
 3. **Structure** — follow the template, include all sections
 
@@ -12,32 +12,19 @@ This guide covers **likeness alignment**, **expressions**, and **prompt structur
 
 The single biggest difference between a thumbnail that "looks like a generic bearded guy" and one that "looks like *me*" is how well the reference budget is spent — and on this API that budget is fixed.
 
-### The 4-reference cap
+### The 5-reference rule
 
-**A generation may cite at most 4 `referenceAssetIds`.** Every Novoads image model enforces it.
-There is no model or skill with a higher ceiling, so this is a design constraint, not a setting.
+Use **at least 5 face reference images** showing the subject from different angles and expressions:
 
-You can *upload* as many photos as you like — uploads are free, and each returns a **durable
-`assetId`** that keeps working across calls and sessions. Build a library; cite four from it.
+| Reference | Purpose |
+|---|---|
+| Front-facing headshot | Locks core face shape and proportions |
+| Studio close-up (high detail) | Beard texture, skin tone, eye color |
+| 3/4 angle | Cheekbone structure, profile |
+| Front with smile | How the face changes with expression |
+| Front with neutral / different expression | Baseline alignment |
 
-Default allocation when the subject is a real person:
-
-| Slot | Reference | Purpose |
-|---|---|---|
-| 1 | Front-facing headshot | Locks core face shape and proportions |
-| 2 | 3/4 angle | Cheekbone structure, profile |
-| 3 | Studio close-up (high detail) | Beard texture, skin tone, eye color |
-| 4 | The one brand asset that must be pixel-accurate | Logo / product / apparel |
-
-If no brand asset needs to be exact, spend slot 4 on a second expression instead.
-
-With 1–2 references the model generalizes to a training prior. Four well-chosen angles get most
-of the way; the **written likeness block below carries the rest**, and on this API it is doing
-work that a 5th and 6th photo used to do. Write it in full every time.
-
-**For a series**, use a rolling window: variation N cites `[hero, N-1, N-2, N-3]` — the approved
-hero as the anchor plus the three most recent good outputs. Drop any variation that drifted
-rather than feeding it forward.
+With 1-2 references the AI generalizes. With 5+ it locks in the specific person.
 
 ### The CRITICAL CHARACTER LIKENESS block
 

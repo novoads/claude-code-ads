@@ -47,25 +47,34 @@ If references are missing or the user pastes images in chat instead of saving th
 ask the user to drop the actual files into a project folder** (e.g. `references/youtube thumbnail/`).
 Chat paste ≠ file on disk.
 
-## The 4-reference cap — read this before planning a likeness run
+## References — how many, and why it changed back
 
-**Every Novoads image model accepts at most 4 `referenceAssetIds` per generation.** This is the
-single biggest change from how this workflow used to run, and it directly contradicts the old
-"always use 5+ face references" advice. That advice is void; here is what replaces it.
+**`nano-banana-pro` accepts up to 14 `referenceAssetIds` per generation**, which is fal's own
+published ceiling for the `/edit` arm this workflow calls, confirmed by probe on 2026-08-03. This
+skill runs on `nano-banana-pro`, so the fork's original advice applies here unchanged.
 
-Two facts make the cap workable:
+For a while this pack said the cap was 4 on every image model and that "always use 5+ face
+references" was void. That was our own held number, carried from a shared constant and never tested
+against the transport we serve this model from. It has been corrected.
 
-1. **An `assetId` is durable and reusable.** Upload once, reference forever, across runs and across sessions. Uploading is free and unlimited — only *generations* are charged. So keep a library of uploaded face angles and brand assets and pick from it.
-2. **Only 4 may be cited per call.** So the skill becomes choosing which 4.
+Two facts still shape how you spend them:
 
-**Default allocation for a likeness thumbnail:** one straight-on headshot, one 3/4 angle, one
-close-up, and the single most important brand asset. Beyond that, the text prompt carries the
-identity — restate the person's features verbatim rather than relying on a fifth photo.
+1. **An `assetId` is durable and reusable.** Upload once, reference forever, across runs and across
+   sessions. Uploading is free and unlimited — only *generations* are charged. So keep a library of
+   uploaded face angles and brand assets and pick from it.
+2. **The other image models are lower.** `reve-2.1` takes 8; `gpt-image-2` is still 4, because
+   nobody has found a published figure for it and it has not been probed. If you route a likeness
+   run to either, the fork's 5+ advice does not survive the trip.
 
-**Rolling window for a series** (ported from the character-sheet workflow, adjusted from a
-5-slot to a 4-slot cap): when generating variation N, pass `[hero, N-1, N-2, N-3]` — the
-approved hero shot as the anchor plus the three most recent good outputs. **Drop any variation
-that drifted** rather than feeding it forward; a bad reference propagates.
+**Always use 5+ face references for character work.** With 1-2 the model generalizes to a
+generic face; with 5+ from different angles it locks in the specific person. Spend them: headshot,
+3/4 angle, studio close-up, one smiling, one neutral, plus any brand asset that must be
+pixel-accurate.
+
+**Rolling window for a series** (ported from the character-sheet workflow): when generating
+variation N, pass `[hero, N-1, N-2, N-3, N-4]` — the approved hero shot as the anchor plus the
+four most recent good outputs. **Drop any variation that drifted** rather than feeding it
+forward; a bad reference propagates.
 
 If the user insists on more coverage, the answer is more *prompt* specificity, not more refs.
 
@@ -217,9 +226,9 @@ the actual file into a project folder.
 
 ### Likeness drift with too few references
 
-With 1–2 face references the model generalizes to a generic person. The cap is 4, so spend them
-deliberately (headshot + 3/4 + close-up + brand asset) and let the written likeness block carry
-the rest. For a series, use the rolling window described above.
+With 1-2 face references the AI generalizes to "generic bearded man with glasses." With 5+ face
+references from different angles it locks in the specific person. **Always use 5+ face references
+for character work.** For a series, use the rolling window described above.
 
 ### Concurrency is 5, not "as many as you like"
 
@@ -243,7 +252,7 @@ indexed arrays instead.
 
 Text descriptions of brand-specific items (logos, branded apparel, custom merchandise) produce
 generic approximations. For pixel-accurate brand reproduction, save the actual brand asset to
-disk and cite it as one of your 4 references.
+disk and cite it as one of your references.
 
 ## Cost
 
