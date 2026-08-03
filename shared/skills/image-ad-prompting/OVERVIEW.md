@@ -159,11 +159,10 @@ This is the workflow inside any chat session where the user wants to make an ad:
    `MASTER_CONTEXT.md`. Wait for explicit confirmation before generating. If `sufficient` is
    false, say so and stop; the response carries `shortBy` and `topUpUrl`.
 
-   The same call **lints the prompt for free** and returns anything it finds in `warnings`.
-   Post-2.0.0 those are advice, not blockers — nothing there stops the generation. Read them
-   anyway: each one names the problem and ships the fix inline (they are the reason a prompt
-   says "sunlit kitchen, soft window light from camera-left" instead of "cinematic kitchen").
-   A clean estimate omits the `warnings` key entirely.
+   The call says nothing about the prompt itself. **No endpoint on this API reads a prompt
+   for quality**, so a weak prompt prices, charges and renders exactly like a strong one —
+   the template library is the whole quality gate, and it is why a prompt here says "sunlit
+   kitchen, soft window light from camera-left" rather than "cinematic kitchen".
 
    Two things the estimate will not catch: it prices `numImages` but never sees
    `aspectRatio` or `referenceAssetIds` (sending either is a `400 Unrecognized key`), and it

@@ -113,9 +113,9 @@ purpose. **Name the model in the estimate body**: the image models' schedules di
 than 3×, and an estimate that omits `model` prices `gpt-image-2`, understating a
 `nano-banana-pro` batch.
 
-The same call lints the prompt for free and returns findings in `warnings` (`{rule, message}`).
-They are advice, never blockers — but a batch runs the same prompt shape N times, so fixing
-what they name once pays off N times.
+The call says nothing about the prompt — no endpoint on this API reads one for quality. Re-read
+the prompt against the formula yourself before pricing: a batch runs the same shape N times, so
+a flaw in it is paid for N times.
 
 ### 4. Pick a formula
 

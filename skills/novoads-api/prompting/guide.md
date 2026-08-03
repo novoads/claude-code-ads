@@ -19,7 +19,7 @@ Check `references/` at the repo root before asking for anything visual. Product 
 - Prefer **one paragraph** of clear direction over a bag of keywords. Bullets and `Label: value` pairs come back rendered as literal on-screen text.
 - Name the **subject**, **setting and light source**, **camera and motion**, **style**, and — for video — the **spoken line in double quotes**. Seedance renders the dialogue and lip-sync in the same call, so the line is part of the prompt, not a later step.
 - If the user gave a vague adjective ("premium", "fun"), **translate it into visual specifics**: materials, wardrobe, location, pace, the actual light source.
-- Real brands only. Never substitute a blank or unbranded stand-in for a product the user has not shown you — the API will render and bill it, and on images `blank_label` on the estimate is the only thing that will mention it. Ask for the photo instead.
+- Real brands only. Never substitute a blank or unbranded stand-in for a product the user has not shown you — the API will render and bill it, and **nothing anywhere will mention it**. Ask for the photo instead.
 
 ## 3. Map the brief to a route
 
@@ -42,5 +42,5 @@ If `MASTER_CONTEXT.md` at the repo root carries brand voice, banned phrases, or 
 - [ ] One reference mode only: `startImageAssetId` **or** `referenceAssetIds`, never both. Every `@ImageN` token points at an id you actually send.
 - [ ] The prompt matches the formula's structure, in the ad's own language.
 - [ ] No secrets in the request body — ids and creative text only.
-- [ ] **Priced live** at `POST /v1/estimates` in this session, `warnings` read out, and the user said yes. Never quote a credit number from memory, from the logs, or from `MASTER_CONTEXT.md`.
+- [ ] **Priced live** at `POST /v1/estimates` in this session, the number shown to the user, and the user said yes. Never quote a credit number from memory, from the logs, or from `MASTER_CONTEXT.md`.
 - [ ] For any video where someone speaks: the spoken line approved on its own first, per gate 1 in [SKILL.md](../SKILL.md).

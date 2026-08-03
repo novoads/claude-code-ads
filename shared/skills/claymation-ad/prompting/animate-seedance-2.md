@@ -14,13 +14,13 @@ The general Seedance craft guide is `prompting/prompt-library/seedance-2.md` ins
 - **Duration:** `durationSeconds`, any integer 4–15. Match each beat target from [guide.md](guide.md) and **always set it** — Seedance defaults to 5.
 - **Aspect ratio:** `"9:16"`. **Always set it** — Seedance defaults to `16:9`.
 - **There is no `resolution` field**, and the spec publishes no output size. Seedance measured 720x1280 at `9:16` (2026-08-02). Do not carry that number to other models.
-- **Audio:** send **`"audioEnabled": false`** on every beat. The field is live on `seedance-2.0` and `seedance-2.0-mini` (default `true`) and renders the clip silent, which is what this pipeline wants — assembly replaces the clip audio with the ElevenLabs VO, so a generated track is paid for and discarded. It does not change the price. Keep the prompt discipline as well: ambient SFX language is fine (it steers the action), a `Narrator:` line is not — see the "No in-prompt narrator" rule below.
+- **Audio:** **`audioEnabled: false`** — see "No in-prompt narrator" rule below. Seedance does generate usable ambient SFX, but we strip and replace in post.
 - **Prompt length:** `Subject + Action + Camera + Style + Constraints`, 100–260 words. **No `Narrator:` line.**
-- **Polish words** — `cinematic`, `professional`, `stunning`, `8k`, `studio`, `perfect` — substitute "stop-motion claymation film aesthetic", "polished hand-sculpted", "high fidelity", "evenly hand-painted". Nothing rejects them: `POST /v1/estimates` returns `banned_polish` as an advisory warning and the generation endpoints run no prompt rules at all. Strip them for the render, not for the response.
+- **Forbidden words** — `cinematic`, `professional`, `stunning`, `8k`, `studio`, `perfect` — substitute "stop-motion claymation film aesthetic", "polished hand-sculpted", "high fidelity", "evenly hand-painted". Nothing on the API rejects them or mentions them. Strip them for the render; nothing else will.
 
 - **Critical for this style:** the motion must read as **smooth AI-rendered animation that preserves the claymation aesthetic of the still**. Do NOT ask Seedance to "stop-motion judder" — that breaks the look. If the user wants judder, post-process with ffmpeg after stitching (see [guide.md → Smooth motion vs stop-motion judder](guide.md#smooth-motion-vs-stop-motion-judder--pick-one)).
 
-Expect `missing_actor_descriptor` and `no_spoken_line` warnings on nearly every prompt in this file, and **ignore both**. The rules no longer scope themselves to a style, so a stylized, deliberately narrator-less route collects advice written for live-action UGC. Read the warnings, then judge — that judgement is the caller's job now.
+Two pieces of the general Seedance guidance **do not apply on this route**: the actor descriptor and the spoken line. This style is stylized and deliberately narrator-less, and that guidance is written for live-action UGC. Nothing will flag either omission — judging which advice fits a stylized route is yours.
 
 ## ⚠️ No in-prompt narrator — VO comes from ElevenLabs
 

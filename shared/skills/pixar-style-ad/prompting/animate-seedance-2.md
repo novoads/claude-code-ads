@@ -15,9 +15,9 @@ The general Seedance craft guide is `prompting/prompt-library/seedance-2.md` ins
 - **Aspect ratio:** `"9:16"`. **Always set it** — Seedance defaults to `16:9`.
 - **There is no `resolution` field**, and the spec publishes no output size. Seedance measured 720x1280 at `9:16` (2026-08-02). Do not carry that number to other models.
 - **Prompt length:** `Subject + Action + Camera + Style + Constraints`, 100–260 words.
-- **Polish words** — `cinematic`, `professional`, `stunning`, `8k`, `studio`, `perfect` — substitute with "3D animated film aesthetic", "polished", "high fidelity", "ivory white matte material". Nothing rejects them; `POST /v1/estimates` returns `banned_polish` as an advisory warning and the generation endpoints run no prompt rules at all. Strip them for the render, not for the response.
+- **Forbidden words** — `cinematic`, `professional`, `stunning`, `8k`, `studio`, `perfect` — substitute with "3D animated film aesthetic", "polished", "high fidelity", "ivory white matte material". Nothing on the API rejects them or mentions them. Strip them for the render; nothing else will.
 
-Two more warnings will fire on every prompt in this file and **both are wrong for this route** — read them, then ignore them. `missing_actor_descriptor` fires because the lead is a hair clump or a mascot rather than a described human; `no_spoken_line` fires on the silent mascot beat. The rules no longer scope themselves to a style, so a stylized route collects advice written for live-action UGC. Judging which advice applies is the caller's job now.
+Two pieces of the general Seedance guidance **do not apply on this route**: the actor descriptor, because the lead is a hair clump or a mascot rather than a described human, and the spoken line, because the mascot beat is silent on purpose. Nothing will flag either omission — that guidance is written for live-action UGC, and judging which of it fits a stylized route is yours.
 
 ## Universal animation prompt structure
 

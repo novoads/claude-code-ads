@@ -70,7 +70,7 @@ The phonetic-brand rule from gate 1 is **untested on this model** — Sora got t
 
 ## Checklist (after reading the vendor guide)
 
-- [ ] Clear subject and setting; camera behavior described, not just "cinematic" (which is a `banned_polish` warning anyway).
+- [ ] Clear subject and setting; camera behavior described, not just "cinematic" — a forbidden word here as well as weak direction.
 - [ ] Motion: what moves, what stays stable across the clip.
 - [ ] Shot size stated **concretely** — what is in frame, not just "medium" or "wide".
 - [ ] Lighting and style named explicitly if they matter.
@@ -100,10 +100,10 @@ comes back to camera, and says: "I kept saying AI ads look fake until I made one
 and nobody could tell." No on-screen text, no captions, no background music. Vertical 9:16.
 ```
 
-> This prompt returns **zero warnings** on `POST /v1/estimates` for `sora-2`, `veo-3.1` and
-> `seedance-2.0` (verified 2026-08-02). The clean-plate clause used to trip `label_without_hold`
-> on the `on-screen` substring; the rule is negation-aware now, so a correctly-written UGC prompt
-> comes back clean and a warning here is worth reading rather than dismissing.
+> This prompt was priced live on `sora-2`, `veo-3.1` and `seedance-2.0` (2026-08-02) and renders
+> on all three. Note the clean-plate clause — `No on-screen text, no captions, no background
+> music` — which every correct UGC prompt in this pack carries, and which nothing on the API
+> will add for you.
 
 ## QA
 
