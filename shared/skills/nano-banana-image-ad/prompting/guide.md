@@ -45,7 +45,7 @@ These come from the live API contract (`GET /v1/openapi.json` is the authority):
 
 1. **Model is `nano-banana-pro`.** The script refuses everything else, including the retired `nano-banana-2` / `nano-banana-edit` strings and `gpt-image-2`.
 2. **Max 4 reference images.** `referenceAssetIds` caps at 4 on every Novoads image model. The script enforces it. There is nowhere to switch to for more.
-3. **Prompt cap 4,000 characters**, and the three always-on suffixes count against it (roughly 1,500 together). The script checks the assembled prompt and fails locally, before spending anything.
+3. **Prompts are capped**, and the three always-on suffixes count against it (roughly 1,500 together). The script checks the assembled prompt and fails locally, before spending anything.
 4. **No platform/screenshot chrome in output.** `NO_CHROME_SUFFIX` is always on (unless `--allow-chrome`).
 5. **Edge-safe rule always on.** Text and focal subjects must sit inside the central 84% of the canvas.
 6. **Glyph-safety rule always on.** Plain words inside body-text blocks; emoji OK in headlines.

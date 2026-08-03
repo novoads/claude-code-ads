@@ -11,7 +11,7 @@ Only `model` and `prompt` are required. The body is **strict** — any key not i
 | Field | Value / range | Notes |
 |---|---|---|
 | `model` | `seedance-2.0`, `seedance-2.0-mini` | Mini is half the price on the same grid. Ask once per workflow; see *Mini-draft tier* below. |
-| `prompt` | 1 to **4,000 characters** | Not words — characters, and it is the hard ceiling. Every worked example in this library sits at half of it or less; see *Length* below. |
+| `prompt` | required | The video prompt. See *Length* below. |
 | `durationSeconds` | any integer **4 to 15** | Continuous range, not an enum. **Defaults to 5**, which is never what an ad wants. Set it. Out-of-grid values are rejected, never rounded. |
 | `aspectRatio` | `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | **Defaults to `16:9`.** Set `9:16` for Reels, TikTok, Stories. |
 | `language` | `en` `es` `pt` `fr` `de` `it` `zh` `ja` `ko` `ar` `hi` | The language the ad is rendered in. Write the prompt in it too. |
@@ -59,21 +59,12 @@ These rules are about how Seedance reads a prompt. None of them is enforced anyw
 
 ### Length
 
-**The only hard number is 4,000 characters.** Everything else is craft, and the craft figure the fork's guidance carried — "keep prompts between 100 and 260 words" — describes **none** of the five worked examples in this library. Measured, they are:
+Keep prompts between **100 and 260 words**. Shorter prompts produce vague results. Longer ones
+overwhelm the model and cause it to lose focus on key details.
 
-| Formula | Shots | Words | Characters |
-|---|---|---|---|
-| UGC selfie review | 1 | 97 | 585 |
-| Feature walkthrough (clip A) | 3 beats | 255 | 1,521 |
-| Studio lookbook | 3 shots + VO | 267 | 1,701 |
-| Premium reveal | 4 timestamps | 272 | 1,699 |
-| Product hero | 4 shots | 332 | 2,001 |
-
-Length follows **shot count**, not a single band. One shot wants roughly **90 to 130 words** — the UGC formula, and the shape 13 shipped production templates use. A 3–4 beat multi-shot prompt wants roughly **250 to 330**, because each beat needs its own framing, action and detail.
-
-What the underlying advice is actually right about: a prompt that is too short leaves the model filling gaps you cared about, and a prompt that keeps piling on adjectives past the point where every shot is specified starts losing the details rather than adding them. Write every beat properly and stop; do not pad to hit a number, and do not cut a beat's framing to stay under one.
-
-At the ~6.3 characters per word these formulas average, even the longest sits at half the ceiling — so length is a craft decision here and not a limit you will hit.
+A prompt that is too short leaves the model filling gaps you cared about; one that keeps piling on
+adjectives past the point where every shot is specified starts losing the details rather than adding
+them. Write every beat properly and stop.
 
 ### Structure
 
@@ -116,15 +107,7 @@ When references are in play, say out loud that they must not drift:
 
 - `The product from @Image1 remains visually unchanged in every shot.`
 - `Keep the outfit unchanged across all cuts.`
-- **Whenever a label, package, bottle, box or screen is visible**, paste the label hold in — and
-  pick the form that matches what you actually sent:
-  > *with* a reference: the product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible
-
-  > *without* one: the product label remains perfectly sharp and stable throughout, with its text unchanged and fully legible
-
-  Naming "the reference image" in a text-to-video prompt points the model at something that was
-  never sent. Both forms clear `label_without_hold`.
-  Seedance preserves logos and destroys printed text. `The Ordinary / Niacinamide 10%` came back as `MAGNANDE 10% ZINC 1%`.
+- `The product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible.`
 
 Repeat the actor tag **verbatim** rather than back-referencing it. `the same woman` resolves to nobody — no identity carries across a cut — and an elaborated tag re-casts as readily as a missing one.
 
@@ -165,8 +148,6 @@ Change **one** element at a time:
 | `no_aspect_ratio` | no ratio stated in the prompt *text* (the `aspectRatio` field is what binds; the sentence steers composition) | every route |
 
 **`missing_actor_descriptor` on premium reveal and product hero is correct-rule, wrong-route.** Those formulas have no person by design. Ignore the warning — do not invent an actor to silence it, and do not go looking for a field that suppresses it, because none exists any more. The same call applies on the Pixar and claymation routes.
-
-**`label_without_hold` is the one worth acting on**, and it is exactly the one the fork's product formulas never mentioned. Both no-person formulas below now carry the clause in their template.
 
 ## Duration and dialogue
 
@@ -215,10 +196,9 @@ Neighbours worth knowing about: [ugc-selfie-style.md](ugc-selfie-style.md) in th
 
 ## Adaptation checklist (all styles)
 
-- [ ] **Length matches the shot count** — ~90–130 words for one shot, ~250–330 for a 3–4 beat prompt (the hard limit is 4,000 *characters*)
+- [ ] **Word count** — prompt is between 100–260 words
 - [ ] **`durationSeconds` set explicitly** — from the dialogue word count, or 15 for no-dialogue. The default is 5.
 - [ ] **`aspectRatio` set explicitly** — `9:16` for social. The default is `16:9`.
-- [ ] **Ratio restated in the prompt text** — `Vertical 9:16.` at the end. One line, clears `no_aspect_ratio`, steers composition.
 - [ ] **Motion specificity** — degree and direction, two or three cues on one action, no `then`
 - [ ] **Consistency anchors** — product and wardrobe stated as unchanged across cuts
 - [ ] **Label hold** — present whenever a label, package or screen is visible

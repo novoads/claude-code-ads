@@ -82,7 +82,7 @@ Discriminated on `kind`, and strict. Any field not listed is a 400.
 | Field | `kind: "video"` | `kind: "image"` |
 |---|---|---|
 | `kind` | required, `"video"` | required, `"image"` |
-| `prompt` | required, 1 to 20,000 chars | required, 1 to 20,000 chars |
+| `prompt` | required | required |
 | `model` | `seedance-2.0` (default), `seedance-2.0-mini`, `omni-flash`, `veo-3.1`, `sora-2` | `gpt-image-2` (default), `nano-banana-pro`, `reve-2.1` |
 | `durationSeconds` | 4 to 15 | n/a |
 | `numImages` | n/a | 1 to 4 |
@@ -359,7 +359,8 @@ It is a schema rejection, and it names the fields:
   "details": { "issues": [ { "field": "(root)", "message": "Unrecognized key: \"styleFamily\"" } ] } } }
 ```
 
-An out-of-grid `durationSeconds` and a prompt past the model's ceiling land the same way (`"prompt must be 4000 characters or fewer for seedance-2.0."`).
+An out-of-grid `durationSeconds` and a prompt past the model's ceiling land the same way — the
+response names the field and the limit.
 
 **There is no second shape.** Until spec `2.0.0` a prompt-rule failure was also a 400, carrying `details.rule` and `details.violations[]`. Those keys no longer appear on any response: the rules do not run on the generation endpoints at all, and on `/estimates` they surface as advisory `warnings` on a `200`. Code that branches on `details.rule` is reading for something that will never arrive.
 

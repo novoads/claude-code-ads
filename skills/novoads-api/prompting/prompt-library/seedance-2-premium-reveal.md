@@ -14,22 +14,19 @@ The power comes from **restraint and revelation**. Each beat reveals slightly mo
 
 ## Two things to know before you write a word
 
-**1. This is the route where the label matters most, and it is the one Seedance is worst at.** The model preserves logos and destroys printed text. A reveal whose final frame is a wordmark is asking for exactly the thing that breaks. Paste the label hold in, always:
-
-> the product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible
-
-The estimate's `label_without_hold` warning fires on this style's own vocabulary (`bottle`, `box`, `label`, `screen`) and clears once the clause is present, so it is a free check that the clause actually landed.
+**1. Seedance preserves logos and destroys printed text.** A reveal whose final frame is a wordmark is asking for exactly the thing the model is worst at. Keep the reference photo sharp and check the render.
+The estimate's `label_without_hold` warning fires on this style's own vocabulary (`bottle`, `box`, `label`, `screen`).
 
 **2. `missing_actor_descriptor` will fire, and it is wrong here.** There is no person by design. Ignore the warning. Do not invent an actor to silence it, and do not go looking for a field that scopes the rules off — that field was removed from the API and sending it is a `400`. Judgement about which advice applies to which route is the caller's now, and this is the standard case.
 
-Verified live on the worked example below, spec `2.0.0`, 2026-08-02: with the label hold and the ratio line in place, `POST /v1/estimates` returns **one** warning, and it is `missing_actor_descriptor`.
+Priced live on the worked example below, 2026-08-03: `POST /v1/estimates` returns **three** warnings, all advisory — none blocks and none reprices.
 
 ## The structure
 
 ```
  1. VOID STAGE        — the black backdrop and lighting setup
  2. PRODUCT HERO      — what the product looks like and how it's lit
- 3. TEXT NARRATIVE    — the story told through animated typography
+ 3. TEXT NARRATIVE     — the story told through animated typography
  4. REVEAL SEQUENCE   — the choreography of product angles and details
  5. VARIANT SHOWCASE  — size/color/model comparisons (optional)
  6. BRAND CLOSE       — final product name + series branding card
@@ -282,9 +279,7 @@ The flag cannot un-stage a shot the prompt asked for. If the render carries musi
 
 A {{PRODUCT_DESCRIPTION}} — {{MATERIAL_SURFACE}},
 {{LIGHT_INTERACTION}}. The product @Image1 is centered in frame,
-{{SCALE_CUE}}. The product label remains perfectly sharp and
-identical to the reference image with its text unchanged and
-fully legible.
+{{SCALE_CUE}}.
 
 [00:00] {{OPENING_REVEAL}}. Bold white text fades in: "{{TEXT_LINE_1}}"
 — centered above the product.
@@ -303,15 +298,14 @@ The camera moves slowly and deliberately throughout — every movement
 is smooth, no quick cuts or handheld shake. The lighting is dramatic,
 with rim light catching the product edges against the pure black void.
 The feel is premium, authoritative, restrained — a product announcement
-that commands attention through simplicity. This is a silent product
-film with no spoken dialogue. Vertical 9:16.
+that commands attention through simplicity.
 ```
 
 ---
 
 ## Worked example: premium water bottle launch
 
-This exact prompt was priced live against spec `2.0.0` on 2026-08-02: **one** warning, `missing_actor_descriptor`, which is the wrong-route one this style always collects. No `label_without_hold`, no `no_aspect_ratio`.
+The fork's example, restored verbatim. Priced live 2026-08-03: **three** warnings — `missing_actor_descriptor`, `label_without_hold` and `no_aspect_ratio`. All advisory.
 
 ```
 15 seconds premium product reveal video. Pure black background,
@@ -321,9 +315,7 @@ the product.
 A double-walled insulated water bottle in matte midnight blue —
 smooth matte finish absorbing light softly, rim light catching the
 brushed metal lid in a thin white line. The product @Image1 is
-centered in frame, filling the lower third of the frame. The product
-label remains perfectly sharp and identical to the reference image
-with its text unchanged and fully legible.
+centered in frame, filling the lower third of the frame.
 
 [00:00] The bottle slowly rises into frame from below, rim light
 illuminating its edges against the void. Bold white text fades in:
@@ -347,7 +339,6 @@ is smooth, no quick cuts or handheld shake. The lighting is dramatic,
 with rim light catching the metal lid and bottle edges against the
 pure black void. The feel is premium, authoritative, restrained — a
 product announcement that commands attention through simplicity.
-This is a silent product film with no spoken dialogue. Vertical 9:16.
 ```
 
 The call:

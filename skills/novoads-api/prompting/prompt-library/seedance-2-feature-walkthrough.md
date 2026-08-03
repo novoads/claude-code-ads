@@ -24,18 +24,20 @@ This is not a review. There is no skepticism arc, no "I was surprised", no befor
 
 **3. Every clip is its own charge.** A 3-clip series is three generations at three prices. Price the whole set at `POST /v1/estimates` and show the total before submitting any of it, and remember that five generations per organization may be in flight at once. Draft the series on `seedance-2.0-mini` at half price, then re-render the winners — the `assetId`s are durable, so the finals reuse the same uploads.
 
-Verified live on the Clip A example below, spec `2.0.0`, 2026-08-02: **zero warnings**.
+The Clip A example below is the fork's, restored verbatim. Priced live 2026-08-03 it returns
+**one warning** — `no_aspect_ratio`. That is advisory: the `aspectRatio` field is what binds the
+output, and the prompt sentence only steers composition. Nothing blocks and nothing reprices.
 
 ## The structure
 
 ```
- 1. FORMAT HEADER      — duration, content type, device, lighting, angle
- 2. PERSON + PRODUCT   — appearance AND the product they're wearing/using (inseparable)
- 3. SETTING            — simple background that doesn't compete with the product
- 4. FEATURE BEATS      — one feature per beat, each with dialogue + physical demo
- 5. GRAPHIC OVERLAYS   — text captions, info cards, color/size callouts
- 6. TONE & PACING      — energy level, speech rhythm, relationship to viewer
- 7. TECHNICAL QUALITY  — camera, lighting, audio characteristics
+ 1. FORMAT HEADER         — duration, content type, device, lighting, angle
+ 2. PERSON + PRODUCT      — appearance AND the product they're wearing/using (inseparable)
+ 3. SETTING               — simple background that doesn't compete with the product
+ 4. FEATURE BEATS         — one feature per beat, each with dialogue + physical demo
+ 5. GRAPHIC OVERLAYS      — text captions, info cards, color/size callouts
+ 6. TONE & PACING         — energy level, speech rhythm, relationship to viewer
+ 7. TECHNICAL QUALITY     — camera, lighting, audio characteristics
 ```
 
 ---
@@ -216,10 +218,10 @@ The lighting is {{LIGHT_TYPE}} — {{LIGHT_QUALITY}}. The image is {{CAMERA_QUAL
 
 ```
 15 seconds UGC style {{CONTENT_TYPE}} video, filmed on smartphone,
-{{LIGHTING_SOURCE}}, {{CAMERA_ANGLE}}. The {{GENDER}} from @Image2 —
-{{AGE_RANGE}}, {{HAIR}}, {{SKIN_DETAILS}} — wearing the @Image1
-({{PRODUCT_DESCRIPTION}}) — {{FIT_DETAILS}}. Standing in {{SPACE}} —
-{{BG_DETAIL_1}}, {{BG_DETAIL_2}}, {{ATMOSPHERE}}.
+{{LIGHTING_SOURCE}}, {{CAMERA_ANGLE}}. A {{AGE_RANGE}} {{GENDER}} with
+{{HAIR}}, {{SKIN_DETAILS}}, wearing the @Image1 ({{PRODUCT_DESCRIPTION}})
+— {{FIT_DETAILS}}. Standing in {{SPACE}} — {{BG_DETAIL_1}},
+{{BG_DETAIL_2}}, {{ATMOSPHERE}}.
 
 The video opens with {{PRONOUN}} {{HOOK_ACTION}}: "{{HOOK_LINE}}"
 
@@ -228,52 +230,53 @@ Jump cut — {{BEAT_2_FRAMING}}, {{BEAT_2_DEMO}}: "{{BEAT_2_DIALOGUE}}"
 Jump cut — {{BEAT_3_FRAMING}}, {{BEAT_3_ACTION}}: "{{KICKER_LINE}}"
 {{CLOSING_ACTION}}.
 
-Throughout the video, the tone is {{TONE_EMOTIONS}} — {{TONE_BEHAVIOR}}.
-{{PACING_CUE}}.
+Throughout the video, the tone is {{TONE_EMOTIONS}} —
+{{TONE_BEHAVIOR}}. {{PACING_CUE}}.
 
 The lighting is {{LIGHT_TYPE}} — {{LIGHT_QUALITY}}. The image is
-{{CAMERA_QUALITY}} — {{CAMERA_DETAILS}}. The sound is {{AUDIO_SOURCE}} —
-{{AUDIO_DETAILS}}. Vertical 9:16.
+{{CAMERA_QUALITY}} — {{CAMERA_DETAILS}}. The sound is
+{{AUDIO_SOURCE}} — {{AUDIO_DETAILS}}.
 ```
 
 ---
 
 ## Worked example: backpack (2-clip series)
 
-Clip A was priced live against spec `2.0.0` on 2026-08-02: **zero warnings**.
+Clip A priced live 2026-08-03: **one warning**, `no_aspect_ratio`. Advisory only.
 
 ### Clip A — hook + hero feature
 
 ```
-15 seconds UGC style product showcase video, filmed on smartphone, bright
-natural daylight from large windows, casual handheld selfie angle. A guy in
-his late 20s with short dark hair and a trimmed beard, natural skin with
-visible texture and slight tan, wearing the @Image1 (Nomad Tech Backpack —
-matte black, 30L, roll-top closure with magnetic buckles) — the bag is on
-his back, straps adjusted. Standing in his apartment entryway — shoes by the
-door, keys on a hook, bright and minimal.
+15 seconds UGC style product showcase video, filmed on smartphone,
+bright natural daylight from large windows, casual handheld selfie
+angle. A guy in his late 20s with short dark hair and a trimmed
+beard, natural skin with visible texture and slight tan, wearing the
+@Image1 (Nomad Tech Backpack — matte black, 30L, roll-top closure
+with magnetic buckles) — the bag is on his back, straps adjusted.
+Standing in his apartment entryway — shoes by the door, keys on a
+hook, bright and minimal.
 
 The video opens with him gesturing to the backpack over his shoulder,
-smiling at camera: "If I could only use one bag for everything — work, gym,
-travel — this is the one."
+smiling at camera: "If I could only use one bag for everything —
+work, gym, travel — this is the one."
 
-Jump cut — he swings the bag around to his front, unrolls the top, shows the
-magnetic buckle snapping shut: "Roll-top expands when you need space, locks
-down with these magnets."
+Jump cut — he swings the bag around to his front, unrolls the top,
+shows the magnetic buckle snapping shut: "Roll-top expands when you
+need space, locks down with these magnets."
 
-Jump cut — he holds the bag at chest height, taps the side, nods: "Absolute
-game changer." He laughs, video cuts.
+Jump cut — he holds the bag at chest height, taps the side, nods:
+"Absolute game changer." He laughs, video cuts.
 
 Throughout the video, the tone is confident, knowledgeable, genuinely
-impressed — he presents each feature like an obvious advantage, speaks
-quickly but clearly, demonstrates without fumbling. Each beat is quick but
-not rushed.
+impressed — he presents each feature like an obvious advantage,
+speaks quickly but clearly, demonstrates without fumbling. Each beat
+is quick but not rushed.
 
 The lighting is bright natural daylight from the windows, filling the
-entryway evenly. The image is natural phone quality, not color graded but
-well-exposed, steady handheld with slight movement when he turns. The sound
-is direct from phone mic — his voice is clear and close, minimal room echo,
-no music underneath. Vertical 9:16.
+entryway evenly. The image is natural phone quality, not color graded
+but well-exposed, steady handheld with slight movement when he turns.
+The sound is direct from phone mic — his voice is clear and close,
+minimal room echo, no music underneath.
 ```
 
 30 spoken words across three beats at 15 seconds — about 2 words per second, which fits a fast delivery with the demo actions given room.
@@ -283,34 +286,36 @@ no music underneath. Vertical 9:16.
 Same person, same bag, same array. The actor description is repeated word for word, and `@Image2` is what actually holds the face across the two renders.
 
 ```
-15 seconds UGC style feature walkthrough video, filmed on smartphone, bright
-natural daylight from large windows, casual handheld selfie angle. The guy
-from @Image2 — late 20s, short dark hair and a trimmed beard, natural skin
-with visible texture and slight tan — wearing the @Image1 (Nomad Tech
-Backpack — matte black, 30L) — the bag is on his back. Standing in his
-apartment entryway — shoes by the door, keys on a hook, bright and minimal.
+15 seconds UGC style feature walkthrough video, filmed on smartphone,
+bright natural daylight from large windows, casual handheld selfie
+angle. A guy in his late 20s with short dark hair and a trimmed
+beard, natural skin with visible texture and slight tan, wearing the
+@Image1 (Nomad Tech Backpack — matte black, 30L) — the bag is on
+his back. Standing in his apartment entryway — shoes by the door,
+keys on a hook, bright and minimal.
 
-The video opens with him turning the bag to show the back panel, unzipping
-it to reveal a padded laptop sleeve: "Separate laptop compartment — fits a
-16-inch, padded on all sides."
+The video opens with him turning the bag to show the back panel,
+unzipping it to reveal a padded laptop sleeve: "Separate laptop
+compartment — fits a 16-inch, padded on all sides."
 
-Jump cut — he runs his hand across the outside fabric, flicks water droplets
-off with his fingers: "Waterproof nylon. Got rained on last week, everything
-inside was bone dry."
+Jump cut — he runs his hand across the outside fabric, then flicks
+water droplets off with his fingers: "Waterproof nylon. Got rained
+on last week, everything inside was bone dry."
 
-Jump cut — he puts the bag back on, adjusts the chest strap, looks at
-camera: "Link's in bio — they sold out twice already, don't sleep on it." He
-taps the strap and walks off frame.
+Jump cut — he puts the bag back on, adjusts the chest strap, looks
+at camera: "Link's in bio — they sold out twice already, don't
+sleep on it." He taps the strap and walks off frame.
 
-Throughout the video, the tone is assured, casual-expert, effortless — he
-knows the product inside out, presents features like obvious facts, no hype,
-just confidence. Speaks at an upbeat pace with no hesitation.
+Throughout the video, the tone is assured, casual-expert, effortless
+— he knows the product inside out, presents features like obvious
+facts, no hype, just confidence. Speaks at an upbeat pace with no
+hesitation.
 
 The lighting is bright natural daylight from the windows, filling the
-entryway evenly. The image is natural phone quality, not color graded but
-well-exposed, steady handheld with slight movement when he turns. The sound
-is direct from phone mic — his voice is clear and close, minimal room echo,
-no music underneath. Vertical 9:16.
+entryway evenly. The image is natural phone quality, not color graded
+but well-exposed, steady handheld with slight movement when he turns.
+The sound is direct from phone mic — his voice is clear and close,
+minimal room echo, no music underneath.
 ```
 
 The call, for each clip:
