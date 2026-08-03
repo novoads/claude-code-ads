@@ -15,6 +15,17 @@ The key is shown once, at creation, and cannot be retrieved afterward. Create an
 
 API generations draw from the organization's plan credits at the same rate as the dashboard. There is no separate API wallet, no free API tier, and no separate API plan: any live subscription, the $1 trial included, can generate here.
 
+### Use `curl`. A `403` with `error code: 1010` is Cloudflare, not your key
+
+**The API sits behind Cloudflare, and Cloudflare's bot rule refuses `python3-urllib` outright.** A request sent with Python's stdlib `urllib` default `User-Agent` comes back `403` carrying a bare edge page with **`error code: 1010`** — not a Novoads `{"error":{...}}` envelope, no `code`, no `requestId`. The same key, on the same endpoint, over `curl`, succeeds a second later.
+
+It reads exactly like a revoked key or a dead subscription and is **neither**. Two tells:
+
+- **The body is the wrong shape.** Every real Novoads failure is the `{"error":{"code",...,"requestId"}}` envelope in *Errors* below. An HTML-ish page with a numeric Cloudflare code never came from this API's application layer.
+- **It hits everything at once.** On 2026-08-02 it took all three estimate calls simultaneously while a `GET /v1/products` issued moments earlier over `curl` had already succeeded. A genuine auth or plan failure would have refused that one too.
+
+**The fix is the client, not the credential.** Use `curl`, as every example in this repo does. If you must call from Python, send a browser-like `User-Agent` — the default is the whole problem. Do not "fix" this by regenerating a key, checking the subscription, or telling the user their plan lapsed.
+
 Ad analysis (reading an existing ad into a structured hook, beats, casting and layout breakdown) is **not** on this API. It lives on the [MCP connector](https://novoads.ai/mcp) as `analyze_ad`. That is deliberate, not a gap to route around.
 
 ## Endpoints
@@ -72,12 +83,18 @@ Discriminated on `kind`, and strict. Any field not listed is a 400.
 |---|---|---|
 | `kind` | required, `"video"` | required, `"image"` |
 | `prompt` | required, 1 to 20,000 chars | required, 1 to 20,000 chars |
-| `model` | `seedance-2.0` (default), `seedance-2.0-mini`, `omni-flash` | `gpt-image-2` (default), `nano-banana-pro`, `reve-2.1` |
+| `model` | `seedance-2.0` (default), `seedance-2.0-mini`, `omni-flash`, `veo-3.1`, `sora-2` | `gpt-image-2` (default), `nano-banana-pro`, `reve-2.1` |
 | `durationSeconds` | 4 to 15 | n/a |
 | `numImages` | n/a | 1 to 4 |
 | `language` | `en` `es` `pt` `fr` `de` `it` `zh` `ja` `ko` `ar` `hi` | same |
 
+All eight models price here, `veo-3.1` and `sora-2` included (verified live, 2026-08-02).
+
 There is **no `styleFamily`** on either arm. The field was deleted from the whole API in spec `2.0.0`, and both arms are strict, so a body carrying it comes back `400 (root): Unrecognized key: "styleFamily"` (verified live, 2026-08-02).
+
+There is **no `audioEnabled`** on either arm, and that is deliberate rather than an omission: the field does not move the price, and this endpoint takes only fields that do. Sending it is `400 Unrecognized key: "audioEnabled"` even on `seedance-2.0`, where the *generation* call accepts it (verified live, 2026-08-02). Price the render without it; send it on `POST /videos`.
+
+**`durationSeconds` is validated against the *named model's* grid here, not against the 4–15 span in the table.** Same behavior as the prompt ceiling: `{"model":"sora-2","durationSeconds":11}` comes back `400 durationSeconds must be one of 4, 8, 12 for sora-2.` while `8` prices cleanly (verified live, 2026-08-02). So the free call catches an out-of-grid duration before the paid one does — one more reason to run it every time.
 
 Response:
 
@@ -106,17 +123,40 @@ This endpoint refuses a churned organization with a 403, on purpose. `sufficient
 
 Per-model request bodies, all `.strict()`.
 
-**Shared by every video model:** `model`, `prompt`, `durationSeconds`, `aspectRatio`, `language`, `startImageAssetId`, `productId`. Only `model` and `prompt` are required. The two Seedance variants also take `referenceAssetIds`; `omni-flash` does not.
+**Shared by all five video models:** `model`, `prompt`, `durationSeconds`, `aspectRatio`, `language`, `startImageAssetId`, `productId`. Only `model` and `prompt` are required. Beyond that the variants differ, and every difference is a `400` rather than a dropped field:
+
+- **`referenceAssetIds`** — the two Seedance variants only. `omni-flash`, `veo-3.1` and `sora-2` have no such field.
+- **`audioEnabled`** — the two Seedance variants only. See below.
 
 There is **no `styleFamily`** on any variant. It was deleted from the API in spec `2.0.0` along with the blocking prompt rules it scoped, and the variants are strict, so sending it is a `400`.
 
-| `model` | `durationSeconds` | `aspectRatio` | Prompt max |
-|---|---|---|---|
-| `seedance-2.0` | 4,5,6,7,8,9,10,11,12,13,14,15 | `16:9` (default) `9:16` `1:1` `4:3` `3:4` `21:9` | 4,000 |
-| `seedance-2.0-mini` | same | same | 4,000 |
-| `omni-flash` | 4, 6, 8, 10 | `9:16` (default) `16:9` | 20,000 |
+| `model` | `durationSeconds` (default) | `aspectRatio` | `refs` | `audio` | Prompt max |
+|---|---|---|---|---|---|
+| `seedance-2.0` | 4–15, any integer (**5**) | `16:9` (default) `9:16` `1:1` `4:3` `3:4` `21:9` | ≤9 | yes | 4,000 |
+| `seedance-2.0-mini` | same (**10**) | same | ≤9 | yes | 4,000 |
+| `omni-flash` | 4, 6, 8, 10 (**8**) | `9:16` (default) `16:9` | — | — | 20,000 |
+| `veo-3.1` | 4, 6, 8 (**8**) | `9:16` (default) `16:9` | — | — | 4,000 |
+| `sora-2` | 4, 8, 12 (**4**) | `9:16` (default) `16:9` | — | — | 4,000 |
 
-Defaults that bite: **Seedance defaults to `16:9` and to 5 seconds.** `omni-flash` defaults to `9:16` and to 8 seconds. Neither model defaults to its maximum, and an out-of-grid `durationSeconds` is rejected, never rounded. Set both fields explicitly on any ad.
+Defaults that bite: **Seedance defaults to `16:9`**, alone among the five — every other model already defaults to `9:16`. On duration, `seedance-2.0` defaults to 5 and mini to 10, `omni-flash` to 8, `sora-2` to 4, and **`veo-3.1` to 8, which is also its maximum** — the only model here that defaults to its ceiling. An out-of-grid `durationSeconds` is rejected, never rounded. Set both fields explicitly on any ad.
+
+### `audioEnabled`
+
+A boolean on **`seedance-2.0` and `seedance-2.0-mini` only**, default `true` — omit it and the endpoint renders exactly what it rendered before the field existed. It controls the synchronized sound effects, ambient sound and lip-synced speech the model generates from the prompt.
+
+Send `false` for a clip that is meant to be silent: a pipeline laying its own voice-over in post otherwise pays for a voice track it throws away, and a product cutaway built to run muted comes back with sound effects nobody hears.
+
+**It does not change the price**, the length, or anything else about the grid — both Seedance providers charge the same either way, which is why `POST /estimates` refuses the field.
+
+Verified live 2026-08-02, each probe pinned with an out-of-grid `durationSeconds` so no body could be valid and none could charge:
+
+| Sent to | Result |
+|---|---|
+| `seedance-2.0`, `seedance-2.0-mini` | accepted — the only complaint was the pinned duration |
+| `omni-flash`, `veo-3.1`, `sora-2` | `400 Unrecognized key: "audioEnabled"` |
+| `POST /estimates`, any model | `400 Unrecognized key: "audioEnabled"` |
+
+**Keep the prose silence clause in the prompt as well.** The flag mutes the render; the clause (`a silent product film with no spoken dialogue`) stops the model staging a talking shot in the first place, and clears `no_spoken_line` on the estimate. They do different jobs and the belt-and-suspenders pair is deliberate.
 
 Response `202`: `jobId`, `status`, `creditsCharged`, `model`. **No `warnings`** — the job responses carry none, because this endpoint runs no prompt rules. Craft advice exists only on `POST /estimates`.
 
@@ -130,7 +170,7 @@ Confirmed against the deployed spec `2.0.0` on 2026-08-02 (the `1.2.0`-era note 
 |---|---|---|
 | What the model does with it | Animates the image as the **first frame** | **Composites** the images as visual references — a character, a product, a wardrobe, a setting |
 | How many | 1 | Up to **9** |
-| Which models | all three | `seedance-2.0` and `seedance-2.0-mini` only — `omni-flash`'s variant omits the field, and it is strict |
+| Which models | all five | `seedance-2.0` and `seedance-2.0-mini` only — the `omni-flash`, `veo-3.1` and `sora-2` variants omit the field, and all three are strict (`400 Unrecognized key`, verified live 2026-08-02) |
 | Addressed in the prompt | no | yes: `@Image1`, `@Image2` … in the order you send them |
 
 **Sending both is a 400**, not a merge: they select different modes on the provider.
@@ -139,7 +179,7 @@ Confirmed against the deployed spec `2.0.0` on 2026-08-02 (the `1.2.0`-era note 
 
 An `@ImageN` token pointing past the end of the array is refused **before the charge** — an unresolvable reference is a content failure at the provider, and a 400 is a better answer than a refunded render.
 
-There is **no `resolution` field.** 720p is fixed.
+There is **no `resolution` field** on any variant, and the spec publishes no output size at all — `GET /models` does not carry one either. Output size is fixed per model and you find it out by measuring. What has been measured here, at `9:16`: `seedance-2.0` and `sora-2` both returned **720x1280** (2026-08-02, ffprobe). `omni-flash` and `veo-3.1` are unmeasured — do not quote a number for them, and do not generalise 720p across the set now that Veo is on it.
 
 There are **no idempotency keys.** See the 500 note below.
 
@@ -149,9 +189,11 @@ There are **no idempotency keys.** See the 500 note below.
 
 | `model` | `aspectRatio` | `referenceAssetIds` | `numImages` | Prompt max |
 |---|---|---|---|---|
-| `gpt-image-2` (default) | `1:1` (default) `4:5` `2:3` `9:16` `16:9` `21:9` | up to 4 | 1 to 4 | 4,000 |
-| `nano-banana-pro` | `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9` | up to 4 | 1 to 4 | 4,000 |
-| `reve-2.1` | same as Nano Banana Pro | up to 4 | 1 to 4 | 4,000 |
+| `gpt-image-2` (default) | `1:1` (default) `4:5` `2:3` `9:16` `16:9` `21:9` | up to **4** | 1 to 4 | 4,000 |
+| `nano-banana-pro` | `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9` | up to **4** | 1 to 4 | 4,000 |
+| `reve-2.1` | same as Nano Banana Pro | up to **8** | 1 to 4 | 4,000 |
+
+**The reference cap is per model and is not uniform.** `reve-2.1` takes 8; the other two take 4. Do not carry one number across the set — the bodies are strict, so a fifth reference to `gpt-image-2` is `400 Too big: expected array to have <=4 items` rather than a silently dropped image, which is the good outcome: a dropped reference is a paid render missing the product. Verified live 2026-08-02, each probe pinned with an out-of-range `numImages` so no body could be valid: 9 refs on `reve-2.1` → too big, 8 → accepted; 5 refs on `gpt-image-2` and on `nano-banana-pro` → too big.
 
 Synchronous. The response carries `images[]` (`url`, `expiresInSeconds` 3600, `width`, `height`), `jobId`, `status`, `creditsCharged`, and `model`. **No `warnings`**, for the same reason as video: this endpoint runs no prompt rules. Nothing to poll. `numImages` multiplies the price.
 
@@ -187,6 +229,39 @@ This is also the recovery path when a call times out: the work may have run and 
 
 While the job is unfinished this is a `409` naming the current status.
 
+## GET /products, POST /products
+
+`GET` lists the organization's products. `POST` creates one and returns it with its `id` — that id is what goes in `productId` on every generation call.
+
+Request body for `POST`, `.strict()` — `name` is the only required field:
+
+| Field | Type | Limit |
+|---|---|---|
+| `name` | string | **required**, 1 to 200 chars |
+| `description` | string | ≤ 2,000 chars |
+| `targetAudience` | string | ≤ 500 chars |
+| `mainFeatures` | string[] | ≤ 20 items, each ≤ 200 chars |
+| `painPoint` | string | ≤ 500 chars |
+| `perceived` | string | perceived value — what a buyer feels it is worth. ≤ 500 chars |
+
+```bash
+curl -sS -X POST https://api.novoads.ai/v1/products \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Aurora Sleep Tea",
+    "description": "A caffeine-free herbal tea blended for people who fall asleep late.",
+    "targetAudience": "Adults 25-45 who work late and struggle to wind down.",
+    "mainFeatures": ["Caffeine free", "Valerian and chamomile", "Brews in 3 minutes"],
+    "painPoint": "Lying awake for an hour after getting into bed.",
+    "perceived": "A nightly ritual worth more than the price of a coffee."
+  }'
+```
+
+**Every descriptive field is stored verbatim and none of them influence what is generated.** Not one reaches the prompt. Filling them in buys you a readable history — `GET /v1/generations?productId=…` becomes a useful filter — and nothing else. Do not treat a product record as a brief the model will read, and do not paste brand voice in here expecting it to change a render; that belongs in `MASTER_CONTEXT.md`, which the agent actually reads.
+
+`PATCH /products/{productId}` takes the same fields, all optional. `GET /products/{productId}/folders` is read-only, and there is no folder-creation endpoint.
+
 ## GET /models
 
 The catalog: per model `id`, `displayName`, `kind`, `endpoint`, `credits`, `representativeOutput`, `aspectRatios`, `durationsSeconds`, `maxPromptCharacters`.
@@ -210,10 +285,17 @@ queued -> running -> finalizing -> succeeded
 
 Measured on production renders (all providers, succeeded only, p10 to p90):
 
-| model | typical wait | median |
-|---|---|---|
-| `seedance-2.0` | 3 to 8 minutes | ~5 minutes |
-| `seedance-2.0-mini` | 2 to 3 minutes | ~2.3 minutes |
+| model | typical wait | median | observed in this repo |
+|---|---|---|---|
+| `seedance-2.0` | 3 to 8 minutes | ~5 minutes | **~171s, ~171s, ~154s** (2026-08-02/03, n=3) |
+| `seedance-2.0-mini` | 2 to 3 minutes | ~2.3 minutes | — |
+| `omni-flash` | not published | — | — |
+| `veo-3.1` | not published | — | — |
+| `sora-2` | not published | — | **~123s** (2026-08-02, n=1) |
+
+The right-hand column is `createdAt` → first observed `succeeded` at 15-second poll granularity, so it is an upper bound on a handful of renders — not a distribution, and not a contradiction of the fleet range next to it. **Quote the fleet range where there is one and say the number is a range.** Both renders anyone here has actually timed came back under three minutes, so "about five minutes" is a promise the API did not make: a user told five who waits nine has been misled, and the p90 says nine happens.
+
+For `omni-flash`, `veo-3.1` and `sora-2` there is no published range at all. Say the wait is unknown rather than borrowing Seedance's.
 
 About 4% of `seedance-2.0` renders run past 10 minutes. Failures are usually reported faster than successes, but their tail is much worse, so a wait that is far past p90 is more likely a slow success than a silent failure.
 

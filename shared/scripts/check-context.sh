@@ -140,7 +140,15 @@ done
   printf '\nSetup:\n'
   printf '  %s\n' "$env_status"
   printf '  %s\n' "$mctx_status"
-  printf '  ✓ skills synced (%d in .claude/skills/)\n' "$skills_count"
+  # Zero synced skills is not a pass. `.claude/skills/` is gitignored and empty on a
+  # fresh clone until the SessionStart hook first runs sync-skill.sh, so a checkmark on
+  # a zero count tells a first-time user everything is fine at the one moment it isn't.
+  # It self-heals on the next session; the remediation is here for the session in hand.
+  if (( skills_count > 0 )); then
+    printf '  ✓ skills synced (%d in .claude/skills/)\n' "$skills_count"
+  else
+    printf '  ✗ no skills synced yet — run ./scripts/sync-skill.sh\n'
+  fi
 
   if [[ ${#image_ad_skills[@]} -gt 0 ]]; then
     printf '\nImage-ad ecosystem (live-validated 2026-05-25):\n'

@@ -1,35 +1,92 @@
-# Veo 3.1 — prompt craft (PARKED)
+# Veo 3.1 — prompt craft
 
-> **PARKED — Veo 3.1 is not on this API.** There is no Veo route here. Nothing in this file
-> is callable today; it is kept **unconverted**, as prompt craft only, until the model ships
-> (plan: Track B P3). At that point it earns a real decision-tree row and a body section
-> written against the live spec.
-> Any route, DTO or field named below belongs to the **upstream fork's API, not this one** —
-> do not send them to `api.novoads.ai`. For what you can generate today, use the decision
-> tree in [SKILL.md](../../SKILL.md).
+**Live on this API** since spec `2.1.0`. `POST /v1/videos` with `"model": "veo-3.1"`.
+
+Read this before composing a Veo prompt. Every HTTP detail comes from [SKILL.md](../../SKILL.md) and [reference.md](../../reference.md), which win whenever this file and they disagree.
 
 **Vendor guide:** [Google Cloud — Ultimate prompting guide for Veo 3.1](https://cloud.google.com/blog/products/ai-machine-learning/ultimate-prompting-guide-for-veo-3-1)
 
+## When to route here
+
+**Pick `veo-3.1` when the user names it, or when the shot has to evolve over its own runtime** — a camera move that changes what the frame means between the first second and the last, rather than a person talking to a fixed lens. That is what Veo's prompting model is built around and it is what the vendor guide spends its length on.
+
+**Two reasons to think before routing here:**
+
+- **Nobody in this repo has measured a Veo render.** No render time, no leading-silence figure, no output resolution, no transcript. Everything below the request body is vendor craft and arithmetic. Say the wait is unknown rather than borrowing Seedance's numbers, and run the video QA in §7 of [SKILL.md](../../SKILL.md) with more attention, not less.
+- **8 seconds is the ceiling**, and it is also the default. Veo has the shortest maximum of any video model here. A script that does not fit in 8s is a Seedance job or a split.
+
+**No `referenceAssetIds`.** Veo takes `startImageAssetId` only, so an ad that has to composite the actor *and* the product is a Seedance job.
+
+## Request body
+
+`.strict()` — any key not in this table is a `400 Unrecognized key`, and nothing is charged.
+
+| Field | Value |
+|---|---|
+| `model` | `"veo-3.1"` — required |
+| `prompt` | required, 1 to **4,000** characters |
+| `durationSeconds` | **4, 6, 8 only.** Defaults to **8**, which is also the maximum — the one model here that does. Out-of-grid values are rejected, never rounded |
+| `aspectRatio` | `9:16` (**default**) or `16:9`. No other ratio |
+| `language` | `en` `es` `pt` `fr` `de` `it` `zh` `ja` `ko` `ar` `hi`. Defaults to `en` |
+| `startImageAssetId` | one `assetId`, animated as the first frame |
+| `productId` | files the job under a product. Organizational only |
+
+**Not on this model:** `referenceAssetIds`, `audioEnabled`, `resolution`, `styleFamily`. All are `400` (verified live 2026-08-02).
+
+```bash
+curl -sS -X POST https://api.novoads.ai/v1/videos \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "veo-3.1",
+    "prompt": "...",
+    "durationSeconds": 8,
+    "aspectRatio": "9:16",
+    "language": "en",
+    "productId": "..."
+  }'
+```
+
+**Price it at `POST /v1/estimates` before you commit, and price Seedance next to it.** The video schedules differ by roughly 5x across the set. Quoting one model's number for another is the failure this repo has no rate tables in order to prevent.
+
 ## Checklist
 
-- [ ] Describe scene, action, and **how the shot evolves** over time (first frame → later beats).
-- [ ] Specify **style** (film stock, animation, documentary, etc.) if it matters.
-- [ ] If using **reference images** or **start/end frames**, say how motion should treat them. (Whatever rules govern them here will be written when the model lands — do not assume this API's Seedance rules carry over.)
-- [ ] **ALWAYS** end the prompt with `"No subtitles, no captions, no text overlays."` — Veo 3.1 sometimes burns subtitles into the video if not explicitly excluded.
+- [ ] Scene, action, and **how the shot evolves** over time — first frame → later beats. This is the layer Veo rewards.
+- [ ] **Style** named explicitly if it matters (film stock, documentary, animation).
+- [ ] Camera behavior described concretely, not as "cinematic" — which is a `banned_polish` warning as well as weak direction.
+- [ ] Shot size stated as what is in frame, not just a shot-size word.
+- [ ] Spoken line in double quotes, with invented brand names spelled phonetically (gate 1).
+- [ ] **ALWAYS** end with `No on-screen text, no captions, no background music.` — Veo burns subtitles into the video if they are not explicitly excluded. This is a vendor-documented default, not a superstition.
+- [ ] If using `startImageAssetId`, say how the motion should treat that first frame. Do not assume this API's Seedance reference rules carry over — Veo has no reference mode at all.
+- [ ] Aspect ratio stated in the prose as well as the field.
 
 ## Template
 
 ```text
-{{OPENING_BEAT}}. {{ACTION_OVER_TIME}}. Setting: {{SETTING}}. Camera: {{CAMERA}}. Style: {{STYLE}}. Lighting: {{LIGHT}}. Optional dialogue: {{DIALOGUE}}.
+{{OPENING_BEAT}}. {{ACTION_OVER_TIME}}. Setting: {{SETTING}}. Camera: {{CAMERA}}.
+Style: {{STYLE}}. Lighting: {{LIGHT}}. {{SUBJECT}} says: "{{SPOKEN_LINE}}".
+No on-screen text, no captions, no background music. Vertical 9:16.
 ```
 
 ## Example
 
 ```text
-Wide shot of a city rooftop at golden hour; runner ties shoes, then jogs toward camera as the camera tracks sideways. Documentary handheld feel, warm natural light, subtle film grain. No logos on clothing.
+Wide shot of a city rooftop at golden hour; a runner ties their shoes, then jogs toward camera
+as the camera tracks sideways. Documentary handheld feel, warm natural light, subtle film grain.
+No logos on clothing. No on-screen text, no captions, no background music. Vertical 9:16.
 ```
 
-## Request body
+## Duration from word count
 
-None — see the PARKED note at the top. The upstream fork's field list for this model does not
-apply to this API, so there is nothing to document here until the model lands.
+The 2.5-words-per-second arithmetic and nothing more — **unmeasured on this model.** Budget no silence, because nobody here knows whether Veo front-loads it the way Seedance does. Find out with the QA step and write the number down.
+
+| Script length | Duration |
+|---|---|
+| 1–10 words | 4s |
+| 11–15 words | 6s |
+| 16–20 words | 8s |
+| **21+ words** | **Too long** — 8s is the ceiling. Split, or move to Seedance |
+
+## QA
+
+Mandatory, same as every video — §7 of [SKILL.md](../../SKILL.md). On this model it is also the cheapest way to close the measurement gap: the ffprobe and silencedetect output from the first real Veo render is worth appending to `MASTER_CONTEXT.md` as a dated learning, because it is the number this file cannot give you.

@@ -31,10 +31,24 @@ ASPECT="${ASPECT_RATIO:-9:16}"             # Seedance defaults to 16:9 — alway
 LANGUAGE="${LANGUAGE:-en}"
 MAX_INFLIGHT="${MAX_INFLIGHT:-4}"          # org ceiling is 5; leave one slot for QA retries
 
-# There is no `resolution` field (720p is fixed) and no `audioEnabled` field:
-# Seedance renders audio and lip-sync in the same call, driven by the prompt.
-# There is no `projectId` either — the v1 API has no project writes. Use
-# productId if you want the job attributable to a product.
+# This pipeline lays its own voice-over and music in post (generate-vo-elevenlabs.sh,
+# generate-music-elevenlabs.sh) and final-assembly.sh replaces the clip audio outright.
+# So we render SILENT: `audioEnabled: false` stops Seedance generating a speech and SFX
+# track that assembly throws away. It costs the same either way — the field does not move
+# the price — but a silent render cannot surprise you with an invented narrator.
+# Override with AUDIO_ENABLED=true if you want Seedance's own audio for a beat.
+AUDIO_ENABLED="${AUDIO_ENABLED:-false}"
+
+# `audioEnabled` exists on the two Seedance variants ONLY. The other video models are
+# strict and would 400 on it, so it is omitted for anything else.
+case "$MODEL" in
+  seedance-2.0|seedance-2.0-mini) AUDIO_SUPPORTED=1 ;;
+  *)                              AUDIO_SUPPORTED=0 ;;
+esac
+
+# There is no `resolution` field — the spec publishes no output size, and it is fixed per
+# model. There is no `projectId` either — the v1 API has no project writes. Use productId
+# if you want the job attributable to a product.
 
 SUBDIR="$1"
 OUT_DIR="$RUN_DIR/$SUBDIR/_resp"
@@ -66,8 +80,10 @@ post_one() {
     --arg model "$MODEL" --arg p "$prompt" --arg asset "$asset" \
     --arg aspectRatio "$ASPECT" --arg language "$LANGUAGE" \
     --argjson dur "$duration" --arg productId "${PRODUCT_ID:-}" \
+    --argjson audio "$AUDIO_ENABLED" --argjson audioOk "$AUDIO_SUPPORTED" \
     '{model:$model, prompt:$p, durationSeconds:$dur, aspectRatio:$aspectRatio,
       language:$language, startImageAssetId:$asset}
+     + (if $audioOk == 1 then {audioEnabled:$audio} else {} end)
      + (if ($productId|length)>0 then {productId:$productId} else {} end)')
 
   # No blind retry on failure: there are no idempotency keys, so a resubmit
@@ -95,7 +111,7 @@ post_one() {
 }
 
 export -f post_one lookup_asset
-export BASE AUTH_HDR MODEL ASPECT LANGUAGE OUT_DIR SF_MAP PRODUCT_ID
+export BASE AUTH_HDR MODEL ASPECT LANGUAGE OUT_DIR SF_MAP PRODUCT_ID AUDIO_ENABLED AUDIO_SUPPORTED
 
 # Throttled fan-out in waves of MAX_INFLIGHT. bash 3.2 safe (no `wait -n`).
 rc=0

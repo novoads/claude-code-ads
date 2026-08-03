@@ -115,12 +115,14 @@ Don't try to one-prompt the whole ad in Seedance 2.0. You'll get character drift
 
 - **Aspect ratio:** `9:16` (vertical) for TikTok / Reels / Shorts, on both the stills and the clips. Use `1:1` only if the user explicitly wants a feed post. Avoid `16:9` for this genre — the framing assumptions in the prompts (close-up macros, head-and-shoulders human shots) don't translate. **Set it explicitly on every video call: Seedance defaults to `16:9`,** which is a wasted render for this format. `gpt-image-2` defaults to `1:1` and also needs it stated.
 - **`9:16` is on both grids** — `gpt-image-2` accepts `1:1 4:5 2:3 9:16 16:9 21:9`, Seedance accepts `16:9 9:16 1:1 4:3 3:4 21:9`. The still and the clip can therefore share a ratio, which is what keeps the start frame from being letterboxed.
-- **There is no `resolution` field.** 720p is fixed on video — there is no 480p draft tier to trade quality for cost. The cheap-draft lever is the **model**: `seedance-2.0-mini` is half the price of `seedance-2.0` on the same grid. Prototype the beat timing on mini, finalize on `seedance-2.0`.
+- **There is no `resolution` field**, and no 480p draft tier to trade quality for cost — the spec publishes no output size at all, and Seedance measured 720x1280 at `9:16` (2026-08-02). The cheap-draft lever is the **model**: `seedance-2.0-mini` is half the price of `seedance-2.0` on the same grid. Prototype the beat timing on mini, finalize on `seedance-2.0`.
 - Upload the still with `POST /v1/uploads`, PUT the bytes, then pass the returned `assetId`. The upload URL expires in 900s; **the `assetId` does not expire and is reusable without limit.**
 
 ## Audio pipeline — ElevenLabs VO, no in-prompt narrator
 
 **Hard rule (cross-skill):** generate voiceover externally via ElevenLabs and overlay in post — never use Seedance's in-prompt `Narrator:` line. See [claymation guide § Audio pipeline](../../claymation-ad/prompting/guide.md#audio-pipeline-do-this-not-in-prompt-narrator) — the same flow applies to Pixar ads. Same ElevenLabs voice across all beats, same Whisper→HyperFrames caption pipeline.
+
+**Render the beats silent: send `"audioEnabled": false`.** The field is live on `seedance-2.0` and `seedance-2.0-mini` and defaults to `true`, so a call that omits it generates speech and sound effects that final assembly then replaces with the ElevenLabs track — paid for, discarded. `scripts/generate-seedance.sh` already sends `false` and only for the Seedance variants (the other video models are strict and would `400`); override with `AUDIO_ENABLED=true` for a beat that genuinely wants Seedance's own audio. It does not change the price, which is why `POST /v1/estimates` refuses the field. Keep the no-`Narrator:` discipline in the prompt regardless — the flag mutes the render, the prompt is what stops the model staging a talking shot.
 
 ### ⚠️ No dead space — VO drives clip duration
 

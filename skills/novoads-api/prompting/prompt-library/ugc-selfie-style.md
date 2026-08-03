@@ -1,12 +1,16 @@
-# UGC selfie-style video — cross-model prompting guide (PARKED)
+# UGC selfie-style video — cross-model prompting guide
 
-> **PARKED — the three models this guide targets (Veo 3.1, Sora 2, Kling 3.0) are not on
-> this API,** and there is no scene or b-roll endpoint. Nothing here is callable today; it is
-> kept **unconverted**, as prompt craft only, until those models ship (plan: Track B P3).
-> The *aesthetic* advice below is model-agnostic and mostly transfers, but the per-model
-> formula sections are written for engines this API does not run — do not port them to
-> Seedance by find-and-replace. For UGC on this API today, use the decision tree in
-> [SKILL.md](../../SKILL.md), which routes to the Seedance UGC formula.
+> **Two of the three models this guide targets are now live on this API.** `veo-3.1` and
+> `sora-2` ship as of spec `2.1.0` — their per-model sections below are callable, subject to
+> the grids and field limits in [veo-3-1.md](veo-3-1.md) and [sora-2.md](sora-2.md), which are
+> the authority for what those bodies accept. **Kling 3.0 is not on this API** and its section
+> is kept as prompt craft only. There is still no scene or b-roll endpoint.
+>
+> **The aesthetic advice in *Core principles* is model-agnostic and transfers to Seedance.**
+> The per-model *formulas* do not: do not port a Veo or Kling formula to Seedance by
+> find-and-replace. For Seedance UGC, the decision tree in [SKILL.md](../../SKILL.md) routes to
+> [seedance-2-ugc.md](seedance-2-ugc.md), which is the formula with a worked example that
+> passes validation.
 
 **Aesthetic:** iPhone-shot, Instagram Reels, unpolished realism
 
@@ -71,7 +75,9 @@ Always exclude: "studio lighting, professional photography, stock photo, perfect
 
 ## Model-specific strategies
 
-### Veo 3.1 — scene and shot designer
+### Veo 3.1 — scene and shot designer · **live on this API**
+
+Grid: `durationSeconds` 4/6/8 only, `aspectRatio` `9:16` or `16:9`, `startImageAssetId` yes, **no `referenceAssetIds`**. Full body in [veo-3-1.md](veo-3-1.md).
 
 **Formula:** `[Camera] + [Subject] + [Action] + [Context/Lighting] + [Style/Imperfections] + [Dialogue/Audio]`
 
@@ -98,7 +104,9 @@ in a casual tone: 'Nobody talks about how productivity advice is just
 procrastination.' No subtitles, no captions, no text overlays.
 ```
 
-### Sora 2 — narrative director
+### Sora 2 — narrative director · **live on this API**
+
+Grid: `durationSeconds` 4/8/12 only, `aspectRatio` `9:16` or `16:9`, `startImageAssetId` yes, **no `referenceAssetIds`**. Full body in [sora-2.md](sora-2.md). Measured here: no leading silence, and `Medium selfie shot` came back a **tight close-up** — name the framing concretely.
 
 **Formula:** Structure with headers: `Format & Style`, `Camera`, `Main Subject`, `Location`, `Lighting`, `Actions & Camera Beats`
 
@@ -123,7 +131,11 @@ Dialogue: "Guys, I swear this is the best thing I've ever tasted."
 Sound: Raw phone audio, slight room echo, background hiss intact.
 ```
 
-### Kling 3.0 — motion operator
+### Kling 3.0 — motion operator · **NOT on this API**
+
+> There is no Kling route on `api.novoads.ai`. This section is prompt craft only. Its physics-first
+> phrasing does transfer usefully to Seedance — describe motion as consequence, anchor hands to
+> objects — but the formula itself has nothing to call.
 
 **Formula:** Think physics engine: `[Environment] -> [Lighting] -> [Camera Movement] -> [Subject/Product Behavior]`
 

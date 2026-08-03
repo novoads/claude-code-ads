@@ -5,10 +5,11 @@ Make AI video ads and static image ads from **Claude Code** or **Cursor**, again
 account. The agent does the mechanical part — upload, price, generate, poll, download — and the
 skills carry the part that decides whether the render is any good: the prompt.
 
-Six models are live on the API. Three make video (**Seedance 2.0**, **Seedance 2.0 Mini**,
-**Omni Flash**) and three make stills (**GPT Image 2**, **Nano Banana Pro**, **Reve 2.1**). On top
-of them this repo ships five Seedance prompt formulas, a 37-template static-ad library, Pixar and
-claymation pipelines, YouTube thumbnails, caption burn-in, and a Meta publishing step.
+Eight models are live on the API. Five make video (**Seedance 2.0**, **Seedance 2.0 Mini**,
+**Omni Flash**, **Veo 3.1**, **Sora 2**) and three make stills (**GPT Image 2**, **Nano Banana
+Pro**, **Reve 2.1**). On top of them this repo ships five Seedance prompt formulas, a 37-template
+static-ad library, Pixar and claymation pipelines, YouTube thumbnails, caption burn-in, and a Meta
+publishing step.
 
 Two rules run through the whole pack, and they are the reason it is safe to point an agent at a
 billing API:
@@ -225,26 +226,32 @@ want to compare models yourself.
 
 ## Supported models
 
-All six are live on `api.novoads.ai/v1`. Grids below come from `GET /v1/models` — that endpoint is
-the current answer, this table is a map.
+All eight are live on `api.novoads.ai/v1`. Grids below come from `GET /v1/models` — that endpoint
+is the current answer, this table is a map.
 
 | Model | Kind | Duration | Aspect ratios | Prompt cap | Notes |
 |---|---|---|---|---|---|
-| **`seedance-2.0`** | Video | 4–15s, any integer | `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | 4,000 chars | The flagship. Native audio + lip-sync. `startImageAssetId` **or** up to 9 `referenceAssetIds`, never both. Renders in 3–8 min, usually ~5. |
+| **`seedance-2.0`** | Video | 4–15s, any integer | `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | 4,000 chars | The flagship. Native audio + lip-sync, mutable with `audioEnabled: false`. `startImageAssetId` **or** up to 9 `referenceAssetIds`, never both. Fleet range 3–8 min; one render here came back in ~171s. |
 | **`seedance-2.0-mini`** | Video | 4–15s, any integer | same as above | 4,000 chars | Same grid, same formulas, half the price, back in 2–3 min. The drafting tier. |
 | **`omni-flash`** | Video | `4` `6` `8` `10` | `9:16` `16:9` | **20,000 chars** | No reference images. Defaults to `9:16` and 8s. Best for long structured briefs and silent b-roll. |
+| **`veo-3.1`** | Video | `4` `6` `8` | `9:16` `16:9` | 4,000 chars | Start frame only, no reference images. Defaults to 8s — the one model that defaults to its own ceiling. Shot-evolution prompting. Unmeasured here: no render time on record. |
+| **`sora-2`** | Video | `4` `8` `12` | `9:16` `16:9` | 4,000 chars | Start frame only, no reference images. Measured with **no leading silence** where Seedance front-loads 3–5s, and ~123s to render. Coarse grid: no 6s, no 10s. |
 | **`gpt-image-2`** | Image | — | `1:1` `4:5` `2:3` `9:16` `16:9` `21:9` | 4,000 chars | Typography and UI mimicry. Synchronous. |
 | **`nano-banana-pro`** | Image | — | 10 ratios incl. `3:2` `4:3` `5:4` | 4,000 chars | Photoreal people and products; strongest identity lock across references. |
 | **`reve-2.1`** | Image | — | same 10 ratios | 4,000 chars | Third look / second opinion on a still. |
 
-Image calls take `numImages` 1–4 and up to 4 `referenceAssetIds`; they have no start-frame concept.
-Videos are asynchronous (`202` + `jobId`, poll to a terminal status); images come back in the
-response body.
+Image calls take `numImages` 1–4. The `referenceAssetIds` cap is **per model** — 8 on `reve-2.1`,
+4 on `gpt-image-2` and `nano-banana-pro` — and images have no start-frame concept. Videos are
+asynchronous (`202` + `jobId`, poll to a terminal status); images come back in the response body.
 
-**Sora 2, Veo 3.1 and Kling 3 are not on this API.** Their prompt libraries sit in
-`skills/novoads-api/prompting/prompt-library/` unconverted, for whenever the endpoints land. The
-agent will tell you plainly rather than routing you somewhere else. There is likewise no b-roll or
-scene endpoint — a silent `omni-flash` or Seedance clip is the b-roll path.
+`audioEnabled` is a Seedance-only boolean (default `true`); send `false` for a clip meant to run
+silent. The other three video models are strict and `400` on it, as does `POST /v1/estimates` for
+every model — it does not move the price.
+
+**Kling 3 is not on this API and is not queued for it.** Its prompt library sits in
+`skills/novoads-api/prompting/prompt-library/` as craft only; the agent will say so plainly rather
+than routing you somewhere else. There is likewise no b-roll or scene endpoint — a silent
+`omni-flash` or Seedance clip is the b-roll path.
 
 ## What's in the box
 

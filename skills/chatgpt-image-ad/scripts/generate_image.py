@@ -120,6 +120,15 @@ def _api_error(e: urllib.error.HTTPError, url: str) -> RuntimeError:
     try:
         err = json.loads(raw).get("error", {})
     except json.JSONDecodeError:
+        # Not our envelope at all -> it never reached the application. The one
+        # that bites: Cloudflare's bot rule refusing the default urllib UA.
+        if "1010" in raw:
+            return RuntimeError(
+                f"HTTP {e.code} on {url}: Cloudflare error 1010 — the edge refused "
+                f"this client, NOT your API key. This is a User-Agent problem: "
+                f"send a non-default one (see USER_AGENT above) or use curl. Do not "
+                f"regenerate the key or check the subscription."
+            )
         return RuntimeError(f"HTTP {e.code} on {url}: {raw}")
     code = err.get("code", "?")
     msg = err.get("message", raw)
@@ -137,11 +146,20 @@ def _api_error(e: urllib.error.HTTPError, url: str) -> RuntimeError:
     return RuntimeError(f"HTTP {e.code} {code} on {url}: {msg}{hint}")
 
 
+# api.novoads.ai sits behind Cloudflare, whose bot rule 403s the default
+# "Python-urllib/x.y" User-Agent with a bare `error code: 1010` page — no JSON
+# envelope, no requestId, and it reads exactly like a revoked key or a lapsed
+# plan. Any non-default UA clears it (verified 2026-08-02). The presigned PUT is
+# NOT affected: it goes to R2, not to the API zone, and its signed headers are
+# sent verbatim on purpose.
+USER_AGENT = "novoads-claude-code/1.0"
+
+
 def http_post_json(url: str, headers: dict, body: dict, timeout: int = 60) -> dict:
     req = urllib.request.Request(
         url,
         data=json.dumps(body).encode("utf-8"),
-        headers=headers,
+        headers={**headers, "User-Agent": USER_AGENT},
         method="POST",
     )
     try:
