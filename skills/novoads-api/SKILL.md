@@ -6,9 +6,10 @@ description: >-
   talking-head ad, an AI actor holding a product, a TikTok or Reels or Shorts
   ad, a static image ad, or asks to "make me an ad", "generate a video",
   "animate this photo", or names a model (Seedance, Seedance Mini, Omni Flash,
-  GPT Image 2, Nano Banana Pro, Reve). Handles upload, dialogue approval, cost
-  confirmation, generation, polling, and download. Not for editing an existing
-  video file and not for publishing to an ad platform.
+  Veo 3.1, Sora 2, GPT Image 2, Nano Banana Pro, Reve). Handles upload,
+  dialogue approval, cost confirmation, generation, polling, QA, and download.
+  Not for editing an existing video file and not for publishing to an ad
+  platform.
 ---
 
 # Novoads REST API
@@ -65,8 +66,10 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | A studio lookbook: polished, voiceover, multi-look | `seedance-2.0` + [seedance-2-studio-lookbook.md](prompting/prompt-library/seedance-2-studio-lookbook.md) |
 | A fast-paced feature walkthrough | `seedance-2.0` + [seedance-2-feature-walkthrough.md](prompting/prompt-library/seedance-2-feature-walkthrough.md) |
 | A fast vertical clip with no dialogue requirement | `omni-flash`, and read `shared/skills/gemini-omni-flash/prompting/guide.md` first — it is the only model here with a 20,000-character prompt ceiling, and its grids are narrower than Seedance's (`durationSeconds` 4/6/8/10 only, `aspectRatio` `9:16` or `16:9` only, **no `referenceAssetIds`**) |
+| A talking clip whose first word must land immediately | `sora-2`, and read [sora-2.md](prompting/prompt-library/sora-2.md) first. Measured here at **no leading silence at all**, where Seedance front-loads 3–5s of it. Grid is `durationSeconds` 4/8/12 only, `aspectRatio` `9:16` (default) or `16:9`, `startImageAssetId` yes, **`referenceAssetIds` no** |
+| Veo 3.1 by name, or a shot that has to evolve over its own runtime | `veo-3.1`, and read [veo-3-1.md](prompting/prompt-library/veo-3-1.md) first. Grid is `durationSeconds` 4/6/8 only, `aspectRatio` `9:16` (default) or `16:9`, `startImageAssetId` yes, **`referenceAssetIds` no**. Nothing in this repo has measured a Veo render — quote its wait as unknown rather than borrowing Seedance's |
 | A video that starts from a specific photo | any video model plus `startImageAssetId` — it animates that image as the first frame |
-| A video built from several photos: the actor **and** the product, a wardrobe, a setting | `seedance-2.0` or mini plus `referenceAssetIds` — up to **9** images, composited rather than animated, addressed in the prompt text as `@Image1`…`@ImageN` in the order you send them. Not on `omni-flash`, whose variant has no such field, and **never alongside `startImageAssetId`**: they are separate modes and a body carrying both is a `400` |
+| A video built from several photos: the actor **and** the product, a wardrobe, a setting | `seedance-2.0` or mini plus `referenceAssetIds` — up to **9** images, composited rather than animated, addressed in the prompt text as `@Image1`…`@ImageN` in the order you send them. **Seedance only** — `omni-flash`, `sora-2` and `veo-3.1` have no such field — and **never alongside `startImageAssetId`**: they are separate modes and a body carrying both is a `400` |
 | The same person to hold across several clips of a series | pass that person's photo in every clip's `referenceAssetIds` and repeat the actor tag verbatim. Seedance re-casts on every cut, so a repeated description alone does not hold a face; see [seedance-2-feature-walkthrough.md](prompting/prompt-library/seedance-2-feature-walkthrough.md) |
 | A reference video turned into a reusable template: "make videos like this", "deconstruct this" | read [prompting/analyze-video/SKILL.md](prompting/analyze-video/SKILL.md). Frames and transcript are extracted locally with ffmpeg and Whisper, and the output is a new formula file in `prompting/prompt-library/`. Nothing is charged until the optional test render at the end |
 | One specific ad cloned for their own product: "make this ad but for my product" | read [prompting/clone-ad/SKILL.md](prompting/clone-ad/SKILL.md). The same local analysis, but the output is a rendered clip and both gates apply. A source longer than 15s becomes a series, held together by passing the same `referenceAssetIds` to every clip — there is no video-to-video on this API |
@@ -80,7 +83,7 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | To reverse-engineer an existing image ad into a reusable template | the `image-ad-clone` skill |
 | A YouTube thumbnail | the `generate-youtube-thumbnail` skill |
 | B-roll, an ambient product clip, a scene | There is no b-roll endpoint. Generate a silent clip: `omni-flash`, or `seedance-2.0` with the word `silent` or `b-roll` in the prompt |
-| Sora 2, Veo 3.1, or Kling | Not on this API. Say so plainly; the libraries sit in the repo for when they land |
+| Kling | Not on this API. Say so plainly; [kling-3.md](prompting/prompt-library/kling-3.md) sits in the repo as prompt craft for when it lands. **Sora 2 and Veo 3.1 are live** — they have their own rows above |
 | To edit an existing MP4 they already have | Not this skill, except captions (row above). Say so |
 | To publish the result as an ad on Meta or TikTok | Not this skill. The output is a file. The `meta-ad-builder` skill takes it from there |
 
@@ -99,10 +102,11 @@ Two separate approvals stand between a request and a charge, and **neither impli
 Seedance renders the audio and the lip-sync in the same call, so the line inside the double quotes is what the actor says, out loud, in the finished video. It cannot be changed afterward without paying for the render again.
 
 1. **Extract the dialogue from the drafted prompt** and show it on its own, separate from the visual description.
-2. **Present it as a numbered list** with beat labels (hook / show / demo / verdict, or similar). Mark silent beats `(silent beat — no dialogue)`.
-3. **Count the spoken words**, state the target duration, and say whether it fits at a natural pace.
-4. **State the `language`** you are going to send, because that is the language the ad is rendered in.
-5. **Ask for approval explicitly.** Never infer it from an earlier yes about tone, template, or cost.
+2. **Spell any invented brand name phonetically inside the quoted line** — see the rule below. Do this before you present the line, and show the phonetic form in the block, because it is what the model will be sent.
+3. **Present it as a numbered list** with beat labels (hook / show / demo / verdict, or similar). Mark silent beats `(silent beat — no dialogue)`.
+4. **Count the spoken words**, state the target duration, and say whether it fits at a natural pace.
+5. **State the `language`** you are going to send, because that is the language the ad is rendered in.
+6. **Ask for approval explicitly.** Never infer it from an earlier yes about tone, template, or cost.
 
 Use this structure:
 
@@ -120,6 +124,34 @@ Approve this dialogue? (yes / edit / rewrite)
 ```
 
 If they say edit, revise and re-present the block until they approve. The gate applies to every flow where the model speaks. Skip it for silent flows: product hero, premium reveal without voiceover, and images.
+
+**Re-run the gate whenever the words change**, including when you change them yourself for the rule below. An approval covers the sentence that was approved, not its successor.
+
+#### Invented brand names get a phonetic spelling in the quoted line
+
+**The gate approves *text*; the model renders *speech*.** A brand name that is a real word survives the trip. A coined or portmanteau name may not: on 2026-08-02 `seedance-2.0` rendered `Novoads` as **"Nuvenov's"** — unrecognisable as the brand — while speaking the other 16 words of the line verbatim. Approving the sentence did not approve how it would be said.
+
+**The rule: write the name as hyphenated syllables inside the double quotes.**
+
+```text
+… and says: "I kept saying AI ads look fake until I made one on NO-vo-ads and nobody could tell."
+```
+
+Use it for names that are invented, run two words together, or that a reader would have to guess at. Leave ordinary words alone — `Nike` and `CeraVe` do not need it.
+
+**This form is validated in `en` only. See the `es` limit below before you reach for it in another language** — the same brand fails there for a different phonetic reason, and the English spelling does not fix it.
+
+**What the A/B actually showed (job `6329f29a…` vs `ff69d118…`, single variable, every other byte identical, pass criterion fixed in writing before the render):** `NO-vo-ads` came back transcribed as **"Novo ads"** — recognisable — and the feared failure did not happen: the model did not read the hyphens aloud or spell the name out.
+
+**Its limits, which are as much a part of the rule as the rule:**
+
+- **n = 1.** One brand, one model, one language. The *fix* is validated on **`seedance-2.0` in `en` only** — untested on `sora-2`, `veo-3.1` and `omni-flash`, and untested in `es`/`pt`, where hyphenated English syllables may read very differently. Do not present it as a general fix.
+- **In `es` the rule does NOT carry, and there is a reason, not just a missing test.** A Spanish render shipping the brand plain came back as **"NoBots"** — unrecognisable (2026-08-03, `seedance-2.0`, `language: es`; whisper `-l es` and `-l auto` agreed independently). Spanish has no /v/–/b/ contrast — ⟨v⟩ and ⟨b⟩ are one phoneme — so **no spelling buys back the /v/**, and what actually broke was the tail: the `o`+`a` hiatus collapsed and a syllable vanished, `vo-ads` → `bots`. Hyphenating syllable boundaries is all `NO-vo-ads` does, and it addresses none of that. **The `es` treatment is unsolved.** Untested candidates, best first: **`Novo Ads`** (two words, forcing the break the hiatus lost), `NO-vo-ADS`, `Nóvoads`. Pick one, QA the render, and write the verdict into `MASTER_CONTEXT.md`.
+- **It lands as two words** — "Novo ads", not "Novoads". That matches what `sora-2` produced unaided and a listener will recognise it, but it is not a perfect single-token rendering.
+- **It fixes pronunciation and nothing else.** Leading silence went 3.71s → 3.16s, i.e. unchanged. The dead-air problem is a duration problem; see *Script length → duration*.
+- **Seedance re-cast the actor between the two renders**, so the A/B held the prompt constant, not the performer. Some part of the delta could be voice-casting luck. Enough to act on, not enough to call proven.
+
+**Verify it in the render.** The rule is a prompt fix with a measured result, not a guarantee — the video QA step in §7 is what tells you the name actually came out right this time.
 
 ### Gate 2 — the cost estimate (MANDATORY)
 
@@ -151,7 +183,7 @@ curl -sS -X POST https://api.novoads.ai/v1/estimates \
   -d '{"kind":"video","model":"seedance-2.0","durationSeconds":12,"language":"en","prompt":"..."}'
 ```
 
-**Pass `model` explicitly.** It defaults to `seedance-2.0`, the schedules differ by 2x across the video set and by more than 3x across the image set, and the per-model prompt ceiling is enforced against whichever model you name. Pricing the wrong model is a quote that disagrees with the invoice.
+**Pass `model` explicitly.** It defaults to `seedance-2.0`, the schedules differ by roughly 5x across the video set and by more than 3x across the image set, and the per-model prompt ceiling is enforced against whichever model you name. Pricing the wrong model is a quote that disagrees with the invoice.
 
 It runs the same access checks and the same structural validation the paid call runs, which is why it is worth calling every time and not only when you are unsure:
 
@@ -174,13 +206,16 @@ Show `credits`, the count, the total, and `balance`. Get a yes. Then generate.
 
 **Infer, and state what you inferred rather than asking:**
 
-- **`aspectRatio`: default `9:16`** for anything headed to Reels, TikTok, Stories, or a vertical feed. Seedance defaults to `16:9`, and a landscape ad is a wasted render; `omni-flash` already defaults to `9:16`, and images default to `1:1`. Go landscape only when the user asks. Seedance also accepts `1:1`, `4:3`, `3:4`, and `21:9`.
+- **`aspectRatio`: default `9:16`** for anything headed to Reels, TikTok, Stories, or a vertical feed. Seedance defaults to `16:9`, and a landscape ad is a wasted render; `omni-flash`, `sora-2` and `veo-3.1` already default to `9:16`, and images default to `1:1`. Go landscape only when the user asks. Seedance also accepts `1:1`, `4:3`, `3:4`, and `21:9`; `omni-flash`, `sora-2` and `veo-3.1` accept only the two.
 - **`language`**: the language the script is written in. Set it, and show it in the dialogue gate. Write the prompt in that language too — nothing on the API pushes back on a Spanish or Portuguese prompt, and the estimate's advice covers those patterns as well, with the fix quoted in the prompt's own language.
-- **`durationSeconds`**: from the word count, below. No model defaults to its maximum — Seedance defaults to 5 and `omni-flash` to 8 — so always send it.
+- **`durationSeconds`**: from the word count, below. Only `veo-3.1` defaults to its maximum — Seedance defaults to 5, `omni-flash` to 8, `sora-2` to 4 — so always send it.
+- **`audioEnabled`**: leave it alone on anything with a spoken line. It exists on `seedance-2.0` and `seedance-2.0-mini` only, defaults `true`, and the one time to send it is `false`, on a clip that is meant to be silent — see below.
 
 ## Script length → duration
 
 Count the words in the spoken line and round **up**. A dense product script runs about **2.5 to 3 spoken words per second**; a calmer lifestyle line runs closer to 1.5, and that slack is what leaves room for a silent beat. Plan on 2.5 and give the line air.
+
+**These tables are speech time. Seedance needs a silence budget on top of them.**
 
 ### `seedance-2.0` and `seedance-2.0-mini` — any integer 4 to 15
 
@@ -192,7 +227,15 @@ Count the words in the spoken line and round **up**. A dense product script runs
 | 26–35 words | 13–15s |
 | **36+ words** | **Too long** — offer to split |
 
-For no-dialogue styles (product hero, premium reveal), default to **15s**.
+**Seedance front-loads dead air, so budget `duration ≈ speech + 4s` as a FLOOR.** Measured across four `seedance-2.0` renders: the leading silence before the first spoken word ran **3.2–3.7s in `en`** and **5.2s in `es`** (2026-08-02/03). It is consistent enough to plan around and it is **not a fixed number** — the `es` render spent 40% of a 13s ad in silence. The eye-contact-break beat (`looks just off-lens, comes back to camera`) is what the model spends it on.
+
+So when the line is tight, do the arithmetic rather than reading the table alone: **`words ÷ 2.5`, plus 4, rounded up into the grid.** The table is the shortcut; this is the check. If the result runs past 15s, the fix is a shorter line or a split, not a longer clip.
+
+**Round up generously outside `en`.** The `es` render fit only because rounding up took 12.4s to 13s, and the line finished at 12.88s of 13.07s — a fifth of a second of margin. `+4` is the floor, not the answer, and the only thing that tells you what you actually got is the QA step in §7.
+
+If the hook has to land in the first second, drop the eye-contact-break beat from the prompt — that is the beat being paid for. `sora-2` measured **no leading silence at all** on the same prompt, so it is the other way out.
+
+For no-dialogue styles (product hero, premium reveal), default to **15s**. The silence budget does not apply: there is no speech to delay.
 
 ### `omni-flash` — enum 4, 6, 8, 10
 
@@ -204,7 +247,29 @@ For no-dialogue styles (product hero, premium reveal), default to **15s**.
 | 21–25 words | 10s |
 | **26+ words** | **Too long** — split, or move to Seedance |
 
-There is no `resolution` field on this API. 720p is what you get.
+### `sora-2` — enum 4, 8, 12
+
+| Script length | Duration |
+|---|---|
+| 1–10 words | 4s |
+| 11–20 words | 8s |
+| 21–30 words | 12s |
+| **31+ words** | **Too long** — split, or move to Seedance |
+
+No silence budget: the one measured render spoke continuously from the first frame. The grid is coarse — there is no 6s and no 10s — so a line that lands between two rungs goes **up**, never down.
+
+### `veo-3.1` — enum 4, 6, 8
+
+| Script length | Duration |
+|---|---|
+| 1–10 words | 4s |
+| 11–15 words | 6s |
+| 16–20 words | 8s |
+| **21+ words** | **Too long** — 8s is this model's ceiling. Split, or move to Seedance |
+
+Unmeasured here, so these are the 2.5-words-per-second arithmetic and nothing more. Budget no silence and promise no wait until someone has timed one.
+
+There is no `resolution` field on any variant, and the spec publishes no output size. Measured at `9:16`: `seedance-2.0` and `sora-2` both came back **720x1280** (2026-08-02). `omni-flash` and `veo-3.1` are unmeasured — do not quote a number for them.
 
 ### Splitting a long script
 
@@ -245,7 +310,9 @@ Both headers are signed into the URL. `image/jpeg; charset=utf-8` is a 403, and 
 
 **Upload once, reuse it forever.** The `assetId` is durable and reusable across calls and across models, which is what makes prototyping on `seedance-2.0-mini` and finalizing on `seedance-2.0` cheap. The presigned *upload URL* expires in 900 seconds; the `assetId` does not.
 
-**Start frame or references — not both.** `startImageAssetId` animates one image as the first frame. `referenceAssetIds` (Seedance only, up to **9**, images only) composites the images as visual references, addressed positionally in the prompt text as `@Image1`…`@ImageN` in the order you send them. They select different modes on the model, so a body carrying both is a `400`, and `omni-flash` takes no references at all.
+**Start frame or references — not both.** `startImageAssetId` animates one image as the first frame. `referenceAssetIds` (Seedance only, up to **9**, images only) composites the images as visual references, addressed positionally in the prompt text as `@Image1`…`@ImageN` in the order you send them. They select different modes on the model, so a body carrying both is a `400`.
+
+**Only the two Seedance variants take `referenceAssetIds` at all.** `omni-flash`, `sora-2` and `veo-3.1` have no such field and their bodies are strict, so sending it is a `400`. All five take `startImageAssetId`. If a workflow needs several photos composited — the actor *and* the product — Seedance is the only route to it.
 
 ### 2. Price it (gate 2)
 
@@ -274,7 +341,17 @@ curl -sS -X POST https://api.novoads.ai/v1/videos \
 
 Returns `202` with `jobId`, `status`, `creditsCharged`, and `model`. **No `warnings`** — the job responses carry none. The craft advice was on the estimate, and this call ran no prompt rules at all.
 
-**Set `aspectRatio` explicitly.** Seedance defaults to `16:9` and an ad that ships landscape is a wasted render. **Set `durationSeconds` explicitly** too: Seedance defaults to 5, `omni-flash` to 8, and neither is the maximum.
+**Set `aspectRatio` explicitly.** Seedance defaults to `16:9` and an ad that ships landscape is a wasted render. **Set `durationSeconds` explicitly** too: Seedance defaults to 5, `omni-flash` to 8, `sora-2` to 4, `veo-3.1` to 8.
+
+### `audioEnabled` — the one field that only belongs on a silent clip
+
+`audioEnabled` is a boolean on **`seedance-2.0` and `seedance-2.0-mini` only**. It defaults to `true`, so omitting it renders exactly what this endpoint rendered before the field existed. `omni-flash`, `sora-2` and `veo-3.1` have no such property and their bodies are strict, so sending it to one of them is a `400`, not a field quietly dropped on the way to a paid render.
+
+**Send `audioEnabled: false` when the clip is meant to be silent** — a pixar or claymation beat that gets its voice-over laid in post, a product cutaway built to run muted. Otherwise the model generates a voice track and sound effects that get thrown away, or worse, an invented narrator over a film that was supposed to be wordless.
+
+**It does not change the price**, which is why `POST /v1/estimates` does not take the field — sending it there is a `400` on an otherwise valid estimate body.
+
+**Keep the silence sentence in the prompt as well.** The prose clause (`a silent product film with no spoken dialogue`) and the flag are belt and suspenders and do different jobs: the flag mutes the render, the clause stops the model from *staging* a talking shot in the first place and clears `no_spoken_line` on the estimate, which is otherwise the wrong signal on a style that has no dialogue on purpose. Dropping the clause because you set the flag trades a composition fix for a mute button.
 
 For N variations, fire the identical payload N times. **Five generations per organization may be in flight at once** — fire at most five, then start the next as each one reaches a terminal state. A sixth submission comes back `429` with `error.details.reason` of `concurrency_limit`, which is a different problem from a rate limit and takes a different response: wait for a slot, do not lengthen the backoff.
 
@@ -293,10 +370,14 @@ curl -sS https://api.novoads.ai/v1/generations/$JOB_ID \
 
 **Poll every 15 seconds.** Not 5: five concurrent jobs at a 5-second interval is 60 calls a minute, exactly the per-key rate limit, with no headroom left for the calls that do real work.
 
-Tell the user the wait up front, per model, so they do not think it hung:
+Tell the user the wait up front, per model, so they do not think it hung — and quote it as a range, never as a promise:
 
-- `seedance-2.0`: usually **3 to 8 minutes**, most often around 5.
-- `seedance-2.0-mini`: usually **2 to 3 minutes**.
+- `seedance-2.0`: fleet range **3 to 8 minutes**, median around 5. **Observed here: ~171s, ~171s, ~154s** on three renders (2026-08-02/03).
+- `seedance-2.0-mini`: fleet range **2 to 3 minutes**.
+- `sora-2`: no fleet range published. **Observed here: ~123s** (2026-08-02, n=1).
+- `omni-flash`, `veo-3.1`: nothing measured and nothing published. Say the wait is unknown rather than borrowing Seedance's.
+
+**Do not promise five minutes.** The two renders anyone here has actually timed both came back under three, and a user told "about five" who gets it in two is fine, while a user told "about five" who waits nine has been misled. Give the range, name the model, and say the numbers are ranges.
 
 When `status` is `succeeded`, `outputUrl` is a presigned download URL valid for `outputUrlExpiresInSeconds` (3600). Read the job again for a fresh one rather than storing it. Update that job's log line with the terminal status, `creditsCharged`, and the elapsed time.
 
@@ -313,11 +394,69 @@ Save under **`outputs/<descriptive-subfolder>/`** — `outputs/seedance-ugc-cera
 
 Present multiple variations as a numbered list. If a job came back `failed` or `blocked`, say which, and quote the `error` the job carries.
 
+### 7. Video QA (mandatory)
+
+**Run this on every video before you hand it over.** It costs no credits and takes seconds. A video can be technically `succeeded` and still be undeliverable in ways that no frame and no waveform will show you: the brand name spoken as a different word, a third of the clip spent in silence before the hook, captions burned in, a silent track on an ad that was supposed to talk. Watching it back is not enough either — you will hear what you expect to hear, because you wrote the line.
+
+**The failure this catches is real and it is the expensive one.** On 2026-08-02 a `seedance-2.0` render spoke the approved 17-word line verbatim and pronounced "Novoads" as **"Nuvenov's"**. Every frame looked perfect. Only the transcript caught it.
+
+#### 1. Container, stream and duration
+
+```bash
+ffprobe -v error -show_entries format=duration -show_entries stream=codec_type,width,height \
+  -of default=noprint_wrappers=1 ad.mp4
+```
+
+Check: the duration is the one you paid for, `width`/`height` match the `aspectRatio` you sent (`9:16` comes back 720x1280), and there is an `codec_type=audio` stream at all. **No audio stream on a clip with dialogue means the render is dead** — that is not a QA note, that is a re-render.
+
+#### 2. Levels and silence
+
+```bash
+ffmpeg -i ad.mp4 -map 0:a -af volumedetect -f null -
+ffmpeg -i ad.mp4 -map 0:a -af silencedetect=noise=-35dB:d=0.3 -f null -
+```
+
+> **Do NOT add `-v error` to these two.** Both filters print their findings at ffmpeg's `info` level, so `-v error` suppresses the entire result and the command exits `0` having told you nothing. It looks exactly like a clean pass. This is the single easiest way to run video QA and learn nothing from it — verified 2026-08-02: with `-v error` the silencedetect call printed no output at all on a clip carrying 3.7s of leading silence.
+>
+> `ffprobe` in step 1 is the opposite case: `-v error` there is correct, because `-show_entries` writes to stdout.
+
+Check `mean_volume` is not near-silent (the four renders measured here came back −19 to −25 dB), and read the **first `silence_end`** — that is when the first word actually lands. Compare it against the silence budget in *Script length → duration*: on Seedance expect **3–4s in `en`, and up to ~5s outside it**; much more than that on a short ad means the hook is gone.
+
+#### 3. Transcribe — the only check that hears the brand name
+
+```bash
+ffmpeg -y -v error -i ad.mp4 -ar 16000 -ac 1 -c:a pcm_s16le /tmp/ad-qa.wav
+```
+
+Then transcribe `/tmp/ad-qa.wav` with whichever Whisper the machine has — the same one `analyze-video` and `clone-ad` use:
+
+```bash
+whisper /tmp/ad-qa.wav --model base --output_format txt --output_dir /tmp   # openai-whisper
+whisper-cli -m <path/to/ggml-medium.bin> -f /tmp/ad-qa.wav -l en --no-prints  # whisper-cpp
+```
+
+Read the transcript against the line the user approved at gate 1, and check three things:
+
+- **The brand name came out as the brand name.** This is the whole reason the step exists. If it did not, the fix is the phonetic spelling in gate 1 — not a re-roll of the same prompt.
+- **The words are the approved words.** A dropped or invented clause means the render does not match what was signed off.
+- **`language` matches** what was rendered.
+
+#### What to do when QA fails
+
+Say which check failed and show the evidence — the transcript line, the silence figure, the missing stream. Then:
+
+- **A mispronounced invented brand name** → re-render with the phonetic spelling (gate 1). This is a prompt fix with a validated result on `seedance-2.0`, not a gamble.
+- **Leading silence eating the hook** → re-render shorter, or drop the eye-contact-break beat, or move to `sora-2`, which measured none.
+- **No audio stream, or a silent track on a talking ad** → re-render. Nothing in the prompt fixes a dead track.
+- **Burned-in captions** → the clean-plate clause is missing from the prompt. Add it and re-render.
+
+**Every re-render is a new charge**, and unlike image QA there is no automatic-retry allowance here: a video re-render goes back through gate 2. Show the QA finding, show a fresh estimate, and get a yes.
+
 ## Images are synchronous
 
 `POST /v1/images` returns the finished images in the response body. **There is nothing to poll and no `/watch` step.** The response carries `images[]` with `url`, `expiresInSeconds`, `width`, and `height`, plus `jobId`, `status`, `model`, and `creditsCharged`. No `warnings`, and no prompt rules ran here either — price the prompt at `/v1/estimates` first if you want the advice.
 
-- `referenceAssetIds`: up to **4** on the image models, images only, order preserved and addressable positionally by the prompt. Upload each one first — there is no base64 field.
+- `referenceAssetIds`: images only, order preserved and addressable positionally by the prompt. Upload each one first — there is no base64 field. **The cap is per model, not one number:** `reve-2.1` takes up to **8**, `gpt-image-2` and `nano-banana-pro` up to **4**. The bodies are strict, so a fifth reference to `gpt-image-2` is a `400`, not a silently dropped image — which is the good outcome, because a dropped reference is a paid render missing the product.
 - `numImages`: 1 to 4, and it multiplies the price.
 - Images take **no `startImageAssetId`**: there is no first-frame concept on a still.
 
@@ -384,6 +523,12 @@ Append one line per new failure. Forward only. Every bullet is a real thing that
 - Never send `styleFamily`. The field no longer exists on this API and any body carrying it is a 400.
 - Never fire more than five generations at once, and poll at 15 seconds, not 5.
 - A QA retry still costs credits. Cap at 2, and report the extras.
+- **Never hand over a video you have not QA'd.** §7 is free and it is the only thing that hears the brand name. A render that looks perfect frame by frame can still say the wrong word.
+- **Never put `-v error` on the `volumedetect` or `silencedetect` calls.** It suppresses the results and the check reports nothing while looking like it passed.
+- Spell invented brand names phonetically inside the quoted line, and re-run gate 1 when you do — the words changed.
+- `audioEnabled` exists on the two Seedance variants only. Sending it to `omni-flash`, `sora-2` or `veo-3.1` is a 400, and sending it to `/v1/estimates` is a 400 on any model.
+- Image `referenceAssetIds` caps are per model: 8 on `reve-2.1`, 4 on `gpt-image-2` and `nano-banana-pro`. There is no single number.
+- Sora 2 and Veo 3.1 **are** on this API. Only Kling is not.
 - Real brands only in prompts. Do not substitute a blank bottle for a product the user has not given you — the API will happily render it and charge for it, and `blank_label` on the estimate is the only thing that will tell you. Ask for the photo.
 
 ## References
@@ -393,5 +538,6 @@ Append one line per new failure. Forward only. Every bullet is a real thing that
 - [prompting/guide.md](prompting/guide.md) — marketing brief → API.
 - [prompting/brand-voice-starter.md](prompting/brand-voice-starter.md) — template to copy into `MASTER_CONTEXT.md`.
 - The other Seedance formulas: [seedance-2.md](prompting/prompt-library/seedance-2.md) (platform guide), [premium reveal](prompting/prompt-library/seedance-2-premium-reveal.md), [product hero](prompting/prompt-library/seedance-2-product-hero.md), [studio lookbook](prompting/prompt-library/seedance-2-studio-lookbook.md), [feature walkthrough](prompting/prompt-library/seedance-2-feature-walkthrough.md).
+- The other video models: [sora-2.md](prompting/prompt-library/sora-2.md), [veo-3-1.md](prompting/prompt-library/veo-3-1.md). [kling-3.md](prompting/prompt-library/kling-3.md) is prompt craft only — Kling is not on this API.
 - Image and character craft: [ugc-selfie-style.md](prompting/prompt-library/ugc-selfie-style.md), [ugc-product-selfie.md](prompting/prompt-library/ugc-product-selfie.md), [product-showcase.md](prompting/prompt-library/product-showcase.md), [influencer-recreation.md](prompting/prompt-library/influencer-recreation.md), [character-sheet.md](prompting/prompt-library/character-sheet.md), [character-sheet-gpt-image-2.md](prompting/prompt-library/character-sheet-gpt-image-2.md), [nano-banana.md](prompting/prompt-library/nano-banana.md).
 - <https://api.novoads.ai/v1/openapi.json> — the spec itself, which is the authority when this file and it disagree.

@@ -25,15 +25,17 @@ Only `model` and `prompt` are required. The body is **strict** — any key not i
 
 References are **images only** (`image/jpeg`, `image/png`, `image/webp`), even though `POST /v1/uploads` also accepts video. Ten references is `referenceAssetIds: Too big: expected array to have <=9 items`. `omni-flash` has no `referenceAssetIds` field at all — offering references on that route is `Unrecognized key`.
 
-**There is no `resolution` field.** 720p is what you get.
+**There is no `resolution` field**, and the spec publishes no output size. Seedance measured 720x1280 at `9:16` (2026-08-02); do not carry that number to other models.
 
 ### Fields this model does not have
 
 Every one of these comes back `400 (root): Unrecognized keys: …` — verified live, 2026-08-02, in one request each:
 
-`duration` (it is `durationSeconds`) · `resolution` · `referenceImages` (it is `referenceAssetIds`) · `referenceVideos` · `referenceAudios` · `audioEnabled` · `startFrame` / `endFrame` (it is `startImageAssetId`) · `nbGenerations` · `projectId` (the API has products, not projects).
+`duration` (it is `durationSeconds`) · `resolution` · `referenceImages` (it is `referenceAssetIds`) · `referenceVideos` · `referenceAudios` · `startFrame` / `endFrame` (it is `startImageAssetId`) · `nbGenerations` · `projectId` (the API has products, not projects).
 
-Audio is not a switch here. Seedance renders the dialogue and the lip-sync from the prompt itself, in the same call, at no extra cost — which is why the spoken line has its own approval gate in `SKILL.md` before anything is submitted.
+**`audioEnabled` is the one exception, and it is a mute switch, not an audio track.** It arrived in spec `2.2.0` on `seedance-2.0` and `seedance-2.0-mini` only — the other three video models still `400` on it, and so does `POST /v1/estimates` for every model, because it does not move the price. It defaults to `true`. Send `false` for a clip that is meant to be silent (a pipeline laying its own VO in post, a cutaway built to run muted); otherwise leave it alone.
+
+What it does **not** give you is control over the audio. Seedance still renders the dialogue and the lip-sync from the prompt itself, in the same call, at no extra cost — which is why the spoken line has its own approval gate in `SKILL.md` before anything is submitted. The flag decides whether that track exists, not what is in it.
 
 ### `@Image1` reference mapping
 
@@ -204,7 +206,7 @@ Pick the formula that matches the goal, then read its file before composing:
 
 If none fits, compose a custom prompt directly from the platform rules above, following Subject + Action + Camera + Style + Constraints.
 
-Two neighbours worth knowing about: `ugc-selfie-style.md` in this folder is a **cross-model** UGC guide whose formulas target Sora 2, Veo 3.1 and Kling 3.0 — none of which exists on this API — so it is parked and its API instructions do not apply here; use [seedance-2-ugc.md](seedance-2-ugc.md) instead. And `omni-flash` is the other video model on this API: narrower grids, no references, but a 20,000-character prompt ceiling. Its guide is `shared/skills/gemini-omni-flash/prompting/guide.md`.
+Neighbours worth knowing about: [ugc-selfie-style.md](ugc-selfie-style.md) in this folder is a **cross-model** UGC guide whose formulas target Veo 3.1, Sora 2 and Kling 3.0. Two of those are now live — see [veo-3-1.md](veo-3-1.md) and [sora-2.md](sora-2.md) — but Kling is not, and neither Veo nor Sora takes `referenceAssetIds`, so for Seedance UGC use [seedance-2-ugc.md](seedance-2-ugc.md) rather than porting a cross-model formula across. The other video model here is `omni-flash`: narrower grids, no references, but a 20,000-character prompt ceiling, guide at `shared/skills/gemini-omni-flash/prompting/guide.md`.
 
 ## Adaptation checklist (all styles)
 

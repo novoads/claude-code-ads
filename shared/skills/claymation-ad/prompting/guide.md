@@ -132,7 +132,7 @@ Same reasoning as Pixar — animates each approved still while preserving the re
 ### Aspect ratio defaults
 
 - **Aspect ratio:** `9:16` for TikTok/Reels/Shorts, on both stills and clips. **Send it explicitly on every call** — Seedance defaults to `16:9` and `gpt-image-2` to `1:1`. Both models have `9:16` on their grid, which is what keeps the start frame from being letterboxed into the clip.
-- **There is no `resolution` field.** 720p is fixed on video; there is no 480p draft tier. The cheap-draft lever is the **model** — `seedance-2.0-mini` is half price on the same duration grid. An 8–12 beat claymation ad is the longest pipeline in this repo, so blocking out beat timing on mini before committing is worth real money here.
+- **There is no `resolution` field**, and no 480p draft tier — the spec publishes no output size at all, and Seedance measured 720x1280 at `9:16` (2026-08-02). The cheap-draft lever is the **model** — `seedance-2.0-mini` is half price on the same duration grid. An 8–12 beat claymation ad is the longest pipeline in this repo, so blocking out beat timing on mini before committing is worth real money here.
 - **`nano-banana-pro` has the wider ratio grid** (it adds `3:2 3:4 4:3 5:4` over `gpt-image-2`'s `1:1 4:5 2:3 9:16 16:9 21:9`). At 9:16 the choice between them is about texture versus identity continuity, not about ratios.
 
 ## Narration & dialogue
@@ -141,7 +141,11 @@ Same reasoning as Pixar — animates each approved still while preserving the re
 
 ### Audio pipeline (do this, not in-prompt narrator)
 
-1. **Seedance prompt** — keep ambient SFX language (room tone, distant birdsong, hose hiss, zap clicks) but **omit the `Narrator:` line entirely**. There is no `audioEnabled` field on this API: Seedance renders audio and lip-sync in the same call and the *prompt* is the only control over it. Saying nothing about a narrator is what keeps a stray VO out of the render — and if one appears anyway, strip it in post with `-an` rather than paying for a re-render.
+1. **Seedance call — send `"audioEnabled": false`, and still omit the `Narrator:` line.** The field exists on `seedance-2.0` and `seedance-2.0-mini` (default `true`) and renders the clip silent. That is what this pipeline wants: step 4 muxes the ElevenLabs VO in and **replaces the clip's audio outright**, so any speech or SFX Seedance generates is paid for and then discarded. It costs the same either way — `audioEnabled` does not move the price, which is why `POST /v1/estimates` refuses the field — but a silent render cannot surprise you with an invented narrator, which is the failure the old `-an` advice was cleaning up after.
+
+   **Keep the `Narrator:` line out anyway, and keep the ambient SFX language in.** Belt and suspenders: the flag mutes the render, while the absence of a narrator line stops the model *staging* a talking shot, and the SFX words still steer the action ("hose hiss" implies a hose actually running) even though they no longer produce a track. If a beat genuinely needs Seedance's own audio, set `audioEnabled: true` for that call and mix it yourself.
+
+   **The trim step below is unaffected.** `-c:a copy` on a silent input is a no-op, not an error — verified, exit 0, video-only output.
 2. **ElevenLabs TTS per beat** — one MP3 per beat using a single consistent `voice_id` across the whole ad. POST `https://api.elevenlabs.io/v1/text-to-speech/{voice_id}`, header `xi-api-key: $ELEVENLABS_API_KEY`, body `{"text": "...", "model_id": "eleven_multilingual_v2", "voice_settings": {"stability": 0.45, "similarity_boost": 0.75, "style": 0.35, "use_speaker_boost": true}}`.
 3. **Trim each clip to match its VO duration — no dead space.** See "No dead space" rule below. After ElevenLabs returns the MP3, `ffprobe` its duration and trim the matching clip to `lead (0.25s) + vo_dur + tail (0.25s)` before muxing. Don't let the clip ride silent after the VO ends.
 4. **Pad each VO mp3** with the 0.25s lead-in and tiny trailing buffer so the audio aligns inside the trimmed clip, then mux (`-c:v copy` on the trimmed video, `-c:a copy` on the padded VO).

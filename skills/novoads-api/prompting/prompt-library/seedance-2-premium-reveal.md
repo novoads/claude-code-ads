@@ -253,7 +253,24 @@ Each clip stands alone as a 15-second ad; together they tell a launch story. Thr
 ### Frame
 - **`aspectRatio: "9:16"`** for social — product centered with generous black space above and below. The API default is `16:9`, so set it, and restate it at the end of the prompt text as `Vertical 9:16.`
 - Text must be readable on mobile — large, bold, high-contrast
-- There is no `resolution` field; 720p is fixed
+- There is no `resolution` field; the spec publishes no output size, and Seedance measured 720x1280 at `9:16`
+
+---
+
+### Audio: send `audioEnabled: false`, and keep saying it in the prose
+
+This style has no dialogue, so **send `"audioEnabled": false` on the generation call.** The field is live on `seedance-2.0` and `seedance-2.0-mini` (default `true`) and renders the clip silent. Without it you are paying for a speech track on a film that has nobody in it — and worse, Seedance can invent a narrator over a product reveal that was never meant to have one.
+
+**It does not change the price**, which is why `POST /v1/estimates` refuses the field. Price the render without it, generate with it.
+
+**Do not drop the prose silence clause when you set the flag — keep both.** They do different jobs:
+
+| | What it does |
+|---|---|
+| `audioEnabled: false` | Mutes the render. A guarantee, at the field level |
+| `a silent product film with no spoken dialogue` in the prompt | Stops the model *staging* a talking shot in the first place, and clears `no_spoken_line` on the estimate — which is otherwise the wrong signal on a style that has no dialogue on purpose |
+
+The flag cannot un-stage a shot the prompt asked for. If the render carries music or SFX you *want*, leave `audioEnabled` at its default and mute in post instead.
 
 ---
 
@@ -370,6 +387,7 @@ No dialogue gate applies to this style — there is nothing spoken to approve. T
 - [ ] **Product is the only subject** — real brand, named, described in full (label, colors, material, shape)
 - [ ] **Label hold clause present** — this is the style where printed text matters most
 - [ ] **Silence stated** — `a silent product film with no spoken dialogue`
+- [ ] **`audioEnabled: false` sent** — the flag as well as the sentence; the default is `true`
 - [ ] **Max 3 text lines** — each under 8 words, reveal timing specified
 - [ ] **Reveal sequence** — one opening style, 2–3 camera moves, all SLOW, none chained with `then`
 - [ ] **Brand close** — full product name, typography style, final hero angle

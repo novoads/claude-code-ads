@@ -57,6 +57,12 @@ silent b-roll with no spoken dialogue.
 
 The silence clause is not decoration. Seedance renders audio from the prompt, so a product film that never says it is silent can come back with an invented voice over it — and it also clears `no_spoken_line` on the estimate, which is otherwise the wrong signal on a style that has no dialogue on purpose.
 
+**Send `"audioEnabled": false` as well.** The field is live on `seedance-2.0` and `seedance-2.0-mini` and defaults to `true`, so a call that omits it generates a speech track for a film with nobody in it. It does not change the price — `POST /v1/estimates` refuses the field for exactly that reason — so the flag is free insurance.
+
+**Keep both.** The flag mutes the render; the prose clause stops the model staging a talking shot and clears the estimate warning. Neither replaces the other, and the flag cannot un-stage a shot the prompt asked for.
+
+**One caveat specific to this style:** `audioEnabled: false` mutes *everything*, including the foley and the impact SFX that a splash or spark shot renders. If you want Seedance's own sound design and only need the dialogue gone, leave the flag at its default, keep the prose clause, and check the result with the video QA step in `SKILL.md` §7 — the transcript tells you whether a voice crept in.
+
 ---
 
 ### Layer 2: Product
@@ -281,7 +287,7 @@ Nothing is spoken here, so gate 1 does not apply. Gate 2 always does.
 - [ ] **3–4 shots that escalate** — macro → interaction → dramatic angle → hero, separated by `Cut to`, never chained with `then`
 - [ ] **Camera movement slow and deliberate**
 - [ ] **Tagline written as prose**, not as a bracketed `Text overlay:` label
-- [ ] **Audio is music + foley, no dialogue**
+- [ ] **Audio is music + foley, no dialogue** — and decide the flag: `audioEnabled: false` for a fully silent master, or leave it default to keep Seedance's foley (see Layer 1)
 - [ ] **Length** — around 330 words for this 4-shot shape; every shot specified, nothing padded
 - [ ] **`@Image1`** — product photo uploaded once, passed in `referenceAssetIds`, never alongside `startImageAssetId`
 - [ ] **No polish words** — no `cinematic`, `8k`, `flawless`, `perfect`, `award-winning`

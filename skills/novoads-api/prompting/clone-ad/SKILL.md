@@ -33,10 +33,10 @@ before you promise anything, all three verified live against the deployed spec `
 | The old shape | Here |
 |---|---|
 | Chain clip 1 → clip 2 → clip 3 as reference **videos**, so each clip inherits the last | **There is no video-to-video path.** `referenceVideos` is `400 (root): Unrecognized key`, and references are images only. What holds a series together is passing the **same image `assetId`s to every clip** plus repeating the actor tag verbatim — see step 5 |
-| `audioEnabled: true` to switch speech on, `false` for a silent clone | **There is no `audioEnabled` field** (`400 Unrecognized key`). Seedance renders the dialogue and the lip-sync from the prompt itself, in the same call, at no extra cost. Silence is something you write in the prose, not a flag you clear |
+| `audioEnabled: true` to switch speech on, `false` for a silent clone | **`audioEnabled` exists here now, on the two Seedance variants only** (added in spec `2.2.0`; `400 Unrecognized key` on `omni-flash`, `veo-3.1` and `sora-2`). It defaults to `true`, so a clone with dialogue needs nothing. Send `false` only for a deliberately silent clone — and **still write the silence into the prose**, because the flag mutes the render while the prose is what stops the model staging a talking shot. It does not change the price, and `POST /v1/estimates` refuses the field |
 | Upload the source audio as `referenceAudios` to clone the voice | **There is no voice cloning on this API** (`400 Unrecognized key`). Describe the voice in the prompt — age, accent, pace, energy — and accept that it is a different person's voice. Do not offer the user a voice match you cannot deliver |
 
-Also gone, in the same probe: `endFrame`, `resolution` (720p is fixed), `projectId` (this
+Also gone, in the same probe: `endFrame`, `resolution` (the spec publishes no output size; Seedance measured 720x1280 at `9:16`), `projectId` (this
 API has products, not projects), `duration` (it is `durationSeconds`) and `referenceImages`
 (it is `referenceAssetIds`).
 
@@ -553,11 +553,12 @@ Full detail in [reference.md](../../reference.md).
 |---|---|
 | `startImageAssetId` **XOR** `referenceAssetIds` | Separate modes on the model. A body with both is a `400` whose message says exactly that. Nothing is charged |
 | `referenceAssetIds` ≤ **9**, images only | Ten is `Too big: expected array to have <=9 items`. A video asset id is refused: references are images |
-| No `referenceVideos`, no `referenceAudios`, no `audioEnabled`, no `endFrame`, no `resolution`, no `projectId` | All `400 Unrecognized key`. Nothing is charged, and no clone workflow can depend on them |
+| No `referenceVideos`, no `referenceAudios`, no `endFrame`, no `resolution`, no `projectId` | All `400 Unrecognized key`. Nothing is charged, and no clone workflow can depend on them |
+| `audioEnabled` — **Seedance only**, optional, default `true` | Send `false` for a silent clone. `400 Unrecognized key` on the three non-Seedance video models, and on `POST /estimates` for every model |
 | `durationSeconds` 4–15, integer | Out-of-grid values are rejected, never rounded. Default is **5** |
 | `aspectRatio` `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | Default is **`16:9`**. Set it, or a vertical clone ships landscape |
 | Prompt ≤ **4,000 characters** on Seedance | Enforced on the estimate too, against whichever `model` you name |
-| Audio is rendered from the prompt | The spoken line is lip-synced in this same call at no extra cost, which is why gate 1 exists |
+| Audio is rendered from the prompt | The spoken line is lip-synced in this same call at no extra cost, which is why gate 1 exists. `audioEnabled: false` mutes the render; it does not give you a separate audio track to direct |
 | Prompt rules block nothing | They run on `POST /v1/estimates` only, as advisory `warnings`. The generation endpoints run none — a weak prompt renders and bills |
 | Moderation is `422 content_policy` | The only refusal of a prompt for what it says, and the estimate skips it, so a clean quote can still be blocked. **Nothing is charged** |
 | Five generations in flight per organization | A sixth is `429` with `details.reason: concurrency_limit`. Wait for a slot; backing off harder does nothing |

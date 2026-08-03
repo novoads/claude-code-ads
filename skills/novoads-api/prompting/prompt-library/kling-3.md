@@ -1,9 +1,12 @@
 # Kling 3.0 — prompt craft (PARKED)
 
-> **PARKED — Kling 3.0 is not on this API.** There is no Kling route here, and no b-roll or
-> scene endpoint either. Nothing in this file is callable today; it is kept **unconverted**,
-> as prompt craft only, until the model ships (plan: Track B P3). At that point it earns a
-> real decision-tree row and a body section written against the live spec.
+> **PARKED — Kling 3.0 is not on this API, and there is no plan for it to be.** There is no
+> Kling route here, and no b-roll or scene endpoint either. **This is the last parked library:**
+> `veo-3.1` and `sora-2` shipped with spec `2.1.0` and are live, but Kling did not ship with them
+> and is not queued behind them — the provider path we would call is canvas-only and does not
+> return a stored asset, so there is nothing to build a `POST /v1/videos` variant on.
+> This file is kept as **prompt craft only**. Its physics-first phrasing transfers usefully to
+> Seedance; its formula has nothing to call.
 > Any route, DTO or field named below belongs to the **upstream fork's API, not this one** —
 > do not send them to `api.novoads.ai`. For what you can generate today, use the decision
 > tree in [SKILL.md](../../SKILL.md).
