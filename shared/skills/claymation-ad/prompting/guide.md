@@ -28,7 +28,7 @@ Anchor every prompt on these traits:
 **Do NOT use these words** (they pull away from the claymation look):
 `Pixar`, `3D rendered`, `digital`, `CGI`, `anime`, `cel-shaded`, `2D`, `painted illustration`, `realistic photo`, `live action`, `photorealistic`, `smooth render`, `subsurface scattering`, `ray-traced`.
 
-Also drop the polish words — `cinematic`, `8k`, `flawless`, `award-winning`, `professional`, `stunning`, `perfect` — and substitute "stop-motion claymation film aesthetic", "polished hand-sculpted", "high fidelity", "evenly hand-painted". **Nothing on the API rejects them.** `POST /v1/estimates` returns a `banned_polish` entry in `warnings` when it sees one, and that warning is advisory: the generation endpoints run no prompt rules at all, so a prompt full of them is charged and rendered exactly as written. The reason to strip them is the render, not the response — and on this route especially, since every one of those words pulls toward the smooth digital finish the whole aesthetic is fighting.
+Also drop the forbidden words — `cinematic`, `professional`, `stunning`, `8k`, `studio`, `perfect` — and substitute "stop-motion claymation film aesthetic", "polished hand-sculpted", "high fidelity", "evenly hand-painted". **Nothing on the API rejects them, and nothing reports them.** No endpoint reads a prompt for craft, so a prompt full of them is charged and rendered exactly as written. The reason to strip them is the render — and on this route especially, since every one of those words pulls toward the smooth digital finish the whole aesthetic is fighting.
 
 ## Smooth motion vs stop-motion judder — pick one
 

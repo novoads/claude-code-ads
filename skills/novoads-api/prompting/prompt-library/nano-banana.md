@@ -64,7 +64,7 @@ whatever identity anchor it was holding.
 - [ ] Follow the vendor guide for framing **subject**, **style**, and **constraints**.
 - [ ] State whether the output should be **photoreal**, **illustration**, **product hero**, etc.
 - [ ] Set `aspectRatio` explicitly — never rely on the `1:1` default.
-- [ ] Avoid polish words (`cinematic`, `ultra-detailed`, `hyperrealistic`). They produce the plastic "looks AI" render; describe the light source, the surface, the flaw instead. The free lint on `POST /v1/estimates` names them if they slip through.
+- [ ] Avoid polish words (`cinematic`, `ultra-detailed`, `hyperrealistic`). They produce the plastic "looks AI" render; describe the light source, the surface, the flaw instead. Nothing on the API checks this — the checklist is the check.
 - [ ] Price the run with `POST /v1/estimates` and get an explicit yes before generating.
 - [ ] Run **post-generation QA** (below) before treating the image as final.
 

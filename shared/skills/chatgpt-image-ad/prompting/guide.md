@@ -114,7 +114,7 @@ When writing or completing a prompt, anchor on:
 - **Reference roles** — if `--image-ref` is being used, name each reference's role explicitly in the prompt (e.g. "the product in the first reference image", "the lighting from the second"). Order is preserved, so positional language works. Multi-reference quality improves when each reference is labeled.
 - **Standalone-creative scope** — never describe iOS chrome, Sponsored badges, engagement counts, or platform UI. The script's no-chrome guard catches violations, but write the prompt as if the rule is on you.
 - **gpt-image-2 strengths to lean on** — explicit typography (font weight + size feel), UI proportions ("iOS dialog with rounded corners ~24px"), small-text body content (treat lines as exact strings).
-- **Concrete over polished.** Words like "cinematic", "ultra-detailed" and "hyperrealistic" produce the plastic look this format exists to avoid, and the free linter on `POST /v1/estimates` flags them by name. Describe the real thing instead: the light source, the surface, the flaw.
+- **Concrete over polished.** Words like "cinematic", "ultra-detailed" and "hyperrealistic" produce the plastic look this format exists to avoid. Nothing on the API will catch one — describe the real thing instead: the light source, the surface, the flaw.
 
 Show the rewritten prompt to the user as one block. Tell them which template (if any) it's
 based on. Ask: "Use this, edit it, or start over?" Loop until approved.
@@ -125,9 +125,9 @@ based on. Ask: "Use this, edit it, or start over?" Loop until approved.
 Free. Show the user `credits` and whether it fits their `balance`, and wait for an explicit yes.
 
 This is the **only** legitimate source of a price — not memory, not the logs, not
-`MASTER_CONTEXT.md`. The same call lints the prompt and returns findings in `warnings`
-(`{rule, message}` each). Post-2.0.0 those are advice and never block, but each one names its
-own fix. A clean prompt has no `warnings` key at all.
+`MASTER_CONTEXT.md`. It says nothing about the prompt: no endpoint on this API reads one for
+quality, so the rewrite rules in Phase 3 are the only check there is. Apply them before you
+price, not after.
 
 Price the **assembled** prompt including the safety suffixes, and remember the estimate body is
 strict — it takes only `kind`, `prompt`, `model`, `numImages`, `language`. It never sees

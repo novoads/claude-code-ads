@@ -56,7 +56,7 @@ A {age}-year-old {gender} influencer with {hair color} {hair texture} {hair leng
 - Do NOT use celebrity names or real people's names
 - Keep clothing simple and neutral — the character sheet is about the person, not the outfit
 - Always include texture cues: "visible skin texture," "individual hair strands catching light"
-- Avoid polish words like "cinematic", "ultra-detailed", "hyperrealistic". They produce the plastic look this workflow exists to avoid, and the free linter on `POST /v1/estimates` will name them.
+- Avoid polish words like "cinematic", "ultra-detailed", "hyperrealistic". They produce the plastic look this workflow exists to avoid. Nothing on the API will catch one — describe the light source, the surface, the flaw instead.
 
 ## Step 2: Present the expanded prompt for approval
 
@@ -80,8 +80,9 @@ Multiply by 10 and present the total against the user's `balance`. Get one expli
 the run. The estimate is free and is the **only** legitimate source of a price — never quote
 credits from memory, from `logs/novoads-api.jsonl`, or from `MASTER_CONTEXT.md`.
 
-The same call lints the prompt for free; findings land in `warnings` as `{rule, message}`. They
-never block, but this prompt gets reused ten times, so fixing what they name pays off tenfold.
+The call says nothing about the prompt itself — no endpoint here does. Re-read the base prompt
+against the rules above before approving: it gets reused ten times, so a flaw in it is paid for
+ten times over.
 
 ## Step 4: Generate the hero image (full body front)
 

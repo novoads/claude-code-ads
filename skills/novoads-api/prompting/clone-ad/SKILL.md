@@ -290,10 +290,10 @@ for a polished voiceover source. Then:
   unchanged and fully legible*.
 - **One primary action per shot**, two or three comma-joined cues on it. `then` /
   `and then` / `followed by` renders as a smear — split it into two shots.
-- **No polish words:** `cinematic`, `flawless`, `perfect`, `8k`, `4k`, `hyper-detailed`,
-  `beauty lighting`, `ultra-realistic`, `masterpiece`, `award-winning`, and their Spanish
-  and Portuguese equivalents. `studio` and `professional` are **not** on that list — they
-  cost you the phone-filmed look on a UGC clone and are the right words on a lookbook clone.
+- **No forbidden words:** `cinematic`, `professional`, `stunning`, `8k`, `studio`,
+  `perfect`. Nothing on the API rejects or reports them — this is craft advice, and the
+  reason to drop them is the render. Describe the real thing instead: the light source,
+  the surface, the flaw.
 - **Write it in the source's language** if that is what the user wants rendered. Nothing on
   the API pushes back on a Spanish or Portuguese prompt.
 
@@ -337,8 +337,9 @@ There is no audio switch to set. What you decide here:
 1. **`language`** — the language the ad is rendered in, defaulted from what whisper
    detected. State it in the gate above and write the prompt in it.
 2. **Whether the clone speaks at all.** A silent source clones silent, and the prompt has
-   to say so: `silent b-roll, no spoken dialogue`. Quoted on-screen text is not enough to
-   make a render silent, it only satisfies the linter.
+   to say so: `silent b-roll, no spoken dialogue`. Quoting on-screen text in the prompt is
+   not enough — the model reads a quoted string as a line to speak, which is the opposite
+   of what you asked for.
 3. **The voice.** It will not be the source's voice — there is no voice cloning here. If
    voice matters, describe it in the prompt (age, accent, pace, energy) and tell the user
    plainly that it is a soundalike, not a match.
@@ -363,11 +364,9 @@ here.
 
 - **Pass `model` explicitly.** It defaults to `seedance-2.0`, and mini is half the price —
   pricing the wrong tier is a quote that disagrees with the invoice.
-- **This is also the free prompt lint.** Any craft findings come back in `warnings` as
-  `{rule, message}` pairs whose message is the fix written out. **Every one is advisory:**
-  `POST /v1/videos` runs no prompt rules at all, so a prompt tripping five of them is
-  charged, rendered and handed to the provider exactly as written. Read them out anyway —
-  this is the only place they run.
+- **It says nothing about the prompt.** No endpoint here reads a prompt for craft, so a
+  weak clone prices, charges and renders exactly like a good one. The checklist in step 6
+  is the only thing standing between the two.
 - **Price every clip and every variation.** A 3-clip series at 2 variations is 6 charges.
   Show the per-call number, the count, and the total.
 - **Warn when the total exceeds `balance`**, and quote `shortBy` and `topUpUrl` when they
@@ -435,8 +434,8 @@ curl -sS -X POST https://api.novoads.ai/v1/videos \
 
 `startImageAssetId` instead of `referenceAssetIds` when that is the mode. Never both.
 
-- Returns `202` with `jobId`, `status`, `creditsCharged` and `model`. **No `warnings`** —
-  the job responses carry none.
+- Returns `202` with `jobId`, `status`, `creditsCharged` and `model`. No `warnings` on any
+  response, here or on the estimate.
 - **Set `aspectRatio` and `durationSeconds` explicitly.** Seedance defaults to `16:9` and to
   5 seconds, and neither is what a cloned ad wants.
 - **Ask how many variations**, default 1. N variations is the identical payload fired N
@@ -512,7 +511,7 @@ Full detail in [reference.md](../../reference.md).
 | `aspectRatio` `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | Default is **`16:9`**. Set it, or a vertical clone ships landscape |
 | Prompt within the model's cap | Enforced on the estimate too, against whichever `model` you name |
 | Audio is rendered from the prompt | The spoken line is lip-synced in this same call at no extra cost, which is why gate 1 exists. `audioEnabled: false` mutes the render; it does not give you a separate audio track to direct |
-| Prompt rules block nothing | They run on `POST /v1/estimates` only, as advisory `warnings`. The generation endpoints run none — a weak prompt renders and bills |
+| There are no prompt rules | No endpoint reads a prompt for craft, and none returns advice about one. A weak prompt renders and bills exactly like a strong one |
 | Moderation is `422 content_policy` | The only refusal of a prompt for what it says, and the estimate skips it, so a clean quote can still be blocked. **Nothing is charged** |
 | Five generations in flight per organization | A sixth is `429` with `details.reason: concurrency_limit`. Wait for a slot; backing off harder does nothing |
 | No idempotency keys | Which is why a 500 is never blindly retried — see below |

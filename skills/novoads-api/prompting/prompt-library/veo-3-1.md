@@ -53,7 +53,7 @@ curl -sS -X POST https://api.novoads.ai/v1/videos \
 
 - [ ] Scene, action, and **how the shot evolves** over time — first frame → later beats. This is the layer Veo rewards.
 - [ ] **Style** named explicitly if it matters (film stock, documentary, animation).
-- [ ] Camera behavior described concretely, not as "cinematic" — which is a `banned_polish` warning as well as weak direction.
+- [ ] Camera behavior described concretely, not as "cinematic" — a forbidden word as well as weak direction.
 - [ ] Shot size stated as what is in frame, not just a shot-size word.
 - [ ] Spoken line in double quotes, with invented brand names spelled phonetically (gate 1).
 - [ ] **ALWAYS** end with `No on-screen text, no captions, no background music.` — Veo burns subtitles into the video if they are not explicitly excluded. This is a vendor-documented default, not a superstition.

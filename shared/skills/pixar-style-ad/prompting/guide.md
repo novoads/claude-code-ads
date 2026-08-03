@@ -26,7 +26,7 @@ The look is the **Disney-Pixar feature film aesthetic** specifically — not gen
 **Do NOT use these words** (they pull away from the Pixar look):
 `anime`, `Ghibli`, `2D`, `cel-shaded`, `cartoon` (yes — say "Pixar-style 3D animated" instead), `Dreamworks`, `realistic photo`, `live action`, `photorealistic`.
 
-Also drop the polish words — `cinematic`, `8k`, `flawless`, `award-winning`, `professional`, `stunning`, `perfect` — and substitute: "3D animated film aesthetic" for cinematic, "polished" for stunning, "high fidelity" for 8k, "ivory white matte material" for perfect. **Nothing on the API rejects them.** `POST /v1/estimates` returns a `banned_polish` entry in `warnings` when it sees one, and that warning is advisory: the generation endpoints run no prompt rules at all, so a prompt full of them is charged and rendered exactly as written. The reason to strip them is the render, not the response.
+Also drop the forbidden words — `cinematic`, `professional`, `stunning`, `8k`, `studio`, `perfect` — and substitute: "3D animated film aesthetic" for cinematic, "polished" for stunning, "high fidelity" for 8k, "ivory white matte material" for perfect. **Nothing on the API rejects them, and nothing reports them.** No endpoint reads a prompt for craft, so a prompt full of them is charged and rendered exactly as written. The reason to strip them is the render, and this checklist is the only place it will be raised.
 
 ## The 4-beat Pixar ad arc (what makes these ads work)
 
@@ -178,7 +178,7 @@ no extra fingers, no melted features, no morphing between frames, no warped prod
 labels, no on-screen text unless specified, no subtitles, no captions
 ```
 
-Strip the polish words as described above. Nothing rejects them — the substitutions are there because they render better, and the `banned_polish` warning on the estimate is the only place you will be reminded.
+Strip the forbidden words as described above. Nothing rejects them and nothing reports them — the substitutions are there because they render better, and this file is the only place you will be reminded.
 
 ## Captioning (the TikTok burned-in look)
 

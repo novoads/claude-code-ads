@@ -128,7 +128,7 @@ When writing or completing a prompt, anchor on:
 - **Material specifics** — "subsurface scattering on skin," "satin foil reflectivity," "knit fabric weave," "marker bleed at stroke edges." This model renders material distinctions; lean into them.
 - **Standalone-creative scope** — never describe iOS chrome, Sponsored badges, engagement counts, or platform UI.
 - **Avoid keyword-soup prompts** — one well-written paragraph beats a comma-separated keyword list.
-- **Concrete over polished.** "Cinematic", "ultra-detailed" and "hyperrealistic" produce the plastic look this format exists to avoid, and the free linter on `POST /v1/estimates` flags them by name. Describe the light source, the surface, the flaw instead.
+- **Concrete over polished.** "Cinematic", "ultra-detailed" and "hyperrealistic" produce the plastic look this format exists to avoid. Nothing on the API will catch one — describe the light source, the surface, the flaw instead.
 
 Show the rewritten prompt to the user as one block. Tell them which template (if any) it's
 based on. Ask: "Use this, edit it, or start over?" Loop until approved.
@@ -142,9 +142,8 @@ Free. Show the user `credits` and whether it fits their `balance`, and wait for 
 `model` prices gpt-image-2 and understates this run. This is the **only** legitimate source of
 a price: not memory, not the logs, not `MASTER_CONTEXT.md`.
 
-The same call lints the prompt and returns findings in `warnings` (`{rule, message}` each).
-Post-2.0.0 those are advice and never block, but each one names its own fix. A clean prompt
-has no `warnings` key at all.
+The call says nothing about the prompt. No endpoint on this API reads one for quality, so the
+rewrite rules in Phase 3 are the only check there is — apply them before you price, not after.
 
 Price the **assembled** prompt including the safety suffixes. The estimate body is strict — it
 takes only `kind`, `prompt`, `model`, `numImages`, `language`. It never sees `aspectRatio` or

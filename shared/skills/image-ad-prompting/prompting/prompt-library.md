@@ -61,8 +61,8 @@ ratio from the wrong grid is a `400` before anything is charged.
 When the user asks for an image ad with a known format, find the matching template below, **check the aspect-ratio table above against the model you're using**, then replace the `{placeholder}` variables and invoke the matching `chatgpt-image-ad` or `nano-banana-image-ad` skill with the filled prompt + the brand's reference image.
 
 Every generation is charged and there are no free re-rolls, so price the run with a live
-`POST /v1/estimates` and get the user's OK first. That call is free, it is the only legitimate
-source of a price, and it lints the prompt as a side effect.
+`POST /v1/estimates` and get the user's OK first. That call is free and it is the only
+legitimate source of a price. It will not check your prompt — nothing on the API does.
 
 **Variable conventions:**
 - `{brand.name}` — wordmark text on the product label (e.g. `AG1`)

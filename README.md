@@ -96,8 +96,7 @@ rendered in the same call. Start from one photo (`startImageAssetId` animates it
 frame) or composite up to **nine** reference images (`referenceAssetIds`, addressed in the prompt
 as `@Image1`…`@ImageN`). Those are two separate modes — a request carrying both is rejected.
 
-Five prompt formulas ship, each with a worked example whose estimate warnings are known and
-written down next to it:
+Five prompt formulas ship, each with a worked example that has been priced live:
 
 | Formula | For | File |
 |---|---|---|
@@ -209,12 +208,12 @@ Instead, before anything is generated, the agent calls `POST /v1/estimates` and 
 back: the credits for that exact configuration, your balance, and — when the batch would exceed the
 balance — how short you are and where to top up. You approve the number, then it generates.
 
-The estimate is free and does more than price:
+The estimate is free, and what it does *not* do is worth stating:
 
-- **It is the only place the prompt rules run.** They come back as advisory `warnings`, each one a
-  `{rule, message}` pair whose message is the fix written out. Nothing on the API blocks a weak
-  prompt — `POST /v1/videos` and `POST /v1/images` run no prompt rules at all — so this is the one
-  chance to read the advice before paying for the render.
+- **Nothing on this API reads your prompt for quality.** Not the estimate, not `POST /v1/videos`,
+  not `POST /v1/images`. A weak prompt is priced, charged and rendered exactly like a strong one.
+  The prompt libraries in this repo are the entire quality gate — which is why the skills treat
+  them as mandatory reading rather than reference material.
 - **It refuses malformed requests for free**, including a prompt over the named model's character
   ceiling.
 - **Its quote cannot disagree with the invoice**, with one caveat worth knowing: the estimate skips
