@@ -146,7 +146,10 @@ Use it for names that are invented, run two words together, or that a reader wou
 **Its limits, which are as much a part of the rule as the rule:**
 
 - **n = 1.** One brand, one model, one language. The *fix* is validated on **`seedance-2.0` in `en` only** — untested on `sora-2`, `veo-3.1` and `omni-flash`, and untested in `es`/`pt`, where hyphenated English syllables may read very differently. Do not present it as a general fix.
-- **In `es` the rule does NOT carry, and there is a reason, not just a missing test.** A Spanish render shipping the brand plain came back as **"NoBots"** — unrecognisable (2026-08-03, `seedance-2.0`, `language: es`; whisper `-l es` and `-l auto` agreed independently). Spanish has no /v/–/b/ contrast — ⟨v⟩ and ⟨b⟩ are one phoneme — so **no spelling buys back the /v/**, and what actually broke was the tail: the `o`+`a` hiatus collapsed and a syllable vanished, `vo-ads` → `bots`. Hyphenating syllable boundaries is all `NO-vo-ads` does, and it addresses none of that. **The `es` treatment is unsolved.** Untested candidates, best first: **`Novo Ads`** (two words, forcing the break the hiatus lost), `NO-vo-ADS`, `Nóvoads`. Pick one, QA the render, and write the verdict into `MASTER_CONTEXT.md`.
+- **`es` needs a DIFFERENT spelling, not the English one.** A Spanish render shipping the brand plain came back as **"NoBots"** — unrecognisable. Spanish has no /v/–/b/ contrast — ⟨v⟩ and ⟨b⟩ are one phoneme — so **no spelling buys back the /v/**, and what actually broke was the tail: the `o`+`a` hiatus collapsed and a syllable vanished, `vo-ads` → `bots`. Hyphenating syllable boundaries is all `NO-vo-ads` does, and it addresses none of that.
+  - **The `es` form is `Novo Ads` — two words, with a space.** Validated by A/B (`6ee797e0` vs `d8aaee21`, single token changed, pass criterion fixed in writing beforehand): transcribed **"Novo Ads"**, recognisable. The orthographic word break restores the syllable the hiatus ate; it does not try to restore the /v/, because nothing can.
+  - **Provisional, and the failure mode is nasty.** The *identical* payload was **1-for-2**. On the bad take Seedance stuttered — one clause spoken twice, verified as real speech and not a decoder artifact — and `Novo` collapsed into the preposition, leaving the ordinary Spanish phrase **"no ads"**. That is *worse* than "NoBots": a listener hears no brand at all rather than a mangled one. **Transcribe every `es` render.** A clean take is not evidence the next one is clean.
+  - `pt` is untested in both directions.
 - **It lands as two words** — "Novo ads", not "Novoads". That matches what `sora-2` produced unaided and a listener will recognise it, but it is not a perfect single-token rendering.
 - **It fixes pronunciation and nothing else.** Leading silence went 3.71s → 3.16s, i.e. unchanged. The dead-air problem is a duration problem; see *Script length → duration*.
 - **Seedance re-cast the actor between the two renders**, so the A/B held the prompt constant, not the performer. Some part of the delta could be voice-casting luck. Enough to act on, not enough to call proven.
@@ -227,11 +230,11 @@ Count the words in the spoken line and round **up**. A dense product script runs
 | 26–35 words | 13–15s |
 | **36+ words** | **Too long** — offer to split |
 
-**Seedance front-loads dead air, so budget `duration ≈ speech + 4s` as a FLOOR.** Measured across four `seedance-2.0` renders: the leading silence before the first spoken word ran **3.2–3.7s in `en`** and **5.2s in `es`** (2026-08-02/03). It is consistent enough to plan around and it is **not a fixed number** — the `es` render spent 40% of a 13s ad in silence. The eye-contact-break beat (`looks just off-lens, comes back to camera`) is what the model spends it on.
+**Seedance front-loads dead air, so budget `duration ≈ speech + 4s` as a FLOOR.** Measured across six `seedance-2.0` renders: leading silence ran **3.2–3.7s in `en`**, and in `es` it came back **5.24s, 0.97s and 4.80s on three byte-identical prompts** (2026-08-02/03). Read that spread as what it is — **the number is not stable, and the budget is insurance against the bad draw, not a prediction.** On the worst of them 40% of a 13s ad was gone before the hook landed; on the best, the silence moved to the tail instead. The eye-contact-break beat (`looks just off-lens, comes back to camera`) is what the model spends it on.
 
 So when the line is tight, do the arithmetic rather than reading the table alone: **`words ÷ 2.5`, plus 4, rounded up into the grid.** The table is the shortcut; this is the check. If the result runs past 15s, the fix is a shorter line or a split, not a longer clip.
 
-**Round up generously outside `en`.** The `es` render fit only because rounding up took 12.4s to 13s, and the line finished at 12.88s of 13.07s — a fifth of a second of margin. `+4` is the floor, not the answer, and the only thing that tells you what you actually got is the QA step in §7.
+**Round up generously outside `en`.** The first `es` render fit only because rounding up took 12.4s to 13s, and the line finished at 12.88s of 13.07s — a fifth of a second of margin. `+4` is the floor, not the answer, and because the silence is drawn fresh on every render, the only thing that tells you what you actually got is the QA step in §7.
 
 If the hook has to land in the first second, drop the eye-contact-break beat from the prompt — that is the beat being paid for. `sora-2` measured **no leading silence at all** on the same prompt, so it is the other way out.
 
@@ -426,7 +429,7 @@ ffmpeg -i ad.mp4 -map 0:a -af silencedetect=noise=-35dB:d=0.3 -f null -
 >
 > `ffprobe` in step 1 is the opposite case: `-v error` there is correct, because `-show_entries` writes to stdout.
 
-Check `mean_volume` is not near-silent (the four renders measured here came back −19 to −25 dB), and read the **first `silence_end`** — that is when the first word actually lands. Compare it against the silence budget in *Script length → duration*: on Seedance expect **3–4s in `en`, and up to ~5s outside it**; much more than that on a short ad means the hook is gone.
+Check `mean_volume` is not near-silent (the renders measured here came back −19 to −25 dB), and read the **first `silence_end`** — that is when the first word actually lands. Compare it against the silence budget in *Script length → duration*: on Seedance expect **3–4s in `en`**, and anywhere from 1s to 5s in `es`, drawn fresh each render. Much more than that on a short ad means the hook is gone.
 
 #### 3. Transcribe — the only check that hears the brand name
 
@@ -451,7 +454,8 @@ Read the transcript against the line the user approved at gate 1, and check thre
 
 Say which check failed and show the evidence — the transcript line, the silence figure, the missing stream. Then:
 
-- **A mispronounced invented brand name** → re-render with the phonetic spelling (gate 1). This is a prompt fix with a validated result on `seedance-2.0`, not a gamble.
+- **A mispronounced invented brand name** → re-render with the phonetic spelling for that language (gate 1): `NO-vo-ads` in `en`, `Novo Ads` in `es`. A prompt fix with a validated result on `seedance-2.0`, not a gamble.
+- **A stutter — a clause spoken twice.** Seen once in three `es` renders of the same payload. Re-render the **identical** body: the defect is nondeterministic delivery, not a prompt fault, so re-sampling the same cell is the right move. This is the one exception to "never resend an identical payload", which is about prompt-caused image defects. It still costs credits, so it still goes through gate 2.
 - **Leading silence eating the hook** → re-render shorter, or drop the eye-contact-break beat, or move to `sora-2`, which measured none.
 - **No audio stream, or a silent track on a talking ad** → re-render. Nothing in the prompt fixes a dead track.
 - **Burned-in captions** → the clean-plate clause is missing from the prompt. Add it and re-render.
