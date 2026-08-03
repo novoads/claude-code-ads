@@ -115,11 +115,15 @@ Repeat the actor tag **verbatim** rather than back-referencing it. `the same wom
 
 Include at least one: `documentary` (natural, observational), `photorealistic` (grounded, no stylization), `handheld` (reinforces the phone-filmed look), `commercial` (polished — sparingly, and never on UGC).
 
-**Words that pull the render toward plastic:** `cinematic`, `flawless`, `perfect`, `8k`, `4k`, `hyper-detailed`, `beauty lighting`, `ultra-realistic`, `masterpiece`, `award-winning`, and their Spanish and Portuguese equivalents. This is the exact list the estimate flags as `banned_polish`. Delete the word and describe the real thing instead — the light source, the surface, the flaw.
+**Avoid:** `cinematic`, `anime`, `studio` — these pull away from UGC authenticity. For premium/product-hero styles, use `dramatic` or `premium` instead of `cinematic`.
 
-Two words the fork's guidance banned that this API's linter does **not** flag: `studio` and `professional`. They are still worth avoiding on UGC routes, where they cost you the phone-filmed look, and they are the correct word on the studio lookbook route, where the whole premise is a lit studio with the rig in frame. Judge by route, not by word list.
+### Forbidden words
 
-For premium and product-hero styles, reach for `dramatic` or `premium` where you were about to write `cinematic`.
+Never use in Seedance 2.0 prompts: `cinematic`, `professional`, `stunning`, `8k`, `studio`, `perfect`.
+
+These are craft advice, not a gate. **Nothing on the API rejects them, and nothing reports them** — the estimate prices the render and says nothing about how the prompt is written. Delete the word anyway and describe the real thing in its place: the light source, the surface, the flaw. "Cinematic kitchen" is a wish; "sunlit kitchen, soft window light from camera-left, natural skin texture with visible pores" is a shot.
+
+One route overrides this list: `studio` is correct on the [studio lookbook](seedance-2-studio-lookbook.md), whose whole premise is a lit studio with the rig in frame. The list is written for UGC, which is where most of this library lives — see note 3 in that file.
 
 ### Iteration
 
@@ -130,24 +134,11 @@ Change **one** element at a time:
 3. Product drifts between shots → add a consistency anchor.
 4. Motion stiff → add degree adverbs and a second comma-joined cue.
 
-## What the estimate flags
+## What the estimate is for
 
-`POST /v1/estimates` is mandatory anyway (it is the only source of a price), and it lints the prompt for free on the way through. Every finding comes back in `warnings` on a `200` as a `{rule, message}` pair whose message is the fix written out.
+`POST /v1/estimates` is the price, and that is the whole of it. It is mandatory before every render because it is the **only** source of a number — never quote a cost from memory, from this file, or from a previous session. It spends nothing, so there is no reason to skip it.
 
-**Every one of them is advisory.** None blocks, none reprices, and `POST /v1/videos` runs no rules at all — a prompt that trips all eight is charged, rendered, and handed to the provider exactly as written. The skill layer is the only quality gate that exists.
-
-| Rule | What it catches | Applies to |
-|---|---|---|
-| `banned_polish` | the polish-word list above | every route |
-| `back_reference` | `the same woman`, `as before`, `la misma mujer` | any route with a person |
-| `missing_actor_descriptor` | no age/gender/wardrobe token | **fires on every no-person route** — see below |
-| `chained_motion` | `then`, `and then`, `followed by` | every route |
-| `bullety_prompt` | `-` lines, or `Label: value, Label:` runs | every route |
-| `no_spoken_line` | no quoted line — satisfied by any double-quoted text, or by the words `silent`, `b-roll`, `voiceover` | every route |
-| `label_without_hold` | a visible label/package/bottle/box/screen with no label-hold clause | **the one to act on for product films** |
-| `no_aspect_ratio` | no ratio stated in the prompt *text* (the `aspectRatio` field is what binds; the sentence steers composition) | every route |
-
-**`missing_actor_descriptor` on premium reveal and product hero is correct-rule, wrong-route.** Those formulas have no person by design. Ignore the warning — do not invent an actor to silence it, and do not go looking for a field that suppresses it, because none exists any more. The same call applies on the Pixar and claymation routes.
+It has no opinion about your prompt. Nothing in the API reads a prompt for craft, on this endpoint or any other: a prompt that breaks every rule in this file is priced, charged and rendered exactly as written. Everything above is the quality gate. There is no second one.
 
 ## Duration and dialogue
 
@@ -202,9 +193,9 @@ Neighbours worth knowing about: [ugc-selfie-style.md](ugc-selfie-style.md) in th
 - [ ] **Motion specificity** — degree and direction, two or three cues on one action, no `then`
 - [ ] **Consistency anchors** — product and wardrobe stated as unchanged across cuts
 - [ ] **Label hold** — present whenever a label, package or screen is visible
-- [ ] **No polish words** — see the `banned_polish` list
+- [ ] **No forbidden words** — no `cinematic`, `professional`, `stunning`, `8k`, `studio`, `perfect`
 - [ ] **`@Image1` tokens match the array** — every token points at a reference you actually send
 - [ ] **One mode only** — `startImageAssetId` **or** `referenceAssetIds`, never both
 - [ ] **Style anchor** — at least one (documentary, photorealistic, handheld)
 - [ ] **Timestamps** — for multi-beat sequences
-- [ ] **Priced live** — `POST /v1/estimates` this session, warnings read out, user said yes
+- [ ] **Priced live** — `POST /v1/estimates` this session, the number shown to the user, user said yes

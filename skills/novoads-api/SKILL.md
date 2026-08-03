@@ -76,8 +76,8 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | A static ad with heavy text or a mimicked UI | `gpt-image-2` |
 | A photoreal still: a person, a product in a scene | `nano-banana-pro` |
 | A different look on a still, or a second opinion on one | `reve-2.1` |
-| A Pixar-style 3D animated ad | read `shared/skills/pixar-style-ad/prompting/guide.md`: storyboard on `gpt-image-2`, animate each beat on `seedance-2.0` + `startImageAssetId`, stitch with ffmpeg. Runnable scripts in `shared/skills/pixar-style-ad/scripts/`. Nothing on the API rejects a stylized prompt; the estimate will still *advise* `missing_actor_descriptor` on a route whose lead is an appliance, and on this route that advice is wrong — ignore it |
-| A claymation / Aardman-style ad | read `shared/skills/claymation-ad/prompting/guide.md`, same shape over 8 beats, same note about the estimate's advice |
+| A Pixar-style 3D animated ad | read `shared/skills/pixar-style-ad/prompting/guide.md`: storyboard on `gpt-image-2`, animate each beat on `seedance-2.0` + `startImageAssetId`, stitch with ffmpeg. Runnable scripts in `shared/skills/pixar-style-ad/scripts/`. Nothing on the API rejects, checks or comments on a stylized prompt — the guide is the only thing that will tell you whether the beat works |
+| A claymation / Aardman-style ad | read `shared/skills/claymation-ad/prompting/guide.md`, same shape over 8 beats |
 | Captions burned onto a finished MP4 | read `shared/skills/caption-video/prompting/guide.md`. Out of band — ffmpeg, Whisper and HyperFrames, no Novoads call and no credits |
 | Meta image-ad creatives from a brief or a template | read `shared/skills/image-ad-prompting/OVERVIEW.md` first, then `chatgpt-image-ad` or `nano-banana-image-ad` |
 | To reverse-engineer an existing image ad into a reusable template | the `image-ad-clone` skill |
@@ -166,9 +166,9 @@ Use it for names that are invented, run two words together, or that a reader wou
 { "credits": 3.2, "balance": 100, "sufficient": true }
 ```
 
-When it is short it also returns `shortBy` and `topUpUrl`. When the prompt trips a rule it returns `warnings`: craft advice, run for free against the prompt you sent, each entry a `{rule, message}` pair whose message is the fix written out.
+When it is short it also returns `shortBy` and `topUpUrl`. That is the whole response — **there is no `warnings` field and no prompt advice of any kind.** This endpoint answers about price.
 
-**Every warning is advisory.** None of them blocks a generation, none of them changes the price, and a prompt that trips every one of them renders exactly like a prompt that trips none. Read them out before generating anyway — the estimate is the only place these rules run at all, so this is the one chance to see the advice before you pay.
+**Nothing on this API reads a prompt for quality.** A weak prompt is priced, charged and rendered exactly like a strong one. The prompt libraries under `prompting/` are the entire quality gate, and they are mandatory reading rather than reference material for that reason.
 
 **The estimate body is not the generate body.** It takes only the fields that move the price, plus a `kind` discriminator, and it is strict: any extra key is a 400.
 
@@ -190,7 +190,7 @@ curl -sS -X POST https://api.novoads.ai/v1/estimates \
 
 It runs the same access checks and the same structural validation the paid call runs, which is why it is worth calling every time and not only when you are unsure:
 
-- **The prompt rules run here and nowhere else.** Every finding comes back in `warnings` on a `200`. `POST /v1/videos` and `POST /v1/images` do not run them at all — a prompt that trips five rules is charged, rendered, and handed to the provider exactly as written. So the mandatory cost call is also a free prompt lint: one call, not a new step.
+- **It has no opinion about the prompt, and neither does anything else here.** Not this endpoint, not `POST /v1/videos`, not `POST /v1/images`. Compose against the formula file before you price, because pricing will not tell you anything you did not already know.
 - **What it does still refuse, for free:** a malformed body — it is strict, and any key that does not move the price is a `400` — and a prompt longer than the *named model's* character ceiling (4,000 for `seedance-2.0` and mini, 20,000 for `omni-flash`; name no model and it is judged as `seedance-2.0`).
 - A quote it returns cannot disagree with the invoice, with two exceptions worth knowing: it never sees `aspectRatio`, the asset fields, or `productId`, and it **skips moderation**, which the paid call runs. A clean estimate can still come back `422` at generation — moderation is the only thing left that refuses a prompt for what it says.
 
@@ -210,7 +210,7 @@ Show `credits`, the count, the total, and `balance`. Get a yes. Then generate.
 **Infer, and state what you inferred rather than asking:**
 
 - **`aspectRatio`: default `9:16`** for anything headed to Reels, TikTok, Stories, or a vertical feed. Seedance defaults to `16:9`, and a landscape ad is a wasted render; `omni-flash`, `sora-2` and `veo-3.1` already default to `9:16`, and images default to `1:1`. Go landscape only when the user asks. Seedance also accepts `1:1`, `4:3`, `3:4`, and `21:9`; `omni-flash`, `sora-2` and `veo-3.1` accept only the two.
-- **`language`**: the language the script is written in. Set it, and show it in the dialogue gate. Write the prompt in that language too — nothing on the API pushes back on a Spanish or Portuguese prompt, and the estimate's advice covers those patterns as well, with the fix quoted in the prompt's own language.
+- **`language`**: the language the script is written in. Set it, and show it in the dialogue gate. Write the prompt in that language too — nothing on the API pushes back on a Spanish or Portuguese prompt, and nothing rewrites or judges one either.
 - **`durationSeconds`**: from the word count, below. Only `veo-3.1` defaults to its maximum — Seedance defaults to 5, `omni-flash` to 8, `sora-2` to 4 — so always send it.
 - **`audioEnabled`**: leave it alone on anything with a spoken line. It exists on `seedance-2.0` and `seedance-2.0-mini` only, defaults `true`, and the one time to send it is `false`, on a clip that is meant to be silent — see below.
 
@@ -353,7 +353,7 @@ curl -sS -X POST https://api.novoads.ai/v1/videos \
   }'
 ```
 
-Returns `202` with `jobId`, `status`, `creditsCharged`, and `model`. **No `warnings`** — the job responses carry none. The craft advice was on the estimate, and this call ran no prompt rules at all.
+Returns `202` with `jobId`, `status`, `creditsCharged`, and `model`. No `warnings` — no response on this API carries that field.
 
 **Set `aspectRatio` explicitly.** Seedance defaults to `16:9` and an ad that ships landscape is a wasted render. **Set `durationSeconds` explicitly** too: Seedance defaults to 5, `omni-flash` to 8, `sora-2` to 4, `veo-3.1` to 8.
 
@@ -365,7 +365,7 @@ Returns `202` with `jobId`, `status`, `creditsCharged`, and `model`. **No `warni
 
 **It does not change the price**, which is why `POST /v1/estimates` does not take the field — sending it there is a `400` on an otherwise valid estimate body.
 
-**Keep the silence sentence in the prompt as well.** The prose clause (`a silent product film with no spoken dialogue`) and the flag are belt and suspenders and do different jobs: the flag mutes the render, the clause stops the model from *staging* a talking shot in the first place and clears `no_spoken_line` on the estimate, which is otherwise the wrong signal on a style that has no dialogue on purpose. Dropping the clause because you set the flag trades a composition fix for a mute button.
+**Keep the silence sentence in the prompt as well.** The prose clause (`a silent product film with no spoken dialogue`) and the flag are belt and suspenders and do different jobs: the flag mutes the render, the clause stops the model from *staging* a talking shot in the first place — an actor mouthing nothing, billed in full. Dropping the clause because you set the flag trades a composition fix for a mute button.
 
 For N variations, fire the identical payload N times. **Five generations per organization may be in flight at once** — fire at most five, then start the next as each one reaches a terminal state. A sixth submission comes back `429` with `error.details.reason` of `concurrency_limit`, which is a different problem from a rate limit and takes a different response: wait for a slot, do not lengthen the backoff.
 
@@ -475,7 +475,7 @@ Say which check failed and show the evidence — the transcript line, the silenc
 
 ## Images are synchronous
 
-`POST /v1/images` returns the finished images in the response body. **There is nothing to poll and no `/watch` step.** The response carries `images[]` with `url`, `expiresInSeconds`, `width`, and `height`, plus `jobId`, `status`, `model`, and `creditsCharged`. No `warnings`, and no prompt rules ran here either — price the prompt at `/v1/estimates` first if you want the advice.
+`POST /v1/images` returns the finished images in the response body. **There is nothing to poll and no `/watch` step.** The response carries `images[]` with `url`, `expiresInSeconds`, `width`, and `height`, plus `jobId`, `status`, `model`, and `creditsCharged`. No `warnings` here either, and nothing anywhere on this API judges the prompt.
 
 - `referenceAssetIds`: images only, order preserved and addressable positionally by the prompt. Upload each one first — there is no base64 field. **The cap is per model, not one number:** `reve-2.1` takes up to **8**, `gpt-image-2` and `nano-banana-pro` up to **4**. The bodies are strict, so a fifth reference to `gpt-image-2` is a `400`, not a silently dropped image — which is the good outcome, because a dropped reference is a paid render missing the product.
 - `numImages`: 1 to 4, and it multiplies the price.
@@ -508,7 +508,7 @@ Check it before asking the user for anything. `references/influencers/` for peop
 | A specific person's likeness | **Yes.** `references/influencers/`. Without it Seedance re-casts on every render. |
 | A look, a palette, a lighting mood | Optional. A style board sharpens it; prose can carry it. |
 
-**Never substitute a blank or generic product for one the user has not given you.** If they are advertising something physical and have no photo to hand, say what you cannot do rather than rendering a nameless bottle — `blank_label` on the estimate is the only other thing that would warn you, and it does not stop the charge.
+**Never substitute a blank or generic product for one the user has not given you.** If they are advertising something physical and have no photo to hand, say what you cannot do rather than rendering a nameless bottle. Nothing on the API will warn you, and the charge lands either way.
 
 Before uploading a reference, if its longest side is under 1024 px, upscale with Lanczos to 1080 px on the long side and re-encode as RGB JPEG at quality 90–95, which strips alpha and keeps the payload sane. (No minimum input size is documented for this API — the practice carries over from a sibling API that answered small images with a 422, and is unverified here.)
 
@@ -529,7 +529,7 @@ Every error is `{"error":{"code":..., "message":..., "requestId":..., "details":
 | 500 | `internal_error` | | **Do not blindly retry.** See below. |
 | 502 | `provider_failed` | A model provider failed. | Credits are refunded automatically. |
 
-**The 400 vs 422 line is simple now, and worth stating because it used to be blurred.** A `400` is a malformed request and nothing else. A `422` is moderation and nothing else. Prompt craft — a missing actor descriptor, no spoken line, a banned polish word — refuses nothing anywhere: those come back as advisory `warnings` on the estimate, and the generation runs regardless. Do not write a retry loop that expects a rule to stop a bad prompt; the only thing that stops it is you, reading the warnings.
+**The 400 vs 422 line is simple now, and worth stating because it used to be blurred.** A `400` is a malformed request and nothing else. A `422` is moderation and nothing else. Prompt craft — a missing actor descriptor, no spoken line, a forbidden word — produces no status at all: the API neither refuses it nor mentions it. Do not write a retry loop that expects a rule to stop a bad prompt; the only thing that stops it is you, before you send it.
 
 **A 429 is not always a rate limit.** `details.reason` names which of four ceilings refused you, and they are paced differently:
 
@@ -553,7 +553,7 @@ Append one line per new failure. Forward only. Every bullet is a real thing that
 - `Content-Type` on the presigned PUT must match byte for byte. Adding `; charset=utf-8` is a 403.
 - Never resubmit after a 500 without checking `GET /v1/generations` first.
 - A 400 is a malformed request. Read `details.issues`, fix the field, and do not go looking for a prompt rule — none of them can 400 anymore.
-- The prompt rules stop nothing. **Nothing on the API will save a weak prompt from being rendered and billed**, so the estimate's `warnings` and the prompt libraries are the whole quality gate. Read the warnings out loud before spending.
+- There are no prompt rules. **Nothing on the API will save a weak prompt from being rendered and billed**, so the prompt libraries are the whole quality gate. Read the formula file before you compose, not after.
 - Never send `styleFamily`. The field no longer exists on this API and any body carrying it is a 400.
 - Never fire more than five generations at once, and poll at 15 seconds, not 5.
 - A QA retry still costs credits. Cap at 2, and report the extras.
@@ -563,7 +563,7 @@ Append one line per new failure. Forward only. Every bullet is a real thing that
 - `audioEnabled` exists on the two Seedance variants only. Sending it to `omni-flash`, `sora-2` or `veo-3.1` is a 400, and sending it to `/v1/estimates` is a 400 on any model.
 - Image `referenceAssetIds` caps are per model: 8 on `reve-2.1`, 4 on `gpt-image-2` and `nano-banana-pro`. There is no single number.
 - Sora 2 and Veo 3.1 **are** on this API. Only Kling is not.
-- Real brands only in prompts. Do not substitute a blank bottle for a product the user has not given you — the API will happily render it and charge for it, and `blank_label` on the estimate is the only thing that will tell you. Ask for the photo.
+- Real brands only in prompts. Do not substitute a blank bottle for a product the user has not given you — the API will happily render it and charge for it, and nothing will tell you. Ask for the photo.
 
 ## References
 

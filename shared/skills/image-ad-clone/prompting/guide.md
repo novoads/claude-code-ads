@@ -56,10 +56,10 @@ Phase 4 + Phase 7 (two calls), the ceiling is Phase 4 + four iterations + Phase 
 Say which model each leg prices at — the schedules differ by more than 3× across the three, so
 a cross-model Phase 8 on `reve-2.1` costs meaningfully more than the same call on `gpt-image-2`.
 
-The estimate is free, it is the **only** legitimate source of a price, and the same call lints
-the prompt: findings come back in `warnings` as `{rule, message}`. They are advice and never
-block, but a clone prompt is going to be run six times, so fixing what they name once is worth
-more here than anywhere else in the ecosystem.
+The estimate is free and it is the **only** legitimate source of a price. It says nothing about
+the prompt — no endpoint here does — so re-read the clone prompt against the template rules
+yourself before pricing. It is going to be run six times, which makes a flaw in it six times as
+expensive as anywhere else in the ecosystem.
 
 ## Inputs the user must provide
 

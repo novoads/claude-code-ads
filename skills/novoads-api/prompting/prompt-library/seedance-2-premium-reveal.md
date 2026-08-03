@@ -14,12 +14,11 @@ The power comes from **restraint and revelation**. Each beat reveals slightly mo
 
 ## Two things to know before you write a word
 
-**1. Seedance preserves logos and destroys printed text.** A reveal whose final frame is a wordmark is asking for exactly the thing the model is worst at. Keep the reference photo sharp and check the render.
-The estimate's `label_without_hold` warning fires on this style's own vocabulary (`bottle`, `box`, `label`, `screen`).
+**1. Seedance preserves logos and destroys printed text.** A reveal whose final frame is a wordmark is asking for exactly the thing the model is worst at. Keep the reference photo sharp, paste the label-hold clause in, and check the render — nothing on the API will remind you.
 
-**2. `missing_actor_descriptor` will fire, and it is wrong here.** There is no person by design. Ignore the warning. Do not invent an actor to silence it, and do not go looking for a field that scopes the rules off — that field was removed from the API and sending it is a `400`. Judgement about which advice applies to which route is the caller's now, and this is the standard case.
+**2. There is no person in this style, by design.** Do not invent an actor. The formula below is complete without one, and the parts of the general Seedance guidance that assume a human on camera — the actor descriptor, the spoken line — do not apply on this route. Judgement about which advice fits which route is yours; this is the standard case.
 
-Priced live on the worked example below, 2026-08-03: `POST /v1/estimates` returns **three** warnings, all advisory — none blocks and none reprices.
+The worked example below is priced live 2026-08-03. Price your own before submitting: the estimate is the only source of a number, and it has no opinion about anything else.
 
 ## The structure
 
@@ -265,7 +264,7 @@ This style has no dialogue, so **send `"audioEnabled": false` on the generation 
 | | What it does |
 |---|---|
 | `audioEnabled: false` | Mutes the render. A guarantee, at the field level |
-| `a silent product film with no spoken dialogue` in the prompt | Stops the model *staging* a talking shot in the first place, and clears `no_spoken_line` on the estimate — which is otherwise the wrong signal on a style that has no dialogue on purpose |
+| `a silent product film with no spoken dialogue` in the prompt | Stops the model *staging* a talking shot in the first place — an actor mouthing nothing, billed in full |
 
 The flag cannot un-stage a shot the prompt asked for. If the render carries music or SFX you *want*, leave `audioEnabled` at its default and mute in post instead.
 
@@ -305,7 +304,7 @@ that commands attention through simplicity.
 
 ## Worked example: premium water bottle launch
 
-The fork's example, restored verbatim. Priced live 2026-08-03: **three** warnings — `missing_actor_descriptor`, `label_without_hold` and `no_aspect_ratio`. All advisory.
+The fork's example, restored verbatim, and priced live 2026-08-03. Note what it leaves out and add both before you send it: a label-hold clause, and the ratio line.
 
 ```
 15 seconds premium product reveal video. Pure black background,
@@ -386,5 +385,5 @@ No dialogue gate applies to this style — there is nothing spoken to approve. T
 - [ ] **Timestamps** — 4 blocks covering the full 15 seconds
 - [ ] **Length** — around 270 words for this 4-timestamp shape; every beat specified, nothing padded
 - [ ] **`@Image1`** — product photo uploaded once, passed in `referenceAssetIds`, never alongside `startImageAssetId`
-- [ ] **No polish words** — `dramatic` and `premium` instead of `cinematic`; no `8k`, `flawless`, `award-winning`
-- [ ] **Priced live** — `POST /v1/estimates` this session, the one expected warning read and dismissed on the record, user said yes
+- [ ] **No forbidden words** — `dramatic` or `premium` instead of `cinematic`; no `professional`, `stunning`, `8k`, `studio`, `perfect`
+- [ ] **Priced live** — `POST /v1/estimates` this session, the number shown to the user, user said yes

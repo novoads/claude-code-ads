@@ -24,9 +24,10 @@ This is not a review. There is no skepticism arc, no "I was surprised", no befor
 
 **3. Every clip is its own charge.** A 3-clip series is three generations at three prices. Price the whole set at `POST /v1/estimates` and show the total before submitting any of it, and remember that five generations per organization may be in flight at once. Draft the series on `seedance-2.0-mini` at half price, then re-render the winners — the `assetId`s are durable, so the finals reuse the same uploads.
 
-The Clip A example below is the fork's, restored verbatim. Priced live 2026-08-03 it returns
-**one warning** — `no_aspect_ratio`. That is advisory: the `aspectRatio` field is what binds the
-output, and the prompt sentence only steers composition. Nothing blocks and nothing reprices.
+The Clip A example below is the fork's, restored verbatim, and priced live 2026-08-03. Note
+that it states no aspect ratio in the prompt text: the `aspectRatio` field is what binds the
+output, and the sentence only steers composition — so add `Vertical 9:16.` when the framing
+matters, and send the field either way.
 
 ## The structure
 
@@ -242,7 +243,8 @@ The lighting is {{LIGHT_TYPE}} — {{LIGHT_QUALITY}}. The image is
 
 ## Worked example: backpack (2-clip series)
 
-Clip A priced live 2026-08-03: **one warning**, `no_aspect_ratio`. Advisory only.
+Clip A priced live 2026-08-03. Price your own before submitting — the number depends on the
+model and the duration, never on the words.
 
 ### Clip A — hook + hero feature
 
@@ -366,5 +368,5 @@ then multiply by the clip count, show the per-clip number, the count, the total 
 - [ ] **Same `referenceAssetIds` array across the series**, and the actor tag repeated verbatim
 - [ ] **Length** — around 260 words for this 3-beat shape; every beat specified, nothing padded
 - [ ] **`@Image1` / `@Image2`** — every token matches an id you actually send, in order; never alongside `startImageAssetId`
-- [ ] **No polish words** — no `cinematic`, `flawless`, `perfect`, `8k`, `award-winning`
-- [ ] **Priced live** — `POST /v1/estimates` this session, warnings read out, user said yes
+- [ ] **No forbidden words** — no `cinematic`, `professional`, `stunning`, `8k`, `studio`, `perfect`
+- [ ] **Priced live** — `POST /v1/estimates` this session, the number shown to the user, user said yes

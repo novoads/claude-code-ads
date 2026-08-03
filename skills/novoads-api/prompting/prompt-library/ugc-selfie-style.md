@@ -20,7 +20,7 @@ Use this guide when the user wants **authentic-looking UGC** — selfie angles, 
 
 ### 1. Camera physics — simulate a smartphone
 
-Stop using "cinematic," "8k," or "award-winning." Instead:
+Stop using "cinematic," "8k," or "stunning." Instead:
 
 - **Lens:** "iPhone 15 Pro front camera in selfie mode," "native wide lens (~26 mm)," "f/2.2 aperture"
 - **Focus:** "Autofocus micro-pulses," "deep focus (everything sharp)," "no artificial blur"

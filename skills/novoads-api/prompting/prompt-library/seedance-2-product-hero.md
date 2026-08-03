@@ -18,13 +18,13 @@ There is no person in this video. The product is the only subject, and the entir
 
 ## Two things to know before you write a word
 
-**1. `missing_actor_descriptor` will fire on the estimate, and it is wrong here.** No person, by design. Ignore it — do not invent an actor, and do not go looking for a field that scopes the rules off, because that field was deleted from the API and sending it is a `400`. Same call as the premium reveal and the Pixar routes.
+**1. There is no person in this style, by design.** Do not invent an actor to satisfy the general Seedance guidance — the actor descriptor and the spoken line are written for routes with a human on camera, and this is not one. Same call as the premium reveal and the Pixar routes.
 
-**2. `label_without_hold` will also fire.** This style lives on macro shots of packaging, and Seedance preserves logos while destroying printed text. Advisory, like the rest.
+**2. Paste the label-hold clause in every time.** This style lives on macro shots of packaging, and Seedance preserves logos while destroying printed text. Nothing on the API will remind you:
 
 > the product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible
 
-Verified live on the worked example below, spec `2.0.0`, 2026-08-02: with the clause and the ratio line in place, `POST /v1/estimates` returns **one** warning, and it is the wrong-route `missing_actor_descriptor`.
+The worked example below was priced live 2026-08-02 with the clause and the ratio line in place. Price your own before submitting.
 
 ## The structure
 
@@ -55,11 +55,11 @@ silent b-roll with no spoken dialogue.
 | `CAMERA_STYLE` | slow-motion macro photography, dramatic product cinematography, high-speed product photography | The shooting approach |
 | `MOOD_DESCRIPTOR` | dark and dramatic, moody and premium, bold and energetic, clean and minimal | The overall visual tone |
 
-The silence clause is not decoration. Seedance renders audio from the prompt, so a product film that never says it is silent can come back with an invented voice over it — and it also clears `no_spoken_line` on the estimate, which is otherwise the wrong signal on a style that has no dialogue on purpose.
+The silence clause is not decoration. Seedance renders audio from the prompt, so a product film that never says it is silent can come back with an invented voice over it — or, worse, staged as a talking shot with nobody in frame to do the talking.
 
 **Send `"audioEnabled": false` as well.** The field is live on `seedance-2.0` and `seedance-2.0-mini` and defaults to `true`, so a call that omits it generates a speech track for a film with nobody in it. It does not change the price — `POST /v1/estimates` refuses the field for exactly that reason — so the flag is free insurance.
 
-**Keep both.** The flag mutes the render; the prose clause stops the model staging a talking shot and clears the estimate warning. Neither replaces the other, and the flag cannot un-stage a shot the prompt asked for.
+**Keep both.** The flag mutes the render; the prose clause stops the model staging a talking shot in the first place. Neither replaces the other, and the flag cannot un-stage a shot the prompt asked for.
 
 **One caveat specific to this style:** `audioEnabled: false` mutes *everything*, including the foley and the impact SFX that a splash or spark shot renders. If you want Seedance's own sound design and only need the dialogue gone, leave the flag at its default, keep the prose clause, and check the result with the video QA step in `SKILL.md` §7 — the transcript tells you whether a voice crept in.
 
@@ -204,7 +204,7 @@ The sound is {{AUDIO_TYPE}} — {{AUDIO_DETAILS}}.
 
 ## Worked example: energy drink can
 
-The fork's example, restored verbatim. Priced live 2026-08-03: **three** warnings — `missing_actor_descriptor` (the wrong-route one this style always collects), plus `label_without_hold` and `no_aspect_ratio`. All three are advisory; none blocks or reprices.
+The fork's example, restored verbatim, and priced live 2026-08-03. Note what it leaves out and add both before you send it: a label-hold clause, and the ratio line.
 
 ```
 15 seconds product hero video, slow-motion macro photography,
@@ -293,5 +293,5 @@ Nothing is spoken here, so gate 1 does not apply. Gate 2 always does.
 - [ ] **Audio is music + foley, no dialogue** — and decide the flag: `audioEnabled: false` for a fully silent master, or leave it default to keep Seedance's foley (see Layer 1)
 - [ ] **Length** — around 330 words for this 4-shot shape; every shot specified, nothing padded
 - [ ] **`@Image1`** — product photo uploaded once, passed in `referenceAssetIds`, never alongside `startImageAssetId`
-- [ ] **No polish words** — no `cinematic`, `8k`, `flawless`, `perfect`, `award-winning`
-- [ ] **Priced live** — `POST /v1/estimates` this session, warnings read out, user said yes
+- [ ] **No forbidden words** — no `cinematic`, `professional`, `stunning`, `8k`, `studio`, `perfect`
+- [ ] **Priced live** — `POST /v1/estimates` this session, the number shown to the user, user said yes

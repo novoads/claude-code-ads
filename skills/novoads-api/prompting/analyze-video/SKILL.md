@@ -98,7 +98,7 @@ Notice what they share:
 - Variables come with **option banks**, not blanks.
 - They state **rules** that explain why a choice matters.
 - They declare a **mode** — `startImageAssetId` or `referenceAssetIds` — at the top.
-- They carry a **worked example** that has been priced live, with its warning set recorded.
+- They carry a **worked example** that has been priced live.
 
 Your template has to hit that depth to be usable.
 
@@ -266,7 +266,7 @@ Max 3 beats, max 2–3 spoken lines. This is the unit.]
 ## Example prompt
 
 [The template filled in for a DIFFERENT product, person and setting than the source video.
-Price it at POST /v1/estimates before shipping it and record its warning set underneath.]
+Price it at POST /v1/estimates before shipping it.]
 
 ## Adaptation checklist
 
@@ -301,14 +301,13 @@ template that omits them manufactures the same defect in every prompt written fr
 
 - **If the style is silent, say so in prose** — `a silent product film with no spoken
   dialogue`, `silent b-roll`. Seedance renders audio from the prompt, so a film that never
-  declares silence can come back with an invented voice on it. On-screen-text strings in
-  quotes are enough to satisfy the linter and not enough to make the render silent.
+  declares silence can come back with an invented voice on it. Do not put on-screen text in
+  double quotes and call it done — the model reads a quoted string as a line to speak.
 
-- **No polish words.** The list the estimate actually flags: `cinematic`, `flawless`,
-  `perfect`, `8k`, `4k`, `hyper-detailed`, `beauty lighting`, `ultra-realistic`,
-  `masterpiece`, `award-winning`, and their Spanish and Portuguese equivalents. `studio` and
-  `professional` are **not** on it — judge those by route, not by list. Replace a polish
-  word with the real thing: the light source, the surface, the flaw.
+- **No forbidden words:** `cinematic`, `professional`, `stunning`, `8k`, `studio`,
+  `perfect`. Nothing on the API rejects or reports them — this is craft advice, and the
+  reason to drop them is the render. Replace one with the real thing: the light source,
+  the surface, the flaw.
 
 - **Prose, never a bulleted prompt.** A run of `Label: value` pairs or `-` lines comes back
   **rendered as literal text on screen**. Use timestamps — `[00:00]`, `[00:05]` — for
@@ -367,9 +366,9 @@ The template is the deliverable; this step only proves it. It runs the full sequ
    sessions — upload once and keep the id.
 
 2. **Price it — gate 2.** `POST /v1/estimates` with `kind: "video"`, the `prompt`, the
-   `model` and `durationSeconds`. It is free, it is the only source of a price, and it is
-   the only place the prompt rules run at all. Read the `warnings` out before spending;
-   every one of them is advisory, and `POST /v1/videos` runs none of them.
+   `model` and `durationSeconds`. It is free and it is the only source of a price. It has
+   no opinion about the prompt — the checklist above is the only quality gate there is.
+   Show the number and get a yes before spending.
 
 3. **Confirm the spoken line — gate 1**, if the clip speaks. Numbered beats, word count
    against the duration, the `language` you are sending, an explicit yes. Approving the
@@ -416,8 +415,8 @@ sequence:
 
 1. Upload the product photo: `POST /v1/uploads` → `assetId` (durable, reuse it).
 2. Price it: `POST /v1/estimates` with `kind: "video"`, `model`, `durationSeconds`,
-   `prompt`. Free, mandatory, and the only place the prompt rules run — read the
-   `warnings` out loud before spending.
+   `prompt`. Free, mandatory, and the only source of a price — show the number out loud
+   before spending.
 3. Confirm the spoken line with the user if the clip speaks (`SKILL.md` gate 1).
 4. Generate: `POST /v1/videos`
 

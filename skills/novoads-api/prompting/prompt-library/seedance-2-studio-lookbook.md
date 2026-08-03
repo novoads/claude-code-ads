@@ -22,7 +22,7 @@ This style sits in the gap between raw UGC and a produced commercial, and borrow
 
 **2. Multi-look is where identity drifts, and `@Image2` is the fix.** Seedance re-casts on every cut. The fork's answer was a repeated wardrobe tag, which still fights the outfit changes this style is built on. A person reference holds the face while the clothes change around it — that is what the reference mode is for. Keep the verbatim tag too, and **never** write `the same woman` or `as before`: a back-reference resolves to nobody.
 
-**3. `studio` is not a banned word here.** The polish-word list bans `cinematic`, not `studio` — and this is the one route where a lit studio with the rig in frame is the entire premise. `cinema camera` and `cinema-quality` are also outside the list and are the right vocabulary for this look. Confirmed live on the worked example below, 2026-08-03: no polish-word warning of any kind.
+**3. The forbidden-word list and this style disagree, and the style wins.** `studio` is on the general list in [seedance-2.md](seedance-2.md), because on a UGC route it costs you the phone-filmed look. This is the one route where a lit studio with the rig in frame is the entire premise, so `studio backdrop`, `photo studio`, `cinema camera` and `cinema-quality` are the correct vocabulary here and every worked example below uses them. Nothing on the API enforces the list either way — it is craft advice, and craft advice is route-dependent. `cinematic`, `professional`, `stunning`, `8k` and `perfect` stay out regardless.
 
 ## The structure
 
@@ -222,8 +222,9 @@ The lighting is {{LIGHT_SETUP}} — {{LIGHT_QUALITY}}. The image is
 
 ## Worked example: waxed canvas weekender bag
 
-The fork's example, restored verbatim. Priced live 2026-08-03: **one warning**, `no_aspect_ratio`.
-Advisory only — the `aspectRatio` field is what binds the output.
+The fork's example, restored verbatim, and priced live 2026-08-03. It states no aspect ratio in
+the prompt text — the `aspectRatio` field is what binds the output, so send it, and add the
+sentence too when the framing matters.
 
 ```
 15 seconds brand lookbook video, filmed on cinema camera with
@@ -310,5 +311,5 @@ Then run gate 1 on the narration before submitting — 29 words against 15 secon
 - [ ] **No back-reference** — repeat the actor tag verbatim, never `the same woman`
 - [ ] **Length** — around 270 words for this 3-shot-plus-narration shape; every shot specified, nothing padded
 - [ ] **`@Image1` / `@Image2`** — every token matches an id you actually send, in order; `referenceAssetIds` never alongside `startImageAssetId`
-- [ ] **No polish words** — no `cinematic`, `flawless`, `8k`, `award-winning`. `studio`, `cinema camera` and `cinema-quality` are fine on this route and are the point of it.
-- [ ] **Priced live** — `POST /v1/estimates` this session, warnings read out, user said yes
+- [ ] **No forbidden words** — no `cinematic`, `professional`, `stunning`, `8k`, `perfect`. `studio`, `cinema camera` and `cinema-quality` are the exception on this route and are the point of it — see note 3 above.
+- [ ] **Priced live** — `POST /v1/estimates` this session, the number shown to the user, user said yes
