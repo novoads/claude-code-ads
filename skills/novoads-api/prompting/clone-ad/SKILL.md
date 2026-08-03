@@ -494,7 +494,7 @@ Then:
 
 Next steps worth offering: iterate the one beat that missed rather than re-firing the whole
 set, hand the file to the `meta-ad-builder` skill to publish it as a Meta creative, or burn
-captions on out of band with `shared/skills/caption-video/prompting/guide.md` — that one
+captions on out of band with the `caption-video` skill — that one
 makes no Novoads call and costs no credits.
 
 ## Seedance 2.0 constraints that bite during a clone

@@ -270,7 +270,7 @@ Burn captions after stitching (`ffmpeg -vf "subtitles=caps.ass"`), not in the Se
 
 ### Recommended pipeline: animated captions via the `caption-video` skill
 
-For per-phrase emphasis (scale-pop on punchlines, brand-color callouts on the product reveal), hand the stitched MP4 to the **`caption-video`** skill rather than burning static `.ass` subtitles. It carries the full HyperFrames + Whisper + chroma-key recipe — Whisper model choice by audio type, the word-grouping helper, the composition, and the ffmpeg composite. Do not re-derive it here.
+For per-phrase emphasis (scale-pop on punchlines, brand-color callouts on the product reveal), hand the stitched MP4 to the **`caption-video`** skill rather than burning static `.ass` subtitles. It carries the full HyperFrames + Whisper + alpha-composite recipe — Whisper model choice by audio type, the silence-offset transcription pattern, the word-grouping helper, the composition, and the ffmpeg composite. Do not re-derive it here.
 
 Two things to carry across the hand-off:
 

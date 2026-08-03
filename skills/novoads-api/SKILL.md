@@ -78,7 +78,7 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | A different look on a still, or a second opinion on one | `reve-2.1` |
 | A Pixar-style 3D animated ad | read `shared/skills/pixar-style-ad/prompting/guide.md`: storyboard on `gpt-image-2`, animate each beat on `seedance-2.0` + `startImageAssetId`, stitch with ffmpeg. Runnable scripts in `shared/skills/pixar-style-ad/scripts/`. Nothing on the API rejects, checks or comments on a stylized prompt — the guide is the only thing that will tell you whether the beat works |
 | A claymation / Aardman-style ad | read `shared/skills/claymation-ad/prompting/guide.md`, same shape over 8 beats |
-| Captions burned onto a finished MP4 | read `shared/skills/caption-video/prompting/guide.md`. Out of band — ffmpeg, Whisper and HyperFrames, no Novoads call and no credits |
+| Captions burned onto a finished MP4 | the `caption-video` skill (`shared/skills/caption-video/SKILL.md`, full recipe in its `prompting/guide.md`). Out of band — ffmpeg, Whisper and HyperFrames, no Novoads call and no credits |
 | Meta image-ad creatives from a brief or a template | read `shared/skills/image-ad-prompting/OVERVIEW.md` first, then `chatgpt-image-ad` or `nano-banana-image-ad` |
 | To reverse-engineer an existing image ad into a reusable template | the `image-ad-clone` skill |
 | A YouTube thumbnail | the `generate-youtube-thumbnail` skill |

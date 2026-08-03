@@ -275,6 +275,16 @@ GET /act_{ACCOUNT_ID}/campaigns
 
 ### 4.1 Create an Ad Set
 
+> **Two things about this example, both learned the hard way (2026-08-03):**
+>
+> 1. **`targeting.targeting_automation` is mandatory.** Omit it and Meta rejects
+>    the call with **code 100 / subcode 1870227**. It is documented three
+>    sections down in §4.4, which is too late if you copy-paste from here.
+> 2. **`status` is `PAUSED` below, on purpose.** This example used to ship
+>    `"ACTIVE"` — a copy-paste that first fails on (1) and then, once fixed,
+>    creates a **spending** ad set. Create it paused, review it in Ads Manager,
+>    un-pause deliberately.
+
 ```
 POST /act_{ACCOUNT_ID}/adsets
 Authorization: Bearer {TOKEN}
@@ -285,7 +295,7 @@ Content-Type: application/json
   "campaign_id": "120200...",
   "billing_event": "IMPRESSIONS",
   "optimization_goal": "OFFSITE_CONVERSIONS",
-  "status": "ACTIVE",
+  "status": "PAUSED",
   "bid_strategy": "LOWEST_COST_WITHOUT_CAP",
   "pacing_type": ["standard"],
   "daily_budget": 5000,
@@ -293,12 +303,19 @@ Content-Type: application/json
     "pixel_id": "123456789",
     "custom_event_type": "PURCHASE"
   },
-  "targeting": { ... },
+  "targeting": {
+    "geo_locations": { "countries": ["US"] },
+    "targeting_automation": { "advantage_audience": 0 }
+  },
   "attribution_spec": [{ ... }],
   "start_time": "2026-04-01T00:00:00-0400",
   "end_time": "2026-04-30T23:59:59-0400"
 }
 ```
+
+`advantage_audience` must be sent explicitly as `0` or `1` — see §4.4. The one
+exception is **ASC+ campaigns**, where `targeting_automation` must be omitted
+entirely (§12.4). The full `targeting` object is §4.2.
 
 ### 4.2 Targeting Object — Full Structure
 
@@ -361,6 +378,12 @@ When multiple geo types are specified:
   "advantage_audience": 0
 }
 ```
+
+**`targeting_automation` is required on ad-set creation.** Leaving it out of
+`targeting` fails with **code 100 / subcode 1870227** (verified live
+2026-08-03). "Disabled" still means sending the object with
+`"advantage_audience": 0` — there is no valid "omit it" state for a normal
+campaign. §4.1's example includes it for this reason.
 
 **For ASC+ campaigns:** `targeting_automation` must be **completely omitted** from the payload.
 
@@ -464,7 +487,7 @@ Content-Type: application/json
   "adset_id": "120200...",
   "account_id": "710640...",
   "name": "My Ad Name",
-  "status": "ACTIVE",
+  "status": "PAUSED",
   "creative": { ... },
   "url_tags": "utm_source=facebook&utm_medium=paid",
   "tracking_specs": [
@@ -478,6 +501,11 @@ Content-Type: application/json
   ]
 }
 ```
+
+**`status` is `PAUSED` above on purpose** — this example is copy-pasteable, and
+an `ACTIVE` ad in a live ad set starts spending the moment it passes review.
+`deploy-ad.py` always sends `PAUSED`; keep it that way here too. Un-pausing is a
+deliberate step in Ads Manager.
 
 ### 5.2 Ad Status Values
 
@@ -926,6 +954,15 @@ roas = purchase_revenue / spend
 
 This goes inside `degrees_of_freedom_spec.creative_features_spec`:
 
+> **Not all of these are cosmetic.** The ones that alter the delivered creative
+> are `video_uncrop`, `video_auto_crop`, `video_filtering` (reframe / recolour),
+> `creative_stickers`, `reveal_details_over_time`, `show_summary`,
+> `show_destination_blurbs` (draw over the frame), `text_translation` (rewrites
+> approved copy) and the `text_extraction` customizations (re-derive copy from
+> text visible in the creative). They default to `OPT_IN`. Opt them out for any
+> creative carrying burned-in text — `deploy-ad.py` does this by default; see
+> its `--burned-in-captions` flag and §12.28.
+
 ```json
 {
   "advantage_plus_creative": { "enroll_status": "OPT_OUT" },
@@ -1304,6 +1341,14 @@ const json = JSON.parse(text);
 23. **Video `status.video_status` must be `ready`** before using in an ad. `processing_phase: complete` alone is not sufficient — the ad creation endpoint returns error subcode `1885252` ("Video not ready for use in an ad"). Poll with 10s intervals until `video_status == "ready"`.
 
 24. **Insights filter `campaign_id` is deprecated.** Use `campaign.id` instead: `[{"field": "campaign.id", "operator": "EQUAL", "value": "120200..."}]`.
+
+25. **The Meta app must be published (Live) to create ad creatives.** A development-mode app fails `POST /act_*/ads` with code `100` / subcode **`1885183`** ("Ads creative post was created by an app that is in development mode"). Allowlisting the ad account under App settings → Advanced → *Authorized ad account IDs* does **not** work around it — tested 2026-08-03. Publishing the app is the only fix, and no Graph endpoint reports app mode for a user token, so this cannot be pre-flighted programmatically.
+
+26. **`targeting.targeting_automation` is required on ad-set creation.** Omitting it returns code `100` / subcode **`1870227`**. Send `{"advantage_audience": 0}` to disable it; there is no "omit" state except for ASC+ campaigns (§12.4). See §4.4.
+
+27. **`TEXT_LIQUIDITY` and `USER_ENROLLED` do not read back.** `degrees_of_freedom_spec.text_transformation_types` and `.degrees_of_freedom_type` are accepted on creation but absent when the creative is read back (verified 2026-08-03). The `asset_feed_spec` copy pool *does* persist. Verify multi-variant behaviour by reading `creative{asset_feed_spec}` and checking the body/title/description counts — not by trusting the flag you sent.
+
+28. **Several Advantage+ enhancements modify the creative itself.** `video_uncrop`, `video_auto_crop`, `video_filtering`, `creative_stickers`, `reveal_details_over_time`, `show_summary` and `show_destination_blurbs` crop, recolour or overlay across the frame; `text_translation` rewrites approved copy; the `text_extraction` customizations re-derive ad copy from text visible in the creative. They default to `OPT_IN` (§8.1). For any creative with text burned into the pixels — captions, typography, UI mockups — opt these out explicitly.
 
 ---
 

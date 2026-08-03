@@ -51,7 +51,7 @@ Three pieces fit together:
    - `optimization_type: DEGREES_OF_FREEDOM`
    - `bodies`, `titles`, `descriptions` (each an array of `{"text": ...}`)
    - `call_to_action_types`
-   - `link_urls` (image ads only)
+   - `link_urls` (image ads only — see below)
 3. **`degrees_of_freedom_spec`** — opts the ad into text liquidity + Advantage+:
    - `degrees_of_freedom_type: USER_ENROLLED`
    - `text_transformation_types: ["TEXT_LIQUIDITY"]`
@@ -61,17 +61,77 @@ Three pieces fit together:
 and place them where they perform best. Supplying 5 bodies / 5 titles /
 3 descriptions is the proven shape — see [copy-guide.md](../prompting/copy-guide.md).
 
-`creative_features_spec` is a fixed enrollment map (`OPT_IN` / `OPT_OUT` per
-feature). It lives as a constant in `deploy-ad.py`; the video variant adds
-`video_auto_crop`, `video_filtering`, `video_uncrop`. Treat it as a known-good
-block — Meta adds features over time, so re-check the cheatsheet §8 if a deploy
-warns about an unknown feature.
+### `link_urls` on images but not videos — deliberate
+
+`build_image_creative` includes `link_urls` in `asset_feed_spec`;
+`build_video_creative` does not. This asymmetry is **verified working**, not an
+oversight: a live video deploy on 2026-08-03 produced an ad whose destination
+resolved correctly, carrying the link through
+`object_story_spec.video_data.call_to_action.value.link`. Do not "fix" it by
+adding `link_urls` to the video path without re-testing a live deploy.
+
+### `TEXT_LIQUIDITY` does not read back
+
+The two `degrees_of_freedom_spec` flags the skill sends —
+`text_transformation_types` and `degrees_of_freedom_type` — **do not appear**
+when the created creative is read back (verified 2026-08-03). The asset feed
+itself does persist: the 5/5/3 pool was present on the live ad. Treat the asset
+feed as the evidence and verify it explicitly:
+
+```bash
+curl -s -G "https://graph.facebook.com/v23.0/<AD_ID>" \
+  --data-urlencode "fields=creative{asset_feed_spec,degrees_of_freedom_spec}" \
+  --data-urlencode "access_token=$META_ACCESS_TOKEN" | python3 -m json.tool
+```
+
+Report what read back, not what was sent.
+
+### `creative_features_spec`
+
+A fixed enrollment map (`OPT_IN` / `OPT_OUT` per feature). It lives as a
+constant in `deploy-ad.py`; the video variant adds `video_auto_crop`,
+`video_filtering`, `video_uncrop`. Meta adds features over time, so re-check
+cheatsheet §8 if a deploy warns about an unknown feature.
+
+**Several of these enrollments modify the creative itself.** `deploy-ad.py`
+defaults to `--burned-in-captions`, which forces the frame-modifying features
+(`video_uncrop`, `video_auto_crop`, `video_filtering`, `creative_stickers`,
+`reveal_details_over_time`, `show_summary`, `show_destination_blurbs`, and the
+`text_extraction` customizations under `enhance_cta` / `text_optimizations`) plus
+`text_translation` to `OPT_OUT`. Creatives from this workspace carry text baked
+into the pixels, and those features crop, recolour, overlay across or re-derive
+copy from it. `--no-burned-in-captions` restores Meta's full enrollment.
+`--dry-run` prints the resulting map feature by feature with a reason for every
+forced `OPT_OUT`.
 
 ## Conversion tracking
 
 Pass `--pixel-id` (or set `META_PIXEL_ID`) to attach a `tracking_specs` entry
 for offsite-conversion attribution. Without a pixel the ad still deploys; it
 just won't be optimized/attributed for conversions.
+
+## Failure reporting and orphaned assets
+
+`upload_image`, `upload_video`, `wait_for_video_processing` and `create_ad` each
+return a **`(value, error)` tuple**. On failure the error carries Meta's `code`,
+`error_subcode`, `type`, `message`, `error_user_msg` and `fbtrace_id` verbatim.
+`deploy-ad.py` writes each one into `deployment_results.json` under `failures`
+and **exits 1**.
+
+This replaced a contract where the helpers printed the error and returned a bare
+`None`, and the caller `continue`d past it — which produced
+`DONE. 0 ad(s) created PAUSED.` and **exit 0** on a run where the ad was
+rejected. Any wrapper reading the exit code saw success, and the reason survived
+only in stdout. If you touch these helpers, keep the error in the return value.
+
+Assets upload before the ad is created, so a rejected ad leaves the uploaded
+video or image behind. `deploy-ad.py` collects these under `orphans` and prints
+each with a ready-to-run `curl -X DELETE` line that reads
+`$META_ACCESS_TOKEN` from the environment (no token is ever printed). Assets
+that did make it onto an ad are excluded — they are not orphans.
+
+**Cleanup is not automatic.** Deleting objects from a live ad account is a
+user decision; the script surfaces them and stops there.
 
 ## Transient errors
 
@@ -85,6 +145,7 @@ research scripts with `Retry-After` / fixed backoff.
 
 | Symptom | Cause / fix |
 |---|---|
+| `Ads creative post was created by an app that is in development mode` (code 100 / subcode **1885183**) | The Meta app is not published. Toggle it to **Live** in the App Dashboard. Allowlisting the ad account under App settings → Advanced → Authorized ad account IDs does **not** help (tested 2026-08-03). |
 | `Video failed to process` (1487713) | Ad created before video finished processing — always poll first. |
 | `code 2`, transient | Meta load — retry/backoff handles it; if it persists, wait and rerun. |
 | Empty response body | Treat as transient; retry. |

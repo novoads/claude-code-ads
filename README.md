@@ -175,7 +175,7 @@ skill.
 | **Pixar-style 3D ad** | Lock a cast sheet → `gpt-image-2` storyboard stills (each beat references the previous for identity lock) → `seedance-2.0` + `startImageAssetId` per beat → ffmpeg stitch | [pixar-style-ad](shared/skills/pixar-style-ad/prompting/guide.md) · runnable scripts in [scripts/](shared/skills/pixar-style-ad/scripts/) |
 | **Claymation / Aardman ad** | Same backbone over an 8-beat narrator arc, clay textures, optional `fps=12,fps=24` stop-motion judder | [claymation-ad](shared/skills/claymation-ad/prompting/guide.md) |
 | **YouTube thumbnails** | 5 CTR formulas (peace-sign branding, real-vs-AI, terminal flow, reaction shock, before/after split) on `nano-banana-pro`, likeness locked with face references | [generate-youtube-thumbnail](skills/generate-youtube-thumbnail/SKILL.md) |
-| **Burn captions onto an MP4** | Whisper transcript → reading phrases → captions-only HTML over magenta → ffmpeg chroma-key overlay. **Out of band — no API call, no credits** | [caption-video](shared/skills/caption-video/prompting/guide.md) |
+| **Burn captions onto an MP4** | Whisper transcript → reading phrases → captions-only HTML with a transparent background → ffmpeg alpha overlay. **Out of band — no API call, no credits** | [caption-video](shared/skills/caption-video/SKILL.md) |
 
 ### 🔄 Reverse-engineer existing creative
 
