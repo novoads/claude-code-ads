@@ -574,7 +574,7 @@ quote when reporting a problem.
 |---|---|---|
 | `400 invalid_input` | The request is **malformed** — an unknown key, an out-of-grid duration, a prompt over the model's ceiling. `details.issues` names each bad field. Never a judgement on the writing | Fix the field. Nothing was charged. Do not go looking for a prompt rule: none of them can 400 |
 | `400` naming the two modes | `startImageAssetId` and `referenceAssetIds` were both sent | Pick one. Start frame to animate a photo, references to composite a scene |
-| `401 unauthorized` | Missing, malformed or revoked key | `./scripts/check-novoads-env.sh`, then Settings → Developer |
+| `401 unauthorized` | Missing, malformed or revoked key | `./scripts/check-novoads-env.sh`, then a new key at <https://novoads.ai/dashboard/settings?tab=api> |
 | `402 insufficient_credits` | `details` carries `required` and `available` | Tell the user the gap. Do not retry |
 | `403 forbidden` | `details.reason` is `plan_required` or `subscription_inactive` — the key is fine, the plan is not | Say which one it is; they are different fixes |
 | `409 conflict` | `/watch` on a job that has not finished | Keep polling |

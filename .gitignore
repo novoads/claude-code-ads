@@ -8,6 +8,12 @@ MASTER_CONTEXT.md
 .cursor/skills/
 .DS_Store
 *.log
+
+# Generation logs are the USER'S session history, not repo content. The file is
+# created on first run and stays local: a committed log ships real creditsCharged
+# values, which is a de-facto price table — exactly what this repo refuses to hold.
+# logs/README.md is the schema and stays tracked.
+logs/*.jsonl
 __pycache__/
 *.pyc
 outputs/
@@ -17,7 +23,6 @@ output/
 # Drop your refs into references/influencers/, references/products/,
 # references/aesthetics/, etc. — they stay on your machine.
 references/
-!references/README.md
 
 
 # Disposable one-off thumbnail iteration scripts (not the canonical skill script)

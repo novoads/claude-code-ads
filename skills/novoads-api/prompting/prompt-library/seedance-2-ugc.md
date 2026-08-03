@@ -84,11 +84,21 @@ The same shape as the six above — advisory, returned in `warnings` — and wor
 
 Seedance preserves logos and destroys printed text. `The Ordinary / Niacinamide 10%` came back as `MAGNANDE 10% ZINC 1%`.
 
-Whenever a label, package, bottle, or screen is visible, paste this clause in:
+Whenever a label, package, bottle, or screen is visible, paste the hold clause in.
+**Pick the wording by whether a reference actually exists.** The clause below names "the reference
+image", and that phrase is a lie in a prompt with no `startImageAssetId` and no `referenceAssetIds`
+— it points the model at something that was never sent. Two forms:
 
-> the product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible
+- **With a reference** (`startImageAssetId` or `referenceAssetIds`):
+  > the product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible
+- **Without a reference** — text-to-video, the label invented from the prose:
+  > the product label remains perfectly sharp and stable throughout, with its text unchanged and fully legible
 
-The warning clears once the clause is present, so an estimate that still warns is telling you the clause did not land.
+Both clear `label_without_hold` on the estimate. The second asks for what the first asks for minus
+the impossible comparison: hold the label steady and keep the lettering readable, rather than match
+a picture that does not exist.
+
+The warning clears once either clause is present, so an estimate that still warns is telling you the clause did not land.
 
 ### 8. State the ratio in the prompt too
 
@@ -111,6 +121,8 @@ No call will flag any of this. All of it is the difference between a render you 
 ## Worked example
 
 Real brand, real product, one action, one line. This exact prompt comes back from the estimate with **zero warnings** — re-verified live against spec `2.0.0` on 2026-08-02.
+
+**Note the pairing:** this prompt uses the *with-reference* label hold, and the body below sends `startImageAssetId`. Copying the prompt without the asset leaves the model chasing a reference image that was never uploaded — use the without-reference wording instead. Both clear the warning (verified live 2026-08-03), so the estimate will not catch the mismatch for you.
 
 ```
 Medium selfie shot in a sunlit kitchen, soft window light from camera-left. A woman in her 20s in a grey zip hoodie holds a bottle of CeraVe Moisturizing Lotion up toward the lens, tilts it slightly, natural skin texture with visible pores, slight camera shake from a handheld phone. She looks just off-lens, comes back to camera, and says: "I stopped buying the expensive stuff after this one." The product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible. No on-screen text, no captions, no background music. Vertical 9:16.

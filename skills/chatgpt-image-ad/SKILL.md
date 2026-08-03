@@ -183,7 +183,7 @@ pipe them. Optionally write them to `./generated/run-<ts>.jsonl` for downstream 
 | What you see | What it means |
 |---|---|
 | `400 invalid_input` with `details.issues` | A malformed field. Most often an `aspectRatio` this model doesn't take, more than 4 `referenceAssetIds`, or a prompt over 4,000 characters. Nothing was charged. |
-| `401 unauthorized` | Missing, malformed or revoked key. Send the user to Settings → Developer. |
+| `401 unauthorized` | Missing, malformed or revoked key. Send the user to <https://novoads.ai/dashboard/settings?tab=api>. |
 | `402 insufficient_credits` | `details` carries `required` and `available`. Tell the user the gap; do not retry. |
 | `403 forbidden` | `details.reason` says which: `plan_required`, `subscription_inactive`, or API access off for the account. |
 | `422 content_policy` | Moderation blocked it. The estimate does not run moderation, so this can land on a prompt the estimate priced cleanly. Nothing was charged. Rewrite or stop. |

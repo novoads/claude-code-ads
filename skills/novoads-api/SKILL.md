@@ -51,7 +51,7 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 
 1. Repo root **`MASTER_CONTEXT.md`** when present: brand voice, default product, accumulated decisions. It carries **no prices** — that is deliberate, see gate 2.
 2. This file. It is the router and it covers the full call sequence.
-3. **List `references/` at the repo root before you ask the user for a photo.** It is where they keep product shots, actor stills, and style boards, and it is gitignored, so the files are theirs and are not in this skill's folder. A product photo found there becomes `startImageAssetId` (video) or an entry in `referenceAssetIds` (images). If it is empty, ask for the photo rather than inventing the product.
+3. **List `references/` at the repo root before you ask the user for a photo.** It is where they keep product shots, actor stills, and style boards, and it is gitignored, so the files are theirs and are not in this skill's folder. A product photo found there becomes `startImageAssetId` (video) or an entry in `referenceAssetIds` (images). **An empty `references/` is the normal state of a fresh clone, not a blocker** — see below before you ask for anything.
 4. **MANDATORY before composing any prompt:** the `prompting/prompt-library/` file for the route you picked in the decision tree. The libraries carry the craft; every HTTP detail comes from this file and `reference.md`, which win whenever the two disagree.
 5. `reference.md` when you need a field you do not see here, or when you hit a status code you want to branch on.
 
@@ -355,7 +355,7 @@ Returns `202` with `jobId`, `status`, `creditsCharged`, and `model`. **No `warni
 
 For N variations, fire the identical payload N times. **Five generations per organization may be in flight at once** — fire at most five, then start the next as each one reaches a terminal state. A sixth submission comes back `429` with `error.details.reason` of `concurrency_limit`, which is a different problem from a rate limit and takes a different response: wait for a slot, do not lengthen the backoff.
 
-**Log each submission immediately**: one line appended to `logs/novoads-api.jsonl` with the timestamp, endpoint, model, `jobId`, `productId`, and the request config (duration, aspectRatio, language, reference counts, prompt **word count**). Never log the prompt text, the key, or the Authorization header. The log is observability — latency and `creditsCharged` after the fact. **It is never a pricing source.** Prices come from `/v1/estimates`, always.
+**Log each submission immediately**: one line appended to `logs/novoads-api.jsonl` with the timestamp, endpoint, model, `jobId`, `productId`, **`creditsCharged` from this `202`**, and the request config (duration, aspectRatio, language, reference counts, prompt **word count**). The charge goes on the line *now* — the poll payload does not carry it, so a line written without it can never be completed. Never log the prompt text, the key, or the Authorization header. The log is observability — latency and spend after the fact. **It is never a pricing source.** Prices come from `/v1/estimates`, always. The file is gitignored: it is the user's session history, not repo content.
 
 ### 5. Poll
 
@@ -379,14 +379,20 @@ Tell the user the wait up front, per model, so they do not think it hung — and
 
 **Do not promise five minutes.** The two renders anyone here has actually timed both came back under three, and a user told "about five" who gets it in two is fine, while a user told "about five" who waits nine has been misled. Give the range, name the model, and say the numbers are ranges.
 
-When `status` is `succeeded`, `outputUrl` is a presigned download URL valid for `outputUrlExpiresInSeconds` (3600). Read the job again for a fresh one rather than storing it. Update that job's log line with the terminal status, `creditsCharged`, and the elapsed time.
+When `status` is `succeeded`, `outputUrl` is a presigned download URL valid for `outputUrlExpiresInSeconds` (3600). Read the job again for a fresh one rather than storing it. Update that job's log line with the terminal status and the elapsed time.
+
+**`creditsCharged` is NOT on this payload — do not go looking for it here.** The poll returns exactly `createdAt`, `error`, `jobId`, `kind`, `model`, `outputUrl`, `outputUrlExpiresInSeconds`, `prompt`, `status` (verified live 2026-08-03). The charge is on the **`202` from the submit**, and that is the only place it is ever available. Carry it forward from the line you already wrote; if it is missing there it is gone, and you never reconstruct it from a rate. The keyed, portable line-update recipe is in `logs/README.md` at the repo root — update by `jobId`, not by position, because up to five jobs are in flight and the line you want is often not the last one.
 
 ### 6. Download and hand it over
 
 ```bash
-curl -sSL -o ad.mp4 https://api.novoads.ai/v1/generations/$JOB_ID/watch \
+OUT_DIR="outputs/seedance-ugc-cerave"      # descriptive, not the job id
+mkdir -p "$OUT_DIR"                        # outputs/ is gitignored and absent on a fresh clone
+curl -sSL -o "$OUT_DIR/ad.mp4" https://api.novoads.ai/v1/generations/$JOB_ID/watch \
   -H "Authorization: Bearer $NOVOADS_API_KEY"
 ```
+
+**The `mkdir -p` is not boilerplate.** `outputs/` is gitignored, so it does not exist in a fresh clone, and curl's failure when the directory is missing is `curl: (56) Failure writing output to destination, passed 559 returned 4294967295` — which reads like a broken download of a render that actually succeeded and was already billed. Create the directory first and that whole detour disappears.
 
 `/watch` 302s to a URL signed at request time, so it never hands you an expired link. While the job is unfinished it is a `409` naming the current status.
 
@@ -476,6 +482,19 @@ If something is wrong, **regenerate with a corrected prompt** that names the def
 
 Check it before asking the user for anything. `references/influencers/` for people, `references/products/` for products, `references/aesthetics/` for style and mood. If a relevant file is already there, offer to use it instead of asking.
 
+### It ships empty. Do not stall on it.
+
+`references/` is gitignored, so on a fresh clone it holds nothing but empty folders. That is the expected state, and **"go find me a photo" is the wrong first move for most requests.** Ask what they are advertising first, then decide whether a photo is needed at all:
+
+| What they are advertising | Does it need a reference? |
+|---|---|
+| **Software, an app, a SaaS product, a service, a course, an agency** | **No.** There is no physical object to hold. The actor talks to camera and the product never appears — this is the single most common ad shape and it needs nothing in `references/`. Route it and go. |
+| A physical product the user sells | **Yes, and it is worth waiting for.** Ask for one photo, put it in `references/products/`, pass it as `startImageAssetId` or in `referenceAssetIds`. Do not invent packaging: the model will render a plausible fake label and charge you for it. |
+| A specific person's likeness | **Yes.** `references/influencers/`. Without it Seedance re-casts on every render. |
+| A look, a palette, a lighting mood | Optional. A style board sharpens it; prose can carry it. |
+
+**Never substitute a blank or generic product for one the user has not given you.** If they are advertising something physical and have no photo to hand, say what you cannot do rather than rendering a nameless bottle — `blank_label` on the estimate is the only other thing that would warn you, and it does not stop the charge.
+
 Before uploading a reference, if its longest side is under 1024 px, upscale with Lanczos to 1080 px on the long side and re-encode as RGB JPEG at quality 90–95, which strips alpha and keeps the payload sane. (No minimum input size is documented for this API — the practice carries over from a sibling API that answered small images with a 422, and is unverified here.)
 
 ## Errors: branch on `error.code`, never on the message
@@ -485,7 +504,7 @@ Every error is `{"error":{"code":..., "message":..., "requestId":..., "details":
 | Status | `code` | What it means | What to do |
 |---|---|---|---|
 | 400 | `invalid_input` | **The request is malformed** — an unknown key, an out-of-grid `durationSeconds`, a prompt over the model's ceiling. `details.issues` names each bad field. Never a judgement on the writing. | Fix the field. Nothing was charged. |
-| 401 | `unauthorized` | Missing, malformed, or revoked key. | Send the user to Settings → Developer. |
+| 401 | `unauthorized` | Missing, malformed, or revoked key. | Send the user to <https://novoads.ai/dashboard/settings?tab=api> to create a new one. |
 | 402 | `insufficient_credits` | `details` carries `required` and `available`. | Tell the user the gap. Do not retry. |
 | 403 | `forbidden` | `details.reason` is `plan_required`, `subscription_inactive`, or the API is off for that account. | Say which. These are different fixes. |
 | 404 | `not_found` | No such object **for this organization**. | Do not assume it exists elsewhere. |

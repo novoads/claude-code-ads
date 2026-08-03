@@ -116,9 +116,14 @@ When references are in play, say out loud that they must not drift:
 
 - `The product from @Image1 remains visually unchanged in every shot.`
 - `Keep the outfit unchanged across all cuts.`
-- **Whenever a label, package, bottle, box or screen is visible**, paste the label hold in:
-  > the product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible
+- **Whenever a label, package, bottle, box or screen is visible**, paste the label hold in — and
+  pick the form that matches what you actually sent:
+  > *with* a reference: the product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible
 
+  > *without* one: the product label remains perfectly sharp and stable throughout, with its text unchanged and fully legible
+
+  Naming "the reference image" in a text-to-video prompt points the model at something that was
+  never sent. Both forms clear `label_without_hold`.
   Seedance preserves logos and destroys printed text. `The Ordinary / Niacinamide 10%` came back as `MAGNANDE 10% ZINC 1%`.
 
 Repeat the actor tag **verbatim** rather than back-referencing it. `the same woman` resolves to nobody — no identity carries across a cut — and an elaborated tag re-casts as readily as a missing one.
