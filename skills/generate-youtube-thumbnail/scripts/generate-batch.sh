@@ -204,7 +204,7 @@ print(imgs[0].get('url','') if imgs else '')
 # ─── PROMPTS ────────────────────────────────────────────────────────────────
 # Define your prompts here. Each entry generates one thumbnail.
 # See ../prompting/guide.md and ../prompting/formulas.md for templates.
-# Prompt cap is 4,000 characters per generation.
+# Prompts are capped per generation; the API names the limit if you exceed it.
 
 declare -a PROMPTS=(
 

@@ -1,198 +1,418 @@
-# Seedance 2.0: UGC selfie-style product review
+# UGC video prompt formula — Seedance 2.0
 
-The formula for the format that carries most of the spend in this category: one person, one phone, one honest-sounding sentence about a product.
+**Use when:** You need to generate a UGC-style product review/testimonial video prompt for any person, any product, in any setting. The output should feel like a real person filmed a casual selfie video on their phone.
 
-**Read this before writing any UGC video prompt.** Everything here is craft, and **none of it is enforced**. The API renders and bills whatever you send it: the only thing that refuses a prompt for its content is moderation. Some of what follows is *flagged* for free by `POST /v1/estimates`, which returns each finding in `warnings` on a `200`, and the rest it never looks at. Both are marked — not because one is mandatory and the other optional, but because the first half you can check with one free call and the second half only you can check.
+**Model guide:** Read [seedance-2.md](seedance-2.md) first for platform rules, API parameters, and the adaptation checklist.
 
-Model: `seedance-2.0` (or `seedance-2.0-mini` at half the price while you iterate).
+## The anatomy of a UGC video prompt
 
----
-
-## The nine layers
-
-Write them as flowing prose in one paragraph, in this order. Never as bullets and never as `Label: value` pairs.
-
-| # | Layer | What goes in it |
-|---|---|---|
-| 1 | **Shot** | `Medium selfie shot`, `close selfie shot`, `handheld waist-up`. Name the frame. |
-| 2 | **Setting and light** | The room and the actual light source. `sunlit kitchen, soft window light from camera-left`. Never a mood word. |
-| 3 | **Actor** | Age band, gender, wardrobe. `a woman in her 20s in a grey zip hoodie` |
-| 4 | **Realism markers** | `natural skin texture with visible pores`, `slight camera shake from a handheld phone`. This is what fights the plastic default. |
-| 5 | **Product** | The real brand and product, by name. Pass its photo as `startImageAssetId`. The photo comes from `references/` at the repo root: list that folder before asking, and ask for the file if it is empty. |
-| 6 | **Motion** | Two or three cues on one action, comma-joined. `holds the bottle up toward the lens, tilts it slightly, shifts her weight`. One *action*, not one twitch — and never a second action chained onto it. |
-| 7 | **Eye-contact break** | `looks just off-lens, comes back to camera`. The single cheapest realism cue in the format. |
-| 8 | **The line** | `and says: "..."` in double quotes. Seedance renders the audio and the lip-sync in the same call. |
-| 9 | **Clean plate and ratio** | `No on-screen text, no captions, no background music.` then `Vertical 9:16.` at the very end. |
-
-Add a tenth layer, the **label hold**, whenever a label, package, bottle, box, or screen is visible. See below.
-
----
-
-## What the estimate flags
-
-Six rules the free `POST /v1/estimates` call checks for you. Each one comes back in `warnings` as a `{rule, message}` pair whose message is the fix written out, with the text that tripped it quoted at the end.
-
-**None of them blocks anything.** A prompt that trips all six still renders and still bills — the warning is advice, and acting on it is the whole point of collecting it. Fix them before you spend; nothing downstream will.
-
-### 1. No polish words
-
-Banned: `cinematic`, `flawless`, `perfect`, `8k`, `4k`, `hyper-detailed`, `beauty lighting`, `ultra-realistic`, `masterpiece`, `award-winning`, and their Spanish and Portuguese equivalents.
-
-These produce the plastic "looks AI" render this whole format exists to avoid. Delete the word and describe the real thing in its place: the light source, the surface, the flaw.
-
-- No: `cinematic kitchen`
-- Yes: `sunlit kitchen, soft window light from camera-left, natural skin texture with visible pores`
-
-### 2. Every prompt names its actor
-
-Seedance re-casts on every cut. A shot that does not name its actor gets a new person.
-
-The rule itself is satisfied by any age or gender token — `a woman` passes it. What the *model* needs is more than that, and is in "What the model needs anyway" below.
-
-### 3. No back-references
-
-`the same woman`, `as before`, `la misma mujer` all resolve to nobody, because no identity carries across cuts. One render came back with three visibly different women across five beats.
-
-Repeat the actor tag verbatim instead. Do not elaborate on it either: an elaborated tag re-casts as readily as a missing one.
-
-### 4. No chained motion
-
-Banned connectors: `then`, `and then`, `followed by`, `after that`, `while also`, and their Spanish and Portuguese equivalents.
-
-The rule is lexical — it looks for the connector, not for how many things move. Several cues on one action pass it and should be used (layer 6). What fails is a *second action* strung onto the first: Seedance renders one clear action well and a sequence badly, and the second beat usually arrives as a smear or not at all.
-
-- No: `she holds the bottle and then turns to the window`
-- Yes: two shots. `she holds the bottle up to camera, tilts it toward the light` / `she turns to the window`
-
-### 5. Prose, not bullets
-
-No `-` or `*` lines, and no `Shot: medium, Lighting: window` pairs. A labelled list comes back rendered as literal on-screen text.
-
-The one colon that stays is the dialogue attribution: `she says: "..."`.
-
-### 6. A spoken line, in double quotes
-
-Without it you get a silent talking head: an actor mouthing nothing, billed in full. Seedance generates the dialogue and lip-sync in the same call, so the line costs nothing extra. Omitting it only loses the audio.
-
-If the shot is genuinely meant to be silent, say so. The words `silent`, `b-roll`, or `voiceover` satisfy the rule.
-
-## Two more the estimate flags
-
-The same shape as the six above — advisory, returned in `warnings` — and worth separating because these two were never fatal even when the others were.
-
-### 7. The label hold
-
-Seedance preserves logos and destroys printed text. `The Ordinary / Niacinamide 10%` came back as `MAGNANDE 10% ZINC 1%`.
-
-Whenever a label, package, bottle, or screen is visible, paste the hold clause in.
-**Pick the wording by whether a reference actually exists.** The clause below names "the reference
-image", and that phrase is a lie in a prompt with no `startImageAssetId` and no `referenceAssetIds`
-— it points the model at something that was never sent. Two forms:
-
-- **With a reference** (`startImageAssetId` or `referenceAssetIds`):
-  > the product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible
-- **Without a reference** — text-to-video, the label invented from the prose:
-  > the product label remains perfectly sharp and stable throughout, with its text unchanged and fully legible
-
-Both clear `label_without_hold` on the estimate. The second asks for what the first asks for minus
-the impossible comparison: hold the label steady and keep the lettering readable, rather than match
-a picture that does not exist.
-
-The warning clears once either clause is present, so an estimate that still warns is telling you the clause did not land.
-
-### 8. State the ratio in the prompt too
-
-`aspectRatio` in the request body is what binds, and you must always set it. Repeating it at the end of the prompt text costs nothing and steers the composition.
-
-`Vertical 9:16.` for Reels, TikTok, and Stories. `1:1` for square feed. `16:9` only for YouTube in-stream.
-
-## What the estimate never checks
-
-No call will flag any of this. All of it is the difference between a render you ship and a render you pay for twice.
-
-- **Establish the actor in roughly 37 to 53 characters** — age band, gender, wardrobe — then repeat a terse **11 to 30 character tag**, word for word, in every later shot. `a woman in her 20s in a grey zip hoodie`, held as `grey zip hoodie woman`.
-- **Anchor on wardrobe, never on facial features.** Faces drift between renders. A hoodie does not.
-- **Ask for a real person, not a person with skin problems.** `natural skin texture with visible pores` is the goal; `acne`, `blemishes`, `redness` are not. The aim is unretouched, not unflattering.
-- **Say `No on-screen text, no captions, no background music.`** No rule looks for it, and Seedance will happily burn captions into a paid render. Every one of our own shipped templates opens with that clause.
-- **Keep the prompt in the ad's own language** and set `language` to match. Nothing on the API pushes back on Spanish or Portuguese, and the estimate lints those prompts in their own language, so there has never been anything to gain by writing a Spanish ad in English.
-
----
-
-## Worked example
-
-Real brand, real product, one action, one line. This exact prompt comes back from the estimate with **zero warnings** — re-verified live against spec `2.0.0` on 2026-08-02.
-
-**Note the pairing:** this prompt uses the *with-reference* label hold, and the body below sends `startImageAssetId`. Copying the prompt without the asset leaves the model chasing a reference image that was never uploaded — use the without-reference wording instead. Both clear the warning (verified live 2026-08-03), so the estimate will not catch the mismatch for you.
+Every effective UGC video prompt has **9 layers**, stacked in order. Skip a layer and the output falls apart.
 
 ```
-Medium selfie shot in a sunlit kitchen, soft window light from camera-left. A woman in her 20s in a grey zip hoodie holds a bottle of CeraVe Moisturizing Lotion up toward the lens, tilts it slightly, natural skin texture with visible pores, slight camera shake from a handheld phone. She looks just off-lens, comes back to camera, and says: "I stopped buying the expensive stuff after this one." The product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible. No on-screen text, no captions, no background music. Vertical 9:16.
-```
-
-The call:
-
-```json
-{
-  "model": "seedance-2.0",
-  "prompt": "<the prompt above>",
-  "durationSeconds": 12,
-  "aspectRatio": "9:16",
-  "language": "en",
-  "startImageAssetId": "<from POST /v1/uploads>"
-}
-```
-
-Price it at `POST /v1/estimates` first, show the user the number, and confirm the spoken line on its own before generating. The estimate is **not** this body: it takes the pricing fields only, and `aspectRatio` and `startImageAssetId` are a 400 there.
-
-```json
-{
-  "kind": "video",
-  "model": "seedance-2.0",
-  "durationSeconds": 12,
-  "language": "en",
-  "prompt": "<the prompt above>"
-}
+ 1. FORMAT HEADER       — duration, style, device, lighting, angle
+ 2. PERSON              — appearance, skin texture, clothing
+ 3. SETTING             — lived-in environment, specific clutter details
+ 4. PRODUCT INTRO       — how they hold/show the product to camera
+ 5. SCRIPT BEATS        — jump-cut scenes with dialogue + actions
+ 6. TONE DIRECTION      — personality, pacing, energy
+ 7. EDIT STYLE          — jump cuts, angles, take selection
+ 8. TECHNICAL FLAWS     — camera quality, audio, lighting imperfections
+ 9. VIBE STATEMENT      — one-sentence emotional anchor
 ```
 
 ---
 
-## Writing the line
+## Layer-by-layer formula
 
-The line is the ad. Everything else is staging.
+### Layer 1: Format header
 
-- **One sentence.** Two sentences in a 12 second clip means both get rushed.
-- **Past tense, specific.** `I stopped buying the expensive stuff after this one` outperforms `this product is amazing`, because the first is a thing that happened and the second is a claim.
-- **No superlatives and no exclamation marks.** They read as scripted, which is the one thing this format cannot survive.
-- **No em dashes.** They read as written rather than spoken.
-- **Say a real objection.** The strongest UGC line names the reason someone did not buy, and then answers it.
+Sets the technical foundation. Always leads the prompt.
 
-Match the language to the audience and set `language` accordingly. Write the prompt in that language too. Do not write a Spanish ad in English to make a rule easier to satisfy.
+**Pattern:**
+```
+{{DURATION}} UGC style {{CONTENT_TYPE}} video, filmed on smartphone,
+{{LIGHTING_SOURCE}}, {{CAMERA_ANGLE}}.
+```
+
+**Variables:**
+
+| Variable | Options | Notes |
+|----------|---------|-------|
+| `DURATION` | 15 seconds, 10 seconds | 15s is the Seedance 2.0 maximum. Use 10s for punchier clips with less dialogue. |
+
+**Duration guide — dialogue must fit the runtime at natural speaking pace:**
+
+| Duration | Jump cuts | Dialogue guidance |
+|----------|-----------|-------------------|
+| **10s** | 2-3 cuts | Very tight — 1-2 spoken lines max plus one silent beat. Hook + punchline. |
+| **15s** | 2-4 cuts | Dialogue is flexible but must be **speakable at a relaxed pace within 15 seconds** including natural pauses. Read your script out loud — if you have to rush to fit it in 15s, cut words. Mix spoken and silent beats. Short punchy lines > long explanations. |
+
+**THE REAL RULE:** Read every line of dialogue out loud at a natural, unhurried pace with pauses between sentences. Time yourself. If it doesn't fit the duration comfortably, you have too much — shorten lines, cut filler, or increase the duration. Include at least one silent action beat (sipping, inspecting, reacting) per video regardless of duration.
+
+| Variable | Options | Notes |
+|----------|---------|-------|
+| `CONTENT_TYPE` | skincare review, product unboxing, morning routine, haul, get-ready-with-me, first impression, honest review, tutorial, day-in-my-life | Match the creator's natural format |
+| `LIGHTING_SOURCE` | natural bedroom window lighting, bathroom vanity mirror lighting, golden hour balcony light, overhead kitchen light, car dashboard light, ring light on desk (subtle) | Natural > artificial. Specify the source, not just "good lighting" |
+| `CAMERA_ANGLE` | casual handheld selfie angle, phone propped on counter, mirror selfie angle, laptop webcam angle, phone in one hand walking | Describes HOW they're filming, not just the frame |
+
+**Example:**
+> 15 seconds UGC style skincare review video, filmed on smartphone, natural bedroom window lighting, casual handheld selfie angle.
 
 ---
 
-## Duration
+### Layer 2: Person
 
-`durationSeconds` accepts any integer from 4 to 15.
+Describe a specific, believable human — not a model. Imperfection is the point.
 
-- **4 to 6** for a single line and a single action. Cheapest, and the highest hit rate.
-- **8 to 12** for a line with a beat before or after it.
-- **15** only when the script genuinely needs it. Longer is not better, and a rushed 15 reads worse than a clean 8.
+**Pattern:**
+```
+A {{AGE_RANGE}} {{GENDER}} with {{HAIR}}, {{SKIN_TEXTURE}},
+wearing {{CLOTHING}},
+```
 
-A dense product line runs about **2.5 to 3 spoken words per second**. A calmer lifestyle line runs closer to 1.5, and that slack is exactly what leaves room for a silent beat. Count the words in your line, plan at 2.5, and pick the duration that fits plus a beat.
+**Variables:**
 
-**Iterate on `seedance-2.0-mini` first.** Same grid, same flow, half the price. Move to `seedance-2.0` once the prompt is right — the `startImageAssetId` you uploaded is durable and reusable, so the second call reuses it with no second upload.
+| Variable | How to fill | Key principle |
+|----------|-------------|---------------|
+| `AGE_RANGE` | young woman, man in his 30s, college-aged guy, woman in her late 20s | Use natural language, not exact ages |
+| `HAIR` | brown hair pulled back, messy bun, short curly hair, blonde highlights in a claw clip | Casual styling, not salon-perfect |
+| `SKIN_TEXTURE` | natural skin with visible texture, light freckles across nose, slight undereye circles, a few smile lines, subtle acne scarring near jawline | **CRITICAL** — always include 2-3 skin reality cues. Without them, AI defaults to airbrushed |
+| `CLOTHING` | casual grey t-shirt, oversized college hoodie, tank top and shorts, worn-in flannel | Comfort clothes. Nothing styled or "outfit of the day" |
+
+**Skin reality cue bank** (pick 2-3):
+- `natural skin with visible texture`
+- `visible pores across nose and cheeks`
+- `slight unevenness in skin tone`
+- `minor undereye shadows`
+- `a hint of shine on forehead from natural oils`
+- `slight pinkness on cheeks and nose`
+- `a few expression lines when smiling`
+- `light freckles` (if appropriate for the character)
+
+**Do NOT use:** acne, pimples, breakouts, blemishes, rosacea — real ≠ dermatological.
 
 ---
 
-## Failure catalog
+### Layer 3: Setting
 
-| What you see | Why | Fix |
-|---|---|---|
-| A different person in every shot | No actor tag, or a back-reference | Repeat the 11 to 30 character tag verbatim |
-| Actor mouths nothing, no audio | No quoted line | Add `and says: "..."` |
-| Garbled text on the packaging | No label hold clause | Paste the clause in |
-| Captions burned over the video | No clean-plate clause | Add `No on-screen text, no captions, no background music.` |
-| Plastic, over-lit, obviously AI | Polish words | Delete them, name the light source instead |
-| Second half of the action is a smear | A second action chained on | Split into two shots |
-| The actor barely moves | One bare motion cue | Two or three comma-joined cues on the same action |
-| Literal text rendered on screen | Bullets or `Label: value` pairs | Rewrite as one prose paragraph |
-| Landscape video | `aspectRatio` omitted | Set it. The default is `16:9` |
+The background sells authenticity. Describe 3-4 specific objects that make it feel lived-in.
+
+**Pattern:**
+```
+in {{THEIR_SPACE}} — {{DETAIL_1}}, {{DETAIL_2}}, {{DETAIL_3}},
+{{ATMOSPHERE_WORD}} and real.
+```
+
+**Setting bank:**
+
+| Setting | Specific clutter details | Atmosphere |
+|---------|------------------------|------------|
+| **Bedroom** | books on shelves, plants on windowsill, clothes on a chair, fairy lights on headboard | cozy, lived-in |
+| **Bathroom** | towels hanging, skincare bottles on counter, toothbrush in holder, foggy mirror edge | steamy, morning |
+| **Kitchen** | coffee mug on counter, cutting board, fruit bowl, morning light through blinds | warm, morning routine |
+| **Living room** | throw blanket on couch, remote on cushion, candle on coffee table, shoes by the door | relaxed, casual |
+| **Car** | coffee in cupholder, sunglasses on dash, aux cord hanging, parking lot through windshield | on-the-go |
+| **Desk/office** | laptop half-open, sticky notes, water bottle, headphones draped over monitor | work-from-home |
+| **Outdoor/balcony** | railing in background, plants in pots, city/trees visible, wind moving hair | golden hour, fresh |
+
+---
+
+### Layer 4: Product introduction
+
+How the product physically enters the frame. This is the bridge from person to pitch.
+
+**Pattern:**
+```
+{{PRONOUN}} holds the @Image1 ({{PRODUCT_DESCRIPTION}}) {{HOW}}.
+```
+
+**Product intro styles:**
+
+| Style | When to use | Example |
+|-------|-------------|---------|
+| **Show to camera** | Review, first impression | "holds the bottle up to the camera" |
+| **Already using** | Tutorial, routine | "is mid-application, product already on her skin" |
+| **Unboxing reveal** | Haul, unboxing | "pulls it out of the box, eyes lighting up" |
+| **In-hand casual** | Day-in-my-life | "has it sitting on her lap, picks it up" |
+| **Before/after** | Results-focused | "holds it next to her face, turning to show her skin" |
+
+---
+
+### Layer 5: Script beats (the heart of the prompt)
+
+Each beat is one jump cut. Structure: **setup → demonstration → proof → verdict.**
+
+**IMPORTANT:** Not every beat needs dialogue. Silent beats (inspecting product, sipping, reacting with facial expressions, reading the label) feel more authentic and prevent cramming too many words into the runtime. Every video should have at least one silent action beat. The number of spoken vs silent beats is flexible — optimize for what sounds natural when read aloud at a relaxed pace within the target duration.
+
+**Pattern (per beat):**
+```
+{{TRANSITION}} — {{FRAMING_CHANGE}}, {{ACTION}}: "{{DIALOGUE}}"
+// OR for silent beats:
+{{TRANSITION}} — {{FRAMING_CHANGE}}, {{ACTION}}.
+```
+
+**Beat framework:**
+
+| Beat # | Purpose | Framing | Example action |
+|--------|---------|---------|----------------|
+| 1 (Hook) | Grab attention | Looking into camera | Expressive opener, holds product up |
+| 2 (Show) | Product detail | Closer to lens | Tilts/turns product, shows label/texture |
+| 3 (Demo) | Proof of use | Extreme close-up | Applies product, shows consistency/texture |
+| 4 (Result) | Evidence | Mirror/different angle | Points at skin/result, shows before/after |
+| 5 (Verdict) | Final opinion | Back to original angle | Holds product up, delivers final line |
+
+For 10s, pick 2-3 of these. For 15s, use 3-4. Any beat can be spoken or silent — just make sure the total dialogue fits the runtime when read aloud naturally.
+
+**Jump cut language:**
+- `Quick jump cut —`
+- `Jump cut —`
+- `Cut to —`
+- `The video opens with`
+- `Final shot —`
+
+**Framing changes** (vary every beat):
+- `she's now showing the bottle closer to the lens`
+- `extreme close-up of her pressing the dropper`
+- `phone propped up, you can see her reflection`
+- `she leans into the camera`
+- `she holds the bottle up one final time`
+
+**Dialogue rules:**
+- Written in quotes, casual spoken language
+- Use filler words: "okay so," "literally," "I'm not even," "like," "you guys"
+- End mid-thought or with a laugh, not a polished sign-off
+- Each line should feel like a different take stitched together
+
+---
+
+### Layer 6: Tone direction
+
+One paragraph that tells the model the emotional texture of the entire video.
+
+**Pattern:**
+```
+Throughout the video, the tone is {{EMOTION_1}}, {{EMOTION_2}},
+{{EMOTION_3}} — {{BEHAVIOR_DESCRIPTION}}.
+```
+
+**Pacing rule (ALWAYS include):** Every tone direction paragraph MUST include an explicit pacing/speed cue. AI video generators default to unnaturally fast speech. Counter this by specifying pauses, breath beats, and natural human rhythm. Use phrases like:
+- `pauses between thoughts as if collecting the next word`
+- `leaves a beat of silence after each sentence before continuing`
+- `speaks at a relaxed, unhurried pace — no rushing`
+- `takes natural breaths between sentences, never rushing to the next line`
+- `lets moments breathe — a sip, a glance down, a pause before speaking again`
+
+**Tone bank:**
+
+| Vibe | Emotion words | Behavior description |
+|------|---------------|---------------------|
+| **Excited fan** | genuine, excited, breathless | she talks with energy but pauses between thoughts, uses natural breaths, laughs at herself |
+| **Chill recommender** | relaxed, honest, conversational | she speaks slowly, leaves beats of silence between lines, makes eye contact, shrugs casually |
+| **Skeptic converted** | surprised, impressed, almost reluctant | she raises her eyebrows, pauses mid-sentence as if reconsidering, sounds like she can't believe it |
+| **Best friend sharing** | warm, conspiratorial, intimate | she lowers her voice, leans in, takes her time — talks like it's a secret worth savoring |
+| **Morning routine casual** | sleepy, soft, unhurried | she yawns, moves slowly, long pauses between sentences, talks between sips of coffee |
+
+---
+
+### Layer 7: Edit style
+
+Describes how the jump cuts and takes work together.
+
+**Pattern:**
+```
+Each jump cut is {{ANGLE_VARIATION}}. {{EDIT_FEEL}}.
+```
+
+**Standard UGC edit style** (use this as default):
+> Each jump cut is slightly closer or at a different angle, as if she filmed multiple takes and edited the best bits together.
+
+**Variations:**
+- `Quick cuts between tight close-ups and medium shots, TikTok editing rhythm`
+- `Long unbroken take with one or two hard cuts where she paused to think`
+- `Get-ready-with-me style — time skips with each step of the routine`
+
+---
+
+### Layer 8: Technical flaws
+
+This is what makes it feel real. Include ALL of these — every single one matters.
+
+**Standard technical flaw block** (copy this every time, adjust to setting):
+```
+The lighting is {{LIGHT_TYPE}} — {{LIGHT_FLAW}}.
+The image is slightly imperfect — {{CAMERA_FLAW_1}}, {{CAMERA_FLAW_2}}, {{CAMERA_FLAW_3}}.
+The sound is {{AUDIO_SOURCE}} — {{AUDIO_DETAILS}}.
+```
+
+**Light flaws:** `no ring light, no filters` / `slightly overexposed from the window` / `one side of face in shadow`
+
+**Camera flaws (pick 2-3):**
+- `natural phone quality, not color graded`
+- `slight motion blur on fast movements`
+- `soft focus, nothing is tack sharp`
+- `visible grain in darker areas`
+- `auto white balance shift between cuts`
+
+**Audio source options:**
+- `direct from the phone mic` — her natural voice, room ambience, no music underneath
+- `front camera mic` — slightly tinny, room echo, background hum
+- `car interior acoustics` — muffled, road noise underneath
+
+---
+
+### Layer 9: Vibe statement
+
+One sentence that anchors the entire emotional feel. This is the "north star" for the model.
+
+**Pattern:**
+```
+The overall feel is {{ADJECTIVE_1}}, {{ADJECTIVE_2}}, {{ADJECTIVE_3}} —
+{{RELATABLE_METAPHOR}}.
+```
+
+**Examples:**
+- `trustworthy, relatable, real — a friend telling you about something she genuinely likes.`
+- `chaotic, genuine, fun — like a voice memo she sent to her group chat.`
+- `calm, honest, intimate — like overhearing someone's morning routine.`
+- `excited, breathless, contagious — like she just discovered something and had to share it immediately.`
+
+---
+
+## Complete template
+
+Copy this and fill in the `{{VARIABLES}}`:
+
+```
+{{DURATION}} UGC style {{CONTENT_TYPE}} video, filmed on smartphone,
+{{LIGHTING_SOURCE}}, {{CAMERA_ANGLE}}. A {{AGE_RANGE}} {{GENDER}} with
+{{HAIR}}, {{SKIN_TEXTURE}}, wearing {{CLOTHING}}, in {{THEIR_SPACE}} —
+{{CLUTTER_DETAIL_1}}, {{CLUTTER_DETAIL_2}}, {{CLUTTER_DETAIL_3}},
+{{ATMOSPHERE}} and real. {{PRONOUN}} holds the @Image1
+({{PRODUCT_DESCRIPTION}}) {{PRODUCT_INTRO_STYLE}}.
+
+The video opens with {{PRONOUN}} {{HOOK_ACTION}}: "{{HOOK_LINE}}"
+
+Quick jump cut — {{BEAT_2_FRAMING}}, {{BEAT_2_ACTION}}:
+"{{BEAT_2_DIALOGUE}}"
+
+Jump cut — {{BEAT_3_FRAMING}}, {{BEAT_3_ACTION}}.
+
+Jump cut — {{BEAT_4_FRAMING}}, {{BEAT_4_ACTION}}:
+"{{BEAT_4_DIALOGUE}}" {{CLOSING_ACTION}}.
+
+Throughout the video, the tone is {{TONE_EMOTIONS}} —
+{{TONE_BEHAVIOR}}. The pacing is natural and unhurried — {{PACING_CUE}}.
+Each jump cut is {{ANGLE_VARIATION}}. {{EDIT_FEEL}}.
+
+The lighting is {{LIGHT_TYPE}} — {{LIGHT_FLAW}}. The image is
+slightly imperfect — {{CAMERA_FLAWS}}. The sound is
+{{AUDIO_SOURCE}} — {{AUDIO_DETAILS}}.
+
+The overall feel is {{VIBE_ADJECTIVES}} — {{RELATABLE_METAPHOR}}.
+```
+
+---
+
+## Quick-start examples
+
+### Example A: Skincare serum (bedroom, excited fan)
+
+```
+15 seconds UGC style skincare review video, filmed on smartphone,
+natural bedroom window lighting, casual handheld selfie angle. A young
+woman with brown hair pulled back, natural skin with visible texture,
+wearing a casual grey t-shirt, in her cozy bedroom — books on shelves,
+plants on the windowsill, clothes on a chair, lived-in and real. She
+holds the @Image1 (LUNA Aurora Serum bottle) up to the camera.
+
+The video opens with her looking into the camera, excited expression:
+"Okay, so I've been using this for two weeks, and I need to talk about
+it."
+
+Quick jump cut — she's now showing the bottle closer to the lens,
+tilting it so the holographic text catches the light from the window:
+"The texture is insane, it's like water but silky?"
+
+Jump cut — extreme close-up of her pressing the dropper, the serum
+dropping onto her fingertips, she rubs it between her fingers, showing
+the consistency.
+
+Jump cut — she leans into the camera, pointing at her cheek with a
+genuine smile: "Look, I actually have a glow right now, and I'm
+literally wearing nothing." She laughs, the video cuts.
+
+Throughout the video, the tone is genuine, unscripted-feeling, warm —
+she talks fast, uses natural pauses, laughs at herself. Each jump cut
+is slightly closer or at a different angle, as if she filmed multiple
+takes and edited the best bits together.
+
+The lighting is soft natural daylight, no ring light, no filters. The
+image is slightly imperfect — natural phone quality, not color graded,
+authentic. The sound is direct from the phone mic — room ambience, her
+natural voice, no music underneath.
+
+The overall feel is trustworthy, relatable, real — a friend telling you
+about something she genuinely likes.
+```
+
+### Example B: Protein powder (kitchen, chill recommender)
+
+```
+15 seconds UGC style honest review video, filmed on smartphone,
+morning kitchen light through blinds, phone propped on counter. A guy
+in his late 20s with short dark hair and stubble, natural skin with
+visible pores and slight undereye shadows, wearing a worn-in black
+t-shirt, in his small apartment kitchen — coffee mug on counter,
+cutting board with banana peel, blender in background, morning mess
+and real. He has the @Image1 (GAINZ Chocolate Whey tub) sitting next
+to the blender.
+
+The video opens with him looking at camera, half-smile: "Alright so
+everyone keeps asking me about my protein powder, so here it is."
+
+Quick jump cut — he picks up the tub, turns it to show the label:
+"Chocolate whey, nothing fancy, but the macros are actually insane."
+
+Jump cut — he scoops powder into the blender, close-up of the scoop
+coming out clean.
+
+Jump cut — he holds the tub up, taps the label: "Link's in my bio,
+you're welcome." He laughs and walks off frame.
+
+Throughout the video, the tone is relaxed, honest, conversational —
+he speaks slowly, makes steady eye contact, shrugs casually. Each
+jump cut is slightly closer or at a different angle, morning light
+shifting between takes.
+
+The lighting is uneven kitchen light — bright from the window side,
+shadow on the other, no overhead light on. The image is slightly
+imperfect — natural phone quality, slight warm cast, not color graded.
+The sound is front camera mic — slightly tinny, fridge hum in
+background, his natural voice.
+
+The overall feel is calm, honest, no-BS — a buddy telling you what
+he actually uses, not selling you anything.
+```
+
+---
+
+## Adaptation checklist
+
+When building a new prompt, verify each layer:
+
+- [ ] **Format header** — duration (max 15s), style, device, lighting source, camera angle all specified
+- [ ] **Person** — described with natural imperfections, not a model casting call
+- [ ] **Skin texture** — at least 2 reality cues included (pores, unevenness, shine, shadows)
+- [ ] **Setting** — 3+ specific clutter objects, atmosphere word
+- [ ] **Product intro** — clear physical description of product, how it enters the frame
+- [ ] **Script beats** — beat count matches duration (10s = 2-3, 15s = 3-4), silent beats included
+- [ ] **Dialogue** — fits the runtime at natural pace, uses filler words, ends naturally (laugh, trail off)
+- [ ] **Tone direction** — 3 emotion words + behavior description
+- [ ] **Pacing** — explicit pacing cues in tone direction, pauses/breaths between lines
+- [ ] **Edit style** — how cuts relate to each other
+- [ ] **Technical flaws** — lighting flaws, camera flaws, audio source all specified
+- [ ] **Vibe statement** — one-sentence emotional metaphor to anchor the whole piece
+- [ ] **Word count** — prompt is between 100–260 words (Seedance 2.0 sweet spot)
+- [ ] **Motion specificity** — actions describe degree/direction, not just "moves"
+- [ ] **Consistency anchors** — product/outfit described as unchanged across shots
+- [ ] **No forbidden words** — no "cinematic," "professional," "stunning," "8k," "studio," "perfect"

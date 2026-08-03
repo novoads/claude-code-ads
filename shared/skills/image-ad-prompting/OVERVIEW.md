@@ -44,7 +44,7 @@ the `novoads-api` skill's `reference.md`; this table is only what differs *betwe
 | | `gpt-image-2` | `nano-banana-pro` | `reve-2.1` |
 |---|---|---|---|
 | **Default?** | yes — omit `model` and this renders | no | no |
-| **Prompt cap** | 4,000 characters | 4,000 characters | 4,000 characters |
+| **Prompt cap** | model cap | model cap | model cap |
 | **Reference images** | up to 4 `referenceAssetIds` | up to 4 | up to 4 |
 | **Aspect ratios** | `1:1` `4:5` `2:3` `9:16` `16:9` `21:9` | those plus `3:2` `3:4` `4:3` `5:4` | same 10 as Nano Banana Pro |
 | **Images per call** | `numImages` 1–4 | 1–4 | 1–4 |

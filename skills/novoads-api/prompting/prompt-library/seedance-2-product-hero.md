@@ -20,7 +20,7 @@ There is no person in this video. The product is the only subject, and the entir
 
 **1. `missing_actor_descriptor` will fire on the estimate, and it is wrong here.** No person, by design. Ignore it — do not invent an actor, and do not go looking for a field that scopes the rules off, because that field was deleted from the API and sending it is a `400`. Same call as the premium reveal and the Pixar routes.
 
-**2. `label_without_hold` is the warning to actually act on.** This style lives on macro shots of packaging, and Seedance preserves logos while destroying printed text. Paste the label hold into layer 2, always:
+**2. `label_without_hold` will also fire.** This style lives on macro shots of packaging, and Seedance preserves logos while destroying printed text. Advisory, like the rest.
 
 > the product label remains perfectly sharp and identical to the reference image with its text unchanged and fully legible
 
@@ -29,12 +29,12 @@ Verified live on the worked example below, spec `2.0.0`, 2026-08-02: with the cl
 ## The structure
 
 ```
- 1. FORMAT HEADER      — duration, visual style, camera type
- 2. PRODUCT            — what it looks like, how it's positioned, label hold
- 3. ENVIRONMENT        — backdrop color, surface, elemental effects
- 4. SHOT SEQUENCE      — the visual beats: angles, movements, compositions
- 5. TEXT OVERLAYS      — tagline, CTA, feature callouts
- 6. TECHNICAL QUALITY  — lighting, camera movement, color grade, audio
+ 1. FORMAT HEADER        — duration, visual style, camera type
+ 2. PRODUCT              — what it looks like, how it's positioned
+ 3. ENVIRONMENT          — backdrop color, surface, elemental effects
+ 4. SHOT SEQUENCE        — the visual beats: angles, movements, compositions
+ 5. TEXT OVERLAYS        — tagline, CTA, feature callouts
+ 6. TECHNICAL QUALITY    — lighting, camera movement, color grade, audio
 ```
 
 ---
@@ -142,9 +142,11 @@ Separate the shots with `Cut to` — never with `then`, `and then` or `followed 
 | **Mid-video (~8–10s)** | Brand tagline or product claim | Large, bold, centered |
 | **End card (~12–15s)** | Where to buy + feature callouts | "Available at [retailer]" + feature badges |
 
-**Write the overlay as a sentence, not as a bracketed label.** `[Text overlay: "MAXIMUM VOLTAGE"]` invites the model to draw the scaffolding — the words *Text overlay* — into the frame along with the tagline. Write instead:
+**Write the overlay as a bracketed label**, on its own line, as the template and the worked example
+below do:
 
-> Bold text appears across the lower third reading MAXIMUM VOLTAGE ZERO COMPROMISE, holding into an end card that reads Available everywhere, zero sugar, 200mg caffeine.
+> `[Text overlay: "MAXIMUM VOLTAGE. ZERO COMPROMISE."]`
+> `[End card: "Available everywhere — Zero Sugar | 200mg Caffeine"]`
 
 **Tagline rules:**
 - Short, punchy, memorable — 4 to 8 words
@@ -176,11 +178,10 @@ The lighting is {{LIGHT_SETUP}} — {{LIGHT_QUALITY}}. The image is {{CAMERA_QUA
 ## Complete template
 
 ```
-15 seconds {{CONTENT_TYPE}} video, {{CAMERA_STYLE}}, {{MOOD_DESCRIPTOR}},
-silent b-roll with no spoken dialogue. The @Image1 ({{PRODUCT_DESCRIPTION}}) —
-{{SURFACE_DETAILS}}, {{CONDITION_DETAILS}}. The product label remains perfectly
-sharp and identical to the reference image with its text unchanged and fully
-legible. Set against a {{BACKDROP}} on a {{SURFACE}}. {{ELEMENTAL_EFFECT_1}},
+15 seconds {{CONTENT_TYPE}} video, {{CAMERA_STYLE}},
+{{MOOD_DESCRIPTOR}}. The @Image1 ({{PRODUCT_DESCRIPTION}}) —
+{{SURFACE_DETAILS}}, {{CONDITION_DETAILS}}. Set against a
+{{BACKDROP}} on a {{SURFACE}}. {{ELEMENTAL_EFFECT_1}},
 {{ELEMENTAL_EFFECT_2}}.
 
 {{SHOT_1_TYPE}} — {{SHOT_1_DESCRIPTION}}.
@@ -189,57 +190,59 @@ Cut to {{SHOT_2_TYPE}} — {{SHOT_2_DESCRIPTION}}.
 
 Cut to {{SHOT_3_TYPE}} — {{SHOT_3_DESCRIPTION}}.
 
-{{SHOT_4_TYPE}} — {{SHOT_4_DESCRIPTION}}. Bold text appears across the lower
-third reading {{TAGLINE}}, holding into an end card that reads {{CTA}}.
+{{SHOT_4_TYPE}} — {{SHOT_4_DESCRIPTION}}.
+[Text overlay: "{{TAGLINE}}"]
+[End card: "{{CTA}}"]
 
-The lighting is {{LIGHT_SETUP}} — {{LIGHT_QUALITY}}. The image is
-{{CAMERA_QUALITY}} — {{CAMERA_DETAILS}}. The color grade is {{COLOR_GRADE}}.
-The sound is {{AUDIO_TYPE}} — {{AUDIO_DETAILS}}. Vertical 9:16.
+The lighting is {{LIGHT_SETUP}} — {{LIGHT_QUALITY}}.
+The image is {{CAMERA_QUALITY}} — {{CAMERA_DETAILS}}.
+The color grade is {{COLOR_GRADE}}.
+The sound is {{AUDIO_TYPE}} — {{AUDIO_DETAILS}}.
 ```
 
 ---
 
 ## Worked example: energy drink can
 
-Priced live against spec `2.0.0` on 2026-08-02: **one** warning, `missing_actor_descriptor`, the wrong-route one this style always collects. No `label_without_hold`, no `no_spoken_line`, no `no_aspect_ratio`.
+The fork's example, restored verbatim. Priced live 2026-08-03: **three** warnings — `missing_actor_descriptor` (the wrong-route one this style always collects), plus `label_without_hold` and `no_aspect_ratio`. All three are advisory; none blocks or reprices.
 
 ```
-15 seconds product hero video, slow-motion macro photography, dark and
-dramatic, silent b-roll with no spoken dialogue. The @Image1 (VOLT Energy
-— tall 16oz matte black can with neon green lightning bolt logo, silver
-pull tab, ZERO SUGAR MAX CHARGE in electric green text on the lower third)
-— condensation droplets forming on the matte surface, ice cold and freshly
-cracked. The product label remains perfectly sharp and identical to the
-reference image with its text unchanged and fully legible. Set against a
-deep black void on a dark reflective surface. Water splashing dramatically
-as the can is set down, neon green light refracting through the suspended
-water droplets.
+15 seconds product hero video, slow-motion macro photography,
+dark and dramatic. The @Image1 (VOLT Energy — tall 16oz matte
+black can with neon green lightning bolt logo, silver pull tab,
+"ZERO SUGAR / MAX CHARGE" in electric green text on the lower
+third) — condensation droplets forming on the matte surface,
+ice cold and freshly cracked. Set against a deep black void on
+a dark reflective surface. Water splashing dramatically as the
+can is set down, neon green light refracting through the
+suspended water droplets.
 
-Extreme close-up — the neon green logo fills the frame, water droplets
-cling to the matte black surface, one droplet slowly rolling down past the
-lightning bolt.
+Extreme close-up — the neon green logo fills the frame, water
+droplets cling to the matte black surface, one droplet slowly
+rolling down past the lightning bolt.
 
-Cut to a hand reaching in from the left, gripping the can and lifting it —
-water cascades off the surface in slow motion, droplets hanging in the air,
-green light catching each one.
+Cut to a hand reaching in from the left, gripping the can and
+lifting it — water cascades off the surface in slow motion,
+droplets hanging in the air, green light catching each one.
 
-Cut to dramatic low angle — the can tilted slightly toward camera, rain
-pouring down onto it from above, water sheeting off the edges, the pull tab
-gleaming.
+Cut to dramatic low angle — the can tilted slightly toward
+camera, rain pouring down onto it from above, water sheeting
+off the edges, the pull tab gleaming.
 
-Hero composition — the can centered on the wet reflective surface, a second
-variant (white can, red logo) placed behind it at an angle. Water settling.
-The reflection doubles them. Bold text appears across the lower third
-reading MAXIMUM VOLTAGE ZERO COMPROMISE, holding into an end card that
-reads Available everywhere, zero sugar, 200mg caffeine.
+Hero composition — the can centered on the wet reflective
+surface, a second variant (white can, red logo) placed behind
+it at an angle. Water settling. The reflection doubles them.
+[Text overlay: "MAXIMUM VOLTAGE. ZERO COMPROMISE."]
+[End card: "Available everywhere — Zero Sugar | 200mg Caffeine"]
 
-The lighting is single spotlight from above with rim light on edges, deep
-shadows pooling around the base. The image is high-end product photography,
-tack-sharp label, slow-motion water capture. The color grade is deep black
-shadows with electric green highlights bleeding from the logo into the
-water. The sound is deep bass building to a drop at the splash moment,
-foley crackle of the can tab, water impact, resolving to a low hum under
-the end card. Vertical 9:16.
+The lighting is single spotlight from above with rim light on
+edges, deep shadows pooling around the base. The image is
+high-end product photography, tack-sharp label, slow-motion
+water capture. The color grade is deep black shadows with
+electric green highlights bleeding from the logo into the
+water. The sound is deep bass building to a drop at the splash
+moment, foley crackle of the can tab, water impact, resolving
+to a low hum under the end card.
 ```
 
 The call:
@@ -286,7 +289,7 @@ Nothing is spoken here, so gate 1 does not apply. Gate 2 always does.
 - [ ] **Surface is reflective**
 - [ ] **3–4 shots that escalate** — macro → interaction → dramatic angle → hero, separated by `Cut to`, never chained with `then`
 - [ ] **Camera movement slow and deliberate**
-- [ ] **Tagline written as prose**, not as a bracketed `Text overlay:` label
+- [ ] **Tagline written as a bracketed `[Text overlay: "…"]` label**, with `[End card: "…"]` under it
 - [ ] **Audio is music + foley, no dialogue** — and decide the flag: `audioEnabled: false` for a fully silent master, or leave it default to keep Seedance's foley (see Layer 1)
 - [ ] **Length** — around 330 words for this 4-shot shape; every shot specified, nothing padded
 - [ ] **`@Image1`** — product photo uploaded once, passed in `referenceAssetIds`, never alongside `startImageAssetId`

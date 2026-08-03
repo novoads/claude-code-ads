@@ -118,7 +118,7 @@ Structure the prompt with these sections (omit any that don't apply):
 - Composition / spacing rules
 - **Explicit chrome exclusion** — name what NOT to render (the validator's no-chrome suffix is a safety net; the prompt should also explicitly exclude)
 
-Keep an eye on length: the models cap prompts at **4,000 characters**, and the three always-on
+Keep an eye on length: the models cap prompt length, and the three always-on
 safety suffixes add roughly 1,500 to whatever you write. The validator checks the assembled
 prompt locally and fails before spending anything, but a v1 that only just fits leaves no room
 for Phase 5's refinements.

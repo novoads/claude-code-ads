@@ -149,7 +149,7 @@ Avoid: distorted face, extra fingers, hands visible, blurry logos, generic face
 **Always include the CRITICAL CHARACTER LIKENESS block** when the subject is a real person —
 and lean on it harder than you used to, since it is now carrying work the 5th reference used to do.
 
-Prompts cap at **4,000 characters**. Reference the uploaded images positionally ("the face in
+Prompts are capped per generation; the API names the limit if you exceed it. Reference the uploaded images positionally ("the face in
 the first reference image") — order is preserved.
 
 ### 6. Generate (use the batch script)

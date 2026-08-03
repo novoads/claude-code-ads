@@ -53,7 +53,7 @@ concurrency, the upload contract — the `novoads-api` skill's `reference.md` is
 | Field | Value |
 |---|---|
 | `model` | `gpt-image-2` (also the API default) |
-| `prompt` | up to **4,000 characters** — and the always-on suffixes count against it |
+| `prompt` | the image prompt — the always-on suffixes count against the model's cap |
 | `aspectRatio` | `1:1` `4:5` `2:3` `9:16` `16:9` `21:9` — **defaults to `1:1`**, so always set it |
 | `referenceAssetIds` | up to **4**, order preserved, addressable positionally from the prompt |
 | `numImages` | `1`–`4`, **one call**, charged per image |
@@ -120,7 +120,7 @@ Three things to know about this call:
 
 - **It also lints the prompt for free.** Anything it finds comes back in `warnings`, each entry `{rule, message}`. These are **advice, not blockers** — nothing in there will stop the generation. Read them anyway: the message names the problem and ships the fix inline, in the prompt's own language. A clean prompt omits the `warnings` key entirely.
 - **The body is strict.** Only `kind`, `prompt`, `model`, `numImages`, `language` are accepted. Sending `aspectRatio` or `referenceAssetIds` is a `400 Unrecognized key` — the estimate never sees them, and neither affects the price.
-- **It enforces this model's prompt ceiling.** A prompt over 4,000 characters is refused here, free, with a message naming the limit — the same refusal the paid call would give. It does **not** run moderation, so a prompt the estimate blessed can still come back `422 content_policy`.
+- **It enforces this model's prompt ceiling.** A prompt over the model's cap is refused here, free, with a message naming the limit — the same refusal the paid call would give. It does **not** run moderation, so a prompt the estimate blessed can still come back `422 content_policy`.
 
 Estimate the **final** prompt — the one the script will send, with the safety suffixes
 appended — or the quote will be short by roughly 1,500 characters' worth of prompt.
@@ -182,7 +182,7 @@ pipe them. Optionally write them to `./generated/run-<ts>.jsonl` for downstream 
 
 | What you see | What it means |
 |---|---|
-| `400 invalid_input` with `details.issues` | A malformed field. Most often an `aspectRatio` this model doesn't take, more than 4 `referenceAssetIds`, or a prompt over 4,000 characters. Nothing was charged. |
+| `400 invalid_input` with `details.issues` | A malformed field. Most often an `aspectRatio` this model doesn't take, more than 4 `referenceAssetIds`, or a prompt over the model's cap. Nothing was charged. |
 | `401 unauthorized` | Missing, malformed or revoked key. Send the user to <https://novoads.ai/dashboard/settings?tab=api>. |
 | `402 insufficient_credits` | `details` carries `required` and `available`. Tell the user the gap; do not retry. |
 | `403 forbidden` | `details.reason` says which: `plan_required`, `subscription_inactive`, or API access off for the account. |

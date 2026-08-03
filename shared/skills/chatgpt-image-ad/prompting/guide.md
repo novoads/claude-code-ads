@@ -37,7 +37,7 @@ These come from the live API contract (`GET /v1/openapi.json` is the authority):
 
 1. **Model is `gpt-image-2`.** The script refuses other model strings (`dall-e-3`, `gpt-image-1`, etc.). Predictable model means predictable cost and behavior per run.
 2. **Max 4 reference images.** `referenceAssetIds` caps at 4 on every Novoads image model. The script enforces it. There is no skill to switch to for more — the cap is the same everywhere.
-3. **Prompt cap 4,000 characters**, and the three always-on suffixes count against it (they run to roughly 1,500 together). The script checks the assembled prompt and fails locally, before spending anything.
+3. **Prompts are capped**, and the three always-on suffixes count against it (they run to roughly 1,500 together). The script checks the assembled prompt and fails locally, before spending anything.
 4. **No platform/screenshot chrome in output.** The `NO_CHROME_SUFFIX` is always on (unless you explicitly `--allow-chrome` for the rare UGC screen-recording aesthetic). Output is the standalone ad creative — the static image that gets uploaded.
 5. **Edge-safe rule always on.** Text and focal subjects must sit inside the central 84% of the canvas. Backgrounds may bleed.
 6. **Glyph-safety rule always on.** Plain words inside body-text blocks. Emoji OK in headlines.

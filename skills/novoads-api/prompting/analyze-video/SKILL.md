@@ -215,7 +215,7 @@ instead of filling blanks.]
 
 [The route-specific traps. If the style speaks, say that the line is rendered and
 lip-synced in this same call and that gate 1 applies. If it is silent, say that silence has
-to be declared in the prose. If a label is ever visible, say that the label hold is
+to be declared in the prose.]
 mandatory.]
 
 ## The structure
@@ -285,11 +285,9 @@ template that omits them manufactures the same defect in every prompt written fr
 - **Every prompt is one clip of 4 to 15 seconds.** If the style needs more, the template
   ships a multi-clip strategy — never a longer prompt.
 
-- **Length follows shot count, not a band.** Roughly **90 to 130 words for a one-shot
-  prompt**, roughly **250 to 330 for a 3–4 beat prompt**, because each beat needs its own
-  framing, action and detail. The only hard limit is **4,000 characters**, and at the ~6.3
-  characters per word these formulas average even the longest sits at half of it. Do not
-  pad a one-shot prompt to hit a number and do not cut a beat's framing to stay under one.
+- **Keep prompts between 100 and 260 words.** Shorter prompts produce vague results; longer
+  ones overwhelm the model and cause it to lose focus on key details. Do not pad to hit the
+  floor and do not cut a beat's framing to stay under the ceiling.
 
 - **Variables are curated choices, not blanks.** "Any lighting" is useless. "Natural window
   light, overhead kitchen light, golden-hour balcony light" is a decision the writer can
@@ -300,15 +298,6 @@ template that omits them manufactures the same defect in every prompt written fr
   pointing past the end of the array is refused before the charge. If the style uses a
   start frame instead, say so and use no tokens at all.
 
-- **State the ratio in the prompt text.** One sentence at the end — `Vertical 9:16.` — on
-  top of the `aspectRatio` field. The field is what binds; the sentence steers composition,
-  and its absence is the `no_aspect_ratio` warning.
-
-- **Paste the label hold wherever a label, package, bottle, box or screen is visible:**
-  *the product label remains perfectly sharp and identical to the reference image with its
-  text unchanged and fully legible*. Seedance preserves logos and destroys printed text.
-  This is the one warning worth acting on, and it is exactly the one the product formulas
-  used to omit.
 
 - **If the style is silent, say so in prose** — `a silent product film with no spoken
   dialogue`, `silent b-roll`. Seedance renders audio from the prompt, so a film that never

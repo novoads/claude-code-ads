@@ -22,18 +22,18 @@ This style sits in the gap between raw UGC and a produced commercial, and borrow
 
 **2. Multi-look is where identity drifts, and `@Image2` is the fix.** Seedance re-casts on every cut. The fork's answer was a repeated wardrobe tag, which still fights the outfit changes this style is built on. A person reference holds the face while the clothes change around it — that is what the reference mode is for. Keep the verbatim tag too, and **never** write `the same woman` or `as before`: a back-reference resolves to nobody.
 
-**3. `studio` is not a banned word here.** The polish-word list bans `cinematic`, not `studio` — and this is the one route where a lit studio with the rig in frame is the entire premise. `cinema camera` and `cinema-quality` are also outside the list and are the right vocabulary for this look. Verified live on the worked example below, spec `2.0.0`, 2026-08-02: **zero warnings**.
+**3. `studio` is not a banned word here.** The polish-word list bans `cinematic`, not `studio` — and this is the one route where a lit studio with the rig in frame is the entire premise. `cinema camera` and `cinema-quality` are also outside the list and are the right vocabulary for this look. Confirmed live on the worked example below, 2026-08-03: no polish-word warning of any kind.
 
 ## The structure
 
 ```
- 1. FORMAT HEADER       — duration, style, lighting approach
- 2. PERSON + STYLING    — the model and their base look, plus outfit changes
- 3. STUDIO SETTING      — the backdrop, the BTS elements visible
- 4. SHOT SEQUENCE       — what the camera shows, in order
- 5. VOICEOVER SCRIPT    — narration running over the visuals (not lip-synced dialogue)
- 6. TONE & PACING       — the mood, the rhythm, the energy arc
- 7. TECHNICAL QUALITY   — lighting, camera, color grade, audio
+ 1. FORMAT HEADER         — duration, style, lighting approach
+ 2. PERSON + STYLING      — the model and their base look, plus outfit changes
+ 3. STUDIO SETTING        — the backdrop, the BTS elements visible
+ 4. SHOT SEQUENCE         — the visual beats: what the camera shows, in order
+ 5. VOICEOVER SCRIPT      — narration that runs over the visuals (NOT synced to lip movement)
+ 6. TONE & PACING         — the mood, the rhythm, the energy arc
+ 7. TECHNICAL QUALITY     — lighting, camera movement, color grade, audio
 ```
 
 ---
@@ -195,11 +195,11 @@ The lighting is {{LIGHT_SETUP}} — {{LIGHT_QUALITY}}. The image is {{CAMERA_QUA
 ## Complete template
 
 ```
-15 seconds {{CONTENT_TYPE}} video, {{CAMERA_SYSTEM}}, {{LIGHTING_SETUP}},
-clean studio backdrop. The {{GENDER}} from @Image2 — {{AGE_RANGE}}, {{HAIR}},
-{{FACIAL_DETAILS}}, {{BUILD}} — wearing {{LOOK_DESCRIPTION}} with the @Image1
-({{PRODUCT_DESCRIPTION}}). Shot in a {{STUDIO_TYPE}} — {{BACKDROP}},
-{{BTS_ELEMENT}}.
+15 seconds {{CONTENT_TYPE}} video, {{CAMERA_SYSTEM}},
+{{LIGHTING_SETUP}}, clean studio backdrop. A {{AGE_RANGE}}
+{{GENDER}} with {{HAIR}}, {{FACIAL_DETAILS}}, {{BUILD}}, wearing
+{{LOOK_DESCRIPTION}} with the @Image1 ({{PRODUCT_DESCRIPTION}}).
+Shot in a {{STUDIO_TYPE}} — {{BACKDROP}}, {{BTS_ELEMENT}}.
 
 {{SHOT_1_TYPE}} — {{SHOT_1_DESCRIPTION}}.
 
@@ -209,51 +209,59 @@ Cut to {{SHOT_3_TYPE}} — {{SHOT_3_DESCRIPTION}}.
 
 Voiceover: "{{VO_LINE_1}}. {{VO_LINE_2}}. {{VO_LINE_3}}."
 
-Throughout the video, the tone is {{TONE_EMOTIONS}} — {{VISUAL_BEHAVIOR}}.
-{{PACING_CUE}}. The voiceover is {{VOICE_QUALITY}}.
+Throughout the video, the tone is {{TONE_EMOTIONS}} —
+{{VISUAL_BEHAVIOR}}. {{PACING_CUE}}.
+The voiceover is {{VOICE_QUALITY}}.
 
 The lighting is {{LIGHT_SETUP}} — {{LIGHT_QUALITY}}. The image is
-{{CAMERA_QUALITY}} — {{CAMERA_DETAILS}}. The sound is {{AUDIO_TYPE}} —
-{{AUDIO_DETAILS}}. Vertical 9:16.
+{{CAMERA_QUALITY}} — {{CAMERA_DETAILS}}. The sound is
+{{AUDIO_TYPE}} — {{AUDIO_DETAILS}}.
 ```
 
 ---
 
 ## Worked example: waxed canvas weekender bag
 
-Priced live against spec `2.0.0` on 2026-08-02: **zero warnings**.
+The fork's example, restored verbatim. Priced live 2026-08-03: **one warning**, `no_aspect_ratio`.
+Advisory only — the `aspectRatio` field is what binds the output.
 
 ```
-15 seconds brand lookbook video, filmed on cinema camera with shallow depth
-of field, large softbox key light with white seamless backdrop, clean studio
-backdrop. The woman from @Image2 — late 20s, shoulder-length dark hair tucked
-behind her ears, clean skin with natural complexion, lean build — wearing a
-white linen button-down tucked into high-waisted olive trousers with the
-@Image1 (Waxed Canvas Weekender — tobacco brown, leather handles and brass
-hardware, side zip pocket, monogrammed luggage tag). Shot in a small photo
-studio — white seamless paper, camera rig on tripod visible in foreground.
+15 seconds brand lookbook video, filmed on cinema camera with
+shallow depth of field, large softbox key light with white seamless
+backdrop, clean studio backdrop. A woman in her late 20s with
+shoulder-length dark hair tucked behind her ears, clean skin with
+natural complexion, lean build, wearing a white linen button-down
+tucked into high-waisted olive trousers with the @Image1 (Waxed
+Canvas Weekender — tobacco brown, leather handles and brass
+hardware, side zip pocket, monogrammed luggage tag). Shot in a
+small photo studio — white seamless paper, camera rig on tripod
+visible in foreground.
 
-She sits on a wooden stool holding the bag on her lap, running her hand
-across the waxed canvas, inspecting the brass zipper.
+She sits on a wooden stool holding the bag on her lap, running
+her hand across the waxed canvas, inspecting the brass zipper.
 
-Cut to full-body standing — she has the bag over her shoulder, one hand on
-the strap, looking slightly off-camera with a relaxed expression.
+Cut to full-body standing — she has the bag over her shoulder,
+one hand on the strap, looking slightly off-camera with a
+relaxed expression.
 
-Cut to extreme close-up — the waxed canvas texture filling the frame,
-leather handle stitching visible, a brass buckle catching the light.
+Cut to extreme close-up — the waxed canvas texture filling the
+frame, leather handle stitching visible, a brass buckle catching
+the light.
 
-Voiceover: "I've been looking for a bag that can handle a weekend trip
-without looking like luggage. The Waxed Canvas Weekender is it — the canvas
-gets better with every trip."
+Voiceover: "I've been looking for a bag that can handle a
+weekend trip without looking like luggage. The Waxed Canvas
+Weekender is it — the canvas gets better with every trip."
 
-Throughout the video, the tone is confident, thoughtful, measured — she
-handles the bag with care, moves slowly, each shot lingers. The voiceover is
-warm and unhurried, like someone describing a favorite possession.
+Throughout the video, the tone is confident, thoughtful,
+measured — she handles the bag with care, moves slowly, each
+shot lingers. The voiceover is warm and unhurried, like someone
+describing a favorite possession.
 
-The lighting is large softbox creating soft even illumination, slightly warm
-tone. The image is cinema-quality, shallow depth of field on close-ups,
-earth-tone color palette. The sound is voiceover recorded separately, clean
-and close-mic'd, subtle acoustic guitar underneath. Vertical 9:16.
+The lighting is large softbox creating soft even illumination,
+slightly warm tone. The image is cinema-quality, shallow depth
+of field on close-ups, earth-tone color palette. The sound is
+voiceover recorded separately, clean and close-mic'd, subtle
+acoustic guitar underneath.
 ```
 
 The call — `@Image1` first, `@Image2` second, because the tokens resolve by array position:

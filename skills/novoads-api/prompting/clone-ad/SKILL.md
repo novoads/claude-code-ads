@@ -277,10 +277,8 @@ for a polished voiceover source. Then:
 - **Order:** Subject + Action + Camera + Style + Constraints, written as flowing prose.
   A bulleted prompt or a run of `Label: value` pairs comes back **rendered as literal text
   on screen**.
-- **Length follows shot count.** Roughly 90–130 words for a one-shot clone, roughly 250–330
-  for a 3–4 beat one, because every beat needs its own framing, action and detail. The only
-  hard limit is **4,000 characters**, and these prompts average about 6.3 characters a word,
-  so length is a craft call rather than a ceiling you will hit.
+- **Keep prompts between 100 and 260 words.** Shorter prompts produce vague results; longer
+  ones overwhelm the model and cause it to lose focus on key details.
 - **Timestamps** — `[00:00]`, `[00:05]` — for multi-beat pacing, one main action per block.
 - **`@Image1`** wherever the prompt points at a reference, matching the array order you will
   send. A token past the end of the array is refused before the charge. If the mode is
@@ -289,10 +287,7 @@ for a polished voiceover source. Then:
   shot*, *keep the outfit unchanged across all cuts*.
 - **The label hold, whenever a label, package, bottle, box or screen is visible:** *the
   product label remains perfectly sharp and identical to the reference image with its text
-  unchanged and fully legible*. Seedance preserves logos and destroys printed text — a
-  cloned ad whose whole point is the user's branding is exactly where this bites.
-- **Restate the ratio in the text:** `Vertical 9:16.` at the end, on top of the
-  `aspectRatio` field.
+  unchanged and fully legible*.
 - **One primary action per shot**, two or three comma-joined cues on it. `then` /
   `and then` / `followed by` renders as a smear — split it into two shots.
 - **No polish words:** `cinematic`, `flawless`, `perfect`, `8k`, `4k`, `hyper-detailed`,
@@ -304,48 +299,6 @@ for a polished voiceover source. Then:
 
 **Duration:** source ≤ 15s → match it, rounded to an integer in 4–15. Source > 15s → split.
 Validate against the spoken word count; `SKILL.md` carries the table.
-
-#### Worked example — a 4-beat UGC clone
-
-Source: a 14-second selfie review of a skincare product. Target: the user's product, a real
-named one, at `@Image1` in `referenceAssetIds` mode. Four beats, one of them silent, three
-short lines — the source's shape, nothing of the source's content.
-
-```
-Vertical 9:16 UGC clone filmed on a smartphone, handheld selfie angle at chest height,
-bright late-morning window light in a small white-tiled bathroom, documentary and
-photorealistic. A woman in her late 20s with dark curly hair in a claw clip, oversized grey
-sweatshirt, no makeup, unretouched skin with visible pores and faint redness along the jaw.
-A folded towel hangs on the rail behind her, slightly out of focus.
-
-[00:00] She holds a jar of Aquaphor Healing Ointment from @Image1 up beside her face,
-close-up framing, deadpan expression, one eyebrow slightly raised, and says: "Okay so I
-bought this fully expecting nothing."
-[00:04] She twists the lid off slowly with her right hand, turning the jar toward the lens,
-tight close-up on her hands and the open jar, and says: "Look at the texture on that."
-[00:08] Silent beat, no dialogue. She works a small amount into the back of her hand in slow
-circles, macro framing, her fingers moving deliberately, the window light catching the sheen
-it leaves behind.
-[00:11] Back to a medium selfie shot, small nod, half-smile, shoulders dropping, and she
-says: "Three days. I'm buying the big one."
-
-The Aquaphor jar from @Image1 remains visually unchanged in every shot, and the product
-label remains perfectly sharp and identical to the reference image with its text unchanged
-and fully legible. Keep the sweatshirt, the hair and the bathroom unchanged across all cuts.
-Handheld micro-movement throughout, natural room tone, phone-mic audio, no on-screen text,
-no captions, no background music. Vertical 9:16.
-```
-
-253 words, 1,562 characters — inside the 250–330 band a 4-beat prompt wants, and under 40%
-of the 4,000-character ceiling. Its 21 spoken words run at 14 seconds, past the
-9–12s [SKILL.md](../../SKILL.md)'s table gives a 16–25 word script — deliberately: the
-`[00:08]` beat is three silent seconds, and the remaining eleven carry the three lines at the
-calm pace the spine names for a lifestyle read (nearer 1.5 words/sec than the 2.5 the table
-plans on). Follow the table when the clip is wall-to-wall dialogue; add the silence back on
-top when it is not. Priced live at `POST /v1/estimates` against spec `2.0.0` on
-2026-08-02 as `seedance-2.0` at 14 seconds: **zero warnings** — the key is absent from the
-response entirely. The number it returned is deliberately not written down here. Price your
-own prompt, in your own session, at step 9.
 
 ### Step 7: Dialogue confirmation gate
 
@@ -414,7 +367,7 @@ here.
   `{rule, message}` pairs whose message is the fix written out. **Every one is advisory:**
   `POST /v1/videos` runs no prompt rules at all, so a prompt tripping five of them is
   charged, rendered and handed to the provider exactly as written. Read them out anyway —
-  this is the only place they run. On a clone, `label_without_hold` is the one to act on.
+  this is the only place they run.
 - **Price every clip and every variation.** A 3-clip series at 2 variations is 6 charges.
   Show the per-call number, the count, and the total.
 - **Warn when the total exceeds `balance`**, and quote `shortBy` and `topUpUrl` when they
@@ -557,7 +510,7 @@ Full detail in [reference.md](../../reference.md).
 | `audioEnabled` — **Seedance only**, optional, default `true` | Send `false` for a silent clone. `400 Unrecognized key` on the three non-Seedance video models, and on `POST /estimates` for every model |
 | `durationSeconds` 4–15, integer | Out-of-grid values are rejected, never rounded. Default is **5** |
 | `aspectRatio` `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | Default is **`16:9`**. Set it, or a vertical clone ships landscape |
-| Prompt ≤ **4,000 characters** on Seedance | Enforced on the estimate too, against whichever `model` you name |
+| Prompt within the model's cap | Enforced on the estimate too, against whichever `model` you name |
 | Audio is rendered from the prompt | The spoken line is lip-synced in this same call at no extra cost, which is why gate 1 exists. `audioEnabled: false` mutes the render; it does not give you a separate audio track to direct |
 | Prompt rules block nothing | They run on `POST /v1/estimates` only, as advisory `warnings`. The generation endpoints run none — a weak prompt renders and bills |
 | Moderation is `422 content_policy` | The only refusal of a prompt for what it says, and the estimate skips it, so a clean quote can still be blocked. **Nothing is charged** |
@@ -584,7 +537,7 @@ quote when reporting a problem.
 | `502 provider_failed` | The model provider failed | Credits are refunded automatically |
 | Job `status: failed` or `blocked` | Read the `error` on the job | If it is content-related, rewrite. If it is a provider failure, credits are already refunded |
 | The clone looks nothing like the source | The reading was wrong, not the render | Go back to the beat map with the user before spending again. Change **one** element per iteration — framing, or pacing, or the anchor — never three |
-| The label came back garbled | The label hold is missing or too weak | Add the full clause, and check the reference photo actually shows the label sharp |
+| The label came back garbled | Seedance preserves logos and destroys printed text | Say in the prompt that the label stays sharp and unchanged, and check the reference photo actually shows it sharp |
 | Source longer than 15s | Not a failure | Split at beat boundaries, generate each clip, offer to stitch |
 
 ## Related files
