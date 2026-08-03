@@ -8,9 +8,12 @@
 #   - whether the user's .env / MASTER_CONTEXT.md are populated
 #   - where the image-ad ecosystem master doc lives
 #
-# The banner's stdout goes into Claude Code's session context AND prints to the
-# user's terminal, so first-time users (and future sessions) immediately know
-# how to start. Non-blocking: prints warnings but never refuses.
+# The banner goes to STDOUT on purpose: a SessionStart hook's stdout is what
+# Claude Code injects into session context, and the user sees it too. It was
+# written to stderr until 2026-08-03, which meant the hook reported "success"
+# every session while delivering the agent nothing — the one reader the banner
+# exists for never saw a byte of it. Do not "tidy" this back to >&2.
+# Non-blocking: prints warnings but never refuses.
 
 set -u  # don't fail on unset vars beyond -u — this script is informational
 
@@ -201,4 +204,4 @@ done
   fi
 
   printf '─────────────────────────────────────────────────────────────────────\n\n'
-} >&2
+}

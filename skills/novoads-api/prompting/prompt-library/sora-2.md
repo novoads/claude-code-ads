@@ -64,7 +64,7 @@ One `sora-2` render at 8s, `9:16`, `en`, no start frame, against a byte-identica
 **Two things to write differently because of this:**
 
 - **Name the framing harder than "medium".** `Medium selfie shot` produced a **tight close-up with shallow depth of field** on Sora, where the same three words gave a true medium — torso, chair, desk, shelf, deep focus — on Seedance. If the product has to be in frame next to the face, say so in the shot layer; do not trust a shot-size word to carry it.
-- **Budget no silence.** The `duration ≈ speech + 4s` rule in [SKILL.md](../../SKILL.md) is a *Seedance* rule. Applying it here buys dead air at the end instead of the start.
+- **Reserve no silence.** The dead-air reservation in [SKILL.md](../../SKILL.md) is a *Seedance* rule — there it is a draw that can land anywhere from 1s to 5s, so you reserve against the worst. Sora drew none. Applying the Seedance reservation here buys dead air at the end instead of the start.
 
 The phonetic-brand rule from gate 1 is **untested on this model** — Sora got the name right unaided, so there was nothing to fix. That is not evidence the rule is unnecessary here, only that this brand did not need it.
 
