@@ -19,6 +19,12 @@ too, measured on fixtures whose voice track is deliberately gapped — at a norm
 at a quiet one. Track *choice* — genre, mood, how many variants — is judgment and lives in
 SKILL.md.
 
+**MM6 is deliberately not mechanical.** It was added 2026-08-04 when music generation
+moved onto the Novoads API, and it asserts against the skill's own text plus one live
+run: that "add music" reaches a finished mix with `NOVOADS_API_KEY` as the *only*
+credential. The mixing script is untouched by that change — it takes an mp3 off the disk
+whichever source produced it — so there is nothing in it to assert on.
+
 ---
 
 ## MM1 — Output duration equals input video duration, and music is never looped
@@ -201,6 +207,47 @@ playback, so it catches "there is no bed" without second-guessing a quiet one.
 
 **Fails if:** any of the three tampered outputs passes, a failure message omits the
 measured values, or the success line claims something the checks did not establish.
+
+---
+
+## MM6 — "Add music" works on the Novoads key alone
+
+**Scenario.** A user with a fresh clone of this pack has exactly one credential in their
+environment: `NOVOADS_API_KEY`. There is no `KIE_API_KEY`, no Suno account, no second
+bill. They say "add music to this" over a finished video and expect two mixed variants.
+
+**Why it matters.** This is the one step in the pack that used to break the "one key, one
+bill" promise every other skill keeps. Until 2026-08-04 the skill's default sourcing path
+told the agent that `$KIE_API_KEY` was "already in the shell env" — true on the machine
+the skill was written on, false for every customer, and documented in no prerequisite
+list or `.env.example` in this repo. The failure was therefore not a clear "you need a
+key" but an agent confidently reaching for a variable that did not exist. This eval is
+the check that the first-party path is genuinely reachable from a bare environment.
+
+**This is a text-and-flow eval, not a mechanical one.** `scripts/test_music_mix.py`
+cannot cover it: the mixing script is unchanged by this and takes an mp3 from the disk
+either way. What changed is *where the mp3 comes from*, and that lives in judgment text.
+
+**Assertions.**
+- SKILL.md § "Sourcing the music" names the Novoads endpoint as **(a)**, the default,
+  and the only path that needs no second credential. KIE-direct is **(b)**, explicitly
+  labelled a fallback with its trigger conditions named (`$NOVOADS_API_KEY` absent, or
+  `invalid_input` from a deployment with music off).
+- The (a) path routes cost through a live `POST /v1/estimates` `{"kind":"music"}` and an
+  approval gate. **No credit or dollar figure for music appears in SKILL.md** — the
+  repo's cost policy, and the reason `reference/kie-suno-api.md` keeps its measured
+  provider figures behind an explicit "dated measurement, not a quote" banner.
+- `reference/kie-suno-api.md` opens by saying it is the fallback and pointing at (a), so
+  an agent that lands there first is redirected rather than led into a second signup.
+- The endpoint is documented where this pack documents endpoints — `novoads-api`
+  skill, `reference.md` § `POST /music` — not only inside this skill. A source the API
+  reference does not carry is a source the routing agent cannot find.
+- Running the documented (a) flow with `KIE_API_KEY` unset reaches two downloaded tracks
+  and then two mixed variants, with the script's verification line reported verbatim.
+
+**Fails if:** any step of the documented default path requires a credential other than
+`NOVOADS_API_KEY`, or the skill quotes a music price from markdown instead of from a
+live estimate.
 
 ---
 

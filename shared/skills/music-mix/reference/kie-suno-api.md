@@ -1,10 +1,22 @@
 # KIE Suno API — generating a music bed
 
+> **This is the FALLBACK path, not the default one.** Since 2026-08-04 Novoads renders
+> music first-party: `POST /v1/music` on the `$NOVOADS_API_KEY` this pack already holds,
+> priced by `POST /v1/estimates` `{"kind":"music"}`, same two tracks, one bill, no
+> second account. See `SKILL.md` § "Sourcing the music" (a) and the `novoads-api`
+> skill's `reference.md` § `POST /music`. Reach for the direct KIE calls below only when
+> there is no `$NOVOADS_API_KEY`, or when music is genuinely off on that deployment —
+> which you confirm with the free, keyless `GET /v1/openapi.json`: no `/music` path
+> means off, a `/music` path means your request was malformed. The provider figures in
+> this file are a **dated measurement record of what KIE charges us**, not a price for
+> anyone to quote.
+
 **Verified live 2026-08-04.** One instrumental generation was run end to end against the
 real endpoint; every shape below is copied from that exchange, not from the docs.
 Docs: <https://docs.kie.ai/suno-api/quickstart>
 
-Auth: `Authorization: Bearer $KIE_API_KEY` — already in the shell env, do not print it.
+Auth: `Authorization: Bearer $KIE_API_KEY` — **a second credential this pack does not
+set up and most users will not have.** Do not print it.
 
 ## Cost, measured
 
