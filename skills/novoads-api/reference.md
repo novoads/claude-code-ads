@@ -36,6 +36,7 @@ Ad analysis (reading an existing ad into a structured hook, beats, casting and l
 | `POST` | `/estimates` | Price a generation. Spends nothing. The only source of a credit number. |
 | `POST` | `/videos` | Submit a video. `202`, charged, asynchronous. |
 | `POST` | `/images` | Generate images. Synchronous, images in the response. |
+| `POST` | `/music` | Generate a music bed from a prompt. `202`, charged, asynchronous. Returns **two** tracks. |
 | `POST` | `/captions` | Burn subtitles into a generated or uploaded video. `202`, charged, asynchronous. |
 | `POST` | `/videos/{jobId}/captions` | Same operation, source in the path. Generated videos only. |
 | `GET` | `/caption-presets` | The 30 caption styles, with tier and per-minute rate. |
@@ -281,13 +282,62 @@ The meter is `rate x whole minutes, rounded up, minimum one`, **doubled again ab
 
 ---
 
+## POST /music
+
+Documented from the live spec `2.7.0` on 2026-08-04, against a deployment with the endpoint enabled.
+
+Renders a music bed from a prompt and returns a `jobId`. **Asynchronous and charged**, exactly like `POST /videos`: poll `GET /generations/{jobId}` to a terminal status. Typical renders finish in about **75 seconds** — much faster than a video.
+
+| Field | Required | Notes |
+|---|---|---|
+| `prompt` | **yes** | 1–500 chars. What the track should sound like, as prose: instrumentation, mood, tempo, what it sits under. |
+| `style` | no | ≤200 chars. Folded **into** the prompt on our side, not sent as a provider field. |
+| `instrumental` | no | Defaults to **`true`**. Leave it — lyrics compete with the voice-over. |
+| `durationHintSeconds` | no | 5–180. **Advisory only.** |
+| `productId` | no | Files the job under a product. Organizational only. |
+
+The body is strict: an unknown key is a `400`, not a shrug.
+
+**The 500-character ceiling applies to the COMPOSED prompt, not to your field alone.** `style`, the instrumental sentence and the duration hint are all concatenated into one string before submission, and *that* is what is measured — before the charge, so an over-long compose is a free `400` rather than a billed `502`. Leave headroom: a 500-character `prompt` plus any `style` at all is over the line.
+
+**`durationHintSeconds` is a preference, not a setting.** The provider takes no duration parameter in the mode this endpoint uses, so the hint is prose in the prompt. Expect roughly **one to two minutes** of audio whatever you ask for, and trim it yourself. It does not move the price.
+
+**One request returns TWO tracks, for one charge.** The model renders two takes of the same prompt. Both arrive in `audio[]` on the polled job and both are yours; they differ in length and arrangement, not in price. That is why the mixing step can offer named variants without a second render — see the `music-mix` skill.
+
+Response `202`: `jobId`, `status`, `creditsCharged`, `model`. `model` is always **`music-suno`** — fixed, and deliberately absent from `GET /models`, which answers what this API renders *video* with.
+
+**`POST /estimates` has a fourth arm for this, and it takes nothing but the kind:**
+
+```json
+{ "kind": "music" }
+```
+
+Sending `prompt` alongside it is a `400` (`Unrecognized key: "prompt"`) — the price is **flat per request**, so there is nothing to price on. Verified live 2026-08-04: `credits: 0.5`, and **no `warnings` key**, because there is no visual prompt to advise about.
+
+**Mind the kind asymmetry, it is deliberate:** you *estimate* `kind: "music"` and you *poll* a job whose `kind` is `"audio"`. The estimate names the operation; the job names its output. Neither is a typo to be fixed.
+
+**This endpoint is behind a deployment flag.** Where music is off, `POST /v1/music` answers `400 invalid_input` — not a `404` — and the `music` estimate arm and the `/music` path are absent from `GET /v1/openapi.json`. Check the spec before assuming an outage.
+
+### Failure modes
+
+| Code | Cause |
+|---|---|
+| `400` | Missing/over-long `prompt`, an over-long **composed** prompt, an unknown key, or music disabled on this deployment. Nothing is charged. |
+| `402` | Not enough credits; `details` carries `required` and `available`. |
+| `429` | Concurrency ceiling — a music job consumes one of the **5** shared generation slots, the same pool as video. |
+| `502` | The provider refused or failed. Terminal, and refunded. |
+
+A prompt the provider's own classifier refuses comes back as terminal status **`blocked`**, not `failed` — rephrase it rather than retrying it, because a retry buys the same refusal.
+
+---
+
 ## GET /generations
 
 | Param | Values |
 |---|---|
 | `limit` | 1 to 50, default 10 |
 | `offset` | default 0 |
-| `kind` | `video`, `image` |
+| `kind` | `video`, `image`, `audio` — `audio` is a music job, spelled for the row's own kind rather than for the estimate arm's `music` |
 | `productId` | filter to one product |
 | `updatedSince` | ISO 8601. The incremental-sync path: store the highest `updatedAt` you have seen and pass it back. |
 | `sortBy` | `createdAt` (default), `updatedAt` |
@@ -300,6 +350,8 @@ This is also the recovery path when a call times out: the work may have run and 
 ## GET /generations/{jobId}
 
 `jobId`, `status`, `kind`, `model`, `prompt`, `createdAt`, and once succeeded, `outputUrl` plus `outputUrlExpiresInSeconds` (3600). On failure, `error` carries our own wording, never a provider's raw text, and the credits are already refunded.
+
+**On a `kind: "audio"` job that has succeeded, there is also `audio[]`** — the two tracks a music request delivered, each `{ url, expiresInSeconds, durationSeconds, title }`. `audio[0]` is the canonical one and is what `outputUrl` points at; `audio[1]` is a second take of the same prompt, and **`audio[]` is the only place it is published** — it is not a separate library asset and it will not turn up in a listing. Both URLs are presigned and minted **when you read the job**, so re-poll for fresh ones instead of storing them.
 
 ## GET /generations/{jobId}/watch
 

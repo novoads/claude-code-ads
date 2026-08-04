@@ -22,11 +22,10 @@ when to enter, what track to pick, where the music comes from, what the user see
 ## Entry condition
 
 **A finished video the user has signed off on.** Captions already burned in is the
-preferred input, because music is genuinely the last thing that happens.
-
-That is safe because the script copies the video stream packet for packet (`-c:v copy`)
-and verifies afterwards that the output's video packets hash identical to the input's —
-so burned captions come through bit-exact, not "re-encoded but probably fine".
+preferred input, because music is genuinely the last thing that happens. That is safe
+because the script copies the video stream packet for packet (`-c:v copy`) and verifies
+afterwards that the output's video packets hash identical to the input's — so burned
+captions come through bit-exact, not "re-encoded but probably fine".
 
 If the cut is still moving, wait. Remixing is cheap; re-rendering the pipeline is not.
 
@@ -37,35 +36,42 @@ If the cut is still moving, wait. Remixing is cheap; re-rendering the pipeline i
 - **Lofi is the default** — it is what the reference edit used, and it sits under a
   talking head without competing with it. Depart from it deliberately, and say why.
 - **Always produce 2–3 named variants.** The reference edit shipped a `final-mixes`
-  folder holding `lofi-jazzy` and `lofi-warm` versions of the same cut. Vary the track
-  or the `--music-gain`, name them for what they are, and let the user pick. Once the
-  video is rendered, each extra mix costs one ffmpeg pass and no credits — there is no
-  reason to present one option.
+  folder with `lofi-jazzy` and `lofi-warm` of the same cut. Vary the track or
+  `--music-gain`, name them for what they are, and let the user pick — each extra mix
+  is one ffmpeg pass and no credits.
 - **Instrumental only.** Lyrics compete with the voiceover for the same attention.
 
 ## Sourcing the music
 
-**Verified live 2026-08-04** — the KIE path below was run end to end; request/response
-shapes, the required-field gotcha and the measured cost are in
-`reference/kie-suno-api.md`.
+**(a) Generated through the Novoads API — the default.** `POST /v1/music` on the
+`$NOVOADS_API_KEY` this pack already uses: no second account, no second bill. Price it
+with `POST /v1/estimates` `{"kind":"music"}` and get approval first, like every
+generation here — that arm takes the kind and nothing else. Then poll
+`GET /v1/generations/{jobId}` to terminal, about 75 seconds. Fields, limits and failure
+modes: `novoads-api` skill, `reference.md` § `POST /music`.
 
-**(a) A file the user supplies.** Always allowed, no questions. Licensing is theirs.
+**One request returns two tracks**, as `audio[]` on the succeeded job, both yours for
+the one charge — so the 2–3 variants above cost one generation, not three. Download
+**both** `audio[].url`; they are presigned at read time, so re-poll rather than reuse a
+stale one. Tracks run one to two minutes whatever you hint — the script trims them.
 
-**(b) Generated via the KIE Suno API.** `$KIE_API_KEY` is already in the shell env.
-Docs: <https://docs.kie.ai/suno-api/quickstart>. Generate Music costs **12 KIE credits
-≈ $0.06 per request** (1 KIE credit = $0.005) and returns two tracks. Supports Suno
-V5/V5.5; use instrumental mode for beds. See the reference file before writing any call
-— `callBackUrl` is required in practice despite being documented as optional, and
-errors arrive as HTTP 200 with a non-200 `code`.
+**(b) Generated via the KIE Suno API directly — fallback.** Only when
+`$NOVOADS_API_KEY` is absent, or when music is genuinely off on that deployment. Confirm
+which before switching: `invalid_input` is also what a typo'd body returns, so the
+reliable test is the free, keyless `GET /v1/openapi.json` — **no `/music` path means the
+deployment has music off; a `/music` path means your request was wrong.** Do not send a
+user to a second signup over a malformed field. (b) needs a **second** credential,
+`$KIE_API_KEY`, which most users of this pack do not have. `reference/kie-suno-api.md`
+carries the live shapes and the two gotchas: `callBackUrl` is required in practice
+despite being documented optional, and errors arrive as HTTP 200 with a non-200 `code`.
 
-**(c) The licensing tradeoff — surface it, do not decide it.** Commercial rights for
-Suno-via-reseller output are legally murky. Suno's own commercial license requires a
-paid Suno plan, which going through a reseller does not give the user, and major-label
-litigation against Suno was still ongoing as of mid-2026. For client-facing or
-paid-media deliverables, prefer a licensed source: **ElevenLabs Music v2** trains on a
-licensed-only catalog and grants full commercial rights at roughly **$0.40/min** via
-API, or use a licensed library. For internal tests and concepting, the KIE path is
-fine. **State this tradeoff once, plainly, and let the user choose.**
+**(c) A file the user supplies.** Always allowed, no questions. Licensing is theirs.
+
+Music from (a) and (b) is **AI-generated** and its clearance is the user's call, not
+this skill's to guarantee: Novoads' terms §11 "AI-Generated Music" make no
+representation that it is free of third-party rights and put use — their jurisdiction,
+their platforms — on the customer. Say that once for client-facing or paid media, and
+improvise no legal advice past it.
 
 ## Hard rule: mixing always goes through the script
 
@@ -75,11 +81,10 @@ than the video, a re-encoded picture, a duration that drifts, loudness that will
 turned down by the platform, an output path that would overwrite one of its own inputs,
 and — the sneakiest one — a bed so quiet it is not in the mix at all.
 
-That last one is caught **before** the render, not after, and it is worth knowing why:
-the output's audio is re-encoded on every path, so a finished file with no music in it
-looks exactly like one with music. The script instead measures the music track's own
-loudness up front and refuses a silent track or a gain that would put the bed below
-audibility. A verifier cannot do that job; do not ask it to.
+That last one is caught **before** the render, and it is worth knowing why: the audio is
+re-encoded on every path, so a finished file with no music in it looks exactly like one
+with music. The script measures the music's own loudness up front and refuses a silent
+track or a gain that would put the bed below audibility. A verifier cannot do that job.
 
 **Escape hatch:** if a request genuinely doesn't fit this model — music that must hit a
 specific cut point, a track that needs an intro trimmed off the front, stems, a
@@ -118,6 +123,7 @@ real failure — surface it, don't retry blindly.
 
 ## Evals
 
-`EVALS.md` defines the five scenarios this skill is held to (MM1–MM5).
-`scripts/test_music_mix.py` implements all five mechanically against synthetic fixtures,
-in 15 cases — run it after touching the script.
+`EVALS.md` defines the six scenarios this skill is held to (MM1–MM6).
+`scripts/test_music_mix.py` implements the five mixing ones mechanically against
+synthetic fixtures, in 15 cases — run it after touching the script. MM6 (sourcing on the
+Novoads key alone) is a text-and-flow eval; the script has no part in it.
