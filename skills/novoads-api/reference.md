@@ -85,10 +85,13 @@ Discriminated on `kind`, and strict. Any field not listed is a 400.
 | `prompt` | required | required |
 | `model` | `seedance-2.0` (default), `seedance-2.0-mini`, `omni-flash`, `veo-3.1`, `sora-2` | `gpt-image-2` (default), `nano-banana-pro`, `reve-2.1` |
 | `durationSeconds` | 4 to 15 | n/a |
+| `resolution` | `480p` `720p` `1080p` `4k` — **range-checked per model** | n/a |
 | `numImages` | n/a | 1 to 4 |
 | `language` | `en` `es` `pt` `fr` `de` `it` `zh` `ja` `ko` `ar` `hi` | same |
 
 All eight models price here, `veo-3.1` and `sora-2` included (verified live, 2026-08-02).
+
+**`resolution` is accepted here because it moves the price** — on `seedance-2.0`, `1080p` is ≈2.5x the `720p` base and `4k` ≈5x (verified live 2026-08-04). Like `durationSeconds`, the enum in the table is the schema's union and **not** what any one model accepts: the service range-checks it against the named model, so `{"model":"seedance-2.0-mini","resolution":"1080p"}` comes back `400 resolution must be one of 720p for seedance-2.0-mini` while `720p` prices cleanly (verified live 2026-08-04). Full per-model table and the mini caveat under *POST /videos → `resolution`*.
 
 There is **no `styleFamily`** on either arm. The field was deleted from the whole API in spec `2.0.0`, and both arms are strict, so a body carrying it comes back `400 (root): Unrecognized key: "styleFamily"` (verified live, 2026-08-02).
 
@@ -180,7 +183,34 @@ Confirmed against the deployed spec `2.0.0` on 2026-08-02 (the `1.2.0`-era note 
 
 An `@ImageN` token pointing past the end of the array is refused **before the charge** — an unresolvable reference is a content failure at the provider, and a 400 is a better answer than a refunded render.
 
-There is **no `resolution` field** on any variant, and the spec publishes no output size at all — `GET /models` does not carry one either. Output size is fixed per model and you find it out by measuring. What has been measured here, at `9:16`: `seedance-2.0` and `sora-2` both returned **720x1280** (2026-08-02, ffprobe). `omni-flash` and `veo-3.1` are unmeasured — do not quote a number for them, and do not generalise 720p across the set now that Veo is on it.
+### `resolution` — on `seedance-2.0` only, and it is a price field
+
+Verified live 2026-08-04 against deployed spec **2.6.0**. The earlier note here — that no variant had the field and `GET /models` published no output size — described an older deployment and is superseded.
+
+| `model` | `resolution` accepted | Default |
+|---|---|---|
+| `seedance-2.0` | `480p`, `720p`, `1080p`, `4k` | `720p` |
+| `seedance-2.0-mini` | **none — the variant has no such property** | 720p, fixed |
+| `omni-flash`, `sora-2` | **none** | 720p, fixed |
+| `veo-3.1` | **none** | 1080p, fixed |
+
+**`GET /v1/models` now publishes this**: each entry carries `resolutions[]` and `defaultResolution`. That is the authority — read it rather than trusting this table, which is a snapshot.
+
+**It changes the price**, which makes it unlike every other output-shape field here. Relative to the `720p` base on `seedance-2.0`: `480p` is **the same**, `1080p` is **≈2.5x**, `4k` is **≈5x**. Those ratios are for warning a user before they ask for 4k — **the number they approve still comes from `POST /estimates`**, and this repo holds no rate table (see SKILL.md gate 2).
+
+**`POST /estimates` takes `resolution`** on the video arm and prices it, so the quote can track the tier you actually intend to render.
+
+**The `seedance-2.0-mini` split-brain, verified live 2026-08-04.** The estimate arm's `resolution` enum is shared across all five models, but the server range-checks it per model:
+
+| Call | Result |
+|---|---|
+| `POST /estimates`, mini, `resolution: "720p"` | `200` — priced, identical to omitting the field |
+| `POST /estimates`, mini, `480p` / `1080p` / `4k` | `400 invalid_input` — *"resolution must be one of 720p for seedance-2.0-mini"* |
+| `POST /videos`, mini, any `resolution` | `400 Unrecognized key: "resolution"` — the variant has no such property (**observed 2026-08-04, not re-verified**: confirming it again means a paid render) |
+
+**So an estimate that accepted `resolution` is not a licence to send it to `POST /videos`.** On mini, never send the key at all.
+
+Output size actually measured, at `9:16`: `seedance-2.0` at its `720p` default and `sora-2` both returned **720x1280** (2026-08-02, ffprobe). `omni-flash` and `veo-3.1` are unmeasured — do not quote a number for them, and do not generalise 720p across the set now that Veo is on it.
 
 There are **no idempotency keys.** See the 500 note below.
 
@@ -265,7 +295,9 @@ curl -sS -X POST https://api.novoads.ai/v1/products \
 
 ## GET /models
 
-The catalog: per model `id`, `displayName`, `kind`, `endpoint`, `credits`, `representativeOutput`, `aspectRatios`, `durationsSeconds`, `maxPromptCharacters`.
+The catalog: per model `id`, `displayName`, `kind`, `endpoint`, `credits`, `representativeOutput`, `aspectRatios`, `durationsSeconds`, `maxPromptCharacters`, and — on video models — **`resolutions[]` and `defaultResolution`** (verified live 2026-08-04; the earlier note that this endpoint published no output size is superseded).
+
+**`resolutions[]` is the authority on which tiers a model takes.** Live on 2026-08-04: `seedance-2.0` returns `["480p","720p","1080p","4k"]`; `seedance-2.0-mini`, `omni-flash` and `sora-2` return `["720p"]`; `veo-3.1` returns `["1080p"]`. Read it instead of hardcoding a set — a value outside a model's list is a `400`, not a downscale. Note that only `seedance-2.0` exposes `resolution` as a *request* field: for the fixed-tier models, `resolutions[]` reports what they render, not something you may send.
 
 **`credits` prices `representativeOutput`, and that unit is not the same across models** — one model's representative output is 5 seconds of video, another's is 10. Comparing the two `credits` numbers directly compares different things. For a real comparison, price both at `POST /v1/estimates` with the same `durationSeconds`.
 

@@ -175,7 +175,9 @@ When it is short it also returns `shortBy` and `topUpUrl`. That is the whole res
 | Estimate accepts | Video | Image |
 |---|---|---|
 | required | `kind: "video"`, `prompt` | `kind: "image"`, `prompt` |
-| optional | `model`, `durationSeconds`, `language` | `model`, `numImages`, `language` |
+| optional | `model`, `durationSeconds`, `language`, `resolution` | `model`, `numImages`, `language` |
+
+**`resolution` belongs here because it moves the price** — on `seedance-2.0` it is the difference between the base and roughly five times it. Send the resolution you actually intend to render, or the quote prices a cheaper video than the one you generate. See the `resolution` section below for the ladder and for the `seedance-2.0-mini` trap. (Verified live 2026-08-04.)
 
 `aspectRatio`, `startImageAssetId`, `referenceAssetIds`, and `productId` do not belong here. They do not change what you pay, and sending one is a rejected request. **There is no `styleFamily` field** — not here and not on a generation call; it was removed from the API and sending it is a `400 Unrecognized key`.
 
@@ -210,6 +212,7 @@ Show `credits`, the count, the total, and `balance`. Get a yes. Then generate.
 **Infer, and state what you inferred rather than asking:**
 
 - **`aspectRatio`: default `9:16`** for anything headed to Reels, TikTok, Stories, or a vertical feed. Seedance defaults to `16:9`, and a landscape ad is a wasted render; `omni-flash`, `sora-2` and `veo-3.1` already default to `9:16`, and images default to `1:1`. Go landscape only when the user asks. Seedance also accepts `1:1`, `4:3`, `3:4`, and `21:9`; `omni-flash`, `sora-2` and `veo-3.1` accept only the two.
+- **`resolution` (`seedance-2.0` only): leave it at the `720p` default, and never raise it silently.** It is the one output-shape field that multiplies the bill — `1080p` is ≈2.5x the base and `4k` ≈5x — so going above `720p` is a *spend* decision, not a quality preference, and it belongs in front of the user with a fresh estimate attached. `480p` costs the same as `720p`, so it buys nothing. Do not send the key on any other model. (Verified live 2026-08-04.)
 - **`language`**: the language the script is written in. Set it, and show it in the dialogue gate. Write the prompt in that language too — nothing on the API pushes back on a Spanish or Portuguese prompt, and nothing rewrites or judges one either.
 - **`durationSeconds`**: from the word count, below. Only `veo-3.1` defaults to its maximum — Seedance defaults to 5, `omni-flash` to 8, `sora-2` to 4 — so always send it.
 - **`audioEnabled`**: leave it alone on anything with a spoken line. It exists on `seedance-2.0` and `seedance-2.0-mini` only, defaults `true`, and the one time to send it is `false`, on a clip that is meant to be silent — see below.
@@ -283,7 +286,26 @@ No silence budget: the one measured render spoke continuously from the first fra
 
 Unmeasured here, so these are the 2.5-words-per-second arithmetic and nothing more. Budget no silence and promise no wait until someone has timed one.
 
-There is no `resolution` field on any variant, and the spec publishes no output size. Measured at `9:16`: `seedance-2.0` and `sora-2` both came back **720x1280** (2026-08-02). `omni-flash` and `veo-3.1` are unmeasured — do not quote a number for them.
+### `resolution` — `seedance-2.0` only, and it moves the price
+
+**`seedance-2.0` takes a `resolution` field: `480p`, `720p`, `1080p`, `4k`, defaulting to `720p`** (verified live 2026-08-04 against spec 2.6.0). It is the one output-shape field that is **not** free — unlike `aspectRatio`, the tiers are separate credit schedules:
+
+| `resolution` | Price, relative to the `720p` base |
+|---|---|
+| `480p` | **same as `720p`** — no draft discount, so there is no reason to ask for it |
+| `720p` (default) | base |
+| `1080p` | **≈2.5x** base |
+| `4k` | **≈5x** base |
+
+**These are ratios, not a rate card. Never quote a credit number from this table** — it exists so you can warn a user that 4k is a five-fold decision before they ask for it. The number they approve comes from `POST /v1/estimates` on the exact cell, in this session, like every other price here (gate 2).
+
+Ask for what will actually ship. `720p` is right for Reels, TikTok and Stories, where the platform re-encodes anyway; `1080p` and `4k` are for a client deliverable, a placement with a quality floor, or a render you intend to crop into.
+
+**Every other model is fixed and has no `resolution` field at all** — `seedance-2.0-mini`, `omni-flash` and `sora-2` render 720p, `veo-3.1` renders 1080p, and sending the key to any of them is a `400`. Read the live set from **`GET /v1/models`** (`resolutions` and `defaultResolution` per model) rather than hardcoding this paragraph.
+
+**The `seedance-2.0-mini` trap: the two endpoints disagree about the field.** `POST /v1/estimates` accepts `resolution: "720p"` for mini and prices it (identically to omitting it), but answers `400 invalid_input` — *"resolution must be one of 720p for seedance-2.0-mini"* — for `480p`, `1080p` or `4k` (all four verified live 2026-08-04). `POST /v1/videos` does not accept the key for mini **at all**: mini's request variant has no `resolution` property, and a body carrying one was observed returning `400 Unrecognized key: "resolution"` (observed 2026-08-04, not re-verified — re-checking it costs a paid render). **So: never send `resolution` on a mini call.** An estimate that passed is not evidence the generate call will.
+
+Output size, measured at `9:16`: `seedance-2.0` at its `720p` default and `sora-2` both came back **720x1280** (2026-08-02). `omni-flash` and `veo-3.1` are unmeasured — do not quote a number for them.
 
 ### Splitting a long script
 
