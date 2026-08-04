@@ -44,6 +44,12 @@ This skill never generates the base. If there isn't one yet, say so and stop.
    you intend to cover, each rendered silent (`audioEnabled: false`). Overlay
    audio is ignored by the script regardless, and generating before approval
    spends credits on a cut that may still change.
+   **Cast the base actor in every cutaway that shows a person:** pass the same
+   identity reference (`referenceAssetIds`) the base used — Seedance re-casts
+   every render, and a stranger's hands or skin in the cutaways breaks the ad
+   (observed live 2026-08-04: Black base actor, five white-cast cutaways).
+   If no identity ref exists, keep people fully out of frame — objects and
+   environments only, not "face out of frame", which still shows skin.
 3. **Propose an EDL.** JSON with `base`, `output`, and an `overlays` list of
    overlay windows (`file`, `start`, `end`, `covers`). Every window carries a
    one-line `covers` rationale **quoting the spoken line it illustrates**. A

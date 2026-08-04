@@ -66,6 +66,10 @@ the talking-head base never moves.
   overlay windows adjacent or back to back).
 - Composition follows the arc — problem → stress → product macro → dose/usage →
   relief — at roughly 2 product shots to 3 emotional/lifestyle beats, not all product.
+- Every cutaway that shows a person casts the base actor (same
+  `referenceAssetIds` as the base) or keeps people entirely out of frame.
+  Observed failure (2026-08-04 dense run): base actor Black, all five cutaways
+  white-cast; "face out of frame" did not hide it — skin and hands still read.
 - The EDL is shown to the user for approval before the script runs.
 
 **Fails if:** windows are placed without quoting the transcript, the hook or closing
