@@ -378,7 +378,8 @@ Show the number, the count, the total and the balance. Get a yes. Then generate.
 
 ### Step 10: Resolve the product and upload the references
 
-1. `GET /v1/products` → `productId`. Default to the product named in `MASTER_CONTEXT.md`
+1. `GET /v1/products` → read `.items[]` (not `.products` — verified live 2026-08-04) →
+   `productId`. Default to the product named in `MASTER_CONTEXT.md`
    under "My workspace"; with exactly one product, save it there; with none, omit the field
    — it is optional. There is no folder or project ritual to run: folders are read-only on
    this API and there are no projects at all.

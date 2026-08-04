@@ -311,6 +311,17 @@ While the job is unfinished this is a `409` naming the current status.
 
 `GET` lists the organization's products. `POST` creates one and returns it with its `id` — that id is what goes in `productId` on every generation call.
 
+**`GET /products` returns the array under `items`, not `products`** (verified live 2026-08-04). This is the same paginated envelope `GET /generations` uses, and the pack previously did not say so anywhere — which left `.products` as the obvious wrong guess:
+
+```json
+{ "items": [ { "id": "...", "name": "...", "folders": [], "createdAt": "...", "updatedAt": "..." } ],
+  "total": 12, "limit": 10, "offset": 0, "hasMore": true }
+```
+
+Every list endpoint on this API answers with the same five keys — `items`, `total`, `limit`, `offset`, `hasMore` — so `.items` is the one accessor to learn. `total` ignores pagination. Query params: `limit`, `offset`, `updatedSince`, `sortBy`, `sortOrder`.
+
+Each item carries `id`, `name`, `description`, `targetAudience`, `mainFeatures`, `painPoint`, `perceived`, `folders`, `createdAt`, `updatedAt`. Every descriptive field except `name` can be `null`.
+
 Request body for `POST`, `.strict()` — `name` is the only required field:
 
 | Field | Type | Limit |

@@ -350,7 +350,14 @@ Output size, measured at `9:16`: `seedance-2.0` at its `720p` default and `sora-
 
 ### 0. Resolve the product (once per session)
 
-`GET /v1/products`. Default to the product named in `MASTER_CONTEXT.md` under "My workspace". If no default is set: with exactly one product, auto-populate `MASTER_CONTEXT.md` with its id and name; with several, ask the user once and save the choice. With none, omit `productId` — it is optional.
+`GET /v1/products`. **The products come back under `items`, not `products`** (verified live 2026-08-04) — it is the same paginated envelope as `GET /v1/generations`, so read `.items` and expect `total`, `limit`, `offset` and `hasMore` alongside it:
+
+```bash
+curl -sS https://api.novoads.ai/v1/products \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" | jq -r '.items[] | "\(.id)  \(.name)"'
+```
+
+Default to the product named in `MASTER_CONTEXT.md` under "My workspace". If no default is set: with exactly one product, auto-populate `MASTER_CONTEXT.md` with its id and name; with several, ask the user once and save the choice. With none, omit `productId` — it is optional.
 
 Pass `productId` on every generation call. It is what makes `GET /v1/generations?productId=…` a useful history later. There is no dated-folder ritual to run here: folders are read-only on this API and there are no projects on it at all.
 
