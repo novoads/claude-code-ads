@@ -176,6 +176,7 @@ skill.
 | **Claymation / Aardman ad** | Same backbone over an 8-beat narrator arc, clay textures, optional `fps=12,fps=24` stop-motion judder | [claymation-ad](shared/skills/claymation-ad/prompting/guide.md) |
 | **YouTube thumbnails** | 5 CTR formulas (peace-sign branding, real-vs-AI, terminal flow, reaction shock, before/after split) on `nano-banana-pro`, likeness locked with face references | [generate-youtube-thumbnail](skills/generate-youtube-thumbnail/SKILL.md) |
 | **Burn captions onto an MP4** | Whisper transcript → reading phrases → captions-only HTML over magenta → ffmpeg chroma-key overlay. **Out of band — no API call, no credits** | [caption-video](shared/skills/caption-video/prompting/guide.md) |
+| **Overlay b-roll cutaways on a finished MP4** | Whisper transcript → EDL of overlay windows (`file`, `start`, `end`, `covers`) → validate → ffmpeg overlay → verify duration, audio and every window. Base audio runs untouched, duration never changes. **Local ffmpeg, no credits** (the cutaway clips themselves are generated first, and those are charged) | [broll-overlay](shared/skills/broll-overlay/SKILL.md) |
 
 ### 🔄 Reverse-engineer existing creative
 
@@ -270,6 +271,7 @@ than routing you somewhere else. There is likewise no b-roll or scene endpoint �
 | [`shared/skills/claymation-ad/`](shared/skills/claymation-ad/) | Aardman-style clay narrative on the same backbone. |
 | [`shared/skills/gemini-omni-flash/`](shared/skills/gemini-omni-flash/) | Prompting guide for `omni-flash`, scoped to what this API actually exposes. |
 | [`shared/skills/caption-video/`](shared/skills/caption-video/) | Out-of-band caption burn-in for any finished MP4. |
+| [`shared/skills/broll-overlay/`](shared/skills/broll-overlay/) | Overlay b-roll cutaways on a finished MP4 — local ffmpeg, no credits. Validates the EDL, renders atomically, and verifies duration, audio and every window. |
 | [`shared/skills/meta-ad-builder/`](shared/skills/meta-ad-builder/) | Publish finished creatives as paused Meta ads. |
 | [`scripts/setup.sh`](scripts/setup.sh) | One-time setup. Validates the key before writing it. |
 | [`scripts/check-novoads-env.sh`](scripts/check-novoads-env.sh) | Connectivity check that names the failure. |
