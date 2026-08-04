@@ -8,7 +8,8 @@ base video, and it **overlays** — it never extends.
 
 OV1, OV2, OV4 and OV5 are mechanical and covered by the executable test
 (`scripts/test_broll_overlay.py`, synthetic fixtures, no credits). OV3 is a text
-assertion against the EDL the agent proposes.
+assertion against the EDL the agent proposes. OV6 is half and half: `--stats` computes
+the cadence numbers mechanically, and the departure rationale is a text assertion.
 
 ---
 
@@ -51,16 +52,26 @@ is not being edited.
 
 **Reference behavior.** The walkthrough's creator chose placements by reading what was
 being said at each second, and kept the person on camera for the hook and the final
-verdict beat.
+verdict beat. A frame-by-frame measurement of that edit on 2026-08-04 also fixed its
+cadence: ~15.5s, 10–11 shots, a cut every ~1.4s, 5 cutaways of ~1–1.5s each, ~40–45%
+b-roll coverage, strict A-B-A-B alternation, 4 b-roll settings across 2–3 rooms while
+the talking-head base never moves.
 
 **Assertions, on the proposed EDL before any rendering:**
 - Every overlay window names the spoken line it covers, in one line of rationale.
 - No window covers the opening hook beat, and the final beat ends on the person.
 - Windows land where the b-roll illustrates the words (product mentioned → product shot).
+- Cadence sits in the measured envelope: 4–6 windows per 15s of base, each ≤2s, total
+  coverage 35–50%, and the base returns between every pair of windows (never two
+  overlay windows adjacent or back to back).
+- Composition follows the arc — problem → stress → product macro → dose/usage →
+  relief — at roughly 2 product shots to 3 emotional/lifestyle beats, not all product.
 - The EDL is shown to the user for approval before the script runs.
 
 **Fails if:** windows are placed without quoting the transcript, the hook or closing
-beat is covered, or rendering starts before the user has seen the plan.
+beat is covered, or rendering starts before the user has seen the plan. Cadence outside
+the envelope is not a failure of OV3 — it is OV6's business, and only fails there when
+the departure goes unstated.
 
 ## OV4 — Overlay windows are geometrically valid, with defined mismatch behavior
 
@@ -99,6 +110,34 @@ is worse than none.
 
 **Fails if:** a corrupted output passes, or failure messages omit the measured values.
 
+## OV6 — The proposed EDL matches the reference cadence envelope, or departs explicitly
+
+**Scenario.** The agent proposes an EDL. Its cadence either sits inside the envelope
+measured from the reference edit, or it doesn't — and the proposal says so.
+
+**Why it matters.** Cadence is style, and style measured once is a default, not a law.
+The failure this catches is not "cut differently" — it is drifting outside the only
+cadence we have evidence for **without noticing**. Our own two renders did exactly that
+(2 windows, 2.5s and 2.0s, ~30% coverage, a cut every ~2.1s) as an unexamined habit,
+not a choice.
+
+**Assertions.**
+- `broll_overlay.py --stats` computes the numbers — window count, min/mean/max window
+  length, coverage in seconds and percent, largest and smallest base-return gap — each
+  marked "within envelope" or "outside envelope (reference: …)". The same block prints
+  on every render run, before rendering, so no run hides its cadence.
+- The envelope: 4–6 windows per 15s of base (scaled to the actual base duration), each
+  window ≤2s, coverage 35–50%, a base return between every pair of windows.
+- **Deviation never changes the exit code.** `--stats` exits 0 whenever validation
+  passes, envelope violations included. A style opinion that can fail a build is a
+  style opinion that gets worked around.
+- If the EDL falls outside the envelope, the proposal shown to the user names the
+  departure and the reason for it (a 6s base, a script with one visual idea, a client
+  brief asking for a slow cut).
+
+**Fails if:** the numbers are wrong, a deviation produces a nonzero exit, or an
+out-of-envelope EDL is proposed with no acknowledgement that it is out of envelope.
+
 ---
 
 ## Notes on evidence strength
@@ -106,10 +145,24 @@ is worse than none.
 - OV1 and OV2 are **well-evidenced**: the stitch failure was observed and recorded, and
   the overlay-not-segment reading of the reference video is documented in
   `VIDEO-PARITY-EXPERIMENT.md`.
-- OV3's hook/closing rule rests on the reference video's visible editing choices (n=1).
-  Strong default with reasoning attached, not a law.
+- OV3 and OV6 rest on **one** reference edit, measured frame by frame on 2026-08-04:
+  ~15.5s, 10–11 shots, a cut every ~1.4s, 5 cutaways of ~1–1.5s, ~40–45% coverage,
+  strict A-B-A-B alternation, 4 b-roll settings across 2–3 rooms, a 2-product /
+  3-emotional shot mix. The only contrast is our own two renders (2 windows, 2.5s and
+  2.0s, ~30% coverage). n=1 with a contrast pair is enough for a default, not for a
+  law — hence "or departs explicitly" in OV6 rather than a hard bound.
+- The hook/closing rule in OV3 predates the measurement and survived it: the reference
+  edit covers neither beat.
+- **Retired 2026-08-04:** the skill used to teach "fewer, longer overlay windows beat
+  many short ones." That was our taste call, never measured, and the measurement
+  reversed it — the reference cuts roughly twice as often as we did, with windows about
+  half as long. Recorded here so the rule reads as considered and overturned, not
+  overlooked. If a second reference edit ever contradicts the envelope, this is the
+  entry to update rather than quietly re-tune the numbers.
 - OV4's no-loop rule is a taste call made here, once, so behavior is defined rather
   than improvised per run.
+- The envelope constants live in `scripts/broll_overlay.py` (`REF_*`) with this
+  provenance in a comment beside them, so the numbers can't drift from their source.
 - External corroboration for the architecture (plan → validate → execute → verify):
   video-use (April 2026) and the HyperFrames workflow (May 2026) both gate rendering on
   a reviewable plan and verify at cut boundaries.

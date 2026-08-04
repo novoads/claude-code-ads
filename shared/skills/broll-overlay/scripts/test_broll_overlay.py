@@ -4,8 +4,10 @@
 Covers the mechanical evals in EVALS.md: OV1 (duration equals base), OV2 (base
 audio passes through byte-identical, overlay audio ignored), OV4 (geometric
 validation: overlap, out-of-bounds, short clip), OV5 (the verifier catches a
-tampered output). OV3 is a text assertion on a proposed EDL and is not
-mechanizable here.
+tampered output), and the mechanical half of OV6 (--stats computes the cadence
+numbers and never turns a style deviation into a nonzero exit). OV3, and OV6's
+departure rationale, are text assertions on a proposed EDL — not mechanizable
+here.
 
 Fixtures are generated with ffmpeg lavfi sources into a temp dir — never into
 the repo. Requires ffmpeg/ffprobe on PATH. Python stdlib only, no pytest.
@@ -184,6 +186,10 @@ def case1_happy_path(fx, state):
                                  f"{c}-dominant RGB{rgb} — an overlay leaked "
                                  "outside its window")
 
+    # (d) a normal render surfaces its cadence before rendering.
+    if "cadence stats" not in r.stdout:
+        fails.append(f"a render run printed no cadence stats block: {r.stdout!r}")
+
     state["good_out"] = out
     return fails
 
@@ -322,6 +328,107 @@ def case6_dry_run(fx, state):
     return fails
 
 
+def _stats_numbers(stdout):
+    """Pull the printed cadence numbers back out. Returns a dict or raises."""
+    pats = {
+        "base": r"cadence stats for a ([\d.]+)s base",
+        "count": r"cutaway windows:\s+(\d+)",
+        "len_min": r"min ([\d.]+)s\s+mean",
+        "len_mean": r"mean ([\d.]+)s\s+max",
+        "len_max": r"max ([\d.]+)s",
+        "cov_s": r"coverage:\s+([\d.]+)s of",
+        "cov_pct": r"of [\d.]+s = ([\d.]+)%",
+    }
+    got = {}
+    for key, pat in pats.items():
+        m = re.search(pat, stdout)
+        if not m:
+            raise RuntimeError(f"stats output has no {key!r} "
+                               f"(pattern {pat!r}) in:\n{stdout}")
+        got[key] = float(m.group(1))
+    return got
+
+
+def case7_stats(fx, state):
+    """--stats reports arithmetically correct cadence numbers, and stays
+    informational: an envelope-violating EDL still exits 0."""
+    fails = []
+    out_never = fx.dir / "never_stats.mp4"
+
+    # (a) an EDL inside the envelope for this 10s base: 4 windows x 1.0s,
+    # 4.0s coverage (~40%), a 1.0s base return between each pair.
+    edl = write_edl(fx.dir / "edl_stats_ok.json", fx.base, out_never, [
+        (fx.red, 1.0, 2.0, "w1"), (fx.blue, 3.0, 4.0, "w2"),
+        (fx.red, 5.0, 6.0, "w3"), (fx.blue, 7.0, 8.0, "w4"),
+    ])
+    r = run_script(edl, "--stats")
+    if r.returncode != 0:
+        fails.append(f"--stats: expected exit 0, got {r.returncode}\n"
+                     f"stderr: {r.stderr}")
+    if out_never.exists():
+        fails.append("--stats created the output file")
+
+    # (b) the printed numbers are arithmetically correct for that EDL.
+    try:
+        g = _stats_numbers(r.stdout)
+    except RuntimeError as e:
+        return fails + [str(e)]
+
+    base_dur = probe_duration(fx.base)
+    expect = {
+        "base": base_dur, "count": 4,
+        "len_min": 1.0, "len_mean": 1.0, "len_max": 1.0,
+        "cov_s": 4.0, "cov_pct": 100.0 * 4.0 / base_dur,
+    }
+    for key, want in expect.items():
+        if abs(g[key] - want) > 0.06:
+            fails.append(f"--stats {key}: printed {g[key]}, expected {want:.2f}")
+
+    m = re.search(r"largest ([\d.]+)s, smallest ([\d.]+)s", r.stdout)
+    if not m:
+        fails.append(f"--stats printed no base-return gaps: {r.stdout!r}")
+    else:
+        largest, smallest = float(m.group(1)), float(m.group(2))
+        if abs(largest - 1.0) > 0.01 or abs(smallest - 1.0) > 0.01:
+            fails.append(f"--stats gaps: largest {largest}s / smallest "
+                         f"{smallest}s, expected 1.00s / 1.00s")
+    if "gap(s)" in r.stdout and "3 gap(s)" not in r.stdout:
+        fails.append(f"--stats: expected 3 gaps for 4 windows: {r.stdout!r}")
+
+    # this EDL sits inside the envelope on every metric.
+    if "outside envelope" in r.stdout:
+        fails.append("--stats flagged an in-envelope EDL as outside:\n"
+                     + r.stdout)
+
+    # (c) an envelope-violating EDL: 2 windows of 2.5s. Still exit 0.
+    edl_bad = write_edl(fx.dir / "edl_stats_bad.json", fx.base, out_never, [
+        (fx.red, 1.0, 3.5, "2.5s window"), (fx.blue, 5.0, 7.5, "2.5s window"),
+    ])
+    r = run_script(edl_bad, "--stats")
+    if r.returncode != 0:
+        fails.append(f"--stats on an envelope-violating EDL: expected exit 0 "
+                     f"(cadence is never a gate), got {r.returncode}\n"
+                     f"stderr: {r.stderr}")
+    if "outside envelope" not in r.stdout:
+        fails.append("--stats did not flag the violating EDL as outside the "
+                     f"envelope: {r.stdout!r}")
+    for label in ("cutaway windows", "window length"):
+        line = next((l for l in r.stdout.splitlines() if label in l), None)
+        if line is None or "outside envelope" not in line:
+            fails.append(f"--stats: {label!r} should be outside the envelope "
+                         f"(2 windows of 2.5s), got: {line!r}")
+    try:
+        gb = _stats_numbers(r.stdout)
+    except RuntimeError as e:
+        return fails + [str(e)]
+    if abs(gb["count"] - 2) > 0.01 or abs(gb["len_max"] - 2.5) > 0.01 \
+            or abs(gb["cov_s"] - 5.0) > 0.06:
+        fails.append(f"--stats numbers wrong for the violating EDL: {gb}")
+    if out_never.exists():
+        fails.append("--stats created the output file")
+    return fails
+
+
 CASES = [
     ("1 happy path (OV1 duration, OV2 audio, overlays displayed, tail-trim)",
      case1_happy_path),
@@ -330,6 +437,7 @@ CASES = [
     ("4 short clip rejected with durations (OV4)", case4_short_clip),
     ("5 verifier catches tampered output (OV5)", case5_verify_catches_tampering),
     ("6 --dry-run renders nothing", case6_dry_run),
+    ("7 --stats reports correct numbers, never gates (OV6)", case7_stats),
 ]
 
 

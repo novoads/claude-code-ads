@@ -9,6 +9,7 @@ concatenation (see EVALS.md OV1).
 Usage:
   python3 broll_overlay.py edl.json              validate + render + verify
   python3 broll_overlay.py edl.json --dry-run    validate only, print the plan
+  python3 broll_overlay.py edl.json --stats      validate, print cadence stats
   python3 broll_overlay.py --verify-only FINAL --base BASE
                                                  re-check an existing output
 
@@ -37,6 +38,24 @@ DURATION_TOLERANCE = 0.05
 # Slack when comparing a clip's probed duration to its window, seconds.
 # Covers ffprobe container rounding only — a genuinely short clip still fails.
 PROBE_SLACK = 0.05
+
+# --- Reference cadence envelope -------------------------------------------
+# Source: frame-by-frame measurement of the one reference edit this pack
+# reproduces (walkthrough at youtu.be/HHGQN9Zqaxo t=2438), taken 2026-08-04.
+# That edit: ~15.5s, 10-11 shots, a cut every ~1.4s, 5 cutaways of ~1-1.5s
+# each, ~40-45% b-roll coverage, strict A-B-A-B alternation. n=1, contrasted
+# against our own two renders (2 windows of 2.5s/2.0s, ~30% coverage).
+# These numbers are INFORMATIONAL: cadence is judgment, and deviation never
+# changes the exit code (EVALS.md OV3/OV6).
+REF_BASE_SECONDS = 15.0        # the reference ad's runtime, the scaling unit
+REF_WINDOWS_MIN = 4            # cutaways per REF_BASE_SECONDS, low end
+REF_WINDOWS_MAX = 6            # cutaways per REF_BASE_SECONDS, high end
+REF_WINDOW_MAX_SECONDS = 2.0   # reference windows ran ~1-1.5s; 2.0s is the cap
+REF_COVERAGE_MIN_PCT = 35.0    # reference coverage was ~40-45%
+REF_COVERAGE_MAX_PCT = 50.0
+# Float-comparison epsilon so a window computed as 1.9999999999999998 counts
+# as 2.0. Not a tolerance on the envelope itself.
+EPS = 1e-6
 
 EXIT_VALIDATION = 2
 EXIT_RENDER = 3
@@ -183,6 +202,56 @@ def validate(edl):
     return base_dur
 
 
+def scaled_window_bounds(base_dur):
+    """The reference's 4-6 cutaways per 15s, scaled to this base's runtime."""
+    scale = base_dur / REF_BASE_SECONDS
+    lo = max(1, int(REF_WINDOWS_MIN * scale + 0.5))
+    hi = max(lo, int(REF_WINDOWS_MAX * scale + 0.5))
+    return lo, hi
+
+
+def format_stats(edl, base_dur):
+    """Cadence numbers for the EDL, each compared to the reference envelope.
+
+    Informational only — this never influences an exit code. Style is judgment;
+    the numbers exist so a departure is a decision instead of an accident."""
+    wins = sorted((float(o["start"]), float(o["end"])) for o in edl["overlays"])
+    lens = [e - s for s, e in wins]
+    gaps = [nxt[0] - cur[1] for cur, nxt in zip(wins, wins[1:])]
+    n = len(wins)
+    total = sum(lens)
+    pct = 100.0 * total / base_dur if base_dur else 0.0
+    lo, hi = scaled_window_bounds(base_dur)
+
+    def mark(ok, reference):
+        return "within envelope" if ok else f"outside envelope (reference: {reference})"
+
+    out = ["", f"cadence stats for a {base_dur:.2f}s base "
+               "(informational — cadence is judgment, never an exit code):"]
+    out.append(f"  cutaway windows:  {n}  —  " + mark(
+        lo <= n <= hi,
+        f"{lo}-{hi} for a {base_dur:.1f}s base; "
+        f"{REF_WINDOWS_MIN}-{REF_WINDOWS_MAX} per {REF_BASE_SECONDS:.0f}s"))
+    out.append(f"  window length:    min {min(lens):.2f}s  mean {total / n:.2f}s  "
+               f"max {max(lens):.2f}s  —  " + mark(
+                   max(lens) <= REF_WINDOW_MAX_SECONDS + EPS,
+                   f"each window <= {REF_WINDOW_MAX_SECONDS:.1f}s; reference ran ~1-1.5s"))
+    out.append(f"  coverage:         {total:.2f}s of {base_dur:.2f}s = {pct:.1f}%  —  "
+               + mark(REF_COVERAGE_MIN_PCT - EPS <= pct <= REF_COVERAGE_MAX_PCT + EPS,
+                      f"{REF_COVERAGE_MIN_PCT:.0f}-{REF_COVERAGE_MAX_PCT:.0f}%"))
+    if gaps:
+        out.append(f"  base returns:     {len(gaps)} gap(s), largest {max(gaps):.2f}s, "
+                   f"smallest {min(gaps):.2f}s  —  " + mark(
+                       min(gaps) > EPS,
+                       "the face returns between every pair of windows (A-B-A-B)"))
+    else:
+        out.append("  base returns:     n/a — a single window has no gap to measure")
+    out.append("  envelope source: frame-by-frame measurement of one reference edit, "
+               "2026-08-04 (n=1).")
+    out.append("  A strong default, not a law — depart deliberately and say why.")
+    return out
+
+
 def build_command(edl):
     base = edl["base"]
     v = probe_video_stream(base)
@@ -250,6 +319,10 @@ def main():
     ap.add_argument("edl", nargs="?", help="EDL JSON file")
     ap.add_argument("--dry-run", action="store_true",
                     help="validate and print the plan; render nothing")
+    ap.add_argument("--stats", action="store_true",
+                    help="validate and print the cadence stats; render nothing. "
+                         "Informational: deviation from the reference envelope "
+                         "never changes the exit code")
     ap.add_argument("--verify-only", metavar="FINAL",
                     help="verify an existing output (requires --base)")
     ap.add_argument("--base", help="base video for --verify-only")
@@ -282,6 +355,13 @@ def main():
         covers = f"  — {ov['covers']}" if ov.get("covers") else ""
         print(f"  [{float(ov['start']):6.2f} → {float(ov['end']):6.2f}] "
               f"{ov['file']}{covers}")
+
+    # Every run surfaces its own cadence, before anything renders.
+    for line in format_stats(edl, base_dur):
+        print(line)
+
+    if args.stats:
+        return
 
     if args.dry_run:
         print("\nDRY RUN — command that would run:")

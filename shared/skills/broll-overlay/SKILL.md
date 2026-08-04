@@ -58,17 +58,31 @@ This skill never generates the base. If there isn't one yet, say so and stop.
 
 ## Placement judgment
 
+Default cadence, measured 2026-08-04 frame by frame from the reference edit this
+pack reproduces — ~15.5s, 10–11 shots, a cut every ~1.4s:
+
+- **Alternate A-B-A-B: the face returns between every cutaway.** Never two
+  overlay windows back to back; the talking head is the spine.
+- **4–6 windows per 15s, ~1–1.5s each, ~40–45% coverage.** Short and frequent.
+  This retires the earlier "fewer, longer windows beat many short ones" rule —
+  our taste, reversed by measurement. Our own two contrasting renders ran 2
+  windows of 2.5s and 2.0s, ~30% coverage, a cut every ~2.1s.
+- **The b-roll may travel; the base never does.** The reference visits 4
+  distinct b-roll settings across 2–3 rooms; the talking head never moves.
 - **Never cover the opening hook beat.** The first beat is a face making a
   claim; cutting away there spends the retention the hook just bought.
 - **End on the person, not on b-roll.** The closing beat is the verdict, and it
   only lands if the viewer is looking at whoever delivers it.
 - **Put product shots where the product is being spoken about.** B-roll that
-  illustrates the current sentence reads as evidence; b-roll that floats
-  anywhere else reads as filler.
-- **Fewer, longer overlay windows beat many short ones.** Rapid cutting away
-  from a talking head reads as nervousness, not energy.
-- The hook and closing rules are strong defaults, not laws — they come from one
-  reference edit (EVALS.md OV3). Depart from them deliberately, and say why.
+  illustrates the current sentence reads as evidence; anything else is filler.
+
+**Default shot plan.** The reference's five cutaways tell one arc: problem →
+stress → product macro → dose/usage → relief — 2 product shots, 3 emotional or
+lifestyle beats. Adapt the imagery to the script, keep the ratio.
+
+Evidence: one measured edit (n=1) against our own two renders. Strong defaults,
+not laws — depart deliberately and say why (EVALS.md OV3, OV6). Every run prints
+its own cadence against this envelope; `--stats` prints it without rendering.
 
 ## Hard rule: assembly always goes through the script
 
@@ -86,6 +100,8 @@ ask the user how to proceed. Do not improvise around the script.
 
 - `python3 scripts/broll_overlay.py edl.json --dry-run` — validate the EDL and
   print the plan, rendering nothing. Cheap way to check window geometry.
+- `python3 scripts/broll_overlay.py edl.json --stats` — window count, lengths,
+  coverage, base-return gaps, each marked against the envelope. Never an error.
 - `python3 scripts/broll_overlay.py --verify-only FINAL --base BASE` — re-check
   any existing output against its base, including one from an old session.
 
@@ -94,6 +110,6 @@ real failure — surface it, don't retry blindly.
 
 ## Evals
 
-`EVALS.md` defines the five scenarios this skill is held to (OV1–OV5).
+`EVALS.md` defines the six scenarios this skill is held to (OV1–OV6).
 `scripts/test_broll_overlay.py` implements the mechanical ones against synthetic
 fixtures — run it after touching the script.
