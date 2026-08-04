@@ -89,6 +89,9 @@ Two tracks from the one request, `modelName: chirp-crow`, both titled
 "Late Train Receipt": **89.24s** and **127.72s**, MP3 48 kHz stereo ~184 kbps.
 Both are far longer than a 15s ad, so `music_mix.py` trims and fades rather than ever
 hitting its too-short error. Verified usable: mixing the 89s track under a 12s fixture
-produced a passing output (−14.0 LUFS, −12.6 dBTP, video packets identical).
+produced an output that passed every check the script makes — duration unchanged, video
+packets identical, −14.0 LUFS, −12.6 dBTP. Those checks do **not** establish that the bed
+is audible in the mix (nothing after the render can — see EVALS.md MM5); that the track
+carries real audio is established before the render, from its own measured loudness.
 
 Saved to `outputs/music-samples/` — **gitignored**, audio is never committed.

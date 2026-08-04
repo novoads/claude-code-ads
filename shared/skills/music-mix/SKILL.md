@@ -72,8 +72,14 @@ fine. **State this tradeoff once, plainly, and let the user choose.**
 Never hand-write mixing ffmpeg for this task. `music_mix.py` owns validation, rendering
 and verification, and it fails loudly on what fails silently by hand: a track shorter
 than the video, a re-encoded picture, a duration that drifts, loudness that will get
-turned down by the platform, and — the sneakiest one — an output that is just a copy of
-the input with no music in it at all.
+turned down by the platform, an output path that would overwrite one of its own inputs,
+and — the sneakiest one — a bed so quiet it is not in the mix at all.
+
+That last one is caught **before** the render, not after, and it is worth knowing why:
+the output's audio is re-encoded on every path, so a finished file with no music in it
+looks exactly like one with music. The script instead measures the music track's own
+loudness up front and refuses a silent track or a gain that would put the bed below
+audibility. A verifier cannot do that job; do not ask it to.
 
 **Escape hatch:** if a request genuinely doesn't fit this model — music that must hit a
 specific cut point, a track that needs an intro trimmed off the front, stems, a
@@ -86,18 +92,32 @@ around the script.
 python3 scripts/music_mix.py video.mp4 music.mp3 out-lofi-warm.mp4
 ```
 
-- `--music-gain DB` — bed level, default −18 dB. The main knob between variants.
+- `--music-gain DB` — bed level, default −18 dB, range ±60. The main knob between
+  variants, and the first one to reach for when loudness verification fails.
 - `--no-duck` — flat bed, no ducking. For a video with no voiceover.
 - `--dry-run` — validate and print the plan, render nothing.
 - `--verify-only OUT --video INPUT` — re-check any existing output, including one from
-  an old session.
+  an old session. Standalone: mixing it with render arguments is an error.
 
 **Report the script's verification line verbatim** — the measured loudness and true
-peak, not a paraphrase. Exit codes: `2` validation, `3` render, `4` verification. A
-nonzero exit is a real failure — surface it, don't retry blindly.
+peak, not a paraphrase. Do not upgrade it: it establishes duration, an un-re-encoded
+picture, rebuilt audio and the loudness envelope, and says nothing about how the bed
+*sounds*. Exit codes: `2` validation, `3` render, `4` verification. A nonzero exit is a
+real failure — surface it, don't retry blindly.
+
+**The refusals worth recognising**, so you fix the input instead of retrying:
+
+| Message | What to do |
+|---|---|
+| `music is Xs, video is Ys — the track is too short` | Get a longer track. Never loop or pad. |
+| `music track is silent` / `music inaudible at these gains` | Wrong file, or `--music-gain` is too low. |
+| `input voice is silent/near-silent` | This is not a music-bed job; the video needs a soundtrack. |
+| `has N audio streams` | Pick one voice track with ffmpeg first — the script will not guess. |
+| `output ... is the same file as the video` | The output path aliases an input (hardlink, symlink, or a case-variant name on macOS). Choose a new name. |
+| `master gain clamped` | The input is more than 30 dB off target; fix its level upstream. |
 
 ## Evals
 
 `EVALS.md` defines the five scenarios this skill is held to (MM1–MM5).
-`scripts/test_music_mix.py` implements all five mechanically against synthetic fixtures
-— run it after touching the script.
+`scripts/test_music_mix.py` implements all five mechanically against synthetic fixtures,
+in 15 cases — run it after touching the script.
