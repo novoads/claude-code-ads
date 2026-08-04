@@ -80,7 +80,8 @@ the departure goes unstated.
 ## OV4 — Overlay windows are geometrically valid, with defined mismatch behavior
 
 **Scenario.** An EDL arrives with a clip shorter than its window, overlapping windows,
-or a window past the end of the base.
+a window past the end of the base, or a shape nobody anticipated (a top-level array, a
+`null` overlay entry, `NaN` for a start time).
 
 **Assertions.**
 - Overlay clip shorter than its window → **hard error** naming the clip, its duration,
@@ -88,17 +89,35 @@ or a window past the end of the base.
   auto-loop: looped b-roll reads as broken.
 - Overlay clip longer than its window → tail trimmed to the window, silently (that is
   the normal case: generated b-roll comes in fixed durations).
-- Overlapping windows, windows outside `[0, duration(base)]`, or end ≤ start → hard
-  error listing every offending window, before any ffmpeg runs.
+- Overlapping windows, windows outside `[0, duration(base video stream)]`, or end ≤
+  start → hard error listing every offending window, before any ffmpeg runs. Bounds are
+  measured against the **video** stream: a base whose audio outruns its picture would
+  otherwise accept windows that composite nothing.
+- A window shorter than one base frame period → hard error. It would render zero overlay
+  frames and every other check would still pass.
+- The base must have exactly one audio stream. Two is a **hard error**, not a silent
+  drop: the assembly maps `0:a:0`, so the rest would vanish and the audio verification
+  would still call the output identical to its base.
+- Malformed EDL structure — top-level array or scalar, an overlay entry that is `null`,
+  a number, a string or a list, a missing/blank `covers`, a non-string `file`, `NaN`,
+  `Infinity` or a bool for `start`/`end` — is a collected validation error (exit 2),
+  never a traceback and never an exit 1.
+- **Every error in one round-trip.** Nothing short-circuits the pass: an unreadable
+  overlay file is reported as `overlays[i] (name): unreadable media file` and validation
+  continues, and the overlap scan is a running-max sweep, so one long window overlapping
+  three later ones reports all three rather than only the adjacent pair.
+- The output path is never an input (same path, hardlink/symlink alias, or case variant
+  on a case-insensitive filesystem) and never starts with `-`.
 - Validation happens entirely before rendering: a bad EDL costs zero render time.
 
-**Fails if:** any invalid EDL reaches ffmpeg, or a short clip is looped or freeze-framed
-to fill a window.
+**Fails if:** any invalid EDL reaches ffmpeg, a short clip is looped or freeze-framed to
+fill a window, one error hides another, or a malformed EDL produces a traceback instead
+of a message.
 
 ## OV5 — The verifier catches a bad output
 
 **Scenario.** Rendering "succeeded" but the output is wrong (truncated file, dropped
-frames, wrong file verified).
+frames, wrong file verified, or a file that is simply a copy of the base).
 
 **Why it matters.** The founding failure was silent. The verify step exists to make
 this class of failure loud, so it must itself be tested — a verifier that always passes
@@ -109,10 +128,24 @@ is worse than none.
   measured numbers in the message.
 - Given an output whose audio stream differs from the base's, verification fails naming
   the difference.
-- Verification is a separate, re-runnable mode (`--verify-only`) so a human or a later
-  session can re-check any old output against its base.
+- **Content check.** Duration and audio are both satisfied by a plain remux of the base,
+  so verification also samples each window's midpoint frame from the output and from the
+  base and requires them to differ. A `-c copy` remux of the base fails verification
+  whenever the windows are known.
+- Verification is a separate, re-runnable mode (`--verify-only FINAL --base BASE`) so a
+  human or a later session can re-check any old output against its base;
+  `--edl edl.json` supplies the windows and enables the content check. Without it the
+  run prints "content check skipped (no --edl)" rather than implying it checked.
+- Probe failures on the verify path exit `4` (verification), not `2` (validation): a
+  0-byte or unreadable output is a verification failure, and a missing `--base` is the
+  only validation error in that mode.
+- The render is atomic: it writes a hidden temp file beside the output and renames it
+  only after verification passes, so a failed render leaves no partial file and an
+  unverified one never lands at the output path.
 
-**Fails if:** a corrupted output passes, or failure messages omit the measured values.
+**Fails if:** a corrupted output passes, a copy of the base passes with its windows
+known, failure messages omit the measured values, or a failed render replaces a good
+output.
 
 ## OV6 — The proposed EDL matches the reference cadence envelope, or departs explicitly
 
@@ -165,6 +198,18 @@ out-of-envelope EDL is proposed with no acknowledgement that it is out of envelo
   entry to update rather than quietly re-tune the numbers.
 - OV4's no-loop rule is a taste call made here, once, so behavior is defined rather
   than improvised per run.
+- **Decisions, not measurements (2026-08-04 pre-landing review).** Three of the rules
+  above are contract choices with no data behind them, recorded so they read as chosen:
+  a base with two audio streams is rejected rather than silently reduced to `0:a:0`; a
+  cutaway whose midpoint frame matches the base within a mean pixel difference of 6/255
+  fails the content check (a re-encode of the same frame lands near 1–3, a real cutaway
+  far above — a cutaway that genuinely looks like the base is a window doing no work);
+  and a missing output directory is a validation error while a directory that exists but
+  refuses writes surfaces as a render error, because the render, not validation, is what
+  tries to write there.
+- OV5's content check is a **sampling** check: one frame per window, at the midpoint. It
+  proves each window composited something; it cannot prove every frame of the window did.
+  A full-window comparison was rejected as slower than the render it verifies.
 - The envelope constants live in `scripts/broll_overlay.py` (`REF_*`) with this
   provenance in a comment beside them, so the numbers can't drift from their source.
 - External corroboration for the architecture (plan → validate → execute → verify):
