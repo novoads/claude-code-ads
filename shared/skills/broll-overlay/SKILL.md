@@ -29,8 +29,10 @@ Two things must already exist:
 1. **A finished, approved base video.** Approved means the user has watched it
    and signed off. B-roll is a polish pass over a locked cut — if the base is
    still moving, every overlay window is provisional.
-2. **Its transcript, with timings.** An SRT from the novoads captions API, or a
-   local whisper pass. Placement is read from the transcript, not eyeballed.
+2. **Its transcript, with timings.** A local whisper pass (`whisper-cli` or
+   `openai-whisper`). The novoads captions API cannot supply this — it burns
+   subtitles into a new MP4 and returns no caption text or timings (verified
+   live 2026-08-04). Placement is read from the transcript, not eyeballed.
 
 This skill never generates the base. If there isn't one yet, say so and stop.
 
