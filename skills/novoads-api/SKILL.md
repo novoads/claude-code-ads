@@ -78,13 +78,13 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | A different look on a still, or a second opinion on one | `reve-2.1` |
 | A Pixar-style 3D animated ad | read `shared/skills/pixar-style-ad/prompting/guide.md`: storyboard on `gpt-image-2`, animate each beat on `seedance-2.0` + `startImageAssetId`, stitch with ffmpeg. Runnable scripts in `shared/skills/pixar-style-ad/scripts/`. Nothing on the API rejects, checks or comments on a stylized prompt — the guide is the only thing that will tell you whether the beat works |
 | A claymation / Aardman-style ad | read `shared/skills/claymation-ad/prompting/guide.md`, same shape over 8 beats |
-| Captions burned onto a finished MP4 | read `shared/skills/caption-video/prompting/guide.md`. Out of band — ffmpeg, Whisper and HyperFrames, no Novoads call and no credits |
+| Captions burned onto a finished MP4 | **Two real paths — offer both.** `POST /v1/captions`: one call, 30 preset styles, no local dependencies, **costs credits** and returns only a new MP4 (never an SRT or the caption text). Or `shared/skills/caption-video/prompting/guide.md`: **free**, any style you can write, and it gives you a Whisper transcript you can hand-correct — but needs Whisper, HyperFrames and an ffmpeg chroma-key composite locally. See *Burned-in captions* below. A clip rendered with `audioEnabled: false` can only go the local route |
 | Meta image-ad creatives from a brief or a template | read `shared/skills/image-ad-prompting/OVERVIEW.md` first, then `chatgpt-image-ad` or `nano-banana-image-ad` |
 | To reverse-engineer an existing image ad into a reusable template | the `image-ad-clone` skill |
 | A YouTube thumbnail | the `generate-youtube-thumbnail` skill |
 | B-roll, an ambient product clip, a scene | There is no b-roll endpoint. Generate a silent clip: `omni-flash`, or `seedance-2.0` with the word `silent` or `b-roll` in the prompt |
 | Kling | Not on this API. Say so plainly; [kling-3.md](prompting/prompt-library/kling-3.md) sits in the repo as prompt craft for when it lands. **Sora 2 and Veo 3.1 are live** — they have their own rows above |
-| To edit an existing MP4 they already have | Not this skill, except captions (row above). Say so |
+| To edit an existing MP4 they already have | Not this skill, except captions (row above) — and note that `POST /v1/captions` accepts an uploaded `assetId`, so burning subtitles into *their own* file is a supported first-party call, not just a local one. Everything else (trims, cuts, overlays, music) is out of scope. Say so |
 | To publish the result as an ad on Meta or TikTok | Not this skill. The output is a file. The `meta-ad-builder` skill takes it from there |
 
 Prefer the **shortest** path. If one model answers the request, do not build a pipeline around it.
@@ -526,6 +526,78 @@ Say which check failed and show the evidence — the transcript line, the silenc
 - **Burned-in captions** → the clean-plate clause is missing from the prompt. Add it and re-render.
 
 **Every re-render is a new charge**, and unlike image QA there is no automatic-retry allowance here: a video re-render goes back through gate 2. Show the QA finding, show a fresh estimate, and get a yes.
+
+## Burned-in captions: `POST /v1/captions`
+
+**This API has a first-party captioning endpoint** (verified live 2026-08-04 against spec 2.6.0). It was undocumented in this pack, and the decision tree used to send every caption request to the local ffmpeg skill as though no endpoint existed. Both paths are real — see *Which caption path* below.
+
+**What it does:** takes a video, transcribes its own audio, burns styled subtitles into it, and gives you back **a new MP4**. Asynchronous, exactly like `POST /v1/videos`.
+
+**What it does not do: it never returns caption text, timings, or an SRT.** There is no transcript field anywhere on the job — `GET /v1/generations/{jobId}` carries `outputUrl` and nothing else about the words. If the user wants an SRT, a transcript, or captions they can restyle later, this endpoint cannot give it to them; the local skill can.
+
+**There is nothing to write.** The text is transcribed from the audio. Your only choice is `preset`.
+
+### The call
+
+```bash
+curl -sS -X POST https://api.novoads.ai/v1/captions \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"jobId":"<a succeeded video job>","preset":"casper"}'
+```
+
+| Field | Notes |
+|---|---|
+| `jobId` | A video **this API generated**, via `POST /v1/videos`. |
+| `assetId` | A video **you uploaded**, via `POST /v1/uploads`. Must be a video, not a still. |
+| `preset` | **Required, no default.** One of 30 styles — the tiers are priced differently, so nothing could be a safe default. |
+
+**Exactly one of `jobId` and `assetId`.** Sending both is a `400`, not a guess — captioning the wrong one of two sources still bills you.
+
+`POST /v1/videos/{jobId}/captions` is the same operation with the source in the path. It is the natural call when the source is a job, and it cannot express the upload case at all (an `assetId` contains slashes and is not a path segment). Either one is fine; prefer `POST /v1/captions` if you want one code path for both sources.
+
+Response is `202` with `jobId`, `status`, `creditsCharged`, and `model` (always `veed/subtitles` — this endpoint has one renderer and it is not in `GET /v1/models`, because a caption is applied to a video rather than generating one). **Poll the returned `jobId` at `GET /v1/generations/{jobId}` to a terminal status, then `…/watch` for the file** — the same sequence as a render, and the caption job is a separate row with its own status and its own refund.
+
+### Presets and price
+
+`GET /v1/caption-presets` lists all **30** styles with tier and rate. Verified live 2026-08-04: **21 `basic` at 0.4 credits per billed minute, 9 `dynamic` at 0.8** (`dynamic` is context-aware and animated). Its own endpoint rather than a `kind` on `GET /v1/models`, because a caption style generates nothing.
+
+**Billing is per minute of source, rounded up, one-minute minimum** — so everything this API generates (≤15s) costs exactly the tier rate for one minute. Above the 1080p tier it doubles again, **measured on the short edge**: an ordinary portrait `1080x1920` is 1080p held sideways and is **not** doubled; a true 4K source is.
+
+Duration and resolution are read from the file itself at request time, not from anything you declare. **Gate 2 still applies** — price it with the caption arm of the estimate, which is free:
+
+```bash
+curl -sS -X POST https://api.novoads.ai/v1/estimates \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"kind":"caption","preset":"casper","jobId":"<source job>"}'
+```
+
+**Name the source in the estimate for anything longer than a minute.** A quote without `jobId`/`assetId` is the one-minute minimum, and a 10-minute upload costs ten times it. (Verified live 2026-08-04: sourceless `casper` quoted 0.4, sourceless `glass` quoted 0.8. As always, the number you show the user is the one that came back, not one from this page.) A caption estimate has no prompt, so it returns no `warnings`.
+
+### What bites
+
+- **`409`** — the source job has not succeeded yet, **or it was rendered with `audioEnabled: false`**. No speech, nothing to transcribe, and the API refuses rather than charging you for an empty result. Silent b-roll cannot be captioned.
+- **`404`** — a `jobId` from the *dashboard* rather than the API answers 404, identically to one that does not exist. So does an asset outside your organization or an incomplete upload.
+- **`400`** — a still passed as `assetId`, both source fields at once, or a file that cannot be measured. **A source we cannot measure charges nothing**, because a file we cannot price is one we cannot bill.
+- **Re-captioning the same video in the same style is safe and free.** The second call returns the *first* job's id and charges nothing. A **different** preset on the same video is a new job and a new charge — so iterating on style costs money each time; pick with the user before you call.
+- **`429` with `details.reason: caption_concurrency_limit`** — 10 concurrent caption jobs, counted **separately** from the 5-generation render ceiling, so a batch of captions can never block your next render.
+
+### Which caption path — the API or the local skill
+
+Both exist. Present both and let the user pick; do not silently default.
+
+| | `POST /v1/captions` | `shared/skills/caption-video` |
+|---|---|---|
+| Cost | **Costs credits** (gate 2 applies) | **Free** |
+| Setup | None — one API call | **Heavy**: Whisper, HyperFrames, a working Node/npm project, and an ffmpeg chroma-key composite. Homebrew ffmpeg ships without `libass`, which is the trap the local guide exists to route around |
+| Styles | **30 presets**, fixed | Anything you can write in HTML/CSS/GSAP |
+| Output | A new MP4, subtitles burned in | A new MP4, subtitles burned in |
+| Transcript / SRT | **No** — no text, no timings, ever | **Yes** — Whisper gives word-level timings you keep and can re-use |
+| Control over wording | None — transcribed, not authored | Full — edit the transcript before rendering |
+| Source | An API `jobId`, or any video you upload | Any local file |
+
+**Rules of thumb.** One finished clip, a standard look, no local toolchain → the API. A caption style outside the 30, hand-corrected wording (invented brand names are the usual reason), a needed SRT, or a batch big enough that per-minute credits add up → the local skill. If the video was rendered with `audioEnabled: false`, the API cannot caption it at all.
 
 ## Images are synchronous
 

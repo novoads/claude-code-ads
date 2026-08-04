@@ -36,6 +36,9 @@ Ad analysis (reading an existing ad into a structured hook, beats, casting and l
 | `POST` | `/estimates` | Price a generation. Spends nothing. The only source of a credit number. |
 | `POST` | `/videos` | Submit a video. `202`, charged, asynchronous. |
 | `POST` | `/images` | Generate images. Synchronous, images in the response. |
+| `POST` | `/captions` | Burn subtitles into a generated or uploaded video. `202`, charged, asynchronous. |
+| `POST` | `/videos/{jobId}/captions` | Same operation, source in the path. Generated videos only. |
+| `GET` | `/caption-presets` | The 30 caption styles, with tier and per-minute rate. |
 | `GET` | `/generations` | List jobs, filterable and paginated. |
 | `GET` | `/generations/{jobId}` | One job, with `outputUrl` once it has succeeded. |
 | `GET` | `/generations/{jobId}/watch` | `302` to a freshly signed download URL. |
@@ -78,6 +81,8 @@ Response `201`:
 ## POST /estimates
 
 Discriminated on `kind`, and strict. Any field not listed is a 400.
+
+**There are three arms, not two.** `kind: "caption"` prices `POST /captions` — see that section for its fields and for the reason a sourceless caption quote is the one-minute minimum.
 
 | Field | `kind: "video"` | `kind: "image"` |
 |---|---|---|
@@ -236,6 +241,46 @@ Images accept **no `startImageAssetId`** — there is no first-frame concept on 
 
 ---
 
+## POST /captions, POST /videos/{jobId}/captions
+
+Documented from the live spec `2.6.0` on 2026-08-04. This endpoint family was **missing from this pack entirely** until then; the decision tree routed every caption request to the local ffmpeg skill as though no first-party endpoint existed.
+
+Burns styled subtitles into a video and returns a `jobId`. **Asynchronous and charged**, exactly like `POST /videos`: poll `GET /generations/{jobId}` to a terminal status, then `…/watch`.
+
+| Field | `POST /captions` | `POST /videos/{jobId}/captions` |
+|---|---|---|
+| `preset` | **required**, one of 30 | **required**, one of 30 |
+| `jobId` | in the body — a video this API generated | **in the path** |
+| `assetId` | in the body — a video you uploaded | not expressible |
+
+Both bodies are strict (`additionalProperties: false`). **Exactly one of `jobId` and `assetId`** on `POST /captions`; sending both is a `400` rather than a guess, because captioning the wrong one of two sources still bills for it. The path form exists because an `assetId` contains slashes and cannot be a path segment.
+
+**The subtitle text is transcribed from the video's own audio. There is nothing to write, and there is nothing to read back:** no response and no field on the job carries the caption text or its timings. `GET /generations/{jobId}` returns `outputUrl` and no transcript. **The output is a new MP4 with the subtitles burned in — there is no SRT on this API.** A workflow that needs the words needs the local `caption-video` skill instead.
+
+Response `202`: `jobId`, `status`, `creditsCharged`, `model`. `model` is always **`veed/subtitles`** — fixed, and deliberately not in `GET /models`, because that endpoint answers what this API can *generate* with and a caption is applied to a video that already exists.
+
+### Presets and pricing
+
+`GET /caption-presets` → `{ "presets": [{ "id", "tier", "credits" }] }`. Verified live 2026-08-04: **30 presets — 21 `basic` at 0.4 credits/billed minute, 9 `dynamic` at 0.8.** The `dynamic` nine are `glass`, `whisper`, `glide`, `glide2`, `fusion`, `terminal`, `handwritten`, `backdrop`, `backdrop2`.
+
+The meter is `rate x whole minutes, rounded up, minimum one`, **doubled again above the 1080p tier, measured on the SHORT edge** — a portrait `1080x1920` is 1080p held sideways and is *not* doubled; a true 4K source is. Duration and resolution are read from the file at request time, not declared. Everything this API generates is ≤15s, so it bills exactly one minute.
+
+**`POST /estimates` has a third arm for this:** `{ "kind": "caption", "preset", jobId | assetId }`. `preset` is required; the source is optional but **name it for anything over a minute**, because a sourceless quote is the one-minute minimum. Verified live 2026-08-04: sourceless `casper` → `credits: 0.4`; sourceless `glass` → `credits: 0.8`. No prompt, so no `warnings`.
+
+### Failure modes
+
+| Code | Cause |
+|---|---|
+| `400` | Both source fields, a still passed as `assetId`, or a file that cannot be measured. **A source we cannot measure charges nothing** — unpriceable is unbillable. |
+| `402` | Not enough credits; `details` carries `required` and `available`. |
+| `404` | No such job or asset **for this organization**, or an upload that never completed. A `jobId` from the dashboard answers 404 identically to one that does not exist — a distinguishable response would be a way to probe what else the account holds. |
+| `409` | The source job has not succeeded yet, **or it was rendered with `audioEnabled: false`**. No speech to transcribe, and an empty result you were charged for is worse than a refusal. |
+| `429` | `details.reason: caption_concurrency_limit` — **10** concurrent caption jobs, counted **separately** from the 5-generation `concurrency_limit`, so a batch of captions can never block the next render. |
+
+**Re-captioning the same video in the same preset is idempotent and free**: the second call returns the *first* job's id and charges nothing, enforced by a database constraint, so two identical requests racing cannot double-charge. **A different preset on the same video is a new job and a new charge** — style iteration is not free.
+
+---
+
 ## GET /generations
 
 | Param | Values |
@@ -344,6 +389,7 @@ About 4% of `seedance-2.0` renders run past 10 minutes. Failures are usually rep
 | Requests per organization | 180 per minute, across every key it holds |
 | Requests per client address, pre-authentication | 1,200 per minute |
 | Concurrent generations per organization | 5 (`429`, `error.code` `rate_limited`, `details.reason` `concurrency_limit`, `Retry-After` 15s) |
+| Concurrent **caption** jobs per organization | 10 (`429`, `details.reason` `caption_concurrency_limit`) — a separate budget from the 5 above |
 | JSON request body | 64 KB |
 | Upload size | 100 MB |
 | Upload URL lifetime | 900 seconds |
@@ -399,7 +445,7 @@ response names the field and the limit.
 
 **There is no second shape.** Until spec `2.0.0` a prompt-rule failure was also a 400, carrying `details.rule` and `details.violations[]`. Those keys no longer appear on any response — the rules that replaced them are **advisory only** and arrive as the `warnings` array on a `200` from `/estimates`, never as an error. Code that branches on `details.rule` is reading for something that will never arrive; code that wants the craft advice reads `warnings` off the estimate. (The earlier claim here that `warnings` was itself removed in spec `3.0.0` was wrong — deployed spec is `2.6.0` and it returns the field; verified live 2026-08-04.)
 
-### The four causes of a 429
+### The five causes of a 429
 
 Every one carries `details.reason` and a `Retry-After` header. Those two are the documented
 contract: sleep on the header, branch on the reason. `error.details` is a free-form object, so a
@@ -409,6 +455,7 @@ only extra it does name. Do not branch on an undocumented `details` key.
 | `details.reason` | Cause | What to do |
 |---|---|---|
 | `concurrency_limit` | 5 generations already in flight for the organization; `details.inFlight` says how many | Wait for one to reach a terminal state, then submit. A longer backoff does not help; a finished job does. Generation endpoints only. |
+| `caption_concurrency_limit` | **10 caption jobs already in flight** for the organization (verified in spec 2.6.0, 2026-08-04) | Same shape as above: wait, do not slow down. Counted **separately** from `concurrency_limit`, deliberately — a batch of captions can never block your next render, and vice versa. |
 | `key_limit` | 60 requests per minute on this key | Honor `Retry-After`. The `X-RateLimit-*` trio tracks this ceiling and only this one. |
 | `organization_limit` | 180 requests per minute across every key the organization holds | Honor `Retry-After`. `X-RateLimit-*` will still show room on your key — correct, not a broken limiter. Minting another key does not raise it. |
 | `client_limit` | 1,200 requests per minute from one address, **pre-authentication** | Honor `Retry-After`. Carries no `X-RateLimit-*` trio. |
