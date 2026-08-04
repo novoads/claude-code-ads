@@ -116,6 +116,14 @@ order you send them. Not every beat needs a reference; two or three carry the lo
 the rest inherit it. A token pointing past the end of the array is refused before the
 charge.
 
+**At least one reference must show the person.** Identity inside this render is earned by
+the actor tag, but the reference set has a second job downstream: `broll-overlay` casts
+the base actor into every human cutaway by re-sending **the same `referenceAssetIds` this
+base used**. A reference set of product-only stills leaves that pass with no identity to
+reuse, and Seedance re-casts on every render — which is how one live run put five
+white-cast cutaways over a Black base actor (2026-08-04). Keep the references you send
+here; they are an input to the next step, not scratch.
+
 ---
 
 ## Checklist before you price it
@@ -144,14 +152,21 @@ charge.
 **The base video is the deliverable.** When it is downloaded and QA'd, the job is done.
 Do not plan, price or generate anything further on your own initiative.
 
-Then offer, in a line or two: **b-roll cutaways** laid over the base, **background
-music**, or **variations of the cut**. If the user declines, the ad is complete and
-correct as it stands.
+Then offer, in a line or two: **b-roll cutaways** laid over the base, **burned captions**,
+**background music**, or **variations of the cut**. If the user declines, the ad is
+complete and correct as it stands.
 
-If they accept, that is separate work with its own inputs — the finished base file and
-its transcript — and it **overlays** rather than extends: the base's audio runs
-underneath while the picture cuts away and returns, so the final duration equals the
-base's duration. A longer output means someone concatenated.
+If they accept, each is separate work owned by its own skill, and each takes the finished
+base as input rather than replacing it:
+
+| Offer | Skill | Contract |
+|---|---|---|
+| B-roll cutaways | `broll-overlay` | Needs the base **and its transcript** (local whisper — the captions API returns no text). **Overlays**, never extends: final duration equals the base's. A longer output means someone concatenated. |
+| Burned captions | novoads API `POST /v1/captions` | A new MP4 with subtitles burned in. |
+| Music bed | `music-mix` | Track from `POST /v1/music` on the same key, or the user's own file. Mixed last, over the captioned cut. |
+
+Order matters: b-roll → captions → music. Music is genuinely last, because its script
+stream-copies the picture and would otherwise have nothing final to sit under.
 
 ---
 

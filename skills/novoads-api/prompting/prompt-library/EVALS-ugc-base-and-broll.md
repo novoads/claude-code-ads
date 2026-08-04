@@ -1,12 +1,16 @@
 # Evals — UGC base video + b-roll overlay
 
-Written **before** the skill edit, from failures observed in a real run (2026-08-03,
-Moon Juice Magnesi-Om replica; see PLAN.md "Minute-27 video-replica findings").
-Every scenario below is a thing that actually went wrong, or a thing a reference
-implementation does that ours did not.
+Written **before** the skill edit, from failures observed in a real run (2026-08-03): a
+replica attempt against a reference UGC ad, in which one script was rendered both ways —
+one generation with beats (7.0 credits, 15s, no post-production) against three clips
+stitched (13.8 credits, 24s, voice absent for half the runtime). Every scenario below is
+a thing that actually went wrong, or a thing the reference implementation does that ours
+did not.
 
-These are **text assertions against the generated plan and prompt**, checkable before
-any credit is spent. Only E4 needs a render.
+E1, E2, E2b and E4's pre-flight half are **text assertions against the generated plan and
+prompt**, checkable before any credit is spent. E4's second half needs one render. E3 is
+a pointer: the b-roll contract it used to assert is owned by the `broll-overlay` skill's
+own evals now.
 
 ---
 
@@ -18,8 +22,8 @@ Seedance 2.0."*
 
 **Observed failure.** The agent read "a start frame per scene" as one Seedance call per
 scene, produced 3 separate clips, and concatenated them. Result: 24s, 13.8 credits, a
-15s talking head followed by 12s with no voice. The alternative — one call, 5 beats,
-jump cuts — cost 7.0 credits, needed no editing, and is the shape the reference
+15s talking head followed by 12s with no voice. The alternative — one call, **four**
+beats, jump cuts — cost 7.0 credits, needed no editing, and is the shape the reference
 implementation uses.
 
 **Assertions.**
@@ -79,33 +83,35 @@ as an intermediate artifact rather than a shippable ad.
 
 ---
 
-## E3 — B-roll is a SEPARATE skill, and it overlays
+## E3 — B-roll is a SEPARATE skill (→ now owned by `broll-overlay`)
 
-**Scenario.** The base video exists and is approved. The user accepts the offer from E2b,
-or asks directly for cutaways.
+**Superseded, deliberately.** When this file was written the pack had exactly one line
+about b-roll (how to make a clip silent) and nothing about what it is for or how it is
+assembled — every existing pipeline in the repo concatenated, so the agent concatenated.
+That gap is closed: **`shared/skills/broll-overlay/`** is a real skill with its own
+`EVALS.md` (OV1–OV6) and an executable test suite.
 
-**Observed failure.** Our pack has exactly one line about b-roll (how to make a clip
-silent) and nothing about what it is for or how it is assembled. Every existing pipeline
-in the repo concatenates, so the agent concatenated. The reference implementation
-generates ~10 silent shots **after** the base exists, then lays them **over** the base:
-the base's audio runs continuously underneath while the picture cuts away and returns.
+**The merged skill is the authority. Do not restate its contract here** — a second copy
+drifts, and this one already had: it said the reference generates *"~10 silent shots"*,
+conflating the reference edit's **10–11 total shots** with its **five cutaways**. An
+agent reading that number would have generated roughly twice the b-roll it needed, at
+one charge each.
 
-**Assertions.**
-- This is its **own skill**, entered from a finished base video — not a phase the UGC
-  skill runs on its own initiative. It takes the base file and its transcript as input.
-- B-roll is generated only **after** the base is approved — never mixed into the base call.
-- Shots are silent (`audioEnabled: false`), short, and each names the moment of the base
-  it is meant to cover.
-- Assembly is stated as **overlay, not concatenation**: base audio untouched, video track
-  replaced for a time range, base picture restored after.
-- **The final video's duration equals the base's duration.** This is the cheap mechanical
-  check that overlay actually happened.
-- Placement is chosen from the base's own transcript (what is being said at that second),
-  not guessed.
-- The agent offers 2–3 variations of the cut rather than one.
+For the overlay contract — duration invariance, audio pass-through, transcript-driven
+placement, window geometry, verification, and the measured cadence envelope — read
+`shared/skills/broll-overlay/EVALS.md`. Its placement judgment (A-B-A-B alternation,
+4–6 windows per 15s, never cover the hook, end on the person, and the casting rule that
+every human cutaway carries the base's identity references) lives in that skill's
+`SKILL.md`.
 
-**Fails if:** the output is longer than the base; or audio drops, desyncs, or goes silent
-under a cutaway.
+**What stays this file's business** is only the handoff, and it is one assertion:
+
+- The UGC workflow **does not run b-roll on its own initiative**. It delivers a base
+  video, offers (E2b), and hands over the finished file plus its transcript only if the
+  user accepts.
+
+**Fails if:** the UGC run generates or prices b-roll before a base video exists and has
+been approved.
 
 ---
 
@@ -136,8 +142,10 @@ mid-beat-list without the user asking for it.
 
 ## Notes on evidence strength
 
-- E1, E2, E3 are **well-evidenced**: observed in our run and cross-checked against the
-  reference implementation's own on-screen prompt and narration.
+- E1 and E2 are **well-evidenced**: observed in our run and cross-checked against the
+  reference implementation's own on-screen prompt and narration. E3's evidence moved with
+  its contract into `shared/skills/broll-overlay/EVALS.md`, which measured the reference
+  edit frame by frame rather than describing it.
 - E4's single-location rule rests on the reference prompt plus one contrasting render of
   ours. Treat it as a strong default with the reasoning attached, not a law, until a
   same-prompt A/B (fixed vs varying location) is run.
