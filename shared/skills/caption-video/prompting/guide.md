@@ -2,6 +2,10 @@
 
 **Use this skill when:** the user has a finished MP4 (claymation ad, Pixar ad, UGC selfie, B-roll, anything) with a narrator / dialogue / voiceover, and wants timed burned-in captions added without re-rendering the source.
 
+> **First, check whether the API is the better answer.** Novoads has a first-party captioning endpoint — `POST /v1/captions`, 30 preset styles, one call, no local toolchain (verified live 2026-08-04; see the `novoads-api` skill's SKILL.md → *Burned-in captions*). **It costs credits and this skill is free**, but this skill needs Whisper, HyperFrames, a Node project and an ffmpeg chroma-key composite, which is a real setup cost the first time.
+>
+> **Come here instead of the API when** the user wants a style outside the 30 presets, needs to hand-correct the wording (invented brand names are the usual reason — Whisper mishears them and the API gives you no way to fix it), wants to keep an **SRT or the word-level timings** (the API returns only a burned-in MP4 and never the text), is captioning enough footage that per-minute credits add up, or the source was rendered with `audioEnabled: false` — which the API refuses with a `409` and this skill can still caption if you supply the words.
+
 > ⚠️ **Trim before captioning.** If the source video has any beats with VO followed by silent visual ("dead space"), trim those beats *before* captioning — re-encode each beat to `vo_dur + 0.5s`, re-concat, and only then transcribe. Whisper timestamps applied to a tightened master line up; timestamps from a dead-space master will drift when the source is later trimmed. See [claymation guide § No dead space](../../claymation-ad/prompting/guide.md#-no-dead-space--vo-drives-clip-duration) for the canonical rule and ffmpeg recipe — it applies to every video-ad style.
 
 Anchors on **HyperFrames** (HTML-based composition framework) + **Whisper** (word-level transcription) + **ffmpeg chroma-key compositing**. This pattern was tuned across multiple production runs — follow it exactly or expect the bugs listed below.

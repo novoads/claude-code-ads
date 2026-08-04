@@ -118,7 +118,7 @@ carries `shortBy` and `topUpUrl`. Wait for an explicit yes before Phase 5.
 
 Three things to know about this call:
 
-- **It says nothing about the prompt.** No endpoint on this API reads a prompt for quality, so a weak prompt prices, charges and renders exactly like a strong one. The rewrite rules in Phase 3 are the only check there is — apply them before you price.
+- **It says nothing about an image prompt.** `POST /v1/estimates` *does* return an advisory `warnings` array of craft notes, but every rule in it is **video** craft: an image estimate carrying the words that trip the video rules came back with no `warnings` key at all (verified live 2026-08-04). So for this route a weak prompt prices, charges and renders exactly like a strong one, and the rewrite rules in Phase 3 are the only check there is — apply them before you price.
 - **The body is strict.** Only `kind`, `prompt`, `model`, `numImages`, `language` are accepted. Sending `aspectRatio` or `referenceAssetIds` is a `400 Unrecognized key` — the estimate never sees them, and neither affects the price.
 - **It enforces this model's prompt ceiling.** A prompt over the model's cap is refused here, free, with a message naming the limit — the same refusal the paid call would give. It does **not** run moderation, so a prompt the estimate blessed can still come back `422 content_policy`.
 

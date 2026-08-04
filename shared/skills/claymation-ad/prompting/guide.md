@@ -132,7 +132,8 @@ Same reasoning as Pixar — animates each approved still while preserving the re
 ### Aspect ratio defaults
 
 - **Aspect ratio:** `9:16` for TikTok/Reels/Shorts, on both stills and clips. **Send it explicitly on every call** — Seedance defaults to `16:9` and `gpt-image-2` to `1:1`. Both models have `9:16` on their grid, which is what keeps the start frame from being letterboxed into the clip.
-- **There is no `resolution` field**, and no 480p draft tier — the spec publishes no output size at all, and Seedance measured 720x1280 at `9:16` (2026-08-02). The cheap-draft lever is the **model** — `seedance-2.0-mini` is half price on the same duration grid. An 8–12 beat claymation ad is the longest pipeline in this repo, so blocking out beat timing on mini before committing is worth real money here.
+- **`seedance-2.0` does have a `resolution` field** — `480p`, `720p`, `1080p`, `4k`, default `720p` (verified live 2026-08-04; the older note here denying the field described a previous deployment). **But it is not a way to make drafts cheaper: `480p` costs exactly the same as `720p`.** Going the other way costs real money — `1080p` is ≈2.5x the base and `4k` ≈5x, which on an 8–12 beat ad is multiplied by every beat. Treat anything above `720p` as a spend decision, price it with `POST /v1/estimates`, and never quote a credit number from those ratios.
+- **The cheap-draft lever is the model, not the resolution** — `seedance-2.0-mini` is half price on the same duration grid (and renders 720p only; never send it a `resolution` key). An 8–12 beat claymation ad is the longest pipeline in this repo, so blocking out beat timing on mini before committing is worth real money here.
 - **`nano-banana-pro` has the wider ratio grid** (it adds `3:2 3:4 4:3 5:4` over `gpt-image-2`'s `1:1 4:5 2:3 9:16 16:9 21:9`). At 9:16 the choice between them is about texture versus identity continuity, not about ratios.
 
 ## Narration & dialogue

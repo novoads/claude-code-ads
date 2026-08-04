@@ -15,7 +15,7 @@ If `.env` or `MASTER_CONTEXT.md` do not exist, tell the user to run `./scripts/s
 
 ## Cost policy
 
-Every credit number shown to a user must come from a live `POST /v1/estimates` call made in the current session, and the user approves it before anything is generated. There are no rate tables in this repo — not in `MASTER_CONTEXT.md`, not in `logs/`. The estimate is free and runs the same structural validation the paid call runs, so there is no reason to skip it. It says nothing about prompt quality — nothing on the API does.
+Every credit number shown to a user must come from a live `POST /v1/estimates` call made in the current session, and the user approves it before anything is generated. There are no rate tables in this repo — not in `MASTER_CONTEXT.md`, not in `logs/`. The estimate is free and runs the same structural validation the paid call runs, so there is no reason to skip it. It also returns an advisory `warnings` array of craft notes on a video prompt (verified live 2026-08-04) — the generation endpoints do not. Those warnings never refuse a call or change the price, and they false-positive on substring matches, so read them, judge each one against the prompt, and say so when you override one.
 
 For any video where the model speaks, the spoken line gets its own approval before the cost gate. The two gates are separate and neither implies the other.
 
