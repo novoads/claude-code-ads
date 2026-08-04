@@ -95,8 +95,8 @@ Quick jump cut to the @Image2 framing — {{ACTOR_TAG}} {{BEAT_3_FRAMING}},
 Quick jump cut — {{ACTOR_TAG}} {{BEAT_4_FRAMING}}, {{BEAT_4_ACTION}}:
 "{{BEAT_4_LINE}}"
 
-One continuous voice across every beat, {{TONE_EMOTIONS}}, at a relaxed
-unhurried pace with a beat of silence after each sentence. Each jump cut
+One continuous voice across every beat, {{TONE_EMOTIONS}}, speaking
+steadily from the first frame to the last with no long pauses. Each jump cut
 is slightly closer or at a different angle, as if {{PRONOUN}} filmed a few
 takes and kept the honest bits.
 
@@ -124,6 +124,13 @@ charge.
 - [ ] **Actor tag verbatim** in all four; no `the same woman` / `as before`
 - [ ] **Setting declared unchanged**; only framing varies
 - [ ] Script read aloud at an unhurried pace **fits the runtime** — timed, not estimated
+- [ ] …and **fills** it: ~2.5 words/sec, so a 15s ad wants **35–40 spoken words**, not 25.
+      An under-written script does not produce a shorter ad — it produces the same ad with
+      the slack rendered as silence (measured: 5.9s of dead air across 5 gaps in a 15s
+      render built from ~27 words, 2026-08-03)
+- [ ] **No "pause after each sentence" instruction.** Correct for a single-shot testimonial,
+      harmful across four beats where every pause compounds. Ask for a steady delivery from
+      first frame to last instead
 - [ ] `@ImageN` tokens ≤ the number of references actually sent
 - [ ] Label-hold clause present if the product carries printed text
 - [ ] Ratio restated in the prompt (`Vertical 9:16.`)
