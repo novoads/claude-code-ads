@@ -176,6 +176,7 @@ skill.
 | **Claymation / Aardman ad** | Same backbone over an 8-beat narrator arc, clay textures, optional `fps=12,fps=24` stop-motion judder | [claymation-ad](shared/skills/claymation-ad/prompting/guide.md) |
 | **YouTube thumbnails** | 5 CTR formulas (peace-sign branding, real-vs-AI, terminal flow, reaction shock, before/after split) on `nano-banana-pro`, likeness locked with face references | [generate-youtube-thumbnail](skills/generate-youtube-thumbnail/SKILL.md) |
 | **Burn captions onto an MP4** | Whisper transcript → reading phrases → captions-only HTML over magenta → ffmpeg chroma-key overlay. **Out of band — no API call, no credits** | [caption-video](shared/skills/caption-video/prompting/guide.md) |
+| **Overlay b-roll cutaways on a finished MP4** | Whisper transcript → EDL of overlay windows (`file`, `start`, `end`, `covers`) → validate → ffmpeg overlay → verify duration, audio and every window. Base audio runs untouched, duration never changes. **Local ffmpeg, no credits** (the cutaway clips themselves are generated first, and those are charged) | [broll-overlay](shared/skills/broll-overlay/SKILL.md) |
 | **Lay a music bed under a finished MP4** | Track trimmed and faded to the exact cut length, ducked under the voice, picture stream-copied so burned captions survive bit-exact. **Local ffmpeg — no API call, no credits** | [music-mix](shared/skills/music-mix/SKILL.md) |
 
 ### 🔄 Reverse-engineer existing creative
@@ -211,10 +212,14 @@ balance — how short you are and where to top up. You approve the number, then 
 
 The estimate is free, and what it does *not* do is worth stating:
 
-- **Nothing on this API reads your prompt for quality.** Not the estimate, not `POST /v1/videos`,
-  not `POST /v1/images`. A weak prompt is priced, charged and rendered exactly like a strong one.
-  The prompt libraries in this repo are the entire quality gate — which is why the skills treat
-  them as mandatory reading rather than reference material.
+- **The estimate lints a video prompt, advisorily.** It returns a `warnings` array of craft notes
+  (`{rule, message}`) — verified live 2026-08-04. `POST /v1/videos` and `POST /v1/images` do not
+  run these rules and return no such field. **Nothing in it can refuse or reprice a call**, so a
+  weak prompt is still priced, charged and rendered exactly like a strong one, and the warnings
+  are substring matches that **do** false-positive. Read them, judge each against your prompt,
+  and never paste in a suggested fix that does not fit. The prompt libraries in this repo remain
+  the real quality gate — which is why the skills treat them as mandatory reading rather than
+  reference material.
 - **It refuses malformed requests for free**, including a prompt over the named model's character
   ceiling.
 - **Its quote cannot disagree with the invoice**, with one caveat worth knowing: the estimate skips
@@ -267,6 +272,7 @@ than routing you somewhere else. There is likewise no b-roll or scene endpoint �
 | [`shared/skills/claymation-ad/`](shared/skills/claymation-ad/) | Aardman-style clay narrative on the same backbone. |
 | [`shared/skills/gemini-omni-flash/`](shared/skills/gemini-omni-flash/) | Prompting guide for `omni-flash`, scoped to what this API actually exposes. |
 | [`shared/skills/caption-video/`](shared/skills/caption-video/) | Out-of-band caption burn-in for any finished MP4. |
+| [`shared/skills/broll-overlay/`](shared/skills/broll-overlay/) | Overlay b-roll cutaways on a finished MP4 — local ffmpeg, no credits. Validates the EDL, renders atomically, and verifies duration, audio and every window. |
 | [`shared/skills/music-mix/`](shared/skills/music-mix/) | The last step of the video pack: a ducked music bed under a finished cut. Local ffmpeg, no credits. [`EVALS.md`](shared/skills/music-mix/EVALS.md) holds the five scenarios, [`scripts/test_music_mix.py`](shared/skills/music-mix/scripts/test_music_mix.py) implements them in 15 executable cases. |
 | [`shared/skills/meta-ad-builder/`](shared/skills/meta-ad-builder/) | Publish finished creatives as paused Meta ads. |
 | [`scripts/setup.sh`](scripts/setup.sh) | One-time setup. Validates the key before writing it. |

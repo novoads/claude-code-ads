@@ -78,13 +78,13 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | A different look on a still, or a second opinion on one | `reve-2.1` |
 | A Pixar-style 3D animated ad | read `shared/skills/pixar-style-ad/prompting/guide.md`: storyboard on `gpt-image-2`, animate each beat on `seedance-2.0` + `startImageAssetId`, stitch with ffmpeg. Runnable scripts in `shared/skills/pixar-style-ad/scripts/`. Nothing on the API rejects, checks or comments on a stylized prompt — the guide is the only thing that will tell you whether the beat works |
 | A claymation / Aardman-style ad | read `shared/skills/claymation-ad/prompting/guide.md`, same shape over 8 beats |
-| Captions burned onto a finished MP4 | read `shared/skills/caption-video/prompting/guide.md`. Out of band — ffmpeg, Whisper and HyperFrames, no Novoads call and no credits |
+| Captions burned onto a finished MP4 | **Two real paths — offer both.** `POST /v1/captions`: one call, 30 preset styles, no local dependencies, **costs credits** and returns only a new MP4 (never an SRT or the caption text). Or `shared/skills/caption-video/prompting/guide.md`: **free**, any style you can write, and it gives you a Whisper transcript you can hand-correct — but needs Whisper, HyperFrames and an ffmpeg chroma-key composite locally. See *Burned-in captions* below. A clip rendered with `audioEnabled: false` can only go the local route |
 | Meta image-ad creatives from a brief or a template | read `shared/skills/image-ad-prompting/OVERVIEW.md` first, then `chatgpt-image-ad` or `nano-banana-image-ad` |
 | To reverse-engineer an existing image ad into a reusable template | the `image-ad-clone` skill |
 | A YouTube thumbnail | the `generate-youtube-thumbnail` skill |
 | B-roll, an ambient product clip, a scene | There is no b-roll endpoint. Generate a silent clip: `omni-flash`, or `seedance-2.0` with the word `silent` or `b-roll` in the prompt |
 | Kling | Not on this API. Say so plainly; [kling-3.md](prompting/prompt-library/kling-3.md) sits in the repo as prompt craft for when it lands. **Sora 2 and Veo 3.1 are live** — they have their own rows above |
-| To edit an existing MP4 they already have | Not this skill, except captions (row above). Say so |
+| To edit an existing MP4 they already have | Not this skill, except captions (row above) — and note that `POST /v1/captions` accepts an uploaded `assetId`, so burning subtitles into *their own* file is a supported first-party call, not just a local one. Everything else (trims, cuts, overlays, music) is out of scope. Say so |
 | To publish the result as an ad on Meta or TikTok | Not this skill. The output is a file. The `meta-ad-builder` skill takes it from there |
 
 Prefer the **shortest** path. If one model answers the request, do not build a pipeline around it.
@@ -166,16 +166,50 @@ Use it for names that are invented, run two words together, or that a reader wou
 { "credits": 3.2, "balance": 100, "sufficient": true }
 ```
 
-When it is short it also returns `shortBy` and `topUpUrl`. That is the whole response — **there is no `warnings` field and no prompt advice of any kind.** This endpoint answers about price.
+When it is short it also returns `shortBy` and `topUpUrl`.
 
-**Nothing on this API reads a prompt for quality.** A weak prompt is priced, charged and rendered exactly like a strong one. The prompt libraries under `prompting/` are the entire quality gate, and they are mandatory reading rather than reference material for that reason.
+### `/estimates` also returns `warnings`, and they are advice, not verdicts
+
+**`POST /v1/estimates` runs craft rules against your prompt and returns them in a `warnings` array** (verified live 2026-08-04 against spec 2.6.0). An earlier version of this file said the field did not exist and that nothing on the API reads a prompt for quality. **Both were wrong.** Each entry is `{ "rule": "...", "message": "..." }`, and the message usually quotes the exact substring that tripped it:
+
+```json
+{ "credits": 7, "balance": 860.1, "sufficient": true,
+  "warnings": [
+    { "rule": "label_without_hold",
+      "message": "Mentions a label, package or screen with no labelHold clause. … (found in your prompt: \"bottle\")" }
+  ] }
+```
+
+Rules seen live: `no_spoken_line`, `missing_actor_descriptor`, `label_without_hold`, `chained_motion`. All four are **video** craft rules. A `kind: "image"` estimate carrying the same trigger words came back with no `warnings` key at all, so treat image prompts as unlinted (verified live 2026-08-04). A `kind: "caption"` estimate has no prompt to read and returns none either.
+
+**They are purely advisory.** None of them refuses a generation, none changes the price, and a prompt that trips all four renders exactly like one that trips none. `/estimates` is the *only* endpoint that runs them — `POST /v1/videos` and `POST /v1/images` do not, and their responses carry no `warnings` field.
+
+**They produce false positives, and you are the one who has to catch them.** Both of these were reproduced live on 2026-08-04:
+
+| Prompt | Rule that fired | Why it was wrong |
+|---|---|---|
+| *"She turns her laptop **screen** toward the camera to show the dashboard…"* | `label_without_hold` — *(found in your prompt: "screen")* | The rule protects **printed** text on physical packaging. A software product has no label to preserve, and pasting in the labelHold clause would tell the model to hold a package that is not in the shot. |
+| *"He says: 'I tried everything for the rust. **Then** a friend told me about this.'"* | `chained_motion` — *(found in your prompt: "Then")* | The match is inside a **quoted spoken line**. "Then" is dialogue, not a second motion instruction — there is exactly one action in the shot. Splitting it would split the sentence the actor says. |
+
+Both rules are substring matches. They cannot tell a physical package from a UI, or narration from stage direction.
+
+**So handle them like this:**
+
+1. **Read every warning.** They catch real mistakes — a missing spoken line on a Seedance render is money thrown away, and `label_without_hold` on an actual product package is the single most expensive prompt error in this repo.
+2. **Judge each one against what your prompt actually says**, including *where* the matched substring sits. Quote the rule and your reasoning when you decide.
+3. **Never apply a suggested fix blindly.** The fix text is a generic clause; pasting it into a prompt it does not fit makes the render worse, not better.
+4. **Never silently drop one either.** If you are overriding a warning, say so to the user in one line — "the `label_without_hold` warning matched the word 'screen', but this is a SaaS dashboard with no printed label, so I am not adding the clause" — so the call is visible and reversible.
+
+**The prompt libraries under `prompting/` are still the real quality gate.** These warnings are a cheap second opinion collected on a call you were making anyway; they are not a substitute for composing against the formula file, and they say nothing at all about whether the *idea* works.
 
 **The estimate body is not the generate body.** It takes only the fields that move the price, plus a `kind` discriminator, and it is strict: any extra key is a 400.
 
 | Estimate accepts | Video | Image |
 |---|---|---|
 | required | `kind: "video"`, `prompt` | `kind: "image"`, `prompt` |
-| optional | `model`, `durationSeconds`, `language` | `model`, `numImages`, `language` |
+| optional | `model`, `durationSeconds`, `language`, `resolution` | `model`, `numImages`, `language` |
+
+**`resolution` belongs here because it moves the price** — on `seedance-2.0` it is the difference between the base and roughly five times it. Send the resolution you actually intend to render, or the quote prices a cheaper video than the one you generate. See the `resolution` section below for the ladder and for the `seedance-2.0-mini` trap. (Verified live 2026-08-04.)
 
 `aspectRatio`, `startImageAssetId`, `referenceAssetIds`, and `productId` do not belong here. They do not change what you pay, and sending one is a rejected request. **There is no `styleFamily` field** — not here and not on a generation call; it was removed from the API and sending it is a `400 Unrecognized key`.
 
@@ -190,7 +224,7 @@ curl -sS -X POST https://api.novoads.ai/v1/estimates \
 
 It runs the same access checks and the same structural validation the paid call runs, which is why it is worth calling every time and not only when you are unsure:
 
-- **It has no opinion about the prompt, and neither does anything else here.** Not this endpoint, not `POST /v1/videos`, not `POST /v1/images`. Compose against the formula file before you price, because pricing will not tell you anything you did not already know.
+- **It is the one endpoint with an opinion about the prompt** — the `warnings` array above. `POST /v1/videos` and `POST /v1/images` have none and return no such field. Compose against the formula file *before* you price: the warnings are a substring-matching second opinion, not a review, and a prompt that trips nothing can still be a bad prompt.
 - **What it does still refuse, for free:** a malformed body — it is strict, and any key that does not move the price is a `400` — and a prompt longer than the *named model's* character ceiling (4,000 for `seedance-2.0` and mini, 20,000 for `omni-flash`; name no model and it is judged as `seedance-2.0`).
 - A quote it returns cannot disagree with the invoice, with two exceptions worth knowing: it never sees `aspectRatio`, the asset fields, or `productId`, and it **skips moderation**, which the paid call runs. A clean estimate can still come back `422` at generation — moderation is the only thing left that refuses a prompt for what it says.
 
@@ -210,6 +244,7 @@ Show `credits`, the count, the total, and `balance`. Get a yes. Then generate.
 **Infer, and state what you inferred rather than asking:**
 
 - **`aspectRatio`: default `9:16`** for anything headed to Reels, TikTok, Stories, or a vertical feed. Seedance defaults to `16:9`, and a landscape ad is a wasted render; `omni-flash`, `sora-2` and `veo-3.1` already default to `9:16`, and images default to `1:1`. Go landscape only when the user asks. Seedance also accepts `1:1`, `4:3`, `3:4`, and `21:9`; `omni-flash`, `sora-2` and `veo-3.1` accept only the two.
+- **`resolution` (`seedance-2.0` only): leave it at the `720p` default, and never raise it silently.** It is the one output-shape field that multiplies the bill — `1080p` is ≈2.5x the base and `4k` ≈5x — so going above `720p` is a *spend* decision, not a quality preference, and it belongs in front of the user with a fresh estimate attached. `480p` costs the same as `720p`, so it buys nothing. Do not send the key on any other model. (Verified live 2026-08-04.)
 - **`language`**: the language the script is written in. Set it, and show it in the dialogue gate. Write the prompt in that language too — nothing on the API pushes back on a Spanish or Portuguese prompt, and nothing rewrites or judges one either.
 - **`durationSeconds`**: from the word count, below. Only `veo-3.1` defaults to its maximum — Seedance defaults to 5, `omni-flash` to 8, `sora-2` to 4 — so always send it.
 - **`audioEnabled`**: leave it alone on anything with a spoken line. It exists on `seedance-2.0` and `seedance-2.0-mini` only, defaults `true`, and the one time to send it is `false`, on a clip that is meant to be silent — see below.
@@ -283,7 +318,26 @@ No silence budget: the one measured render spoke continuously from the first fra
 
 Unmeasured here, so these are the 2.5-words-per-second arithmetic and nothing more. Budget no silence and promise no wait until someone has timed one.
 
-There is no `resolution` field on any variant, and the spec publishes no output size. Measured at `9:16`: `seedance-2.0` and `sora-2` both came back **720x1280** (2026-08-02). `omni-flash` and `veo-3.1` are unmeasured — do not quote a number for them.
+### `resolution` — `seedance-2.0` only, and it moves the price
+
+**`seedance-2.0` takes a `resolution` field: `480p`, `720p`, `1080p`, `4k`, defaulting to `720p`** (verified live 2026-08-04 against spec 2.6.0). It is the one output-shape field that is **not** free — unlike `aspectRatio`, the tiers are separate credit schedules:
+
+| `resolution` | Price, relative to the `720p` base |
+|---|---|
+| `480p` | **same as `720p`** — no draft discount, so there is no reason to ask for it |
+| `720p` (default) | base |
+| `1080p` | **≈2.5x** base |
+| `4k` | **≈5x** base |
+
+**These are ratios, not a rate card. Never quote a credit number from this table** — it exists so you can warn a user that 4k is a five-fold decision before they ask for it. The number they approve comes from `POST /v1/estimates` on the exact cell, in this session, like every other price here (gate 2).
+
+Ask for what will actually ship. `720p` is right for Reels, TikTok and Stories, where the platform re-encodes anyway; `1080p` and `4k` are for a client deliverable, a placement with a quality floor, or a render you intend to crop into.
+
+**Every other model is fixed and has no `resolution` field at all** — `seedance-2.0-mini`, `omni-flash` and `sora-2` render 720p, `veo-3.1` renders 1080p, and sending the key to any of them is a `400`. Read the live set from **`GET /v1/models`** (`resolutions` and `defaultResolution` per model) rather than hardcoding this paragraph.
+
+**The `seedance-2.0-mini` trap: the two endpoints disagree about the field.** `POST /v1/estimates` accepts `resolution: "720p"` for mini and prices it (identically to omitting it), but answers `400 invalid_input` — *"resolution must be one of 720p for seedance-2.0-mini"* — for `480p`, `1080p` or `4k` (all four verified live 2026-08-04). `POST /v1/videos` does not accept the key for mini **at all**: mini's request variant has no `resolution` property, and a body carrying one was observed returning `400 Unrecognized key: "resolution"` (observed 2026-08-04, not re-verified — re-checking it costs a paid render). **So: never send `resolution` on a mini call.** An estimate that passed is not evidence the generate call will.
+
+Output size, measured at `9:16`: `seedance-2.0` at its `720p` default and `sora-2` both came back **720x1280** (2026-08-02). `omni-flash` and `veo-3.1` are unmeasured — do not quote a number for them.
 
 ### Splitting a long script
 
@@ -296,7 +350,14 @@ There is no `resolution` field on any variant, and the spec publishes no output 
 
 ### 0. Resolve the product (once per session)
 
-`GET /v1/products`. Default to the product named in `MASTER_CONTEXT.md` under "My workspace". If no default is set: with exactly one product, auto-populate `MASTER_CONTEXT.md` with its id and name; with several, ask the user once and save the choice. With none, omit `productId` — it is optional.
+`GET /v1/products`. **The products come back under `items`, not `products`** (verified live 2026-08-04) — it is the same paginated envelope as `GET /v1/generations`, so read `.items` and expect `total`, `limit`, `offset` and `hasMore` alongside it:
+
+```bash
+curl -sS https://api.novoads.ai/v1/products \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" | jq -r '.items[] | "\(.id)  \(.name)"'
+```
+
+Default to the product named in `MASTER_CONTEXT.md` under "My workspace". If no default is set: with exactly one product, auto-populate `MASTER_CONTEXT.md` with its id and name; with several, ask the user once and save the choice. With none, omit `productId` — it is optional.
 
 Pass `productId` on every generation call. It is what makes `GET /v1/generations?productId=…` a useful history later. There is no dated-folder ritual to run here: folders are read-only on this API and there are no projects on it at all.
 
@@ -353,7 +414,7 @@ curl -sS -X POST https://api.novoads.ai/v1/videos \
   }'
 ```
 
-Returns `202` with `jobId`, `status`, `creditsCharged`, and `model`. No `warnings` — no response on this API carries that field.
+Returns `202` with `jobId`, `status`, `creditsCharged`, and `model`. **No `warnings`** — this endpoint does not run the prompt rules at all. If you want them, they came back on the estimate you already made (gate 2); there is no second chance to collect them here.
 
 **Set `aspectRatio` explicitly.** Seedance defaults to `16:9` and an ad that ships landscape is a wasted render. **Set `durationSeconds` explicitly** too: Seedance defaults to 5, `omni-flash` to 8, `sora-2` to 4, `veo-3.1` to 8.
 
@@ -473,9 +534,81 @@ Say which check failed and show the evidence — the transcript line, the silenc
 
 **Every re-render is a new charge**, and unlike image QA there is no automatic-retry allowance here: a video re-render goes back through gate 2. Show the QA finding, show a fresh estimate, and get a yes.
 
+## Burned-in captions: `POST /v1/captions`
+
+**This API has a first-party captioning endpoint** (verified live 2026-08-04 against spec 2.6.0). It was undocumented in this pack, and the decision tree used to send every caption request to the local ffmpeg skill as though no endpoint existed. Both paths are real — see *Which caption path* below.
+
+**What it does:** takes a video, transcribes its own audio, burns styled subtitles into it, and gives you back **a new MP4**. Asynchronous, exactly like `POST /v1/videos`.
+
+**What it does not do: it never returns caption text, timings, or an SRT.** There is no transcript field anywhere on the job — `GET /v1/generations/{jobId}` carries `outputUrl` and nothing else about the words. If the user wants an SRT, a transcript, or captions they can restyle later, this endpoint cannot give it to them; the local skill can.
+
+**There is nothing to write.** The text is transcribed from the audio. Your only choice is `preset`.
+
+### The call
+
+```bash
+curl -sS -X POST https://api.novoads.ai/v1/captions \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"jobId":"<a succeeded video job>","preset":"casper"}'
+```
+
+| Field | Notes |
+|---|---|
+| `jobId` | A video **this API generated**, via `POST /v1/videos`. |
+| `assetId` | A video **you uploaded**, via `POST /v1/uploads`. Must be a video, not a still. |
+| `preset` | **Required, no default.** One of 30 styles — the tiers are priced differently, so nothing could be a safe default. |
+
+**Exactly one of `jobId` and `assetId`.** Sending both is a `400`, not a guess — captioning the wrong one of two sources still bills you.
+
+`POST /v1/videos/{jobId}/captions` is the same operation with the source in the path. It is the natural call when the source is a job, and it cannot express the upload case at all (an `assetId` contains slashes and is not a path segment). Either one is fine; prefer `POST /v1/captions` if you want one code path for both sources.
+
+Response is `202` with `jobId`, `status`, `creditsCharged`, and `model` (always `veed/subtitles` — this endpoint has one renderer and it is not in `GET /v1/models`, because a caption is applied to a video rather than generating one). **Poll the returned `jobId` at `GET /v1/generations/{jobId}` to a terminal status, then `…/watch` for the file** — the same sequence as a render, and the caption job is a separate row with its own status and its own refund.
+
+### Presets and price
+
+`GET /v1/caption-presets` lists all **30** styles with tier and rate. Verified live 2026-08-04: **21 `basic` at 0.4 credits per billed minute, 9 `dynamic` at 0.8** (`dynamic` is context-aware and animated). Its own endpoint rather than a `kind` on `GET /v1/models`, because a caption style generates nothing.
+
+**Billing is per minute of source, rounded up, one-minute minimum** — so everything this API generates (≤15s) costs exactly the tier rate for one minute. Above the 1080p tier it doubles again, **measured on the short edge**: an ordinary portrait `1080x1920` is 1080p held sideways and is **not** doubled; a true 4K source is.
+
+Duration and resolution are read from the file itself at request time, not from anything you declare. **Gate 2 still applies** — price it with the caption arm of the estimate, which is free:
+
+```bash
+curl -sS -X POST https://api.novoads.ai/v1/estimates \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"kind":"caption","preset":"casper","jobId":"<source job>"}'
+```
+
+**Name the source in the estimate for anything longer than a minute.** A quote without `jobId`/`assetId` is the one-minute minimum, and a 10-minute upload costs ten times it. (Verified live 2026-08-04: sourceless `casper` quoted 0.4, sourceless `glass` quoted 0.8. As always, the number you show the user is the one that came back, not one from this page.) A caption estimate has no prompt, so it returns no `warnings`.
+
+### What bites
+
+- **`409`** — the source job has not succeeded yet, **or it was rendered with `audioEnabled: false`**. No speech, nothing to transcribe, and the API refuses rather than charging you for an empty result. Silent b-roll cannot be captioned.
+- **`404`** — a `jobId` from the *dashboard* rather than the API answers 404, identically to one that does not exist. So does an asset outside your organization or an incomplete upload.
+- **`400`** — a still passed as `assetId`, both source fields at once, or a file that cannot be measured. **A source we cannot measure charges nothing**, because a file we cannot price is one we cannot bill.
+- **Re-captioning the same video in the same style is safe and free.** The second call returns the *first* job's id and charges nothing. A **different** preset on the same video is a new job and a new charge — so iterating on style costs money each time; pick with the user before you call.
+- **`429` with `details.reason: caption_concurrency_limit`** — 10 concurrent caption jobs, counted **separately** from the 5-generation render ceiling, so a batch of captions can never block your next render.
+
+### Which caption path — the API or the local skill
+
+Both exist. Present both and let the user pick; do not silently default.
+
+| | `POST /v1/captions` | `shared/skills/caption-video` |
+|---|---|---|
+| Cost | **Costs credits** (gate 2 applies) | **Free** |
+| Setup | None — one API call | **Heavy**: Whisper, HyperFrames, a working Node/npm project, and an ffmpeg chroma-key composite. Homebrew ffmpeg ships without `libass`, which is the trap the local guide exists to route around |
+| Styles | **30 presets**, fixed | Anything you can write in HTML/CSS/GSAP |
+| Output | A new MP4, subtitles burned in | A new MP4, subtitles burned in |
+| Transcript / SRT | **No** — no text, no timings, ever | **Yes** — Whisper gives word-level timings you keep and can re-use |
+| Control over wording | None — transcribed, not authored | Full — edit the transcript before rendering |
+| Source | An API `jobId`, or any video you upload | Any local file |
+
+**Rules of thumb.** One finished clip, a standard look, no local toolchain → the API. A caption style outside the 30, hand-corrected wording (invented brand names are the usual reason), a needed SRT, or a batch big enough that per-minute credits add up → the local skill. If the video was rendered with `audioEnabled: false`, the API cannot caption it at all.
+
 ## Images are synchronous
 
-`POST /v1/images` returns the finished images in the response body. **There is nothing to poll and no `/watch` step.** The response carries `images[]` with `url`, `expiresInSeconds`, `width`, and `height`, plus `jobId`, `status`, `model`, and `creditsCharged`. No `warnings` here either, and nothing anywhere on this API judges the prompt.
+`POST /v1/images` returns the finished images in the response body. **There is nothing to poll and no `/watch` step.** The response carries `images[]` with `url`, `expiresInSeconds`, `width`, and `height`, plus `jobId`, `status`, `model`, and `creditsCharged`. No `warnings` here either. The prompt rules run on `POST /v1/estimates` only, and every rule observed so far is **video** craft (spoken line, actor descriptor, label hold, chained motion) — an image estimate carrying "label" and "Then" came back with no `warnings` key at all (verified live 2026-08-04). Treat images as unlinted: the image prompt libraries are the only check there is.
 
 - `referenceAssetIds`: images only, order preserved and addressable positionally by the prompt. Upload each one first — there is no base64 field. **The cap is per model, not one number:** `reve-2.1` takes up to **8**, `gpt-image-2` and `nano-banana-pro` up to **4**. The bodies are strict, so a fifth reference to `gpt-image-2` is a `400`, not a silently dropped image — which is the good outcome, because a dropped reference is a paid render missing the product.
 - `numImages`: 1 to 4, and it multiplies the price.
@@ -553,7 +686,7 @@ Append one line per new failure. Forward only. Every bullet is a real thing that
 - `Content-Type` on the presigned PUT must match byte for byte. Adding `; charset=utf-8` is a 403.
 - Never resubmit after a 500 without checking `GET /v1/generations` first.
 - A 400 is a malformed request. Read `details.issues`, fix the field, and do not go looking for a prompt rule — none of them can 400 anymore.
-- There are no prompt rules. **Nothing on the API will save a weak prompt from being rendered and billed**, so the prompt libraries are the whole quality gate. Read the formula file before you compose, not after.
+- Prompt rules exist **only** on `POST /v1/estimates`, as the advisory `warnings` array, and they cannot refuse or reprice anything. **Nothing on the API will stop a weak prompt from being rendered and billed**, so the prompt libraries are still the quality gate. Read every warning, judge it against your prompt (they false-positive — see gate 2), and never apply a suggested fix without checking it fits.
 - Never send `styleFamily`. The field no longer exists on this API and any body carrying it is a 400.
 - Never fire more than five generations at once, and poll at 15 seconds, not 5.
 - A QA retry still costs credits. Cap at 2, and report the extras.
