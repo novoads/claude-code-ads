@@ -36,9 +36,11 @@ before you promise anything, all three verified live against the deployed spec `
 | `audioEnabled: true` to switch speech on, `false` for a silent clone | **`audioEnabled` exists here now, on the two Seedance variants only** (added in spec `2.2.0`; `400 Unrecognized key` on `omni-flash`, `veo-3.1` and `sora-2`). It defaults to `true`, so a clone with dialogue needs nothing. Send `false` only for a deliberately silent clone — and **still write the silence into the prose**, because the flag mutes the render while the prose is what stops the model staging a talking shot. It does not change the price, and `POST /v1/estimates` refuses the field |
 | Upload the source audio as `referenceAudios` to clone the voice | **There is no voice cloning on this API** (`400 Unrecognized key`). Describe the voice in the prompt — age, accent, pace, energy — and accept that it is a different person's voice. Do not offer the user a voice match you cannot deliver |
 
-Also gone, in the same probe: `endFrame`, `resolution` (the spec publishes no output size; Seedance measured 720x1280 at `9:16`), `projectId` (this
+Also gone, in the same probe: `endFrame`, `projectId` (this
 API has products, not projects), `duration` (it is `durationSeconds`) and `referenceImages`
 (it is `referenceAssetIds`).
+
+**`resolution` was on that list and has come back.** It is a real field on `seedance-2.0` as of spec 2.6.0 — `480p`, `720p`, `1080p`, `4k`, default `720p` (verified live 2026-08-04). A clone should normally match the source's tier, which for a social ad is `720p`; going above it is a **spend** decision (`1080p` ≈2.5x the base, `4k` ≈5x) that gets priced with `POST /v1/estimates` and approved like any other. `480p` costs the same as `720p`. **A clone rendered as a series pays the multiplier on every clip** — check the tier before you fan out. Never send the key on `seedance-2.0-mini`, which renders 720p only.
 
 **And one the old shape got wrong in the other direction:** aspect ratio is not
 `9:16`-or-`16:9`. Seedance takes `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` — probed live, `1:1`
@@ -376,7 +378,8 @@ Show the number, the count, the total and the balance. Get a yes. Then generate.
 
 ### Step 10: Resolve the product and upload the references
 
-1. `GET /v1/products` → `productId`. Default to the product named in `MASTER_CONTEXT.md`
+1. `GET /v1/products` → read `.items[]` (not `.products` — verified live 2026-08-04) →
+   `productId`. Default to the product named in `MASTER_CONTEXT.md`
    under "My workspace"; with exactly one product, save it there; with none, omit the field
    — it is optional. There is no folder or project ritual to run: folders are read-only on
    this API and there are no projects at all.
@@ -434,8 +437,9 @@ curl -sS -X POST https://api.novoads.ai/v1/videos \
 
 `startImageAssetId` instead of `referenceAssetIds` when that is the mode. Never both.
 
-- Returns `202` with `jobId`, `status`, `creditsCharged` and `model`. No `warnings` on any
-  response, here or on the estimate.
+- Returns `202` with `jobId`, `status`, `creditsCharged` and `model`. **No `warnings` here** —
+  but the **estimate does** return them (verified live 2026-08-04). Collect the craft advice at
+  gate 2; there is no second chance at submit time.
 - **Set `aspectRatio` and `durationSeconds` explicitly.** Seedance defaults to `16:9` and to
   5 seconds, and neither is what a cloned ad wants.
 - **Ask how many variations**, default 1. N variations is the identical payload fired N
@@ -505,13 +509,14 @@ Full detail in [reference.md](../../reference.md).
 |---|---|
 | `startImageAssetId` **XOR** `referenceAssetIds` | Separate modes on the model. A body with both is a `400` whose message says exactly that. Nothing is charged |
 | `referenceAssetIds` ≤ **9**, images only | Ten is `Too big: expected array to have <=9 items`. A video asset id is refused: references are images |
-| No `referenceVideos`, no `referenceAudios`, no `endFrame`, no `resolution`, no `projectId` | All `400 Unrecognized key`. Nothing is charged, and no clone workflow can depend on them |
+| No `referenceVideos`, no `referenceAudios`, no `endFrame`, no `projectId` | All `400 Unrecognized key`. Nothing is charged, and no clone workflow can depend on them |
+| `resolution` — **`seedance-2.0` only**, `480p` `720p` `1080p` `4k`, default `720p` | Real as of spec 2.6.0 (verified live 2026-08-04). **It multiplies the bill** — `1080p` ≈2.5x the base, `4k` ≈5x, and a series pays it per clip. Price the tier at `POST /v1/estimates`; `480p` saves nothing. `400 Unrecognized key` on `seedance-2.0-mini` and the three non-Seedance models |
 | `audioEnabled` — **Seedance only**, optional, default `true` | Send `false` for a silent clone. `400 Unrecognized key` on the three non-Seedance video models, and on `POST /estimates` for every model |
 | `durationSeconds` 4–15, integer | Out-of-grid values are rejected, never rounded. Default is **5** |
 | `aspectRatio` `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | Default is **`16:9`**. Set it, or a vertical clone ships landscape |
 | Prompt within the model's cap | Enforced on the estimate too, against whichever `model` you name |
 | Audio is rendered from the prompt | The spoken line is lip-synced in this same call at no extra cost, which is why gate 1 exists. `audioEnabled: false` mutes the render; it does not give you a separate audio track to direct |
-| There are no prompt rules | No endpoint reads a prompt for craft, and none returns advice about one. A weak prompt renders and bills exactly like a strong one |
+| Prompt rules are advisory and live on `/estimates` only | The estimate returns a `warnings` array of `{rule, message}` craft advice; `POST /videos` does not. None of it can refuse or reprice a call, so a weak prompt still renders and bills exactly like a strong one. The warnings are substring matches and **do false-positive** — read them, judge each against the prompt, and say so when you override one |
 | Moderation is `422 content_policy` | The only refusal of a prompt for what it says, and the estimate skips it, so a clean quote can still be blocked. **Nothing is charged** |
 | Five generations in flight per organization | A sixth is `429` with `details.reason: concurrency_limit`. Wait for a slot; backing off harder does nothing |
 | No idempotency keys | Which is why a 500 is never blindly retried — see below |
