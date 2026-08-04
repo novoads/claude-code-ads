@@ -366,9 +366,10 @@ The template is the deliverable; this step only proves it. It runs the full sequ
    sessions — upload once and keep the id.
 
 2. **Price it — gate 2.** `POST /v1/estimates` with `kind: "video"`, the `prompt`, the
-   `model` and `durationSeconds`. It is free and it is the only source of a price. It has
-   no opinion about the prompt — the checklist above is the only quality gate there is.
-   Show the number and get a yes before spending.
+   `model` and `durationSeconds`. It is free and it is the only source of a price. It also
+   returns an advisory `warnings` array of craft notes (verified live 2026-08-04) — read them,
+   but they are substring matches that false-positive, and the checklist above is still the
+   real quality gate. Show the number and get a yes before spending.
 
 3. **Confirm the spoken line — gate 1**, if the clip speaks. Numbered beats, word count
    against the duration, the `language` you are sending, an explicit yes. Approving the

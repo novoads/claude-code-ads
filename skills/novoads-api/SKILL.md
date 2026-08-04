@@ -166,9 +166,41 @@ Use it for names that are invented, run two words together, or that a reader wou
 { "credits": 3.2, "balance": 100, "sufficient": true }
 ```
 
-When it is short it also returns `shortBy` and `topUpUrl`. That is the whole response — **there is no `warnings` field and no prompt advice of any kind.** This endpoint answers about price.
+When it is short it also returns `shortBy` and `topUpUrl`.
 
-**Nothing on this API reads a prompt for quality.** A weak prompt is priced, charged and rendered exactly like a strong one. The prompt libraries under `prompting/` are the entire quality gate, and they are mandatory reading rather than reference material for that reason.
+### `/estimates` also returns `warnings`, and they are advice, not verdicts
+
+**`POST /v1/estimates` runs craft rules against your prompt and returns them in a `warnings` array** (verified live 2026-08-04 against spec 2.6.0). An earlier version of this file said the field did not exist and that nothing on the API reads a prompt for quality. **Both were wrong.** Each entry is `{ "rule": "...", "message": "..." }`, and the message usually quotes the exact substring that tripped it:
+
+```json
+{ "credits": 7, "balance": 860.1, "sufficient": true,
+  "warnings": [
+    { "rule": "label_without_hold",
+      "message": "Mentions a label, package or screen with no labelHold clause. … (found in your prompt: \"bottle\")" }
+  ] }
+```
+
+Rules seen live: `no_spoken_line`, `missing_actor_descriptor`, `label_without_hold`, `chained_motion`. All four are **video** craft rules. A `kind: "image"` estimate carrying the same trigger words came back with no `warnings` key at all, so treat image prompts as unlinted (verified live 2026-08-04). A `kind: "caption"` estimate has no prompt to read and returns none either.
+
+**They are purely advisory.** None of them refuses a generation, none changes the price, and a prompt that trips all four renders exactly like one that trips none. `/estimates` is the *only* endpoint that runs them — `POST /v1/videos` and `POST /v1/images` do not, and their responses carry no `warnings` field.
+
+**They produce false positives, and you are the one who has to catch them.** Both of these were reproduced live on 2026-08-04:
+
+| Prompt | Rule that fired | Why it was wrong |
+|---|---|---|
+| *"She turns her laptop **screen** toward the camera to show the dashboard…"* | `label_without_hold` — *(found in your prompt: "screen")* | The rule protects **printed** text on physical packaging. A software product has no label to preserve, and pasting in the labelHold clause would tell the model to hold a package that is not in the shot. |
+| *"He says: 'I tried everything for the rust. **Then** a friend told me about this.'"* | `chained_motion` — *(found in your prompt: "Then")* | The match is inside a **quoted spoken line**. "Then" is dialogue, not a second motion instruction — there is exactly one action in the shot. Splitting it would split the sentence the actor says. |
+
+Both rules are substring matches. They cannot tell a physical package from a UI, or narration from stage direction.
+
+**So handle them like this:**
+
+1. **Read every warning.** They catch real mistakes — a missing spoken line on a Seedance render is money thrown away, and `label_without_hold` on an actual product package is the single most expensive prompt error in this repo.
+2. **Judge each one against what your prompt actually says**, including *where* the matched substring sits. Quote the rule and your reasoning when you decide.
+3. **Never apply a suggested fix blindly.** The fix text is a generic clause; pasting it into a prompt it does not fit makes the render worse, not better.
+4. **Never silently drop one either.** If you are overriding a warning, say so to the user in one line — "the `label_without_hold` warning matched the word 'screen', but this is a SaaS dashboard with no printed label, so I am not adding the clause" — so the call is visible and reversible.
+
+**The prompt libraries under `prompting/` are still the real quality gate.** These warnings are a cheap second opinion collected on a call you were making anyway; they are not a substitute for composing against the formula file, and they say nothing at all about whether the *idea* works.
 
 **The estimate body is not the generate body.** It takes only the fields that move the price, plus a `kind` discriminator, and it is strict: any extra key is a 400.
 
@@ -192,7 +224,7 @@ curl -sS -X POST https://api.novoads.ai/v1/estimates \
 
 It runs the same access checks and the same structural validation the paid call runs, which is why it is worth calling every time and not only when you are unsure:
 
-- **It has no opinion about the prompt, and neither does anything else here.** Not this endpoint, not `POST /v1/videos`, not `POST /v1/images`. Compose against the formula file before you price, because pricing will not tell you anything you did not already know.
+- **It is the one endpoint with an opinion about the prompt** — the `warnings` array above. `POST /v1/videos` and `POST /v1/images` have none and return no such field. Compose against the formula file *before* you price: the warnings are a substring-matching second opinion, not a review, and a prompt that trips nothing can still be a bad prompt.
 - **What it does still refuse, for free:** a malformed body — it is strict, and any key that does not move the price is a `400` — and a prompt longer than the *named model's* character ceiling (4,000 for `seedance-2.0` and mini, 20,000 for `omni-flash`; name no model and it is judged as `seedance-2.0`).
 - A quote it returns cannot disagree with the invoice, with two exceptions worth knowing: it never sees `aspectRatio`, the asset fields, or `productId`, and it **skips moderation**, which the paid call runs. A clean estimate can still come back `422` at generation — moderation is the only thing left that refuses a prompt for what it says.
 
@@ -375,7 +407,7 @@ curl -sS -X POST https://api.novoads.ai/v1/videos \
   }'
 ```
 
-Returns `202` with `jobId`, `status`, `creditsCharged`, and `model`. No `warnings` — no response on this API carries that field.
+Returns `202` with `jobId`, `status`, `creditsCharged`, and `model`. **No `warnings`** — this endpoint does not run the prompt rules at all. If you want them, they came back on the estimate you already made (gate 2); there is no second chance to collect them here.
 
 **Set `aspectRatio` explicitly.** Seedance defaults to `16:9` and an ad that ships landscape is a wasted render. **Set `durationSeconds` explicitly** too: Seedance defaults to 5, `omni-flash` to 8, `sora-2` to 4, `veo-3.1` to 8.
 
@@ -497,7 +529,7 @@ Say which check failed and show the evidence — the transcript line, the silenc
 
 ## Images are synchronous
 
-`POST /v1/images` returns the finished images in the response body. **There is nothing to poll and no `/watch` step.** The response carries `images[]` with `url`, `expiresInSeconds`, `width`, and `height`, plus `jobId`, `status`, `model`, and `creditsCharged`. No `warnings` here either, and nothing anywhere on this API judges the prompt.
+`POST /v1/images` returns the finished images in the response body. **There is nothing to poll and no `/watch` step.** The response carries `images[]` with `url`, `expiresInSeconds`, `width`, and `height`, plus `jobId`, `status`, `model`, and `creditsCharged`. No `warnings` here either. The prompt rules run on `POST /v1/estimates` only, and every rule observed so far is **video** craft (spoken line, actor descriptor, label hold, chained motion) — an image estimate carrying "label" and "Then" came back with no `warnings` key at all (verified live 2026-08-04). Treat images as unlinted: the image prompt libraries are the only check there is.
 
 - `referenceAssetIds`: images only, order preserved and addressable positionally by the prompt. Upload each one first — there is no base64 field. **The cap is per model, not one number:** `reve-2.1` takes up to **8**, `gpt-image-2` and `nano-banana-pro` up to **4**. The bodies are strict, so a fifth reference to `gpt-image-2` is a `400`, not a silently dropped image — which is the good outcome, because a dropped reference is a paid render missing the product.
 - `numImages`: 1 to 4, and it multiplies the price.
@@ -575,7 +607,7 @@ Append one line per new failure. Forward only. Every bullet is a real thing that
 - `Content-Type` on the presigned PUT must match byte for byte. Adding `; charset=utf-8` is a 403.
 - Never resubmit after a 500 without checking `GET /v1/generations` first.
 - A 400 is a malformed request. Read `details.issues`, fix the field, and do not go looking for a prompt rule — none of them can 400 anymore.
-- There are no prompt rules. **Nothing on the API will save a weak prompt from being rendered and billed**, so the prompt libraries are the whole quality gate. Read the formula file before you compose, not after.
+- Prompt rules exist **only** on `POST /v1/estimates`, as the advisory `warnings` array, and they cannot refuse or reprice anything. **Nothing on the API will stop a weak prompt from being rendered and billed**, so the prompt libraries are still the quality gate. Read every warning, judge it against your prompt (they false-positive — see gate 2), and never apply a suggested fix without checking it fits.
 - Never send `styleFamily`. The field no longer exists on this API and any body carrying it is a 400.
 - Never fire more than five generations at once, and poll at 15 seconds, not 5.
 - A QA retry still costs credits. Cap at 2, and report the extras.

@@ -436,8 +436,9 @@ curl -sS -X POST https://api.novoads.ai/v1/videos \
 
 `startImageAssetId` instead of `referenceAssetIds` when that is the mode. Never both.
 
-- Returns `202` with `jobId`, `status`, `creditsCharged` and `model`. No `warnings` on any
-  response, here or on the estimate.
+- Returns `202` with `jobId`, `status`, `creditsCharged` and `model`. **No `warnings` here** —
+  but the **estimate does** return them (verified live 2026-08-04). Collect the craft advice at
+  gate 2; there is no second chance at submit time.
 - **Set `aspectRatio` and `durationSeconds` explicitly.** Seedance defaults to `16:9` and to
   5 seconds, and neither is what a cloned ad wants.
 - **Ask how many variations**, default 1. N variations is the identical payload fired N
@@ -514,7 +515,7 @@ Full detail in [reference.md](../../reference.md).
 | `aspectRatio` `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | Default is **`16:9`**. Set it, or a vertical clone ships landscape |
 | Prompt within the model's cap | Enforced on the estimate too, against whichever `model` you name |
 | Audio is rendered from the prompt | The spoken line is lip-synced in this same call at no extra cost, which is why gate 1 exists. `audioEnabled: false` mutes the render; it does not give you a separate audio track to direct |
-| There are no prompt rules | No endpoint reads a prompt for craft, and none returns advice about one. A weak prompt renders and bills exactly like a strong one |
+| Prompt rules are advisory and live on `/estimates` only | The estimate returns a `warnings` array of `{rule, message}` craft advice; `POST /videos` does not. None of it can refuse or reprice a call, so a weak prompt still renders and bills exactly like a strong one. The warnings are substring matches and **do false-positive** — read them, judge each against the prompt, and say so when you override one |
 | Moderation is `422 content_policy` | The only refusal of a prompt for what it says, and the estimate skips it, so a clean quote can still be blocked. **Nothing is charged** |
 | Five generations in flight per organization | A sixth is `429` with `details.reason: concurrency_limit`. Wait for a slot; backing off harder does nothing |
 | No idempotency keys | Which is why a 500 is never blindly retried — see below |

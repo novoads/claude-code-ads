@@ -210,10 +210,14 @@ balance — how short you are and where to top up. You approve the number, then 
 
 The estimate is free, and what it does *not* do is worth stating:
 
-- **Nothing on this API reads your prompt for quality.** Not the estimate, not `POST /v1/videos`,
-  not `POST /v1/images`. A weak prompt is priced, charged and rendered exactly like a strong one.
-  The prompt libraries in this repo are the entire quality gate — which is why the skills treat
-  them as mandatory reading rather than reference material.
+- **The estimate lints a video prompt, advisorily.** It returns a `warnings` array of craft notes
+  (`{rule, message}`) — verified live 2026-08-04. `POST /v1/videos` and `POST /v1/images` do not
+  run these rules and return no such field. **Nothing in it can refuse or reprice a call**, so a
+  weak prompt is still priced, charged and rendered exactly like a strong one, and the warnings
+  are substring matches that **do** false-positive. Read them, judge each against your prompt,
+  and never paste in a suggested fix that does not fit. The prompt libraries in this repo remain
+  the real quality gate — which is why the skills treat them as mandatory reading rather than
+  reference material.
 - **It refuses malformed requests for free**, including a prompt over the named model's character
   ceiling.
 - **Its quote cannot disagree with the invoice**, with one caveat worth knowing: the estimate skips

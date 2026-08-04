@@ -109,7 +109,9 @@ Response:
 | `shortBy` | Present when short. |
 | `topUpUrl` | Present when short. |
 
-That is the whole response. **No `warnings`** — see *Prompt rules* below for what left and why.
+| `warnings` | Advisory craft advice: `[{ rule, message }]`. Omitted when nothing fires. **This endpoint is the only one that returns it** (verified live 2026-08-04). |
+
+**`warnings` never refuses the call and never changes `credits`** — and it false-positives. See *Prompt rules* below before you act on one.
 
 Pass `model` explicitly. Video schedules differ by 2x across the set, image schedules by more than 3x.
 
@@ -119,7 +121,7 @@ This endpoint refuses a churned organization with a 403, on purpose. `sufficient
 
 **Two things the estimate cannot see.** It never receives `aspectRatio`, `startImageAssetId`, `referenceAssetIds` or `productId`, because none of them moves the price. And it **skips moderation**, deliberately — running it would pay for a moderation call on every estimate for a verdict that almost never differs. So the one gap left is a prompt that prices clean here and fails moderation: `422` at generation. Nothing is charged in that case either.
 
-**What this endpoint does with the prompt, exactly.** The price does not depend on it at all — that comes from the model and the duration or image count. The prompt is checked for exactly one thing: the named model's character ceiling, a `400`. Nothing else about it is read, judged or reported. See *Prompt rules* below.
+**What this endpoint does with the prompt, exactly.** The price does not depend on it at all — that comes from the model and the duration, resolution or image count. The prompt is checked for two things: the named model's character ceiling, which is a hard `400`; and the craft rules, which are **advisory** and come back in `warnings` without affecting the price or the outcome. See *Prompt rules* below — they false-positive, so they are read and judged, not applied.
 
 ---
 
@@ -162,7 +164,7 @@ Verified live 2026-08-02, each probe pinned with an out-of-grid `durationSeconds
 
 **Keep the prose silence clause in the prompt as well.** The flag mutes the render; the clause (`a silent product film with no spoken dialogue`) stops the model staging a talking shot in the first place — an actor mouthing nothing, billed in full. They do different jobs and the belt-and-suspenders pair is deliberate.
 
-Response `202`: `jobId`, `status`, `creditsCharged`, `model`. **No `warnings`** — no response on this API carries that field any more, because no endpoint runs prompt rules.
+Response `202`: `jobId`, `status`, `creditsCharged`, `model`. **No `warnings`** — this endpoint does not run the prompt rules. They run on `POST /estimates` only (see *Prompt rules*), so the advice was already on the quote you took before submitting.
 
 `creditsCharged` is in the unit the billing page shows. Internally 1 credit is 10 centi-credits; the API has already converted, so echo the number as given.
 
@@ -226,7 +228,7 @@ There are **no idempotency keys.** See the 500 note below.
 
 **The reference cap is per model and is not uniform.** `reve-2.1` takes 8; the other two take 4. Do not carry one number across the set — the bodies are strict, so a fifth reference to `gpt-image-2` is `400 Too big: expected array to have <=4 items` rather than a silently dropped image, which is the good outcome: a dropped reference is a paid render missing the product. Verified live 2026-08-02, each probe pinned with an out-of-range `numImages` so no body could be valid: 9 refs on `reve-2.1` → too big, 8 → accepted; 5 refs on `gpt-image-2` and on `nano-banana-pro` → too big.
 
-Synchronous. The response carries `images[]` (`url`, `expiresInSeconds` 3600, `width`, `height`), `jobId`, `status`, `creditsCharged`, and `model`. **No `warnings`**, for the same reason as video: nothing on this API runs prompt rules. Nothing to poll. `numImages` multiplies the price.
+Synchronous. The response carries `images[]` (`url`, `expiresInSeconds` 3600, `width`, `height`), `jobId`, `status`, `creditsCharged`, and `model`. **No `warnings`**, for the same reason as video: the prompt rules run on `POST /estimates` only. In practice image prompts are unlinted either way — an image estimate carrying the words that trip the video rules returned no `warnings` key at all (verified live 2026-08-04). Nothing to poll. `numImages` multiplies the price.
 
 Reference order is preserved and can be addressed positionally by the prompt. There is no base64 field: upload first, pass ids.
 
@@ -395,7 +397,7 @@ It is a schema rejection, and it names the fields:
 An out-of-grid `durationSeconds` and a prompt past the model's ceiling land the same way — the
 response names the field and the limit.
 
-**There is no second shape.** Until spec `2.0.0` a prompt-rule failure was also a 400, carrying `details.rule` and `details.violations[]`. Those keys no longer appear on any response, and since `3.0.0` neither does the advisory `warnings` field that briefly replaced them on `/estimates`. Code that branches on `details.rule` is reading for something that will never arrive.
+**There is no second shape.** Until spec `2.0.0` a prompt-rule failure was also a 400, carrying `details.rule` and `details.violations[]`. Those keys no longer appear on any response — the rules that replaced them are **advisory only** and arrive as the `warnings` array on a `200` from `/estimates`, never as an error. Code that branches on `details.rule` is reading for something that will never arrive; code that wants the craft advice reads `warnings` off the estimate. (The earlier claim here that `warnings` was itself removed in spec `3.0.0` was wrong — deployed spec is `2.6.0` and it returns the field; verified live 2026-08-04.)
 
 ### The four causes of a 429
 
@@ -431,12 +433,24 @@ Dated. Struck through when fixed, never deleted, because a retraction is more us
 
 ## Prompt rules
 
-**There are none.** No endpoint on this API reads a prompt for quality — not `POST /estimates`, not `POST /videos`, not `POST /images`. A prompt that breaks every rule in the prompt libraries is priced, charged, rendered and handed to the provider exactly as written. Moderation is the one thing that can refuse a prompt for what it says, and it refuses content, not craft — see the `422` row in the error table.
+**They exist, on `POST /estimates` only, and they are advisory.** The previous text here said there were none and that the `warnings` field had been deleted in spec `3.0.0` (2026-08-03). **That was wrong on both counts: the deployed spec is `2.6.0`, there is no `3.0.0`, and `/estimates` returns `warnings` today** (verified live 2026-08-04).
 
-The estimate used to return craft advice in a `warnings` field. **It is gone as of spec `3.0.0` (2026-08-03), along with the rule ids it named.** If you are reading a `warnings` key on an estimate response, you are reading a cached example, not the API.
+| | |
+|---|---|
+| Where | `POST /estimates` **only**. `POST /videos` and `POST /images` do not run them and return no `warnings` field. |
+| Shape | `warnings: [{ "rule": string, "message": string }]`. Omitted entirely when nothing fires. |
+| Force | **None.** Advisory. They never refuse a call, never change `credits`, and never reach the provider. |
+| Scope | Video craft. Rules seen live: `no_spoken_line`, `missing_actor_descriptor`, `label_without_hold`, `chained_motion`. An image estimate with the same trigger words returned **no** `warnings` key; a caption estimate has no prompt and returns none. |
 
-The reason is worth knowing, because it tells you where the quality bar actually lives. Those rules were written in-house, in a sprint, and never checked against a render; two of them were patched for firing on prompts that were correct, and one made an actor-less product video impossible to describe honestly. Meanwhile Arcads' API — the surface this pack mirrors — has never published a prompt rule at all.
+**They match substrings, so they false-positive.** Two reproduced live on 2026-08-04:
 
-So the **skill layer is the only quality gate that exists**, and that is not a fallback: the prompt libraries carry a working practitioner's craft notes, which is a better source than a config file was. Read the formula file for the route before composing. Nothing else will catch it.
+- `label_without_hold` fired on the word **"screen"** in a prompt for a SaaS dashboard demo. The rule protects *printed* text on physical packaging; there was no label in the shot, and applying the suggested labelHold clause would have asked the model to preserve a package that does not exist.
+- `chained_motion` fired on the word **"Then"** — inside a **quoted spoken line**. The rule looks for a second staged action; this was dialogue. Splitting the shot would have split the actor's sentence.
+
+Neither rule can distinguish a physical package from a UI, or narration from stage direction.
+
+**How to use them:** read every one, judge it against what your prompt actually says and where the matched substring sits, and state your reasoning if you override it. Never paste a suggested fix into a prompt it does not fit, and never drop a warning silently — an unexplained override is indistinguishable from not having read it.
+
+**The skill layer is still the real quality gate.** The prompt libraries carry a practitioner's craft notes and cover everything these four rules do not — which is nearly all of it. Read the formula file for the route before composing; a clean estimate is not a reviewed prompt. Moderation remains the only thing that can *refuse* a prompt for what it says, and it refuses content, not craft — see the `422` row in the error table.
 
 What that leaves the estimate doing is the one thing it was always for: **the price.** It is still mandatory before every render, and it is still the only legitimate source of a number.
