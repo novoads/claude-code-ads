@@ -199,5 +199,5 @@ proceed.
 - **Ad copy writing** — different skill.
 - **Video, carousel, DCO ads** — image only; video lives in the `novoads-api` skill.
 - **ChatGPT Image 2 / gpt-image-2 generation** — use `chatgpt-image-ad` instead.
-- **Editing or retouching an existing image** — no edit path exists on this API.
+- **Editing or retouching an existing image** — not on this model. `gpt-image-2` takes `sourceAssetId` (spec 2.10.0); send it to `chatgpt-image-ad`.
 - **Editing the prompt library** — use `image-ad-clone` to add new validated templates.

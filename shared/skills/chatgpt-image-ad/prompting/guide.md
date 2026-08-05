@@ -190,5 +190,5 @@ proceed.
 - **Ad copy writing** — different skill.
 - **Video, carousel, DCO ads** — image only; video lives in the `novoads-api` skill.
 - **Nano Banana image generation** — use `nano-banana-image-ad` instead.
-- **Editing or retouching an existing image** — no edit path exists on this API.
+- **Masked or region-selected retouching** — this model edits from a prompt (`sourceAssetId`, spec 2.10.0), but there is no mask and no img2img strength dial.
 - **Editing the prompt library** — use `image-ad-clone` to add new validated templates.
