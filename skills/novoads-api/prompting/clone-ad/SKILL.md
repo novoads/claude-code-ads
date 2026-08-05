@@ -512,6 +512,11 @@ curl -sS -X POST https://api.novoads.ai/v1/videos \
   gate 2; there is no second chance at submit time.
 - **Set `aspectRatio` and `durationSeconds` explicitly.** Seedance defaults to `16:9` and to
   5 seconds, and neither is what a cloned ad wants.
+- **Carry `resolution` into this body whenever the estimate carried it.** The estimate
+  priced the tier; this call is what renders it. Quote `1080p` at gate 2 and then omit the
+  key here and the user approved one video and receives another — billed at the `720p`
+  schedule, which is the quiet half of the same bug. `audioEnabled` is the mirror case: it
+  belongs **only** here, because `POST /v1/estimates` refuses it.
 - **Ask how many variations, and which kind.** Default 1. Two different things share the
   word: the **same script rendered N times** (identical payload, seed-level variety only)
   or **N script variants** (distinct dialogue adaptations on one beat structure, step 6).
