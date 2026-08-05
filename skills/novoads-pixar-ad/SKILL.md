@@ -296,6 +296,14 @@ The turn needs a **single-frame** change, not a gradual one: a page snapping int
 light coming on. Specify "in a single frame," or the model renders a slow dissolve and the
 payoff lands soft.
 
+**Setups, not just beats.** Five beats covered in three setups in one location reads
+boring no matter how clean the arc is — measured against a reference ad running ~6 setups
+across 3 locations at a ~2.5–3.2s mean shot. Give each beat its own setup where you can,
+change location at least once, vary shot size (medium → close → wide), and keep every
+shot between ~2s and ~3s. Do not buy label fidelity with a long static product hold; hand
+the product to a character square to camera and anchor that beat with a reference still
+instead.
+
 ## Output format
 
 Deliver in this order, no preamble:
@@ -446,6 +454,17 @@ instructions.
   voice` and shorten the lines. Word count over 33 is the usual cause.
 - **Uncanny children.** Reduce to one child, keep them in profile or partially occluded,
   and shorten the beat. If it survives two attempts, cut the child from the story.
+- **Two props in one clause glitch physics.** "Swallows capsules with water" rendered
+  capsules spawning on the counter and an empty palm. Write the beat as sequential
+  single-action sentences (pour to palm → set bottle down → palm to mouth → then drink),
+  name the actor in every sentence, and add explicit negatives (no capsules in the glass,
+  mid-air, or on the counter).
+- **A stray image reference becomes a shot.** Every reference passed to the render is a
+  shot the model may spend time on; an unneeded product still produced a 0.13s flash
+  insert. Pass only what a specific beat needs.
+- **The render can gain or lose a word.** One render delivered "And wake up, we're rested"
+  for a scripted "And wake up rested" — confirmed across five whisper passes. Transcribe
+  the render before shipping; never assume the script survived.
 - **`insufficient_credits`.** The error carries `required` and `available`. Report both and
   the top-up path. Do not retry.
 
