@@ -240,6 +240,28 @@ Reference order is preserved and can be addressed positionally by the prompt. Th
 
 Images accept **no `startImageAssetId`** — there is no first-frame concept on a still — and **no `styleFamily`**, which no longer exists anywhere on this API.
 
+### The response is the only copy of images 2..N
+
+A `numImages > 1` call charges for every image, but only the **first** is recoverable
+afterwards. `GET /generations/{jobId}` returns a single `outputUrl` — image 1 — and images
+2..N exist nowhere but the body of the response that returned them. Lose that response and
+the credits stay spent.
+
+That is not a hypothetical: the render blocks inside the POST for 60–90 seconds, so a
+proxy or CDN idle-timeout on a long call drops a response for work the API already did and
+charged for. Two consequences worth building around:
+
+- **Write each image to disk as you read it**, before doing anything else with the response.
+  Do not hold a batch in memory and save at the end.
+- **Prefer one image per call in a long batch.** `numImages: 4` is one concurrency slot and
+  the same price as four calls, which is the right trade when four variants of one prompt
+  are wanted. It is the wrong trade when the four are independent deliverables, because it
+  puts three unrecoverable images behind a single response.
+
+If a call does time out, do **not** re-send it — there are no idempotency keys, so a retry
+renders and charges again. Check `GET /generations` first and match on `createdAt`; a job
+that landed is already there, and image 1 is retrievable even though its siblings are not.
+
 ---
 
 ## POST /captions, POST /videos/{jobId}/captions

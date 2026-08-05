@@ -94,7 +94,26 @@ check_script "skills/image-ad-clone/scripts/validate_image.py" 14 --model nano-b
 check_script "skills/image-ad-clone/scripts/validate_image.py" 8 --model reve-2.1
 
 # ── 3. docs carry no resurrected universal-cap claim ─────────────────────────
-RESIDUE="$(grep -rn "caps at .* on every\|cap is .* on every\|max 4 on every\|cap is the same on every\|cap is the same everywhere" \
+#
+# These patterns match the CLAIM, in every phrasing found in the pack — not just
+# the sentences that existed when this check was written. That distinction is the
+# whole point: the first version of this grep passed on a tree where three files
+# still said the caps were uniform, because each said it a different way
+# ("All three cap reference images at 4", "Every image model here accepts max 4",
+# a bare "(max 4)"). A checker that only knows yesterday's wording reports
+# "docs agree" while the most-read file in the family says the opposite.
+# Add a pattern here whenever you find a new way to say it.
+RESIDUE="$(grep -rn -i \
+  -e "caps at .* on every" \
+  -e "cap is .* on every" \
+  -e "max 4 on every" \
+  -e "cap is the same on every" \
+  -e "cap is the same everywhere" \
+  -e "all three cap" \
+  -e "every image model here accepts" \
+  -e "same on every image model" \
+  -e "cap[s]* .* all three" \
+  -e "all three .* at 4" \
   --include="*.md" --include="*.py" "$ROOT/skills" "$ROOT/shared" "$ROOT/README.md" 2>/dev/null || true)"
 [[ -n "$RESIDUE" ]] && problem "universal-cap claim resurfaced:
 $RESIDUE"

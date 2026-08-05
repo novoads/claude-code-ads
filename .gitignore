@@ -30,3 +30,7 @@ scripts/generate-thumbnails.sh
 scripts/generate-thumbnails-*.sh
 scripts/generate-ab-variants*.sh
 scripts/regen-*.sh
+
+# Generated ad renders are the user's output, not repo content (the script's
+# default --out is ./generated). Same reasoning as logs/*.jsonl and references/.
+generated/

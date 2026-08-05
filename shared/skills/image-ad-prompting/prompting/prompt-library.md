@@ -19,10 +19,12 @@ Together: ~1,575 chars of always-on guard, leaving headroom under each model's p
 - **`nano-banana-pro`** (Nano Banana Pro) — strong photorealism, multi-image reference blending, character continuity across runs. Weaker on dense small text.
 - **`reve-2.1`** — the third opinion, reachable through the `image-ad-clone` validator. Most entries list it as `untested`; that is honest, and better than a guess.
 
-**All three cap reference images at 4 per generation** — the old "5 on one, 14 on the other"
-split is gone, so a template's reference guidance never needs to name a model for capacity
-reasons. Uploads are free and each returns a durable `assetId`, so build a library and cite
-four from it.
+**The reference cap is per model, not one number** — `gpt-image-2` takes 4, `reve-2.1` 8,
+`nano-banana-pro` 14 (spec 2.7.0; `./scripts/verify-image-caps.sh` is the standing check).
+Every template here fits inside the smallest of those, so a template's reference guidance
+never needs to name a model for capacity reasons; the gap only matters when you carry a
+reference set to a model with less room than the one it was written for. Uploads are free
+and each returns a durable `assetId`, so build a library and cite from it.
 
 When a template renders cleanly on more than one, the entry says `both: clean`. When one
 struggles, the note tells the consuming skill which model to prefer.
@@ -59,6 +61,18 @@ ratio from the wrong grid is a `400` before anything is charged.
 ## How to use this file
 
 When the user asks for an image ad with a known format, find the matching template below, **check the aspect-ratio table above against the model you're using**, then replace the `{placeholder}` variables and invoke the matching `chatgpt-image-ad` or `nano-banana-image-ad` skill with the filled prompt + the brand's reference image.
+
+**Pass every brand mark in the frame as a reference asset. Unpinned means invented.**
+The `Reference image:` line on each template is a requirement, not a suggestion, and it
+extends to any mark the template adds — a publication wordmark, a logo on a prop, a
+competitor's packaging. A 34-template run on one real product (2026-08-04) is the evidence:
+the product label was faithful in **all 34** because a reference pinned it, and every
+brand element that was *not* pinned either drifted or was fabricated — including a
+back-of-pack view invented whole, carrying a sourcing claim about a real brand that
+appeared in no prompt. The model fills unspecified surfaces with plausible brand-shaped
+content; silence reads as an invitation. Where a template shows only one face of a product,
+say so in the prompt: *"front label only; do NOT render the back, no invented label copy,
+no ingredient text, no sourcing statement, no barcode."*
 
 Every generation is charged and there are no free re-rolls, so price the run with a live
 `POST /v1/estimates` and get the user's OK first. That call is free and it is the only
