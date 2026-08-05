@@ -47,6 +47,9 @@ echo "GET $BASE/v1/models → HTTP $code"
 case "$code" in
   200)
     echo "OK. Connection verified."
+    # Claims audit (soft): warn — never block — if the repo's per-model reference
+    # caps have drifted from the live spec. Full audit: ./scripts/verify-image-caps.sh
+    "$ROOT/scripts/verify-image-caps.sh" --soft || true
     ;;
   401)
     echo "" >&2
