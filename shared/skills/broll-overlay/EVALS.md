@@ -97,15 +97,28 @@ failure that reads exactly like a bad render (F2, 2026-08-04).
   real duration, not ~1000x it. An EDL built from milliseconds would place every window
   past the end of the video and is the failure this catches.
 - Every `covers` string quotes a phrase that appears verbatim in the transcript `text`.
-- **The brand token transcribes as its real spelling.** The prompt's pronunciation
-  spelling ("NOH-voh-ads") must not survive into the transcript as `nohvo ads` — keyterm
-  biasing is exactly what this asserts, and F1 of the 2026-08-04 run is what it is for.
+- **The brand token is CHECKED, and a mangled one fails the PROMPT, not the transcriber.**
+  Read the brand token out of the transcript verbatim. If it comes back mangled —
+  `nohvo ads`, `noh voads`, `nohvoads` — the fault is upstream: the prompt spelled the
+  brand phonetically and the model said the respelling out loud, so the transcript is
+  *correct about what was said*. Fix the prompt (F1's own remedy: spell the brand its
+  real way unless a render proves otherwise), regenerate the base, and re-run.
+
+  **Measured 2026-08-05, and it is the reason this bullet is worded this way.** Against
+  the exact F1 source, `POST /v1/transcripts` returned `noh voads`. A controlled A/B on
+  the identical audio: no keyterms → `NOHVO ads`; `+["render farm"]` → still `nohvo ads`
+  but "render **form**" correctly became "render **farm**"; `+["novoads"]` → `nohvoads`.
+  So keyterm biasing demonstrably **works** (the positive control flips a real
+  mistranscription, and the vendor's own cost moves 6cc→7cc), and it even pulls the brand
+  token from two words to one — but it **cannot** recover a word the speaker never said.
+  Do not assert that keyterms will fix a phonetic respelling; they will not.
 - The final duration equals the base duration (OV1's contract still holds).
 - A second transcript call on the same base returns `creditsCharged: 0` — so a re-run of
   this eval costs one transcript, not two.
 
-**Fails if:** the run needs any local install, the words come back empty, timings are in
-milliseconds, or the brand token is mistranscribed.
+**Fails if:** the run needs any local install, the words come back empty, or timings are in
+milliseconds. A mangled brand token fails **E4/F1 upstream** (the prompt), not this eval —
+this eval's job is to surface it, and it is the cheapest detector the pack has.
 
 ## OV4 — Overlay windows are geometrically valid, with defined mismatch behavior
 

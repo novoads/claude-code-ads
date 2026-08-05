@@ -340,8 +340,15 @@ the estimate is a `400`, because it does not move the price.
 
 **Transcribing the same source twice is free.** The second call returns the stored transcript
 with `creditsCharged: 0`. So a client that times out and retries is not billed twice, and two
-skills that each want the same words pay once between them. A different `languageCode` is a
-different transcript, not a cache hit.
+skills that each want the same words pay once between them. Verified live 2026-08-05: second call
+`creditsCharged: 0`, same `jobId`, every field byte-identical, and **one** charge in the ledger
+across both.
+
+What counts as "the same source" is finer than the id, deliberately: the cache identity is
+(organization, R2 key, **byte length**, model, language, vocabulary). So a different
+`languageCode` is a different transcript rather than a cache hit; **re-uploading different bytes
+under the same `assetId` correctly MISSES** rather than serving the old words for new media; and a
+vocabulary upgrade on our side misses once so the next call gets the better transcript.
 
 ### Failure modes
 
@@ -349,7 +356,7 @@ different transcript, not a cache hit.
 |---|---|
 | `400` | Both source fields or neither; an unknown key; a source **over the 10-minute cap** (named in the message); or the flag being off on this deployment. **Nothing is charged.** |
 | `402` | Not enough credits; `details` carries `required` and `available`. |
-| `404` | No such job or asset **for this organization**, or an upload that never completed. Identical to a nonexistent id, deliberately — a distinguishable response would be a way to probe what else the account holds. |
+| `404` | No such job or asset **for this organization**, or an upload that never completed. Identical to a nonexistent id, deliberately — a distinguishable response would be a way to probe what else the account holds. **Also a CAPTION job's id**: a caption's output is not a transcript source, and the message says so — pass the jobId of the ORIGINAL video. |
 | `409` | The source job has not succeeded yet, **or it has no audio track**. A silent source is refused rather than charged for an empty result — every b-roll clip is this shape. Also returned when a transcript of this source is already in flight; the message names the job to poll. |
 | `429` | `details.reason: transcript_concurrency_limit` — **10** concurrent transcripts, counted separately from both the 5-generation `concurrency_limit` and the caption ceiling. |
 | `5xx` | The transcriber failed. **Credits were refunded** — the message says so. |
