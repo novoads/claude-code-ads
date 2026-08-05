@@ -84,7 +84,7 @@ Response `201`:
 
 Discriminated on `kind`, and strict. Any field not listed is a 400.
 
-**There are four arms, not two.** `kind: "caption"` prices `POST /captions` and `kind: "transcript"` prices `POST /transcripts` — see those sections for their fields and for the reason a sourceless quote is the one-minute minimum on both.
+**There are more than two arms.** `kind: "caption"` prices `POST /captions` and `kind: "transcript"` prices `POST /transcripts` — see those sections for their fields and for the reason a sourceless quote is the one-minute minimum on both. Which arms a deployment publishes is flag-dependent (`music`, `transcript` and `voiceover` each have their own); read the live `openapi.json` `discriminator.mapping` rather than counting them here.
 
 | Field | `kind: "video"` | `kind: "image"` |
 |---|---|---|
@@ -291,9 +291,10 @@ Documented from the live spec `2.8.0` on 2026-08-04. Gated on `TRANSCRIPT_API`; 
 is off the path 400s with a message naming what the deployment does render.
 
 The words of a video, with their timings. **Synchronous** — `200`, and the transcript is in the
-response body. There is no `jobId` to poll. This is the only charged endpoint here that answers
-with its result rather than with a job to wait on, and it is deliberate: the provider is one
-round-trip with no job id of its own, so there is nothing to poll and nothing to strand.
+response body. There is no `jobId` to poll. It is the **second** charged endpoint here that answers with its
+result rather than a job to wait on — `POST /images` is the precedent and states the rule — and it
+is deliberate: the provider is one round-trip with no job id of its own, so there is nothing to
+poll and nothing to strand.
 
 Measured 2026-08-04: a 15-second ad comes back in about a second, a 5-minute source in ~25s, a
 10-minute one in ~46s.
@@ -313,7 +314,7 @@ Response `200`:
 |---|---|
 | `jobId` | Addressable afterwards at `GET /generations/{jobId}`, whose `outputUrl` presigns the same JSON. |
 | `status` | Always `"succeeded"` — the transcript is right here. |
-| `creditsCharged` | What this call cost. **`0` when the transcript was already stored** (see below). |
+| `creditsCharged` | What this call **was billed**. `0` most often means the transcript was already stored (see below); it also covers a rare race where the job's charge had already been reversed. Treat `0` as "not billed", not as "served from cache". |
 | `model` | Always `scribe-v2`. |
 | `language` | What the transcriber detected, **verbatim, as ISO-639-3** — `"spa"`, `"eng"`. Not the two-letter code. |
 | `durationSeconds` | Length of the source. |
@@ -333,7 +334,7 @@ one-minute floor. A 15-second ad and a 55-second one both cost **0.1 credits**; 
 source costs **1.0**. There is **no resolution term** — unlike captions — because the
 transcriber is billed on duration and never sees the picture.
 
-**`POST /estimates` has a fourth arm:** `{ "kind": "transcript", jobId | assetId }`. Source is
+**`POST /estimates` has its own arm:** `{ "kind": "transcript", jobId | assetId }`. Source is
 optional; name it for anything over a minute, because a sourceless quote is the one-minute
 minimum. The arm is **strict and narrower than the generate body** — sending `languageCode` to
 the estimate is a `400`, because it does not move the price.
@@ -347,24 +348,38 @@ across both.
 What counts as "the same source" is finer than the id, deliberately: the cache identity is
 (organization, R2 key, **byte length**, model, language, vocabulary). So a different
 `languageCode` is a different transcript rather than a cache hit; **re-uploading different bytes
-under the same `assetId` correctly MISSES** rather than serving the old words for new media; and a
+under the same `assetId` normally MISSES** rather than serving the old words for new media; and a
 vocabulary upgrade on our side misses once so the next call gets the better transcript.
+
+The byte-length half is a cheap content check, not a checksum: it catches every ordinary
+re-upload, but **a replacement of exactly the same size is still a HIT** and returns the previous
+file's words for free. If you replace media in place and need it re-read, upload it under a new
+`assetId`.
 
 ### Failure modes
 
 | Code | Cause |
 |---|---|
-| `400` | Both source fields or neither; an unknown key; a source **over the 10-minute cap** (named in the message); or the flag being off on this deployment. **Nothing is charged.** |
+| `400` | Both source fields or neither; an unknown key; a source **over the 10-minute cap** (named in the message); or the flag being off on this deployment. **Nothing is charged** for any of those — they are all decided before the debit. One 400 is the exception and arrives *after* it: a container whose declared duration disagrees with its real contents is caught during audio extraction, so it is charged and then refunded. |
 | `402` | Not enough credits; `details` carries `required` and `available`. |
-| `404` | No such job or asset **for this organization**, or an upload that never completed. Identical to a nonexistent id, deliberately — a distinguishable response would be a way to probe what else the account holds. **Also a CAPTION job's id**: a caption's output is not a transcript source, and the message says so — pass the jobId of the ORIGINAL video. |
-| `409` | The source job has not succeeded yet, **or it has no audio track**. A silent source is refused rather than charged for an empty result — every b-roll clip is this shape. Also returned when a transcript of this source is already in flight; the message names the job to poll. |
+| `404` | No such job or asset **for this organization**, or an upload that never completed. **Also a video generated outside this API** — a dashboard `jobId` answers 404 identically to one that does not exist, because a distinguishable response would be a way to probe what else the account holds. **Also a CAPTION job's id**: a caption's output is not a transcript source, and the message says so — pass the jobId of the ORIGINAL video. (An `assetId` that names a still rather than a video is a `400`, not a 404 — nothing is missing, it is the wrong kind.) |
+| `409` | Several causes, and **whether you are charged depends on which** — the message always says so. *Before the debit, nothing is charged:* the source job has not succeeded, it has no stored file yet, its stored file could not be read just now (retryable), it has **no audio stream at all** (every b-roll clip is this shape), or a transcript of this source is **already in flight** (the message names the job to poll). *After the debit, charged and then refunded:* the track exists but carries **only room tone**, so no speech was detected — the pre-charge check reads streams, and a stream of silence is still a stream — or the audio could not be extracted. |
 | `429` | `details.reason: transcript_concurrency_limit` — **10** concurrent transcripts, counted separately from both the 5-generation `concurrency_limit` and the caption ceiling. |
-| `5xx` | The transcriber failed. **Credits were refunded** — the message says so. |
+| `502` | The transcriber failed. **Read the message for the money**, which is not always the same sentence: `Credits were refunded.` means the reversal already landed, while `The refund did not go through on this attempt and has been queued; your credits will be returned automatically.` means it has **not** come back yet and a backstop will return it. |
 
 ### What it does not do
 
 No diarization, no speaker labels, no translation. The transcript is faithful to what was said,
 in the language it was said in.
+
+### One thing it does that you cannot see
+
+Every call is sent a **server-side biasing vocabulary** — product and model names, so the words
+that recur in these scripts are spelled the way we spell them. It is not a request field and you
+cannot set it. It can change the words you get back, and changing it invalidates the cache (that is
+the "vocabulary" term in the identity above). It biases toward known words; it **cannot** recover a
+word the speaker did not say — a script that spells a brand phonetically will transcribe as the
+phonetic spelling.
 
 ---
 

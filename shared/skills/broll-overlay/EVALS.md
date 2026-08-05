@@ -92,7 +92,10 @@ failure that reads exactly like a bad render (F2, 2026-08-04).
 **Assertions:**
 - `which whisper-cli whisper` returns nothing, and the run still completes.
 - The transcript call returns `200` with a non-empty `words[]`, `start` values
-  **monotonically non-decreasing**, and `segments[]` whose joined text equals `text`.
+  **monotonically non-decreasing**, and `segments[]` that reconstruct the same prose as
+  `text`. Compare them whitespace-collapsed rather than byte-for-byte: `text` is the
+  vendor's own decoded string passed through, while `segments[]` is rebuilt from tokens,
+  so the two are the same words but not contractually the same bytes.
 - Timings are **seconds**: the last word's `end` is within a second or two of the base's
   real duration, not ~1000x it. An EDL built from milliseconds would place every window
   past the end of the video and is the failure this catches.
@@ -105,13 +108,21 @@ failure that reads exactly like a bad render (F2, 2026-08-04).
   real way unless a render proves otherwise), regenerate the base, and re-run.
 
   **Measured 2026-08-05, and it is the reason this bullet is worded this way.** Against
-  the exact F1 source, `POST /v1/transcripts` returned `noh voads`. A controlled A/B on
-  the identical audio: no keyterms → `NOHVO ads`; `+["render farm"]` → still `nohvo ads`
-  but "render **form**" correctly became "render **farm**"; `+["novoads"]` → `nohvoads`.
-  So keyterm biasing demonstrably **works** (the positive control flips a real
-  mistranscription, and the vendor's own cost moves 6cc→7cc), and it even pulls the brand
-  token from two words to one — but it **cannot** recover a word the speaker never said.
-  Do not assert that keyterms will fix a phonetic respelling; they will not.
+  the exact F1 source, `POST /v1/transcripts` returned `noh voads`.
+
+  The A/B that explains why was run **against the transcription vendor directly, not
+  through this endpoint** — `POST /v1/transcripts` takes only `jobId | assetId |
+  languageCode` and rejects anything else, so keyterms are not a knob you can turn from
+  here. On the identical audio: no keyterms → `NOHVO ads`; `+["render farm"]` → still
+  `nohvo ads`, but "render **form**" correctly became "render **farm**"; `+["novoads"]`
+  → `nohvoads`.
+
+  So keyterm biasing demonstrably **works** — the positive control flips a real
+  mistranscription — and it even pulls the brand token from two words to one. What it
+  **cannot** do is recover a word the speaker never said. Do not assert that keyterms will
+  fix a phonetic respelling; they will not. (The vendor's own unit moved 6→7 on that
+  request. That is the VENDOR's meter, not novoads credits: what you are charged is
+  duration only, and no vocabulary change moves it.)
 - The final duration equals the base duration (OV1's contract still holds).
 - A second transcript call on the same base returns `creditsCharged: 0` — so a re-run of
   this eval costs one transcript, not two.
