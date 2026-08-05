@@ -129,7 +129,8 @@ which is Google DeepMind's own guide with the parts this API cannot reach marked
 ### 🖼️ Stills — people, products, characters
 
 `POST /v1/images` is **synchronous**: the finished images come back in the response body, so there
-is nothing to poll. Up to 4 images per call, up to 4 reference images each.
+is nothing to poll. Up to 4 images per call; reference images are capped per model — 4 on
+`gpt-image-2`, 14 on `nano-banana-pro`, 8 on `reve-2.1`.
 
 - **`gpt-image-2`** — heavy typography and mimicked UI.
 - **`nano-banana-pro`** — photoreal people and products in a scene; holds a character's identity
@@ -245,8 +246,8 @@ is the current answer, this table is a map.
 | **`nano-banana-pro`** | Image | — | 10 ratios incl. `3:2` `4:3` `5:4` | 4,000 chars | Photoreal people and products; strongest identity lock across references. |
 | **`reve-2.1`** | Image | — | same 10 ratios | 4,000 chars | Third look / second opinion on a still. |
 
-Image calls take `numImages` 1–4. The `referenceAssetIds` cap is **per model** — 8 on `reve-2.1`,
-4 on `gpt-image-2` and `nano-banana-pro` — and images have no start-frame concept. Videos are
+Image calls take `numImages` 1–4. The `referenceAssetIds` cap is **per model** — 14 on
+`nano-banana-pro`, 8 on `reve-2.1`, 4 on `gpt-image-2` — and images have no start-frame concept. Videos are
 asynchronous (`202` + `jobId`, poll to a terminal status); images come back in the response body.
 
 `audioEnabled` is a Seedance-only boolean (default `true`); send `false` for a clip meant to run

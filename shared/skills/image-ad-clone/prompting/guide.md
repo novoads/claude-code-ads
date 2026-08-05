@@ -56,6 +56,10 @@ Phase 4 + Phase 7 (two calls), the ceiling is Phase 4 + four iterations + Phase 
 Say which model each leg prices at — the schedules differ by more than 3× across the three, so
 a cross-model Phase 8 on `reve-2.1` costs meaningfully more than the same call on `gpt-image-2`.
 
+A **batch** (several references in one conversation) prices once, up front: the estimate
+validates the prompt it is given, so run one free estimate per distinct final prompt, present
+one combined range covering every reference, and get ONE yes for the whole batch.
+
 The estimate is free and it is the **only** legitimate source of a price. It says nothing about
 the prompt — no endpoint here does — so re-read the clone prompt against the template rules
 yourself before pricing. It is going to be run six times, which makes a flaw in it six times as
@@ -143,7 +147,9 @@ Fire one generation with the original as a reference and the matched aspect rati
 blocks for the render, typically 60–90 seconds — there is nothing to poll. Read the generated
 image when it returns.
 
-Up to **4** references are allowed. For Phase 4 you normally pass exactly one: the original ad.
+The reference cap is per model — 4 on `gpt-image-2`, 14 on `nano-banana-pro`, 8 on `reve-2.1`
+(verified against spec 2.7.0, 2026-08-04). For Phase 4 you normally pass exactly one: the
+original ad.
 
 ### Phase 5: Compare and iterate
 
@@ -247,7 +253,7 @@ If the save target already has T1–T39 (the seeded templates), continue with T4
 
 - **Generating real ads / uploading to Meta.** The `meta-ad-builder` skill. This skill produces templates only.
 - **Reverse-engineering video ads.** Image only. Refuse with: *"This skill is for static image ads. Video reverse-engineering isn't supported in this version."*
-- **Multi-template extraction in one run.** One reference → one template per skill invocation. If the user has 5 references, do 5 sequential runs.
+- **Multi-template extraction in one run.** One reference → one template per skill invocation. A folder of N references is N independent runs — and they may run in parallel: the API allows **5 generations in flight per organization** and refuses the 6th with an explicit error (it does not queue), so stagger anything beyond 5. Price the whole batch up front per the Cost section — one free estimate per distinct final prompt, one combined range, ONE consent before the first charged call.
 - **Modifying existing templates in the library.** If the user wants to revise T3, treat it as a new run pointed at the same library entry — show the diff and ask before overwriting.
 - **Editing the source image.** There is no image-edit path on this API. Cloning means re-generating from a prompt, which is what this whole workflow is.
 

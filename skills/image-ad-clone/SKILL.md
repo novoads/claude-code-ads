@@ -79,7 +79,8 @@ takes `--model`, applies that model's own aspect-ratio grid, and is the only pat
 `reve-2.1`, which has no generator skill.
 
 It shares everything else with the generators: the same three always-on safety suffixes, the
-same upload flow, the same 4-reference cap, the same local prompt-length check before spending.
+same upload flow, each model's own reference cap (`gpt-image-2` 4, `nano-banana-pro` 14,
+`reve-2.1` 8), the same local prompt-length check before spending.
 
 ## Dependencies
 
@@ -102,6 +103,10 @@ ask six separate times, and do not surface the cost only at the end.
 
 The schedules differ by more than 3× across the three models, so **name the model** in the
 estimate body — a Phase 8 cross-check on `reve-2.1` is not priced by a `gpt-image-2` estimate.
+
+A **batch** (several references cloned in one conversation) prices the same way, once: one free
+estimate per distinct final prompt, presented as one combined range, one yes covering the whole
+batch — not a consent per reference.
 
 Report the **actual total** from each response's `creditsCharged` when the run finishes.
 

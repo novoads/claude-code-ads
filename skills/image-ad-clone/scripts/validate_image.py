@@ -39,15 +39,16 @@ from pathlib import Path
 
 BASE_URL_DEFAULT = "https://api.novoads.ai"  # host only; this script appends /v1/...
 # Each model carries its own typed grid in the API schema, and the schemas are strict —
-# an aspect ratio from the wrong grid is a 400 before anything is charged.
+# an aspect ratio from the wrong grid is a 400 before anything is charged. The same
+# goes for max_refs: referenceAssetIds maxItems is PER MODEL, not one number.
+# Verified against spec 2.7.0 on 2026-08-04 — re-check: ./scripts/verify-image-caps.sh
 _WIDE_RATIOS = {"1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"}
 MODELS = {
-    "gpt-image-2":     {"ratios": {"1:1", "4:5", "2:3", "9:16", "16:9", "21:9"}},
-    "nano-banana-pro": {"ratios": _WIDE_RATIOS},
-    "reve-2.1":        {"ratios": _WIDE_RATIOS},
+    "gpt-image-2":     {"ratios": {"1:1", "4:5", "2:3", "9:16", "16:9", "21:9"}, "max_refs": 4},
+    "nano-banana-pro": {"ratios": _WIDE_RATIOS, "max_refs": 14},
+    "reve-2.1":        {"ratios": _WIDE_RATIOS, "max_refs": 8},
 }
 ALL_RATIOS = set().union(*(m["ratios"] for m in MODELS.values()))
-MAX_REFS = 4  # referenceAssetIds maxItems for every Novoads image model
 MAX_IMAGES = 4  # numImages enum: 1, 2, 3, 4
 MAX_PROMPT_CHARS = 4000  # every image model's prompt ceiling; the API 400s above it
 MIN_DIMENSION = 1024
@@ -391,7 +392,8 @@ def main() -> int:
         default=[],
         metavar="PATH",
         help=(
-            f"Reference image path (PNG/JPG/WEBP). Repeatable, max {MAX_REFS}. "
+            "Reference image path (PNG/JPG/WEBP). Repeatable; the cap depends on "
+            "--model (gpt-image-2: 4, nano-banana-pro: 14, reve-2.1: 8). "
             "Uploaded once each; order is preserved and may be addressed positionally "
             "by the prompt."
         ),
@@ -437,10 +439,11 @@ def main() -> int:
         log(f"error: --n must be 1..{MAX_IMAGES} (got {args.n})")
         return 2
 
-    if len(args.image_ref) > MAX_REFS:
+    max_refs = MODELS[args.model]["max_refs"]
+    if len(args.image_ref) > max_refs:
         log(
-            f"error: too many --image-ref ({len(args.image_ref)}); the cap is {MAX_REFS} "
-            f"on every Novoads image model"
+            f"error: too many --image-ref ({len(args.image_ref)}); {args.model} "
+            f"caps at {max_refs}"
         )
         return 2
 

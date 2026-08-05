@@ -31,7 +31,7 @@ concurrency, the upload contract — the `novoads-api` skill's `reference.md` is
 1. **Model is `nano-banana-pro`.** It is the only Nano Banana on this API — there is no `nano-banana-2`, no `nano-banana-edit`, no legacy `nano-banana`. The script refuses anything else. If the user asks for gpt-image-2, point them at `chatgpt-image-ad`.
 2. **No platform/screenshot chrome in output.** `NO_CHROME_SUFFIX` is always on (override only with `--allow-chrome`).
 3. **Edge-safe + glyph-safety suffixes always on** unless `--no-safe-zone` is explicit.
-4. **Max 4 reference images.** `referenceAssetIds` caps at 4 on every Novoads image model. The script enforces it.
+4. **Max 14 reference images.** `referenceAssetIds` caps at 14 on `nano-banana-pro` (spec 2.7.0; `gpt-image-2` takes 4, `reve-2.1` 8). The script enforces it — and 2-4 well-chosen references usually beat many.
 5. **No Meta upload from this skill.** Image generation only. Hand off via filesystem paths.
 6. **Always show a live cost estimate before generating, and get an explicit yes.** The price comes from `POST /v1/estimates` in this session — never from memory, never from `logs/novoads-api.jsonl`, never from `MASTER_CONTEXT.md`. There are no credit numbers written down anywhere in this repo, on purpose. Nano Banana Pro costs more per image than gpt-image-2, so the model choice is worth surfacing when you show the quote.
 
@@ -55,7 +55,7 @@ concurrency, the upload contract — the `novoads-api` skill's `reference.md` is
 | `model` | `nano-banana-pro` |
 | `prompt` | the image prompt — the always-on suffixes count against the model's cap |
 | `aspectRatio` | `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9` — **defaults to `1:1`**, so always set it |
-| `referenceAssetIds` | up to **4**, order preserved, addressable positionally from the prompt |
+| `referenceAssetIds` | up to **14**, order preserved, addressable positionally from the prompt |
 | `numImages` | `1`–`4`, **one call**, charged per image |
 | `productId` | optional, organizational only |
 

@@ -12,6 +12,7 @@ If `.env` or `MASTER_CONTEXT.md` do not exist, tell the user to run `./scripts/s
 2. Follow the skill at `.cursor/skills/` or `.claude/skills/` (synced from `skills/` via `scripts/sync-skill.sh`).
 3. If `MASTER_CONTEXT.md` has empty fields (default product, brand voice, defaults), offer to populate them — ask the user and write the values back so future sessions have them. Never write a credit number into it.
 4. After material changes, add a dated entry to **MASTER_CONTEXT.md** Changelog.
+5. Before changing any stated API limit — or whenever a preflight prints `WARN(image-caps)` — run `./scripts/verify-image-caps.sh`: the standing audit that checks the repo's per-model reference caps against the live spec, exercises the scripts' refusal gates (no key, no spend), and greps for resurrected universal-cap claims.
 
 ## Cost policy
 

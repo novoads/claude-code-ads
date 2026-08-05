@@ -31,7 +31,7 @@ concurrency, the upload contract — the `novoads-api` skill's `reference.md` is
 1. **Model is `gpt-image-2`.** The script refuses any other value. If the user asks for Nano Banana, point them at `nano-banana-image-ad`.
 2. **No platform/screenshot chrome in output.** `NO_CHROME_SUFFIX` is always on (override with `--allow-chrome` only when the ad's concept *requires* chrome — rare).
 3. **Edge-safe + glyph-safety suffixes always on** unless `--no-safe-zone` is explicit. They fix real failures; don't remove silently.
-4. **Max 4 reference images.** `referenceAssetIds` caps at 4 on every Novoads image model. The script enforces it.
+4. **Max 4 reference images.** `referenceAssetIds` caps at 4 on `gpt-image-2` (`nano-banana-pro` takes up to 14, `reve-2.1` 8 — spec 2.7.0). The script enforces it.
 5. **No Meta upload from this skill.** Image generation only. Hand off via filesystem paths.
 6. **Always show a live cost estimate before generating, and get an explicit yes.** The price comes from `POST /v1/estimates` in this session — never from memory, never from `logs/novoads-api.jsonl`, never from `MASTER_CONTEXT.md`. There are no credit numbers written down anywhere in this repo, on purpose.
 

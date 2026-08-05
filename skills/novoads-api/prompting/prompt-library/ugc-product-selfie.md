@@ -26,9 +26,10 @@ referenceAssetIds = [
 ]
 ```
 
-**A generation may cite at most 4 references.** Order is preserved and the first is the
-strongest signal, so the character hero always goes first. That leaves exactly **two** slots for
-style, not three or four.
+**A generation may cite up to 14 references on `nano-banana-pro`** (spec 2.7.0). Order is
+preserved and the first is the strongest signal, so the character hero always goes first — and
+the discipline survives the bigger cap: hero, product, and at most **two** style references.
+More style refs dilute the hero.
 
 This is a tighter budget than this workflow used to assume — and it points the same direction
 the failure table at the bottom already does: *"character face doesn't match → too many style
