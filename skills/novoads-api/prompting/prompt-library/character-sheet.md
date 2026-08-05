@@ -8,8 +8,9 @@
 
 ## The reference budget — read this first
 
-A generation may cite **at most 4 `referenceAssetIds`**. That cap is the same on every image
-model here, so it shapes this whole workflow.
+A generation may cite up to **14 `referenceAssetIds`** on `nano-banana-pro` (spec 2.7.0 —
+`gpt-image-2` caps at 4, `reve-2.1` at 8). The budget is generous; the discipline below still
+shapes this whole workflow, because more references dilute the hero.
 
 What makes it workable: `POST /v1/uploads` returns a **durable `assetId`** that keeps working
 across calls and across sessions. Uploads are free and unlimited; only generations are charged.
@@ -113,7 +114,7 @@ Once the hero is approved:
    - Same `model` and `aspectRatio` as the hero
    - `referenceAssetIds`: `[hero_assetId]` — the **same id every time**, no re-upload
    - The angle-specific prompt
-4. **Rolling window for drift.** If an angle starts drifting from the hero, add the last one or two *good* angles alongside the hero: `[hero, angle_N-1, angle_N-2]`, up to the 4-reference cap. Never feed a drifted angle forward — a bad reference propagates.
+4. **Rolling window for drift.** If an angle starts drifting from the hero, add the last one or two *good* angles alongside the hero: `[hero, angle_N-1, angle_N-2]`, well inside the 14-reference cap (spec 2.7.0). Keep the window small even so — never feed a drifted angle forward; a bad reference propagates.
 5. **Concurrency is 5.** Fire at most 4 at a time to keep headroom. A 6th in flight returns `429` with `details.reason: concurrency_limit`, and unlike the other 429 causes, slowing down doesn't help — only a finishing job frees a slot.
 6. QA each image per [nano-banana.md](nano-banana.md).
 

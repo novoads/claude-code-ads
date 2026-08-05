@@ -29,14 +29,14 @@ If any of these are core to the ad, **prefer `nano-banana-image-ad` instead**:
 - **Photoreal handheld objects** — held-up whiteboard signs, handwritten napkin testimonials, flatlay product photography with rich material rendering (leather + metal + fabric textures next to each other).
 - **Aspirational lifestyle photography** — full-bleed scenic backgrounds (sunset coastline, mountain trail, kitchen at golden hour) with naturalistic lighting.
 - **Stop-motion / claymation / Pixar / clay textures** — anything that needs material-based realism.
-- **Blending several references into one subject** — both models cap at 4 references on this API, so this is no longer a question of how many you can pass. It is a question of how smoothly they merge, and Nano Banana Pro merges them better.
+- **Blending several references into one subject** — gpt-image-2 caps at 4 references on this API while Nano Banana Pro takes up to 14, and Nano Banana Pro also merges them more smoothly. When the composition needs more than four sources, the route is decided.
 
 ## Hard limits
 
 These come from the live API contract (`GET /v1/openapi.json` is the authority):
 
 1. **Model is `gpt-image-2`.** The script refuses other model strings (`dall-e-3`, `gpt-image-1`, etc.). Predictable model means predictable cost and behavior per run.
-2. **Max 4 reference images.** `referenceAssetIds` caps at 4 on every Novoads image model. The script enforces it. There is no skill to switch to for more — the cap is the same everywhere.
+2. **Max 4 reference images.** `referenceAssetIds` caps at 4 on `gpt-image-2`. The script enforces it. When a composition genuinely needs more sources, `nano-banana-pro` takes up to 14 (spec 2.7.0) — switching skill is the escalation path.
 3. **Prompts are capped**, and the three always-on suffixes count against it (they run to roughly 1,500 together). The script checks the assembled prompt and fails locally, before spending anything.
 4. **No platform/screenshot chrome in output.** The `NO_CHROME_SUFFIX` is always on (unless you explicitly `--allow-chrome` for the rare UGC screen-recording aesthetic). Output is the standalone ad creative — the static image that gets uploaded.
 5. **Edge-safe rule always on.** Text and focal subjects must sit inside the central 84% of the canvas. Backgrounds may bleed.

@@ -229,10 +229,10 @@ There are **no idempotency keys.** See the 500 note below.
 | `model` | `aspectRatio` | `referenceAssetIds` | `numImages` | Prompt max |
 |---|---|---|---|---|
 | `gpt-image-2` (default) | `1:1` (default) `4:5` `2:3` `9:16` `16:9` `21:9` | up to **4** | 1 to 4 | 4,000 |
-| `nano-banana-pro` | `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9` | up to **4** | 1 to 4 | 4,000 |
+| `nano-banana-pro` | `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9` | up to **14** | 1 to 4 | 4,000 |
 | `reve-2.1` | same as Nano Banana Pro | up to **8** | 1 to 4 | 4,000 |
 
-**The reference cap is per model and is not uniform.** `reve-2.1` takes 8; the other two take 4. Do not carry one number across the set — the bodies are strict, so a fifth reference to `gpt-image-2` is `400 Too big: expected array to have <=4 items` rather than a silently dropped image, which is the good outcome: a dropped reference is a paid render missing the product. Verified live 2026-08-02, each probe pinned with an out-of-range `numImages` so no body could be valid: 9 refs on `reve-2.1` → too big, 8 → accepted; 5 refs on `gpt-image-2` and on `nano-banana-pro` → too big.
+**The reference cap is per model and is not uniform.** `gpt-image-2` takes 4, `nano-banana-pro` 14, `reve-2.1` 8. Do not carry one number across the set — the bodies are strict, so a fifth reference to `gpt-image-2` is `400 Too big: expected array to have <=4 items` rather than a silently dropped image, which is the good outcome: a dropped reference is a paid render missing the product. Verified live 2026-08-04 against spec 2.7.0 (which raised `nano-banana-pro` from 4 to 14), each probe pinned with an out-of-range `numImages` so no body could be valid: 15 refs on `nano-banana-pro` → too big, 14 → accepted; 9 on `reve-2.1` → too big, 8 → accepted; 5 on `gpt-image-2` → too big. Standing re-check: `./scripts/verify-image-caps.sh`.
 
 Synchronous. The response carries `images[]` (`url`, `expiresInSeconds` 3600, `width`, `height`), `jobId`, `status`, `creditsCharged`, and `model`. **No `warnings`**, for the same reason as video: the prompt rules run on `POST /estimates` only. In practice image prompts are unlinted either way — an image estimate carrying the words that trip the video rules returned no `warnings` key at all (verified live 2026-08-04). Nothing to poll. `numImages` multiplies the price.
 

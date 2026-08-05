@@ -57,7 +57,7 @@ Follow the template below. The prompt should describe:
 1. **The person** — age, gender, appearance, wardrobe, expression, pose
 2. **The product interaction** — how they hold it, where it sits in frame, what angle, how prominent
 3. **Match the video intent** — if the final video is UGC selfie-style, the still should already look like a selfie. If it's a polished product ad, frame accordingly
-4. **Cite the product image** in `referenceAssetIds` so the model can composite it. Up to **4** references — the product plus, if you have one, the character's hero shot. Name each one's role in the prompt ("the product in the first reference image"); order is preserved.
+4. **Cite the product image** in `referenceAssetIds` so the model can composite it. Up to **14** references on `nano-banana-pro` (spec 2.7.0), though the product plus the character's hero shot is usually all this format needs. Name each one's role in the prompt ("the product in the first reference image"); order is preserved.
 
 ### 3. Generate the still image
 
@@ -68,7 +68,7 @@ Follow the template below. The prompt should describe:
    - `model` — **`nano-banana-pro`**
    - `prompt` — the product showcase prompt
    - `aspectRatio` — match the video intent (`9:16` for reels, `16:9` for landscape, `1:1` for square). **It defaults to `1:1`**, so set it explicitly.
-   - `referenceAssetIds` — `[product_assetId]` (+ the character hero if you have one), max **4**
+   - `referenceAssetIds` — `[product_assetId]` (+ the character hero if you have one), max **14** on `nano-banana-pro`
    - `productId` (optional — organizational only; it does not influence what is generated)
 5. **The call is synchronous** — it blocks for the render (typically 60–90 seconds) and returns the finished still in `images[]`. Nothing to poll.
 6. **Post-generation QA:** Inspect the still per [nano-banana.md](nano-banana.md) (hands, product edges, merged geometry). **Regenerate** with a refined prompt if needed — up to **2** retries after the first attempt, each billed. **Only then** treat the still as ready to show.

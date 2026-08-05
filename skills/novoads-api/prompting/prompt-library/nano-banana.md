@@ -48,7 +48,7 @@ See [reference.md](../../reference.md) for the full schema. Key fields:
 - `model` (required) — `nano-banana-pro` for the stills this file covers
 - `prompt` (required) — the image prompt; follow the template and checklist below
 - `aspectRatio` (optional, **defaults to `1:1`**) — `nano-banana-pro` takes `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9`. Always set it explicitly; the default is rarely the shot you want. (`gpt-image-2` does **not** take `3:2`, `3:4`, `4:3` or `5:4`.)
-- `referenceAssetIds` (optional) — up to **4** `assetId` strings from `POST /v1/uploads`. Order is preserved and may be addressed positionally from the prompt.
+- `referenceAssetIds` (optional) — up to **14** `assetId` strings from `POST /v1/uploads` (spec 2.7.0; `gpt-image-2` caps at 4, `reve-2.1` at 8). Order is preserved and may be addressed positionally from the prompt. Few well-chosen references beat many.
 - `numImages` (optional, default 1) — 1–4 variants of the **same** prompt, in one call. Charged per image.
 - `productId` (optional) — organizational only; it does not influence what is generated.
 

@@ -19,7 +19,7 @@ Pick this skill (over `chatgpt-image-ad`) when the ad's success depends on any o
 
 - **Photoreal handheld objects** — held-up whiteboard signs, hand-lettered cardboard, handwritten napkin notes, sticky-note + product flatlays, letter-board signs. It renders held-paper texture, marker bleed, and hand-shadow naturalism better than gpt-image-2.
 - **Aspirational lifestyle photography** — full-bleed scenic backgrounds (sunset coastline, mountain trail, kitchen at golden hour) with naturalistic lighting and shallow DOF.
-- **Multi-image reference blending** — both models cap at 4 references here, so the edge is not how many you can pass but how smoothly they merge. Nano Banana Pro blends logo + product + style board + character more cleanly.
+- **Multi-image reference blending** — Nano Banana Pro takes up to **14** references on this API (gpt-image-2 caps at 4), and it blends logo + product + style board + character more cleanly. The headroom is real, but 2-4 well-chosen references still usually beat many: extra style refs dilute subject identity.
 - **Subject continuity across multiple runs** — pass the same hero portrait `assetId` across N generations and the character stays consistent.
 - **Rich material rendering** — leather, metal, fabric, foil, glass, liquid, plasticine. Anywhere the brief says "photoreal" or "tactile".
 - **Stop-motion / claymation / Pixar-adjacent aesthetics** — material-based realism that gpt-image-2 flattens.
@@ -44,7 +44,7 @@ between the two models, that is a real tiebreaker — but confirm the actual fig
 These come from the live API contract (`GET /v1/openapi.json` is the authority):
 
 1. **Model is `nano-banana-pro`.** The script refuses everything else, including the retired `nano-banana-2` / `nano-banana-edit` strings and `gpt-image-2`.
-2. **Max 4 reference images.** `referenceAssetIds` caps at 4 on every Novoads image model. The script enforces it. There is nowhere to switch to for more.
+2. **Max 14 reference images.** `referenceAssetIds` caps at 14 on `nano-banana-pro` (spec 2.7.0 — `gpt-image-2` takes 4, `reve-2.1` 8). The script enforces it. Headroom is not a goal: 2-4 well-chosen references usually beat many.
 3. **Prompts are capped**, and the three always-on suffixes count against it (roughly 1,500 together). The script checks the assembled prompt and fails locally, before spending anything.
 4. **No platform/screenshot chrome in output.** `NO_CHROME_SUFFIX` is always on (unless `--allow-chrome`).
 5. **Edge-safe rule always on.** Text and focal subjects must sit inside the central 84% of the canvas.

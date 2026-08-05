@@ -41,7 +41,9 @@ BASE_URL_DEFAULT = "https://api.novoads.ai"  # host only; this script appends /v
 # gpt-image-2 does not: 3:2, 3:4, 4:3, 5:4.
 ALLOWED_RATIOS = {"1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"}
 LOCKED_MODEL = "nano-banana-pro"
-MAX_REFS = 4  # referenceAssetIds maxItems for every Novoads image model
+# referenceAssetIds maxItems for nano-banana-pro — the caps are PER MODEL (gpt-image-2: 4,
+# reve-2.1: 8). Verified against spec 2.7.0 on 2026-08-04 — re-check: ./scripts/verify-image-caps.sh
+MAX_REFS = 14
 MAX_IMAGES = 4  # numImages enum: 1, 2, 3, 4
 MAX_PROMPT_CHARS = 4000  # nano-banana-pro prompt ceiling; the API 400s above it
 MIN_DIMENSION = 1024
@@ -430,7 +432,7 @@ def main() -> int:
     if len(args.image_ref) > MAX_REFS:
         log(
             f"error: too many --image-ref ({len(args.image_ref)}); the cap is {MAX_REFS} "
-            f"on every Novoads image model"
+            f"on {LOCKED_MODEL}"
         )
         return 2
 

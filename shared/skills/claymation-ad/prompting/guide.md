@@ -287,13 +287,13 @@ One API, no chooser. The storyboard and animation files in this folder own the p
 | Step | Call | Model | Images in |
 |------|------|-------|-----------|
 | Upload a still or product photo | `POST /v1/uploads` → PUT the bytes to `uploadUrl` | — | returns a durable `assetId` |
-| Storyboard | `POST /v1/images` — **synchronous** | `gpt-image-2`, or `nano-banana-pro` when clay texture matters more than identity | `referenceAssetIds: [assetId, …]`, **max 4 on every image model**, images only, addressed as `@Image1`…`@Image4` |
+| Storyboard | `POST /v1/images` — **synchronous** | `gpt-image-2`, or `nano-banana-pro` when clay texture matters more than identity | `referenceAssetIds: [assetId, …]`, **max 4 on `gpt-image-2` / 14 on `nano-banana-pro`** (spec 2.7.0), images only, addressed as `@Image1`… |
 | Animation | `POST /v1/videos` — **async, returns `jobId`** | `seedance-2.0` (or `seedance-2.0-mini` for drafts) | `startImageAssetId: assetId` — the approved still becomes the first frame |
 | Polling | `GET /v1/generations/{jobId}` every 15s until **terminal** (`succeeded`/`failed`/`blocked`/`canceled`) | — | — |
 | Download | `GET /v1/generations/{jobId}/watch` → 302 to the file | — | — |
 | Auth | `Authorization: Bearer $NOVOADS_API_KEY` on every call | — | — |
 
-**The reference cap is 4, on every image model.** A previous version of this guide gave Nano Banana a 14-reference budget; that is not this API. Four is enough for the beats that chain identity — hero plus one or two prior stills — but when a beat wants more, keep a rolling window anchored on the hero (`[hero, N-1, N-2, N-3]`) and never feed a *drifted* still forward. On this route the cap also protects you: too many style references dilute identity, and the documented fix for that failure is to cut back to two.
+**The reference cap is per model: 4 on `gpt-image-2`, 14 on `nano-banana-pro`** (spec 2.7.0 restored Nano Banana's 14-reference budget on this API). On the default `gpt-image-2` storyboard route, four is enough for the beats that chain identity — hero plus one or two prior stills — and when a beat wants more, keep a rolling window anchored on the hero (`[hero, N-1, N-2, N-3]`) and never feed a *drifted* still forward. The discipline holds even on `nano-banana-pro`'s bigger budget: too many style references dilute identity, and the documented fix for that failure is to cut back to two.
 
 Poll at **15s**, not 5s: 5s across 5 concurrent jobs is 60 calls/min, exactly the per-key rate limit with zero headroom.
 
