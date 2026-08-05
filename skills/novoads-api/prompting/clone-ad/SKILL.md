@@ -28,7 +28,7 @@ step 9 on spends credits.
 The analysis half of this skill is untouched — frames, transcript and beat structure are
 local work on the user's file. The generation half has three differences worth knowing
 before you promise anything. All three were established with free `400` probes that reject
-before any charge, and re-verified field-for-field against the deployed spec `2.9.0`
+before any charge, and re-verified field-for-field against the deployed spec `2.10.0`
 (2026-08-05):
 
 | The old shape | Here |
@@ -41,7 +41,7 @@ Also gone, in the same probe: `endFrame`, `projectId` (this
 API has products, not projects), `duration` (it is `durationSeconds`) and `referenceImages`
 (it is `referenceAssetIds`).
 
-**`resolution` was on that list and has come back.** It is a real field on `seedance-2.0` — `480p`, `720p`, `1080p`, `4k`, default `720p` (verified live against spec 2.9.0, 2026-08-05). A clone should normally match the source's tier, which for a social ad is `720p`; going above it is a **spend** decision (`1080p` ≈2.5x the base, `4k` ≈5x) that gets priced with `POST /v1/estimates` and approved like any other. `480p` costs the same as `720p`. **A clone rendered as a series pays the multiplier on every clip** — check the tier before you fan out. Never send the key on `seedance-2.0-mini`, which renders 720p only.
+**`resolution` was on that list and has come back.** It is a real field on `seedance-2.0` — `480p`, `720p`, `1080p`, `4k`, default `720p` (verified live against spec 2.10.0, 2026-08-05). A clone should normally match the source's tier, which for a social ad is `720p`; going above it is a **spend** decision (`1080p` ≈2.5x the base, `4k` ≈5x) that gets priced with `POST /v1/estimates` and approved like any other. `480p` costs the same as `720p`. **A clone rendered as a series pays the multiplier on every clip** — check the tier before you fan out. Never send the key on `seedance-2.0-mini`, which renders 720p only.
 
 **And one the old shape got wrong in the other direction:** aspect ratio is not
 `9:16`-or-`16:9`. Seedance takes `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` — probed live, `1:1`
@@ -436,7 +436,7 @@ see the bullet below.
 Returns `credits`, `balance`, `sufficient` and a `warnings` array, plus `shortBy` and
 `topUpUrl` when it is short. The body is strict and takes exactly six fields: `kind`,
 `prompt`, `model`, `durationSeconds`, `language`, `resolution` — checked field-for-field
-against `CreateEstimateRequestVideo` in spec `2.9.0` (2026-08-05). `aspectRatio`,
+against `CreateEstimateRequestVideo` in spec `2.10.0` (2026-08-05). `aspectRatio`,
 `audioEnabled`, the asset fields and `productId` are a `400` here.
 
 - **Pass `model` explicitly.** It defaults to `seedance-2.0`, and mini is half the price —
@@ -607,7 +607,7 @@ Full detail in [reference.md](../../reference.md).
 | `startImageAssetId` **XOR** `referenceAssetIds` | Separate modes on the model. A body with both is a `400` whose message says exactly that. Nothing is charged |
 | `referenceAssetIds` ≤ **9**, images only | Ten is `Too big: expected array to have <=9 items`. A video asset id is refused: references are images |
 | No `referenceVideos`, no `referenceAudios`, no `endFrame`, no `projectId` | All `400 Unrecognized key`. Nothing is charged, and no clone workflow can depend on them |
-| `resolution` — **`seedance-2.0` only**, `480p` `720p` `1080p` `4k`, default `720p` | Real, and re-verified against spec 2.9.0 (2026-08-05). **It multiplies the bill** — `1080p` ≈2.5x the base, `4k` ≈5x, and a series pays it per clip. Price the tier at `POST /v1/estimates`; `480p` saves nothing. `400 Unrecognized key` on `seedance-2.0-mini` and the three non-Seedance models |
+| `resolution` — **`seedance-2.0` only**, `480p` `720p` `1080p` `4k`, default `720p` | Real, and re-verified against spec 2.10.0 (2026-08-05). **It multiplies the bill** — `1080p` ≈2.5x the base, `4k` ≈5x, and a series pays it per clip. Price the tier at `POST /v1/estimates`; `480p` saves nothing. `400 Unrecognized key` on `seedance-2.0-mini` and the three non-Seedance models |
 | `audioEnabled` — **Seedance only**, optional, default `true` | Send `false` for a silent clone. `400 Unrecognized key` on the three non-Seedance video models, and on `POST /estimates` for every model |
 | `durationSeconds` 4–15, integer | Out-of-grid values are rejected, never rounded. Default is **5** |
 | `aspectRatio` `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | Default is **`16:9`**. Set it, or a vertical clone ships landscape |

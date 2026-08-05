@@ -6,7 +6,7 @@ the repo squash-merges and commit order does not survive the merge.
 
 Unlike [EVALS-ugc-base-and-broll.md](../prompt-library/EVALS-ugc-base-and-broll.md), which
 was written from an observed failing run, these four come from two places: the
-deployed-spec verification at the top of this PR (`info.version` **2.9.0**, fetched
+deployed-spec verification at the top of this PR (`info.version` **2.10.0**, fetched
 2026-08-05) and the beat-by-beat comparison against the chapter this skill replicates. One
 assertion in E4 was measured directly against the local script; it says so where it lands.
 
