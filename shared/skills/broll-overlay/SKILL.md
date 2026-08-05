@@ -6,7 +6,8 @@ description: >-
   the final duration always equals the base duration. Use when the user asks to
   add b-roll, add cutaways, or overlay clips on a video: "add b-roll to this",
   "cut away to a product shot here", "overlay these clips on my UGC ad". Entered
-  from an approved base video plus its transcript; it never generates the base
+  from an approved base video plus its transcript, which comes from
+  POST /v1/transcripts and needs no local install; it never generates the base
   itself and it never extends a video.
 ---
 
@@ -29,9 +30,25 @@ isn't one yet, say so and stop.
    means the user has watched it and signed off — b-roll is a polish pass over a
    locked cut. The script stream-copies one voice track under the picture, so a
    two-stream base is rejected: `ffmpeg -i base -map 0:v -map 0:a:0 -c copy`.
-2. **Its transcript, with timings.** A local whisper pass (`whisper-cli` or
-   `openai-whisper`); the novoads captions API cannot supply it — it burns
-   subtitles into a new MP4 and returns no text or timings (verified 2026-08-04).
+2. **Its transcript, with timings.** One call to **`POST /v1/transcripts`** with
+   the base's `jobId` (or its `assetId` if it was uploaded). It returns `text`,
+   word-level `words[]` and `segments[]` — **timings in SECONDS**, which is what
+   the EDL below takes — plus an `srt` you can ignore here. Priced at 0.1 credits
+   per minute of source, rounded up from a one-minute minimum, and **a repeat of
+   the same source is free**, so asking twice costs once. No local install.
+
+   *(The **captions** endpoint still cannot supply this — it burns subtitles into
+   a new MP4 and returns no text or timings, verified 2026-08-04 and re-checked
+   when transcripts shipped. That finding is correct and is kept here so nobody
+   re-discovers it and files a bug against captions.)*
+
+   **Offline fallback:** a local whisper pass (`whisper-cli` or `openai-whisper`)
+   still works and is the path when there is no API key or no network. Note
+   whisper reports timings in **milliseconds** where the API reports seconds, and
+   `whisper-cli` with no model downloaded returns an EMPTY transcript rather than
+   an error — which reads exactly like a bad render. See README for the model
+   download.
+
    Placement is read from the transcript, not eyeballed.
 
 ## Workflow

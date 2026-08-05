@@ -38,6 +38,7 @@ Ad analysis (reading an existing ad into a structured hook, beats, casting and l
 | `POST` | `/images` | Generate images. Synchronous, images in the response. |
 | `POST` | `/music` | Generate a music bed from a prompt. `202`, charged, asynchronous. Returns **two** tracks. |
 | `POST` | `/captions` | Burn subtitles into a generated or uploaded video. `202`, charged, asynchronous. |
+| `POST` | `/transcripts` | The words of a video with their timings. **`200`, charged, SYNCHRONOUS — the transcript is in the response.** |
 | `POST` | `/videos/{jobId}/captions` | Same operation, source in the path. Generated videos only. |
 | `GET` | `/caption-presets` | The 30 caption styles, with tier and per-minute rate. |
 | `GET` | `/generations` | List jobs, filterable and paginated. |
@@ -83,7 +84,7 @@ Response `201`:
 
 Discriminated on `kind`, and strict. Any field not listed is a 400.
 
-**There are three arms, not two.** `kind: "caption"` prices `POST /captions` — see that section for its fields and for the reason a sourceless caption quote is the one-minute minimum.
+**There are four arms, not two.** `kind: "caption"` prices `POST /captions` and `kind: "transcript"` prices `POST /transcripts` — see those sections for their fields and for the reason a sourceless quote is the one-minute minimum on both.
 
 | Field | `kind: "video"` | `kind: "image"` |
 |---|---|---|
@@ -256,7 +257,9 @@ Burns styled subtitles into a video and returns a `jobId`. **Asynchronous and ch
 
 Both bodies are strict (`additionalProperties: false`). **Exactly one of `jobId` and `assetId`** on `POST /captions`; sending both is a `400` rather than a guess, because captioning the wrong one of two sources still bills for it. The path form exists because an `assetId` contains slashes and cannot be a path segment.
 
-**The subtitle text is transcribed from the video's own audio. There is nothing to write, and there is nothing to read back:** no response and no field on the job carries the caption text or its timings. `GET /generations/{jobId}` returns `outputUrl` and no transcript. **The output is a new MP4 with the subtitles burned in — there is no SRT on this API.** A workflow that needs the words needs the local `caption-video` skill instead.
+**The subtitle text is transcribed from the video's own audio. There is nothing to write, and there is nothing to read back FROM THIS ENDPOINT:** no response and no field on a caption job carries the caption text or its timings. `GET /generations/{jobId}` on a caption job returns `outputUrl` and no transcript. **The output is a new MP4 with the subtitles burned in — there is no SRT on the captions endpoint** (verified 2026-08-04, still true).
+
+**A workflow that needs the WORDS uses `POST /transcripts`, not this.** That endpoint returns text, word-level timings and an SRT in one synchronous call, and it runs on the BASE video — which is where you want it anyway, because b-roll placement is read from the transcript before the captions step. Captioning and transcribing are two operations, priced separately.
 
 Response `202`: `jobId`, `status`, `creditsCharged`, `model`. `model` is always **`veed/subtitles`** — fixed, and deliberately not in `GET /models`, because that endpoint answers what this API can *generate* with and a caption is applied to a video that already exists.
 
@@ -279,6 +282,82 @@ The meter is `rate x whole minutes, rounded up, minimum one`, **doubled again ab
 | `429` | `details.reason: caption_concurrency_limit` — **10** concurrent caption jobs, counted **separately** from the 5-generation `concurrency_limit`, so a batch of captions can never block the next render. |
 
 **Re-captioning the same video in the same preset is idempotent and free**: the second call returns the *first* job's id and charges nothing, enforced by a database constraint, so two identical requests racing cannot double-charge. **A different preset on the same video is a new job and a new charge** — style iteration is not free.
+
+---
+
+## POST /transcripts
+
+Documented from the live spec `2.8.0` on 2026-08-04. Gated on `TRANSCRIPT_API`; where the flag
+is off the path 400s with a message naming what the deployment does render.
+
+The words of a video, with their timings. **Synchronous** — `200`, and the transcript is in the
+response body. There is no `jobId` to poll. This is the only charged endpoint here that answers
+with its result rather than with a job to wait on, and it is deliberate: the provider is one
+round-trip with no job id of its own, so there is nothing to poll and nothing to strand.
+
+Measured 2026-08-04: a 15-second ad comes back in about a second, a 5-minute source in ~25s, a
+10-minute one in ~46s.
+
+| Field | Type | Notes |
+|---|---|---|
+| `jobId` | string, optional | A video this API generated. **Exactly one of `jobId` / `assetId`.** |
+| `assetId` | string, optional | A video you uploaded with `POST /uploads`. **Video only** — uploads accept no audio-only types. Exactly one. |
+| `languageCode` | string, optional | `en` `es` `pt` `fr` `de` `it` `zh` `ja` `ko` `ar` `hi`. **Omit it.** Auto-detect is the right default; forcing the wrong language does not fail, it returns a confidently wrong transcript. Note the local `caption-video` path has the OPPOSITE default (it forces English), so do not assume parity. |
+
+Body is strict. There is **no granularity knob** — every response carries all three renderings,
+because they are three views of one call and cost nothing extra.
+
+Response `200`:
+
+| Field | Meaning |
+|---|---|
+| `jobId` | Addressable afterwards at `GET /generations/{jobId}`, whose `outputUrl` presigns the same JSON. |
+| `status` | Always `"succeeded"` — the transcript is right here. |
+| `creditsCharged` | What this call cost. **`0` when the transcript was already stored** (see below). |
+| `model` | Always `scribe-v2`. |
+| `language` | What the transcriber detected, **verbatim, as ISO-639-3** — `"spa"`, `"eng"`. Not the two-letter code. |
+| `durationSeconds` | Length of the source. |
+| `text` | The whole transcript as one string. |
+| `words[]` | `{ text, start, end }` per word. **Real words only** — the vendor's whitespace tokens are filtered out, so `words.length` is a word count. |
+| `segments[]` | `{ start, end, text }` per sentence. |
+| `srt` | The same transcript as a SubRip file. |
+
+> **ALL TIMINGS ARE SECONDS**, as decimals — `0.42`, not `420`. The local `caption-video` path
+> reports the same concept in **milliseconds**. Mixing them up is a 1000x error that still looks
+> plausible, and it is the single most likely way to get this wrong.
+
+### Pricing
+
+**1 centi-credit = 0.1 display credits per BILLED MINUTE**, `ceil(seconds / 60)` with a
+one-minute floor. A 15-second ad and a 55-second one both cost **0.1 credits**; a 10-minute
+source costs **1.0**. There is **no resolution term** — unlike captions — because the
+transcriber is billed on duration and never sees the picture.
+
+**`POST /estimates` has a fourth arm:** `{ "kind": "transcript", jobId | assetId }`. Source is
+optional; name it for anything over a minute, because a sourceless quote is the one-minute
+minimum. The arm is **strict and narrower than the generate body** — sending `languageCode` to
+the estimate is a `400`, because it does not move the price.
+
+**Transcribing the same source twice is free.** The second call returns the stored transcript
+with `creditsCharged: 0`. So a client that times out and retries is not billed twice, and two
+skills that each want the same words pay once between them. A different `languageCode` is a
+different transcript, not a cache hit.
+
+### Failure modes
+
+| Code | Cause |
+|---|---|
+| `400` | Both source fields or neither; an unknown key; a source **over the 10-minute cap** (named in the message); or the flag being off on this deployment. **Nothing is charged.** |
+| `402` | Not enough credits; `details` carries `required` and `available`. |
+| `404` | No such job or asset **for this organization**, or an upload that never completed. Identical to a nonexistent id, deliberately — a distinguishable response would be a way to probe what else the account holds. |
+| `409` | The source job has not succeeded yet, **or it has no audio track**. A silent source is refused rather than charged for an empty result — every b-roll clip is this shape. Also returned when a transcript of this source is already in flight; the message names the job to poll. |
+| `429` | `details.reason: transcript_concurrency_limit` — **10** concurrent transcripts, counted separately from both the 5-generation `concurrency_limit` and the caption ceiling. |
+| `5xx` | The transcriber failed. **Credits were refunded** — the message says so. |
+
+### What it does not do
+
+No diarization, no speaker labels, no translation. The transcript is faithful to what was said,
+in the language it was said in.
 
 ---
 
@@ -337,7 +416,7 @@ A prompt the provider's own classifier refuses comes back as terminal status **`
 |---|---|
 | `limit` | 1 to 50, default 10 |
 | `offset` | default 0 |
-| `kind` | `video`, `image`, `audio` — `audio` is a music job, spelled for the row's own kind rather than for the estimate arm's `music` |
+| `kind` | `video`, `image`, `audio`, `text` — `audio` is a music job and `text` is a transcript, both spelled for the row's own kind rather than for their estimate arms' `music` / `transcript` |
 | `productId` | filter to one product |
 | `updatedSince` | ISO 8601. The incremental-sync path: store the highest `updatedAt` you have seen and pass it back. |
 | `sortBy` | `createdAt` (default), `updatedAt` |

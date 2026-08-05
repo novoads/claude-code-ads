@@ -77,6 +77,36 @@ beat is covered, or rendering starts before the user has seen the plan. Cadence 
 the envelope is not a failure of OV3 — it is OV6's business, and only fails there when
 the departure goes unstated.
 
+### OV3-E2E — the whole loop, on a machine that could not run whisper
+
+**Scenario.** From a clean shell with **only `NOVOADS_API_KEY` set and NO whisper binary
+on `PATH`**: generate a base video, transcribe it with `POST /v1/transcripts`, build an
+EDL whose `covers` quote lines from that response, generate the cutaways, render.
+
+This is the single check that proves the goal of the transcript endpoint. Until it
+shipped, the documented b-roll workflow was gated on a transcript the documented
+prerequisites could not produce — and the failure was SILENT: `whisper-cli` with no
+model returns empty output, which a QA run scores as "every line missing", a tooling
+failure that reads exactly like a bad render (F2, 2026-08-04).
+
+**Assertions:**
+- `which whisper-cli whisper` returns nothing, and the run still completes.
+- The transcript call returns `200` with a non-empty `words[]`, `start` values
+  **monotonically non-decreasing**, and `segments[]` whose joined text equals `text`.
+- Timings are **seconds**: the last word's `end` is within a second or two of the base's
+  real duration, not ~1000x it. An EDL built from milliseconds would place every window
+  past the end of the video and is the failure this catches.
+- Every `covers` string quotes a phrase that appears verbatim in the transcript `text`.
+- **The brand token transcribes as its real spelling.** The prompt's pronunciation
+  spelling ("NOH-voh-ads") must not survive into the transcript as `nohvo ads` — keyterm
+  biasing is exactly what this asserts, and F1 of the 2026-08-04 run is what it is for.
+- The final duration equals the base duration (OV1's contract still holds).
+- A second transcript call on the same base returns `creditsCharged: 0` — so a re-run of
+  this eval costs one transcript, not two.
+
+**Fails if:** the run needs any local install, the words come back empty, timings are in
+milliseconds, or the brand token is mistranscribed.
+
 ## OV4 — Overlay windows are geometrically valid, with defined mismatch behavior
 
 **Scenario.** An EDL arrives with a clip shorter than its window, overlapping windows,

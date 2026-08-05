@@ -37,7 +37,7 @@ is per-workflow:
 | **`curl` + `jq`** | Everything on the API: uploads, estimates, generation, polling, download | preinstalled / `brew install jq` |
 | **Python 3.10+** | The image-ad callers (`chatgpt-image-ad`, `nano-banana-image-ad`, `image-ad-clone`) — **stdlib only, nothing to `pip install`** | preinstalled or `brew install python@3.12` |
 | **`ffmpeg`** | Pixar and claymation stitching, caption overlay, frame extraction in `analyze-video` | `brew install ffmpeg` |
-| **`whisper`** | Transcription for `caption-video` and `analyze-video` | `pip install openai-whisper` |
+| **`whisper`** *(optional — offline only)* | Local transcription for `caption-video` and `analyze-video`, and the offline fallback for `broll-overlay`. **Not required for the API path**: `POST /v1/transcripts` returns text, word timings and an SRT with nothing installed. Install it only to work without a key or a network | `pip install openai-whisper` **plus a model download** — the binary alone is not enough, and `whisper-cli` with no model returns an EMPTY transcript rather than an error, which reads exactly like a bad render |
 | **Node.js** | Caption burn-in (`npx hyperframes`, run on demand) | `brew install node` |
 | **`meta-ad-builder` deps** | Publishing to the Meta Marketing API | `pip install -r shared/skills/meta-ad-builder/scripts/requirements.txt` |
 
