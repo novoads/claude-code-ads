@@ -556,6 +556,18 @@ def main() -> int:
         )
     except Exception as e:  # noqa: BLE001
         log(f"generation FAILED — {e}")
+        # The render blocks inside the POST for 60-90s, so a lost response does
+        # NOT mean a lost render: the job may have landed and been CHARGED while
+        # the body never arrived (observed live 2026-08-05 — 55s render, no
+        # response, credits gone). There are no idempotency keys, so re-sending
+        # renders and charges again. Check before you retry.
+        log(
+            "  before retrying: this may have rendered and been charged anyway. "
+            "Check `GET /v1/generations?limit=5` for a job matching this prompt "
+            "and createdAt — a succeeded row carries the image in `outputUrl`. "
+            "Re-sending renders and charges a SECOND time; there are no "
+            "idempotency keys."
+        )
         return 1
 
     job_id = job.get("jobId", "")
