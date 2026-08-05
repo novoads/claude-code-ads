@@ -316,20 +316,27 @@ def build_prompt(prompt: str, allow_chrome: bool, no_safe_zone: bool) -> str:
 
 def generate(
     prompt: str,
-    aspect_ratio: str,
+    aspect_ratio: str | None,
     num_images: int,
     ref_asset_ids: list[str],
     product_id: str | None,
     base_url: str,
     auth_hdr: str,
+    source_asset_id: str | None = None,
 ) -> dict:
     """One synchronous POST /v1/images. Returns the finished ImageJob."""
     body: dict = {
         "model": LOCKED_MODEL,
         "prompt": prompt,
-        "aspectRatio": aspect_ratio,
         "numImages": num_images,
     }
+    # Exactly one of these two ever goes on the wire. The API 400s if both are
+    # sent, deliberately: an edit's output tracks the source's shape, so an
+    # aspectRatio alongside it would reframe the thing you asked to preserve.
+    if source_asset_id:
+        body["sourceAssetId"] = source_asset_id
+    else:
+        body["aspectRatio"] = aspect_ratio
     if ref_asset_ids:
         body["referenceAssetIds"] = ref_asset_ids
     if product_id:
@@ -352,9 +359,12 @@ def main() -> int:
     p.add_argument("--prompt", required=True, help="Image prompt (post-rewrite).")
     p.add_argument(
         "--aspect-ratio",
-        required=True,
         choices=sorted(ALLOWED_RATIOS),
-        help="Canvas ratio. The API defaults to 1:1 if omitted, which is rarely the ad you want.",
+        help=(
+            "Canvas ratio. Required for a GENERATION — the API defaults to 1:1 if "
+            "omitted, which is rarely the ad you want. Must be OMITTED for an edit: "
+            "an edit's output tracks the source's shape and the API 400s if both are sent."
+        ),
     )
     p.add_argument(
         "--n",
@@ -378,6 +388,24 @@ def main() -> int:
             f"Reference image path (PNG/JPG/WEBP). Repeatable, max {MAX_REFS}. "
             "Uploaded once each; order is preserved and may be addressed positionally "
             "by the prompt."
+        ),
+    )
+    p.add_argument(
+        "--source-image",
+        type=Path,
+        metavar="PATH",
+        help=(
+            "EDIT this local image instead of drawing a new one (uploaded for you). "
+            "The prompt then describes the CHANGE, not the whole picture. Mutually "
+            "exclusive with --aspect-ratio: the output tracks the source's shape."
+        ),
+    )
+    p.add_argument(
+        "--source-asset-id",
+        metavar="ASSET_ID",
+        help=(
+            "Same as --source-image but for an assetId already uploaded. Use this "
+            "when editing something this API generated, or re-editing across runs."
         ),
     )
     p.add_argument(
@@ -434,15 +462,41 @@ def main() -> int:
         )
         return 2
 
+    if args.source_image and args.source_asset_id:
+        log("error: pass --source-image OR --source-asset-id, not both.")
+        return 2
+
+    editing = bool(args.source_image or args.source_asset_id)
+    if editing and args.aspect_ratio:
+        log(
+            "error: --aspect-ratio cannot be combined with a source. An edit's output "
+            "tracks the source image's shape; the API refuses the pair with a 400. "
+            "Drop --aspect-ratio, or drop the source and generate fresh."
+        )
+        return 2
+    if not editing and not args.aspect_ratio:
+        log(
+            "error: --aspect-ratio is required for a generation. The API defaults to "
+            "1:1 when it is omitted, which is rarely the ad you want."
+        )
+        return 2
+    if args.source_image and not args.source_image.exists():
+        log(f"error: --source-image not found: {args.source_image}")
+        return 2
+
     if not (1 <= args.n <= MAX_IMAGES):
         log(f"error: --n must be 1..{MAX_IMAGES} (got {args.n})")
         return 2
 
-    if len(args.image_ref) + len(args.ref_asset_id) > MAX_REFS:
+    # The source counts against the SAME cap: it becomes a reference at the
+    # provider, so four refs plus a source is five images and a 400 we paid for.
+    total_refs = len(args.image_ref) + len(args.ref_asset_id) + (1 if editing else 0)
+    if total_refs > MAX_REFS:
         log(
-            f"error: too many references "
-            f"({len(args.image_ref)} --image-ref + {len(args.ref_asset_id)} --ref-asset-id); "
-            f"the cap is {MAX_REFS} on {LOCKED_MODEL}"
+            f"error: too many references ({len(args.image_ref)} --image-ref + "
+            f"{len(args.ref_asset_id)} --ref-asset-id"
+            + (" + 1 source" if editing else "")
+            + f"); the cap is {MAX_REFS} on {LOCKED_MODEL}"
         )
         return 2
 
@@ -475,7 +529,7 @@ def main() -> int:
     log(
         f"generating {args.n} image(s) model={LOCKED_MODEL} aspect={args.aspect_ratio} "
         f"chrome={chrome_state} refs={len(args.image_ref) + len(args.ref_asset_id)} "
-        f"-> {args.out}/"
+        f"mode={'edit' if editing else 'generate'} -> {args.out}/"
     )
 
     # Already-uploaded ids go first so their prompt positions are stable across a
@@ -486,11 +540,19 @@ def main() -> int:
         for ref in args.image_ref:
             ref_asset_ids.append(upload_reference(ref, base_url, auth_hdr))
 
+    source_asset_id = args.source_asset_id
+    if args.source_image:
+        log("uploading the source image to edit…")
+        source_asset_id = upload_reference(args.source_image, base_url, auth_hdr)
+
+    if source_asset_id:
+        log(f"EDIT mode — source {source_asset_id}; output shape follows the source")
+
     log(f"submitting (this blocks for the render, typically 60-90s)…")
     try:
         job = generate(
             final_prompt, args.aspect_ratio, args.n, ref_asset_ids,
-            product_id, base_url, auth_hdr,
+            product_id, base_url, auth_hdr, source_asset_id,
         )
     except Exception as e:  # noqa: BLE001
         log(f"generation FAILED — {e}")

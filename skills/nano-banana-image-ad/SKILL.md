@@ -68,10 +68,11 @@ of style.
 `images[]`. Do not fan out four parallel requests — that burns four of your five concurrency
 slots to get the same result at the same price.
 
-**There is no edit mode.** The Nano Banana inpainting flows the older skill had do not exist
-on this API — no `nano-banana-edit`, no `--source`, no mask, no img2img. "Change the background
-of this image" is a fresh generation with the original uploaded as a reference. Say that rather
-than implying an edit.
+**There is no edit mode on THIS model.** The Nano Banana inpainting flows the older skill
+had do not exist on this API — no `nano-banana-edit`, no mask, no img2img — and
+`nano-banana-pro` does not publish `sourceAssetId`. Editing an existing image is a
+`gpt-image-2` capability (spec 2.10.0): route it to `chatgpt-image-ad` rather than
+approximating it here with a reference-led regeneration.
 
 ## Inputs the user must provide
 

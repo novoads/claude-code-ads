@@ -241,6 +241,25 @@ Reference order is preserved and can be addressed positionally by the prompt. Th
 
 Images accept **no `startImageAssetId`** — there is no first-frame concept on a still — and **no `styleFamily`**, which no longer exists anywhere on this API.
 
+### `sourceAssetId` — editing an image (spec 2.10.0, `gpt-image-2` only)
+
+Pass an `assetId` as `sourceAssetId` and the prompt describes the CHANGE rather than the
+whole picture. Same endpoint, same `ImageJob` response, same price as a generation of the
+same size — an edit is one image, charged once.
+
+| | |
+|---|---|
+| Models | `gpt-image-2` only. The field is ABSENT from the other two variants, and `.strict()` refuses it there. |
+| `aspectRatio` | **Cannot be combined.** Sending both is `400`, not a silently-ignored field. |
+| Output shape | Tracks the source: the service measures it and renders the closest cell of the model's grid. Portrait never becomes landscape, or the reverse — but the grid has nothing between `1:1` and `16:9`, so a 4:3 source renders `1:1`. |
+| `referenceAssetIds` | Still allowed. The source **counts against the same cap** and is always first. |
+| Source type | Images only. A video assetId is refused by extension before anything is fetched. |
+
+**It is flag-gated, and the flag gates the SCHEMA.** Where the deployment has it off,
+`sourceAssetId` does not appear in `CreateImageRequestGptImage2` at all and the request is
+refused like a typo. So `GET /v1/openapi.json` is the honest capability check: if the
+property is absent, this deployment cannot edit, and no retry will change that.
+
 ### The response is the only copy of images 2..N
 
 A `numImages > 1` call charges for every image, but only the **first** is recoverable

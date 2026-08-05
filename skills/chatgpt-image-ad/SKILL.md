@@ -68,9 +68,23 @@ No template in the shared library needs them.
 `images[]`. Do not fan out four parallel requests — that burns four of your five concurrency
 slots to get the same result at the same price.
 
-**There is no edit mode.** Novoads has no image-editing, inpainting, masking or img2img path
-on any model. If the user wants "the same ad but change the background", that is a fresh
-generation with the original uploaded as a reference — say so rather than implying an edit.
+**There IS an edit mode, on this model only.** `sourceAssetId` edits an existing image
+instead of drawing a new one — "remove the logo on the bottle", "make the background a
+kitchen counter". `POST /v1/images` since spec **2.10.0**; `nano-banana-pro` and `reve-2.1`
+do not publish the field, so an edit is a reason to stay on this skill rather than switch.
+
+Two rules the API enforces with a `400`, not a shrug:
+
+- **`aspectRatio` cannot be sent with `sourceAssetId`.** An edit's output tracks the
+  source's shape — the service measures the source and renders at the closest cell of this
+  model's grid — so an `aspectRatio` alongside it would reframe the thing you asked to
+  preserve. *Closest*, not exact: this grid has nothing between `1:1` and `16:9`, so a 4:3
+  landscape source renders `1:1`. Portrait is never rendered landscape, or the reverse.
+- **The source spends a reference slot.** Source + `referenceAssetIds` must total ≤ 4.
+
+There is still no mask and no inpainting: you describe the change in words. If the field is
+missing from `GET /v1/openapi.json`, this deployment has the arm switched off — say so
+rather than retrying.
 
 ## Inputs the user must provide
 
@@ -149,6 +163,36 @@ Each line on stdout is one JSON image (`variant`, `path`, `job_id`, `width`, `he
 Log the call to `logs/novoads-api.jsonl` per `logs/README.md` — images are written **once,
 complete** (sync endpoint, no `jobId` to poll back). Record `creditsCharged` from the response,
 never an estimate. Observability only, never a pricing source.
+
+### Phase 5b: For an edit run
+
+Same seven phases; four differences, all of them consequences of editing rather than drawing.
+
+```bash
+./skills/chatgpt-image-ad/scripts/generate_image.py \
+  --prompt "Remove the sticker on the bottle. Change nothing else." \
+  --source-image ./generated/T36-....png \
+  --out ./generated \
+  --env-file .env
+```
+
+1. **No `--aspect-ratio`.** The script refuses the pair locally, before spending, for the
+   same reason the API does. Use `--source-asset-id` instead of `--source-image` when the
+   image is already uploaded — re-uploading the same bytes mints a second asset.
+2. **The prompt names the CHANGE and pins everything else.** "Remove the sticker" leaves the
+   rest of the frame unspecified, and unspecified is what this model reinvents. Say what
+   must not move: *"Change nothing else. Keep the label, the wordmark, the lighting and the
+   framing exactly as they are."*
+3. **The wordmark rule applies harder here, not less.** You are handing the model a picture
+   that already contains brand marks — the failure mode is it re-renders them slightly
+   wrong. Pass the brand's own wordmark as `--image-ref` alongside the source when the
+   edit touches anything near it, and read the result for drift.
+4. **Phase 6 QA is unchanged and still mandatory.** An edit is a fresh render, not a patch:
+   nothing carries over pixel-for-pixel, so the whole frame is in scope for QA, not only
+   the region you asked about. Compare against the source side by side.
+
+Cost is a normal image: an edit is one image, charged once, priced by `POST /v1/estimates`
+like any other. Confirm it in Phase 4 the same way.
 
 ### Phase 6: Visual QA (MANDATORY)
 
@@ -231,7 +275,7 @@ that is `image-ad-clone`'s job.
 
 - **Meta upload** — the `meta-ad-builder` skill.
 - **Nano Banana image generation** — use `nano-banana-image-ad`.
-- **Editing an existing image** — no model on this API has an edit path. Offer a fresh generation with the original as a reference.
+- **Masked / inpainted editing** — `sourceAssetId` edits from a prompt; there is no mask, no region selection, no img2img strength dial. Describe the change in words.
 - **Video, carousel, DCO ads** — image only. Video lives in the `novoads-api` skill.
 - **Ad copy writing** — different skill.
 - **Editing the shared prompt library** — use `image-ad-clone`.

@@ -66,10 +66,16 @@ Notes that bite:
   `assetId`; pass those in `referenceAssetIds`. The id keeps working across later calls — you
   do not re-upload per variant.
 
-**There is no image-editing path on this API.** No `source`, no mask, no inpainting, no
-img2img — not on any of the three models. A request to "change the background of this image"
-or "fix the text in this one" cannot be served by editing; it is a fresh generation with the
-original passed as a reference. Say that plainly rather than pretending to edit.
+**Editing exists on `gpt-image-2` alone, from spec 2.10.0.** `sourceAssetId` on
+`POST /v1/images` edits an existing image from a prompt — "change the background of this
+one", "remove the text". `nano-banana-pro` and `reve-2.1` do not publish the field, so an
+edit request routes to `chatgpt-image-ad` regardless of which model the aesthetic would
+otherwise favour.
+
+Still no mask, no region select, no img2img strength dial: the change is described in words.
+And the edit's output tracks the source's shape, so `aspectRatio` cannot be sent with it —
+the API answers `400`, deliberately, rather than reframing what you asked to preserve. If
+`GET /v1/openapi.json` does not show the field, this deployment has the arm off.
 
 ---
 
