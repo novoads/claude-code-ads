@@ -161,7 +161,7 @@ base as input rather than replacing it:
 
 | Offer | Skill | Contract |
 |---|---|---|
-| B-roll cutaways | `broll-overlay` | Needs the base **and its transcript** (local whisper — the captions API returns no text). **Overlays**, never extends: final duration equals the base's. A longer output means someone concatenated. |
+| B-roll cutaways | `broll-overlay` | Needs the base **and its transcript** (`POST /v1/transcripts` — one call, no local install; the *captions* endpoint still returns no text). **Overlays**, never extends: final duration equals the base's. A longer output means someone concatenated. |
 | Burned captions | novoads API `POST /v1/captions` | A new MP4 with subtitles burned in. |
 | Music bed | `music-mix` | Track from `POST /v1/music` on the same key, or the user's own file. Mixed last, over the captioned cut. |
 

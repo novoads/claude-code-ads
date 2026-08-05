@@ -61,7 +61,7 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 |---|---|
 | A UGC video: a person talking to camera about a product | `seedance-2.0`. Read [seedance-2-ugc-v2.md](prompting/prompt-library/seedance-2-ugc-v2.md) for the **shape** — how many beats, how many API calls, which reference mode — then [seedance-2-ugc.md](prompting/prompt-library/seedance-2-ugc.md) for the **craft** of writing each layer. v2 is one render with four talking beats in one location; it is the default and costs about half what stitching costs |
 | The user says "a start frame for each scene", or asks for several scenes | That phrasing commits you to one call per scene (`startImageAssetId`), which forecloses multi-beat cuts inside a single render — the two modes are mutually exclusive. Say so, and offer the one-shot alternative from [seedance-2-ugc-v2.md](prompting/prompt-library/seedance-2-ugc-v2.md) before generating anything |
-| B-roll cutaways, burned captions, background music, or variations of a finished ad | Not part of making the ad. Deliver the base video first, then **offer** these as a separate pass, each owned by its own skill: `broll-overlay` (needs the base **and** a local whisper transcript; it **overlays** — the base audio keeps running and the final duration is unchanged — it does not extend), `POST /v1/captions`, then `music-mix` last |
+| B-roll cutaways, burned captions, background music, or variations of a finished ad | Not part of making the ad. Deliver the base video first, then **offer** these as a separate pass, each owned by its own skill: `broll-overlay` (needs the base **and** its transcript from `POST /v1/transcripts` — no local install; it **overlays** — the base audio keeps running and the final duration is unchanged — it does not extend), `POST /v1/captions`, then `music-mix` last |
 | The same thing, but cheap, to test a prompt before committing | `seedance-2.0-mini`, same grid, same formulas, half the price and back in 2–3 minutes. The draft-then-finalize loop is *Mini-draft tier* in [seedance-2.md](prompting/prompt-library/seedance-2.md) |
 | A premium product reveal: dark void, no person, text narrative | `seedance-2.0` + [seedance-2-premium-reveal.md](prompting/prompt-library/seedance-2-premium-reveal.md) |
 | A product hero: elemental effects, splash or mist, no person | `seedance-2.0` + [seedance-2-product-hero.md](prompting/prompt-library/seedance-2-product-hero.md) |
@@ -542,7 +542,9 @@ Say which check failed and show the evidence — the transcript line, the silenc
 
 **What it does:** takes a video, transcribes its own audio, burns styled subtitles into it, and gives you back **a new MP4**. Asynchronous, exactly like `POST /v1/videos`.
 
-**What it does not do: it never returns caption text, timings, or an SRT.** There is no transcript field anywhere on the job — `GET /v1/generations/{jobId}` carries `outputUrl` and nothing else about the words. If the user wants an SRT, a transcript, or captions they can restyle later, this endpoint cannot give it to them; the local skill can.
+**What it does not do: THIS endpoint never returns caption text, timings, or an SRT.** There is no transcript field anywhere on a caption job — `GET /v1/generations/{jobId}` carries `outputUrl` and nothing else about the words. That is still true and is not a bug to file.
+
+**But the API as a whole does return the words now.** `POST /v1/transcripts` gives you text, word-level timings and an SRT in one synchronous call, on the base video, with no local install — see *POST /v1/transcripts* in [reference.md](reference.md). So "the user wants an SRT" is no longer a reason to leave the API; wanting to **edit the wording before rendering**, or wanting a style outside the 30 presets, still is.
 
 **There is nothing to write.** The text is transcribed from the audio. Your only choice is `preset`.
 
@@ -602,7 +604,7 @@ Both exist. Present both and let the user pick; do not silently default.
 | Setup | None — one API call | **Heavy**: Whisper, HyperFrames, a working Node/npm project, and an ffmpeg chroma-key composite. Homebrew ffmpeg ships without `libass`, which is the trap the local guide exists to route around |
 | Styles | **30 presets**, fixed | Anything you can write in HTML/CSS/GSAP |
 | Output | A new MP4, subtitles burned in | A new MP4, subtitles burned in |
-| Transcript / SRT | **No** — no text, no timings, ever | **Yes** — Whisper gives word-level timings you keep and can re-use |
+| Transcript / SRT | **Not from this endpoint** — but `POST /v1/transcripts` returns text, word timings and an SRT for 0.1 credits/minute, no install | **Yes** — Whisper gives word-level timings you keep and can re-use |
 | Control over wording | None — transcribed, not authored | Full — edit the transcript before rendering |
 | Source | An API `jobId`, or any video you upload | Any local file |
 

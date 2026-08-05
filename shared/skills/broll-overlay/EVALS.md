@@ -77,6 +77,60 @@ beat is covered, or rendering starts before the user has seen the plan. Cadence 
 the envelope is not a failure of OV3 — it is OV6's business, and only fails there when
 the departure goes unstated.
 
+### OV3-E2E — the whole loop, on a machine that could not run whisper
+
+**Scenario.** From a clean shell with **only `NOVOADS_API_KEY` set and NO whisper binary
+on `PATH`**: generate a base video, transcribe it with `POST /v1/transcripts`, build an
+EDL whose `covers` quote lines from that response, generate the cutaways, render.
+
+This is the single check that proves the goal of the transcript endpoint. Until it
+shipped, the documented b-roll workflow was gated on a transcript the documented
+prerequisites could not produce — and the failure was SILENT: `whisper-cli` with no
+model returns empty output, which a QA run scores as "every line missing", a tooling
+failure that reads exactly like a bad render (F2, 2026-08-04).
+
+**Assertions:**
+- `which whisper-cli whisper` returns nothing, and the run still completes.
+- The transcript call returns `200` with a non-empty `words[]`, `start` values
+  **monotonically non-decreasing**, and `segments[]` that reconstruct the same prose as
+  `text`. Compare them whitespace-collapsed rather than byte-for-byte: `text` is the
+  vendor's own decoded string passed through, while `segments[]` is rebuilt from tokens,
+  so the two are the same words but not contractually the same bytes.
+- Timings are **seconds**: the last word's `end` is within a second or two of the base's
+  real duration, not ~1000x it. An EDL built from milliseconds would place every window
+  past the end of the video and is the failure this catches.
+- Every `covers` string quotes a phrase that appears verbatim in the transcript `text`.
+- **The brand token is CHECKED, and a mangled one fails the PROMPT, not the transcriber.**
+  Read the brand token out of the transcript verbatim. If it comes back mangled —
+  `nohvo ads`, `noh voads`, `nohvoads` — the fault is upstream: the prompt spelled the
+  brand phonetically and the model said the respelling out loud, so the transcript is
+  *correct about what was said*. Fix the prompt (F1's own remedy: spell the brand its
+  real way unless a render proves otherwise), regenerate the base, and re-run.
+
+  **Measured 2026-08-05, and it is the reason this bullet is worded this way.** Against
+  the exact F1 source, `POST /v1/transcripts` returned `noh voads`.
+
+  The A/B that explains why was run **against the transcription vendor directly, not
+  through this endpoint** — `POST /v1/transcripts` takes only `jobId | assetId |
+  languageCode` and rejects anything else, so keyterms are not a knob you can turn from
+  here. On the identical audio: no keyterms → `NOHVO ads`; `+["render farm"]` → still
+  `nohvo ads`, but "render **form**" correctly became "render **farm**"; `+["novoads"]`
+  → `nohvoads`.
+
+  So keyterm biasing demonstrably **works** — the positive control flips a real
+  mistranscription — and it even pulls the brand token from two words to one. What it
+  **cannot** do is recover a word the speaker never said. Do not assert that keyterms will
+  fix a phonetic respelling; they will not. (The vendor's own unit moved 6→7 on that
+  request. That is the VENDOR's meter, not novoads credits: what you are charged is
+  duration only, and no vocabulary change moves it.)
+- The final duration equals the base duration (OV1's contract still holds).
+- A second transcript call on the same base returns `creditsCharged: 0` — so a re-run of
+  this eval costs one transcript, not two.
+
+**Fails if:** the run needs any local install, the words come back empty, or timings are in
+milliseconds. A mangled brand token fails **E4/F1 upstream** (the prompt), not this eval —
+this eval's job is to surface it, and it is the cheapest detector the pack has.
+
 ## OV4 — Overlay windows are geometrically valid, with defined mismatch behavior
 
 **Scenario.** An EDL arrives with a clip shorter than its window, overlapping windows,
