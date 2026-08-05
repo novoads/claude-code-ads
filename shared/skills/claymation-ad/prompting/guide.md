@@ -8,7 +8,7 @@ Use this guide when the user asks for a "claymation ad," "Aardman-style ad," or 
 
 Every HTTP detail — auth, upload, polling, error codes — comes from the `novoads-api` skill and its `reference.md`, which win whenever this file disagrees. This file owns the craft.
 
-Sibling: [Pixar-style ad](../../pixar-style-ad/prompting/guide.md), same pipeline shape.
+Sibling: [novoads-pixar-storyboard-ad](../../../../skills/novoads-pixar-storyboard-ad/SKILL.md), the same pipeline shape as an MCP/REST-native skill.
 
 ## What "claymation" means here (and what it doesn't)
 
