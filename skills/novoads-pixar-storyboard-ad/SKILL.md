@@ -1,0 +1,612 @@
+---
+name: novoads-pixar-storyboard-ad
+description: >-
+  Build a 30 to 60 second stylized 3D animated ad as a STORYBOARD — four to six
+  separate beats, each rendered from its own key frame, with narration laid into
+  the gaps, a music bed under it and captions burned on, assembled locally with
+  ffmpeg. Produces a cast sheet, a beat board, a per-beat still, a per-beat clip,
+  a per-gap voice-over line, and the exact generation calls in order. Trigger
+  when the user wants a MULTI-SHOT animated spot: "a 30 second animated ad", "a
+  storyboard ad", "several scenes", "a longer Pixar-style ad", "an animated ad
+  with a voice-over", or hands you a product and asks for something with an arc
+  rather than a single shot. Do NOT use for a single 15-second animated shot
+  (use novoads-pixar-ad, which is one call and cheaper), for talking-head UGC
+  (the default Novoads flow), for cloning a competitor's video (use clone-hook),
+  or for a static image ad (use clone-static-ad).
+---
+
+# Novoads Pixar Storyboard Ad
+
+One product in. A 30 to 60 second stylized 3D animated ad out, cut from four to
+six separately rendered beats, with narration, music and captions.
+
+This is the **sibling** of `novoads-pixar-ad`, not a replacement for it. That
+skill renders one 15-second shot in ONE call, and its single-call doctrine is
+deliberate — everything that can go wrong in a stitch cannot go wrong there.
+This one buys an arc and pays for it in seams. If the story fits in fifteen
+seconds, use that skill instead and say so.
+
+Everything that skill says about STORY — the gates, the doctrines, the word
+budget per beat, the IP rules — still applies. Read it. This file covers only
+what changes when there are five shots instead of one.
+
+## Before anything: this runs on a Novoads account
+
+1. A Novoads account with credits. https://novoads.ai
+2. The connector at `https://novoads.ai/api/mcp`, added to **the surface you are
+   actually using**:
+   - **Claude Code** — `claude mcp add --transport http novoads https://novoads.ai/api/mcp`,
+     then `/mcp` to authenticate, then **restart Claude Code**.
+   - **claude.ai** — add it as a connector in settings.
+3. **ffmpeg on your machine.** This is the one hard local dependency, and it is
+   what separates this skill from its sibling: the assembly happens here, not on
+   the server. `ffmpeg -version` before you start.
+
+If the tools are missing, it is almost always step 2 on the wrong surface, or a
+session that has not been restarted.
+
+## What one run costs
+
+A five-beat, 25-second ad, at the defaults this file recommends:
+
+| Step | Calls | Centi-credits |
+|---|---|---|
+| Cast sheet | 1 image | 3 |
+| Beat stills | 5 images | 15 |
+| Beat clips | 5 × 5s Seedance | 150 |
+| Voice-over | 5 lines | 10 |
+| Music bed | 1 | 5 |
+| Captions | 1 pass | 4 |
+| **Total** | | **187 cc ≈ 18.7 credits** |
+
+Check it rather than trust it. `estimate_cost` prices every one of these kinds
+and spends nothing; Gate 2 below fires it before anything else.
+
+Two numbers worth holding: **the clips are 80% of the bill**, and a still costs
+a fiftieth of the clip it produces. That is the whole economic argument for the
+still gate — and for never re-rendering a beat you have not first tried to fix
+in its still.
+
+## Hard constraints
+
+- **Four to six beats.** Fewer is `novoads-pixar-ad`'s job. More than six and
+  the seams outnumber the story.
+- **Each beat is its own `generate_video` call from its own start frame.** Never
+  ask one call for multiple scenes.
+- **4 to 15 seconds per beat**, and in practice 4 to 6. A beat is one action.
+- **9:16** unless the operator says otherwise.
+- **`audioEnabled: true` on every beat.** The clip's own audio is the SFX bed
+  and the in-scene voices; there is no SFX endpoint and none is needed.
+- **A narrator line goes in the PROMPT or in the VO track. Never both.** This is
+  the rule that separates this skill from its sibling, and getting it wrong is
+  silent: Seedance renders any `NARRATOR: "…"` line in the prompt into the clip's
+  own audio, so laying a `generate_voiceover` take of the same words on top plays
+  every line twice. Measured — a raw beat clip transcribed on its own came back
+  saying the narrator's line, and the finished mix said it twice. Decide per beat:
+  - **Narration from the VO track** (the default here, because it is the only way
+    to get ONE voice across five separate renders): the prompt carries in-scene
+    dialogue only, or states that the shot has no speech. Keep `audioEnabled:
+    true` for ambience.
+  - **Narration native to the clip**: put `NARRATOR: "…"` in the prompt and
+    generate NO voice-over for that beat. Its voice will not match the others.
+- **One continuous voice.** Pick the narrator voice ONCE, from `list_voices`,
+  and use that same `voiceId` for every line. A voice that changes between beats
+  reads as a different ad — which is also why native per-beat narration does not
+  work across a storyboard: each render casts its own.
+- **There is no `styleFamily` field.** It was deleted from the whole API. Nothing
+  on the generation path refuses a prompt on style grounds any more; the only
+  prompt refusal left is content moderation.
+
+## The gates run in order. Do not skip to the render.
+
+### Gate 0, 1 — fit and product read
+
+Unchanged from `novoads-pixar-ad`. Run its Gate 0 filter (emotional pain, visible
+on a face or a mechanism, a relationship, impulse-priced) and its Gate 1 product
+read (verified facts, buyer language, who actually buys, what you will not claim,
+anything unbuyable). A longer format does not lower that bar; it raises the cost
+of getting it wrong.
+
+One addition at this length: **an arc needs a turn that is worth 25 seconds.** If
+the product read produces one feeling and one feature, the honest answer is a
+15-second single-shot ad. Say so.
+
+### Gate 2 — price the whole board, then announce it
+
+Price each KIND once and multiply. `estimate_cost` takes one call at a time, so
+four calls describe the whole run:
+
+```
+estimate_cost  kind: "image",     prompt: <a beat still prompt>
+estimate_cost  kind: "video",     prompt: <a beat prompt>, durationSeconds: 5
+estimate_cost  kind: "voiceover", script: <the longest VO line>
+estimate_cost  kind: "music"                    (skip if the tool is absent)
+```
+
+Then announce in one line and proceed:
+
+> Cast sheet + 5 stills + 5 clips + 5 VO lines + music + captions ≈ 18.7 credits
+> (balance: 340). Starting.
+
+This is an announcement, not a question. Two cases change it:
+
+- **`sufficient: false` on any kind** — stop. Name what is short and give the
+  `topUpUrl`. That is a blocker.
+- **The balance covers the run and no retry.** Say so in one clause before
+  firing: "this covers one pass, not a re-render." At this length a re-render is
+  a beat, not the whole ad — which is worth saying too, because it is the good
+  news: a bad beat costs 3 credits to redo, not 18.
+
+**The `warnings` array is advice.** `estimate_cost` is the only call that lints a
+prompt, and it lints against the UGC talking-head rules — nothing here refuses
+anything. A prompt written the way this file says comes back clean; a warning
+usually means you drifted, not that the lint is confused.
+
+Two clauses are what make it come back clean, and both are in the style lock and
+the worked prompt for this reason. Measured on a beat prompt without them: the
+VOICE STYLE casting line answers `missing_actor_descriptor` (the rule looks for
+an age or gender token anywhere in the prompt), and the labelHold clause answers
+`label_without_hold`, which fires on the word "bottle" alone. Drop either and the
+same beat comes back with a warning that is telling you the truth.
+
+## The board
+
+Before a single call, write the board. It is the artifact the operator approves,
+and it is cheaper to argue with than any render.
+
+### Cast sheet — one image, referenced by every still
+
+`generate_image`, `1:1`, product photo as reference. On one canvas: the lead in
+three emotional states readable in the eyes, any secondary character, the product
+in 2 to 3 views, and a scale line-up at true relative size.
+
+This single image is what makes five separately-rendered beats look like one
+film. Every beat still references it. Skipping it is the most expensive shortcut
+available here — five beats with five differently-imagined characters is not an
+ad, and no amount of prompt discipline recovers it afterwards.
+
+### Style lock — one paragraph, pasted verbatim into every prompt
+
+Write it once. Location palette, one named practical light source, lens and
+camera height, the finish of the world. Paste it into every still prompt and
+every beat prompt, unchanged, character for character. Rewording it between
+beats is how the grade drifts.
+
+Never name a studio or a franchise. Write "stylized 3D animated feature film
+look." The trademark risk is higher for this aesthetic than for any other,
+because it belongs to specific studios and the models will hand you near-copies
+of their characters if invited.
+
+### Beat board — the table you get approved
+
+| # | Beat | Seconds | Track | Visual |
+|---|---|---|---|---|
+| 1 | Hook — the want, stated out loud | 5 | SYNC | … |
+| 2 | Problem — the attempt fails | 5 | VO | … |
+| 3 | Low point — the private defeat | 4 | SYNC | … |
+| 4 | Turn — the product arrives and is used | 6 | VO | … |
+| 5 | Payoff — warmth, then the hero card | 5 | VO closes | … |
+
+Rules for the board:
+
+1. **One action per beat.** Two actions in one prompt is the single most reliable
+   way to get glitched physics. Splitting them is what a storyboard is FOR.
+2. **Give each beat its own setup.** Five beats in one location at one shot size
+   reads as boring no matter how clean the arc is. Change location at least once;
+   vary shot size (medium → close → wide).
+3. **The low point is the shortest beat and the most important one.** Everything
+   rides on that face.
+4. **Word budget is per beat, not per ad.** Two spoken lines per 5-second beat is
+   the ceiling. Across five beats that is a 45 to 60 word script, which is
+   correct for 25 seconds — and much easier to write than the 30-to-33 the
+   single-call skill squeezes into fifteen.
+5. **VO and SYNC never overlap in the same beat.** Write the SYNC lines first;
+   fit the narration into beats that have none. And keep the narrator's words out
+   of the prompt for any beat you are giving a VO line — see the hard constraint
+   above. The board's Track column is what records that decision per beat.
+6. No em dashes in ad copy. Never say "free" — the entry offer is the $1 trial.
+
+## Gate 3 — stills first, all of them, then STOP
+
+Render every beat still BEFORE any clip. Sequentially, each referencing the cast
+sheet and the previous still:
+
+```
+upload_asset(product photo) → PUT the bytes with the returned `headers` VERBATIM
+      │
+      ▼
+generate_image  cast sheet   1:1   ref [product]                        3 cc
+      │  ← returns images[].assetId. Pass it straight to the next call.
+      ▼
+generate_image  beat 1       9:16  ref [castSheet, product]             3 cc
+generate_image  beat 2       9:16  ref [castSheet, beat1]               3 cc
+generate_image  beat 3       9:16  ref [castSheet, beat2]               3 cc      ← sequential,
+generate_image  beat 4       9:16  ref [castSheet, beat3]               3 cc        each on the
+generate_image  beat 5       9:16  ref [castSheet, beat4]               3 cc        one before
+      │  ← each one's assetId feeds the next, no upload in between
+      ▼
+╔═══════════════════════════════════════════════════════════════════════╗
+║  BOARD GATE — show all six images in order. Wait for the operator.    ║
+║  18 cc spent. The clips are 150. A wrong character, a wrong palette   ║
+║  or a wrong location caught here costs an eighth of what it costs     ║
+║  after the renders.                                                   ║
+╚═══════════════════════════════════════════════════════════════════════╝
+```
+
+**A generated image IS an assetId — chain it directly.** `generate_image`
+returns `images[].assetId` alongside `images[].url`, and that id is what
+`referenceAssetIds`, `startImageAssetId` and `sourceAssetId` take. No download,
+no re-upload, nothing in between:
+
+```
+generate_image → images[0].assetId  ← pass this to the next call, as-is
+```
+
+**Chain from `assetId`, not from `url`.** The URL is a one-hour presign for
+fetching the bytes; the assetId does not expire that way. Still download each
+still as it lands if you want the files locally — a slow board review will
+outlive the URLs.
+
+<details>
+<summary>Fallback for a deployment older than API spec 2.11.0</summary>
+
+Before 2.11.0, `generate_image` returned a URL and no asset id, and every still
+needed a round trip before the next call could reference it. If `images[]` has
+no `assetId`, you are on such a deployment — do this instead, per still:
+
+```
+generate_image → images[0].url
+      │  download the bytes
+      ▼
+upload_asset  contentType: "image/png", sizeBytes: <n>
+      │  PUT with `headers` VERBATIM
+      ▼
+assetId  ← what referenceAssetIds and startImageAssetId take
+```
+
+It costs nothing (uploads are free) and applies to the cast sheet and every beat
+still. Skipping it there gets the reference rejected as a foreign id, which reads
+as a permissions problem rather than a format one. On those deployments the
+one-hour URL expiry is load-bearing: download each still as it lands rather than
+at the end of the board, or a slow review turns into re-rendering images you
+already paid for.
+
+</details>
+
+**Chain each still on the previous one, not just on the cast sheet.** That is
+what carries the location, the light and the wardrobe forward. `gpt-image-2`
+takes up to 4 reference images, so cast sheet plus previous still plus the
+product leaves room for one more; use it for the product when the product is in
+frame.
+
+**This gate is one stop, not five.** Do not ask after each still. A board is
+approved as a board — the operator is judging whether beat 3 follows beat 2,
+which they cannot do one image at a time.
+
+## Gate 4 — the clips, in waves of five
+
+```
+generate_video  beat N  seedance-2.0  9:16  startImageAssetId=<beat N still>
+                        durationSeconds=<from the board>  audioEnabled=true
+```
+
+**Submit in waves of at most five.** The API allows five generations in flight
+per organization; a sixth is refused with `concurrency_limit`, which is a real
+refusal and not a queue. Five beats is exactly one wave. Six beats is one wave of
+five, then one.
+
+**Write every jobId down the moment it comes back**, before you start waiting —
+id, which beat, the credits it cost. A job whose id you recorded is a lookup when
+something goes wrong. A job whose id you did not is an investigation.
+
+**Poll every 3 seconds. Give up at 10 minutes.** Poll `get_generation` per job
+until `succeeded`. Renders take minutes and the poll is what drives completion —
+keep the session open.
+
+**If a call times out, do NOT generate again.** The work usually completed and
+was charged; what timed out was the response carrying its id. Call
+`list_generations`, find the job by timestamp and prompt preview, take its
+`outputUrl`.
+
+### Per-clip QA, before you spend a voice-over on it
+
+Check each clip as it lands. A beat that fails here is 3 credits to redo; a beat
+that fails after the mix has cost the mix too.
+
+1. The character is the same character as the cast sheet.
+2. The action in the prompt is the action on screen, and it is ONE action.
+3. Nothing grew eyes, limbs or a mouth that the design does not have.
+4. The product's identifying details survived, and any printed label is legible.
+5. The clip's own audio is usable — ambience and in-scene voices, not a music bed
+   competing with the narration you are about to lay over it.
+
+Fix by subtraction. A failed beat gets a shorter prompt and fewer clauses, not
+more instructions.
+
+## Gate 5 — the voice-over
+
+One line per beat that needs narration. Pick the voice once:
+
+```
+list_voices                    → pick ONE voiceId, note it, reuse it
+generate_voiceover  script: <beat 2 VO line>, voiceId: <the one>
+                    → { url, assetId, characters, creditsCharged }
+```
+
+**This call returns the finished mp3, not a job.** There is nothing to poll —
+download the `url` immediately, because it is time-limited and minted per
+response. If a call times out, do NOT retry it: the audio was probably rendered
+and charged, and `list_generations` will show it with its cost.
+
+**Write the lines to the gaps, not to the beats.** A beat with a SYNC line has no
+room for narration. Read each line aloud against the beat's length before
+generating it: about 15 characters per second of speech, so a 5-second beat holds
+roughly 70 characters of narration and no more.
+
+**The script is read VERBATIM**, including anything in square brackets — the
+model interprets those as performance tags rather than skipping them. Keep stage
+directions out.
+
+**Language**, if the ad is not in English: pass `language` and pick a voice whose
+`languages` include it. A mismatch is refused before anything is charged, which
+is the good outcome; picking a voice that does not speak the language and getting
+a charged take in the wrong accent is the bad one.
+
+## Gate 6 — the music bed
+
+```
+generate_music  prompt: <what it sits under>, instrumental: true   5 cc
+                → { jobId } — poll get_generation, read audio[]
+```
+
+One request returns TWO takes for one charge. Listen to both and use the one that
+sits better under the voice; they differ in length and arrangement, not price.
+Expect one to two minutes of audio whatever you ask for — you will trim it.
+
+**If `generate_music` is not in your tool list, skip this step.** It is behind a
+flag and some deployments do not offer it. Say one sentence — "no music bed on
+this account, mixing without one" — and carry on. The ad works without it; clip
+audio plus narration is a complete mix.
+
+## Gate 7 — local assembly
+
+This is where the seams either disappear or announce themselves.
+
+### Trim to the narration, not to the clip
+
+For each beat: the clip is as long as you asked for, and the line inside it is
+whatever length it is. **Trim the clip to the voice-over plus 0.5 seconds**, not
+the other way round. Dead air at the end of a beat is the single most common tell
+that an ad was assembled rather than shot.
+
+```bash
+# VO duration, to two decimals
+ffprobe -v error -show_entries format=duration -of csv=p=0 beat2-vo.mp3
+# trim the clip to it, +0.5s of air
+ffmpeg -i beat2.mp4 -t <vo+0.5> -c:v libx264 -c:a aac beat2-trimmed.mp4
+```
+
+A beat with no narration keeps its own length.
+
+### Concatenate, then mix
+
+```bash
+# 1. concat the trimmed beats
+printf "file '%s'\n" beat*-trimmed.mp4 > beats.txt
+ffmpeg -f concat -safe 0 -i beats.txt -c copy stitched.mp4
+
+# 2. one VO track: the lines, each delayed to its beat's start
+#    (adelay is in MILLISECONDS, per channel)
+ffmpeg -i beat2-vo.mp3 -af "adelay=5000|5000" vo2-placed.mp3
+# …then amix the placed lines into one vo.mp3
+
+# 3. the mix
+ffmpeg -i stitched.mp4 -i vo.mp3 -i music.mp3 -filter_complex \
+  "[0:a]volume=0.28[clip];[1:a]volume=1.0[vo];[2:a]volume=0.10[bed];\
+   [clip][vo][bed]amix=inputs=3:duration=first:dropout_transition=0[a]" \
+  -map 0:v -map "[a]" -c:v copy -c:a aac master.mp4
+```
+
+**The levels are the recipe: VO 100%, clip audio 28%, music 10%.** They are not
+a starting point to taste — they are what keeps the narration intelligible over a
+clip that has its own dialogue in it. If the narration is fighting something,
+lower the clip track before you raise the voice.
+
+**If you hear a line twice, the mix is not the problem.** That beat's prompt
+carried the narrator's words and Seedance rendered them, and no level will fix
+it — re-render the beat with the narration removed from the prompt. The
+transcribe-verify step below is what catches this, and it is why that step is not
+optional.
+
+### Verify what it actually says, before it ships
+
+The render can gain or lose a word, and a script that survived in your head is
+not evidence. Transcribe the master and read it back against the script:
+
+- If `transcribe_video` is in your tool list, `upload_asset` the master and call
+  it. That is the cheap path and it returns timings.
+- Otherwise transcribe locally.
+
+Read the transcript against the board. A dropped word in the offer line is worth
+a re-render of that beat.
+
+## Gate 8 — captions
+
+Captions are burned SERVER-side, and the source has to be an asset the API can
+reach. A local file is not a caption source until it is uploaded.
+
+```
+upload_asset  contentType: "video/mp4", sizeBytes: <n>
+              → { uploadUrl, assetId, headers } — then HTTP PUT the bytes to
+                uploadUrl, sending `headers` VERBATIM. Content-Type and
+                Content-Length are signed into the URL, so an omitted or
+                library-inferred Content-Type is a 403, not an upload.
+      │
+      ▼
+generate_captions  assetId: <the master>, preset: <a style>
+                   → { jobId } — poll get_generation
+```
+
+`list_caption_presets` shows the styles and their prices; the basic tier is 0.4
+credits per billed minute and the dynamic tier is 0.8. A 25-second ad bills one
+minute — the minimum — either way.
+
+**READ THE CAPTIONS BEFORE YOU SHIP. They are TRANSCRIBED, not taken from your
+script**, so they inherit every mishearing the transcript does — and brand names
+are what they mishear. Measured on a real run: a voice-over saying "Owala
+FreeSip" was captioned **"Olaf. Free sip water"**, and "bottles" came back
+"bootles". A caption that renames the product is worse than no caption, and
+nothing upstream warns you.
+
+Two fixes, in order of preference: keep the brand name out of the NARRATION and
+put it on screen as the hero card instead, which is where a wordmark belongs
+anyway; or burn the captions locally from your own script, where you own every
+character. The server pass is the cheap default, not the safe one.
+
+Burning captions locally is the fallback, not the default. The server pass reads
+the audio you just mixed and places words on it; a local burn means you own the
+timing, and at this length the timing is five separate lines.
+
+## Output format
+
+Deliver in this order, no preamble:
+
+1. **PRODUCT READ** — verified facts, buyer language, who actually buys, what you
+   will not claim, anything unbuyable.
+2. **FIT** — one line confirming Gate 0, or a plain refusal naming a better
+   format. If the story fits in 15 seconds, say so and hand off to
+   `novoads-pixar-ad`.
+3. **ANGLE** — the enemy this ad attacks.
+4. **DOCTRINE** — C or D (see `novoads-pixar-ad`), and why.
+5. **CAST + STYLE LOCK** — the paragraph that will be pasted into every prompt.
+6. **BEAT BOARD** — the table. Word count per beat against the two-line ceiling.
+7. **COST** — the `estimate_cost` figures, announced in one line.
+8. Then generate: cast sheet, all stills, **stop at the board gate**, clips, VO,
+   music, assemble, verify, caption.
+
+## The calls
+
+```
+upload_asset      contentType: "image/jpeg" | "video/mp4", sizeBytes: <n>
+                  → { uploadUrl, assetId, headers } — PUT the bytes with
+                    `headers` VERBATIM
+
+estimate_cost     kind: "image" | "video" | "voiceover" | "music" | "caption"
+                  → { credits, balance, sufficient, shortBy?, topUpUrl?,
+                      warnings? }   `warnings` is advice; it refuses nothing
+
+generate_image    prompt, aspectRatio: "1:1" | "9:16",
+                  referenceAssetIds: [castSheet, previousStill, product?]
+                  → { jobId, images: [{ url, expiresInSeconds, assetId }] } —
+                    SYNCHRONOUS, the finished image is in the response.
+                    `assetId` chains straight into the next call's
+                    referenceAssetIds / startImageAssetId — no re-upload.
+                    (Absent on deployments older than spec 2.11.0; see Gate 3
+                    for that fallback.) Blocks ~45-75s.
+
+generate_video    prompt, durationSeconds: 4-15, aspectRatio: "9:16",
+                  startImageAssetId: <this beat's still>, audioEnabled: true
+                  → { jobId } — not ready yet
+
+list_voices       → [{ id, name, source, languages?, category? }]
+                    Read once. Pick one. Reuse it for every line.
+                    Unpaginated and LARGE — measured at 12,566 voices / 6.6 MB.
+                    Filter it in your own code; do not print it.
+
+generate_voiceover script, voiceId, language?
+                  → { url, assetId, characters, creditsCharged }
+                    ALREADY DONE — no jobId to poll. Download `url` now.
+
+generate_music    prompt, instrumental: true
+                  → { jobId } — poll, then read audio[] (two takes, one charge)
+
+generate_captions assetId | jobId, preset
+                  → { jobId } — poll get_generation
+
+get_generation    jobId → { status, kind, outputUrl?, audio? }
+
+list_generations  limit, kind  → the recovery path when a call times out and you
+                    never received the jobId. Reads only, spends nothing.
+```
+
+### Worked beat prompt
+
+A finished **beat 4** (the turn) `generate_video` prompt — one action, style lock
+included, negatives at the end.
+`lib/generation/__tests__/pixar-storyboard-skill-prompts.test.ts` reads this exact
+block and runs it through the same rule engine `estimate_cost` lints with, so the
+worked example cannot drift into one the lint has real complaints about.
+
+<!-- eval:beat-prompt:start -->
+```
+Stylized 3D animated feature film look, 9:16. A warm kitchen in late afternoon,
+one window low and to the left as the only light source, honey and clay palette,
+35mm at chest height, shallow focus band on the counter.
+
+The grandmother sits at the table with the copper kettle in front of her. She
+lifts the lid in a single frame and the steam catches the window light across her
+face. She says, half to herself: "There you are."
+
+No other speech in this shot. This beat's narration is laid in afterwards from
+generate_voiceover, so nobody here speaks it.
+
+The kettle is exactly as shown in the reference: same shape, same colour, same
+proportions, same finish. Do not redesign or restyle it. Hold the printed markings
+on the base sharp and legible. The woman is a warm, unhurried grandmother in her
+seventies in a grey cardigan.
+
+no named or copyrighted animated film characters, no photorealistic humans, no
+uncanny faces, no dead eyes
+```
+<!-- eval:beat-prompt:end -->
+
+## Failure modes
+
+- **The prompt is rejected.** Only content moderation can refuse a render, and it
+  answers `content_policy`. There is no rule-id rejection any more, so a refusal
+  is not a wording problem to lint your way out of — read what it says.
+- **`concurrency_limit` on the sixth clip.** Not an error in your request: five
+  generations are already in flight. Wait for one, then submit. This is why the
+  waves are five.
+- **`voiceover_concurrency_limit`.** A different queue from the renders, and the
+  wait is seconds rather than minutes. Your clips are unaffected.
+- **The character changed between beats.** The cast sheet was not referenced, or
+  a still was chained on the cast sheet alone rather than on the previous still.
+  Re-render the stills, not the clips.
+- **The grade drifted across beats.** The style lock was reworded. Paste it
+  verbatim and re-render the affected stills.
+- **Two props in one clause glitch physics.** "Swallows capsules with water"
+  rendered capsules on the counter and an empty palm. Split into sequential
+  single-action sentences, name the actor in each, and add explicit negatives.
+- **A stray reference became a shot.** Every reference passed to a render is a
+  shot the model may spend time on; an unneeded product still produced a 0.13s
+  flash insert. Pass only what the beat needs.
+- **The render gained or lost a word.** Measured: "And wake up, we're rested" for
+  a scripted "And wake up rested". Transcribe before shipping; never assume the
+  script survived.
+- **The wordmark on the rendered product is garbled.** Expected, and the
+  labelHold clause does not fully fix it — measured on a run carrying the
+  canonical clause verbatim that still rendered "Owala" as "ovola". The model
+  carries a MARK (a shape) and destroys TYPE. Do not re-roll hoping for a clean
+  one: keep the label small and out of focus in the beats, and composite the real
+  product photo over the final beat, which is what the sibling skill's Doctrine C
+  does and why.
+- **The captions renamed the product.** They are transcribed from the audio, not
+  from your script. See Gate 8.
+- **Dead air between beats.** The clips were not trimmed to their narration. Go
+  back to Gate 7.
+- **`insufficient_credits`.** The error carries `required` and `available`.
+  Report both and the top-up path. Do not retry.
+
+## Hard rules
+
+- One product per run.
+- Stop at the board gate. The operator approves the board before 150 credits of
+  clips fire.
+- Never invent reviews, ratings, prices, or performance claims.
+- Never claim what the reviews contradict.
+- Use the real brand and the real packaging from the photo. Never invent a brand
+  and never blank-label the product.
+- On-screen text is short words and numbers only, never sentences.
+- If a fact cannot be verified from the source given, leave it out and say so.
+- Transcribe the master before you call it finished.
