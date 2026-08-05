@@ -60,6 +60,15 @@ A **batch** (several references in one conversation) prices once, up front: the 
 validates the prompt it is given, so run one free estimate per distinct final prompt, present
 one combined range covering every reference, and get ONE yes for the whole batch.
 
+A batch also needs a **ledger, not a tally**. Summing each response's `creditsCharged` is
+correct per call and silently under-reports across a batch — one response that scrolled past
+instead of landing in the log is enough, and a 2026-08-05 nine-call run reported 3.00 credits
+across 8 calls when the truth was 3.5 across 9. So read the `balance` that `POST /v1/estimates`
+returns **before the first charged call and again after the last** (the estimate is free; this
+adds no cost), and report both: the summed `creditsCharged` and the balance delta. **When they
+disagree, trust the delta** — your sum is missing a call, not the other way round — and say
+which number you are reporting.
+
 The estimate is free and it is the **only** legitimate source of a price. It says nothing about
 the prompt — no endpoint here does — so re-read the clone prompt against the template rules
 yourself before pricing. It is going to be run six times, which makes a flaw in it six times as
@@ -122,10 +131,14 @@ Structure the prompt with these sections (omit any that don't apply):
 - Composition / spacing rules
 - **Explicit chrome exclusion** — name what NOT to render (the validator's no-chrome suffix is a safety net; the prompt should also explicitly exclude)
 
-Keep an eye on length: the models cap prompt length, and the three always-on
-safety suffixes add roughly 1,500 to whatever you write. The validator checks the assembled
-prompt locally and fails before spending anything, but a v1 that only just fits leaves no room
-for Phase 5's refinements.
+**Draft v1 to ~2,425 characters — the suffixes take the rest.** The prompt ceiling is 4,000
+characters, and the three always-on safety suffixes consume 1,575 of it before your first word,
+so 2,425 is the real budget on default flags. Phase 2 asks you to be exhaustive and a faithful
+six-panel clone genuinely wants ~3,000, which is why a v1 that ignores this number overflows
+on the first attempt — that is the default outcome, not user error. The validator checks the
+assembled prompt locally, fails before spending anything, and prints the exact budget for the
+flags you passed (`--allow-chrome` and `--no-safe-zone` each buy some of it back). Aim under
+2,425 anyway: a v1 that only just fits leaves no room for Phase 5's refinements.
 
 Show the v1 prompt to the user, then price the run (see **Cost** above) and get the go-ahead.
 

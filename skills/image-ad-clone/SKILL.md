@@ -110,6 +110,14 @@ batch — not a consent per reference.
 
 Report the **actual total** from each response's `creditsCharged` when the run finishes.
 
+**On a batch, that tally is not the ledger — reconcile against the balance.** Summing
+`creditsCharged` by hand across many calls is right per call and wrong in aggregate the moment
+one response goes missing (a retry that printed to stdout instead of the log is enough). Read
+the `balance` that `POST /v1/estimates` returns **before the first charged call and again after
+the last** — the estimate is free, so this costs nothing — and report both numbers: the summed
+`creditsCharged` and the balance delta. When they disagree, **the delta is the truth** and your
+sum is missing a call; say so rather than reporting the smaller number.
+
 ## Aspect ratio mapping
 
 | Ratio | `gpt-image-2` | `nano-banana-pro` / `reve-2.1` |
@@ -129,7 +137,7 @@ rendering at a mapped ratio, not the original.
 
 1. **Phase 1: Preflight + model choice.** Reference image resolves; `.env` has `NOVOADS_API_KEY`; validator located. **Ask which model to validate against** (or auto-detect).
 2. **Phase 2: Visual analysis.** Describe the reference structurally — aspect ratio, format type, layout, typography, color palette, photography style, every text string verbatim, decorative elements, chrome to strip, and `[BRAND]` vs `[STRUCTURE]` for each.
-3. **Phase 3: Draft v1 prompt** (brand-specifics intact). Watch the 4,000-character cap — the safety suffixes add ~1,500.
+3. **Phase 3: Draft v1 prompt** (brand-specifics intact). The three always-on safety suffixes take 1,575 of the 4,000-character cap, so **draft v1 to ~2,425 characters** — that is your whole budget on default flags, and the validator prints the exact number when you overflow.
 4. **Phase 4: Generate with reference.** Price the run and get a yes first. Pass `--image-ref <reference>` and the matched ratio. Synchronous; blocks 60–90s.
 5. **Phase 5: Compare and iterate.** Refine on the deltas. Cap 4 iterations. Track running credits.
 6. **Phase 6: Generalize into placeholders** (`{brand.name}`, `{brand.color_primary}`, etc.).
