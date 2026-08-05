@@ -91,7 +91,7 @@ Once the hero is approved:
 
 1. Upload the hero image **once** via `POST /v1/uploads` → `PUT` the bytes to the returned `uploadUrl`, echoing the returned `headers` byte for byte → keep the `assetId`. It is durable and reusable across every later call and session, so this upload never repeats.
 2. **Reference strategy (the rolling window):**
-   - Every image model here accepts **max 4 `referenceAssetIds` per request**.
+   - `gpt-image-2` accepts **max 4 `referenceAssetIds` per request** — the tightest of the three (`reve-2.1` 8, `nano-banana-pro` 14), which is what makes the rolling window below necessary here and optional on the Nano Banana sibling.
    - Always include the **hero** as the first ref (the anchor). Order is preserved.
    - For angles 2–4: pass `[hero]` only — you have no prior angles yet anyway.
    - For angles 5+: pass `[hero, angle_N-1, angle_N-2, angle_N-3]` — the three most recent angles plus the hero. This keeps continuity from the most recent successful generation while still anchoring on the hero.

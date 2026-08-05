@@ -32,8 +32,9 @@ concurrency, the upload contract — the `novoads-api` skill's `reference.md` is
 2. **No platform/screenshot chrome in output.** `NO_CHROME_SUFFIX` is always on (override with `--allow-chrome` only when the ad's concept *requires* chrome — rare).
 3. **Edge-safe + glyph-safety suffixes always on** unless `--no-safe-zone` is explicit. They fix real failures; don't remove silently.
 4. **Max 4 reference images.** `referenceAssetIds` caps at 4 on `gpt-image-2` (`nano-banana-pro` takes up to 14, `reve-2.1` 8 — spec 2.7.0). The script enforces it.
-5. **No Meta upload from this skill.** Image generation only. Hand off via filesystem paths.
-6. **Always show a live cost estimate before generating, and get an explicit yes.** The price comes from `POST /v1/estimates` in this session — never from memory, never from `logs/novoads-api.jsonl`, never from `MASTER_CONTEXT.md`. There are no credit numbers written down anywhere in this repo, on purpose.
+5. **Every brand mark that appears in the frame is passed as a reference asset.** Not a tip — a rule. This model invents brand-shaped content on any surface the prompt leaves unspecified, and it states it as fact. Measured over a 34-template run on one real product (2026-08-04): the label was faithful in **all 34** because a reference pinned it, while unpinned marks failed three ways — a billboard invented a *back-of-can view* carrying "OUR WATER IS SOURCED FROM THE AUSTRIAN ALPS…" with an icon row and a barcode, a prop thermos rendered a **Hydro Flask logo**, and a publication wordmark drifted. So: pin the product, pin the logo, pin any third-party mark the concept needs; and for product surfaces the ad does **not** show, say so — *"front label only; do NOT render the back of the can, no invented label copy, no ingredient text, no sourcing statement, no barcode."* One retry with that wording cured the fabricated claim completely. Unpinned means invented.
+6. **No Meta upload from this skill.** Image generation only. Hand off via filesystem paths.
+7. **Always show a live cost estimate before generating, and get an explicit yes.** The price comes from `POST /v1/estimates` in this session — never from memory, never from `logs/novoads-api.jsonl`, never from `MASTER_CONTEXT.md`. There are no credit numbers written down anywhere in this repo, on purpose.
 
 ## Prerequisites
 
@@ -138,6 +139,10 @@ appended — or the quote will be short by roughly 1,500 characters' worth of pr
   --env-file .env
 ```
 
+`--image-ref` uploads the file on every invocation. For a batch that reuses one product
+photo across many prompts, upload it once and pass `--ref-asset-id <assetId>` instead —
+same reference, no repeat upload. The two are interchangeable and share the 4-reference cap.
+
 Each line on stdout is one JSON image (`variant`, `path`, `job_id`, `width`, `height`,
 `prompt`, `aspect_ratio`, `model`, `credits_charged`).
 
@@ -168,6 +173,59 @@ without hunting for them.
 
 Selected images are ready for the **`meta-ad-builder` skill**. Print the paths so the user can
 pipe them. Optionally write them to `./generated/run-<ts>.jsonl` for downstream consumption.
+
+## Full-library run
+
+One product photo, the whole template library, one folder of finished ads. This is the
+batch shape of the seven phases above — not a replacement for them. Every phase still
+applies per image; what follows is the choreography around them.
+
+**1. Inputs.** One product photo — a real product, with its real brand on it. Upload it
+**once** with `POST /v1/uploads` and reuse that `assetId` on every template
+(`--ref-asset-id <id>`); an `assetId` is durable, and re-uploading the same bytes per
+template just mints redundant assets. Also collect the offer and brand facts the templates
+interpolate (product name, claim, price, CTA). Output goes to **one flat folder** — one
+folder for the whole run, not a folder per template.
+
+**2. Estimate before anything renders.** One `POST /v1/estimates` for the run's image count
+(Phase 4's rules apply unchanged: the estimate is the only price source, and it is free).
+Show the total against `balance` and get an explicit yes before the pilot. Decide a
+**hard credit ceiling for the run at the same time**, and check it before *every* request,
+retries included — if the next call would cross it, stop and report what is left rather
+than finishing the set. Worst case is not the happy path: every template retried twice is
+three times the quoted number. If you drive this from a script, have it read prior spend
+back off its own ledger, so a second process inherits the budget instead of restarting at
+zero.
+
+**3. Pilot five, then stop.** Run `T12` (fake ChatGPT), `T14` (fake Slack), `T33`
+(typography hero), `T34` (iMessage), `T38` (stat hero + chart) — five templates that
+exercise dense UI text, conversation layout, pure type, and chart rendering, which is where
+this model fails if it is going to. **At most 4 requests in flight** (the org concurrency
+cap is 5, it is org-wide, and anything else the account is running shares it). Then Phase 6
+QA on all five. **Gate: show the user the five images and get approval before the
+remainder.** A pilot that surfaces a systematic problem — brand wordmark drifting, product
+rendered from the wrong angle — is worth more than 30 more images with the same flaw.
+
+**4. The remainder.** Every other template whose `Model notes` block marks `gpt-image-2`
+clean or preferred. **Count them from `prompt-library.md` at run time; do not carry a number
+from a previous run or from another product's library** — entries get added, and Model notes
+get corrected by exactly the kind of run you are doing now. Templates marked `acceptable`,
+or whose note leads with a caveat rather than "clean", are not in the set; name them in the
+report as skipped rather than silently dropping them. Same 4-in-flight cap. On `429`, branch
+on `details.reason`: `concurrency_limit` clears only by waiting, so honor `Retry-After`
+instead of retrying tighter.
+
+**5. One image per call.** Omit `numImages` (or send `1`). A library run wants one render
+per template, and a multi-image response is the **only copy** of images 2–N — a lost
+response loses them while the credits stay charged (see the `novoads-api` skill's
+`reference.md`). **Write every image to disk the moment it arrives**, before starting the
+next template.
+
+**6. Report.** Per-template credits summed from each response's `creditsCharged` (never the
+estimate), the defect list from QA, what retries cost, and which templates were skipped or
+left unrun and why. The QA defects are the useful output: they are what corrects the Model
+notes in `prompt-library.md`. File those as follow-ups — do not edit the library mid-run,
+that is `image-ad-clone`'s job.
 
 ## Out of scope — fail clearly
 

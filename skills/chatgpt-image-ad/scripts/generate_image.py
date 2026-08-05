@@ -381,6 +381,19 @@ def main() -> int:
         ),
     )
     p.add_argument(
+        "--ref-asset-id",
+        action="append",
+        default=[],
+        metavar="ASSET_ID",
+        help=(
+            "An assetId already returned by POST /v1/uploads, used as a reference "
+            "without re-uploading the bytes. Repeatable, and counts against the same "
+            "cap as --image-ref. An assetId is durable, so a batch that reuses one "
+            "product photo across many prompts should upload it once and pass the id "
+            "here. These are sent before any --image-ref ids."
+        ),
+    )
+    p.add_argument(
         "--model",
         default=LOCKED_MODEL,
         help=f"Locked to {LOCKED_MODEL} by brand contract.",
@@ -425,10 +438,11 @@ def main() -> int:
         log(f"error: --n must be 1..{MAX_IMAGES} (got {args.n})")
         return 2
 
-    if len(args.image_ref) > MAX_REFS:
+    if len(args.image_ref) + len(args.ref_asset_id) > MAX_REFS:
         log(
-            f"error: too many --image-ref ({len(args.image_ref)}); the cap is {MAX_REFS} "
-            f"on {LOCKED_MODEL}"
+            f"error: too many references "
+            f"({len(args.image_ref)} --image-ref + {len(args.ref_asset_id)} --ref-asset-id); "
+            f"the cap is {MAX_REFS} on {LOCKED_MODEL}"
         )
         return 2
 
@@ -460,10 +474,13 @@ def main() -> int:
     chrome_state = "allowed" if args.allow_chrome else "stripped"
     log(
         f"generating {args.n} image(s) model={LOCKED_MODEL} aspect={args.aspect_ratio} "
-        f"chrome={chrome_state} refs={len(args.image_ref)} -> {args.out}/"
+        f"chrome={chrome_state} refs={len(args.image_ref) + len(args.ref_asset_id)} "
+        f"-> {args.out}/"
     )
 
-    ref_asset_ids: list[str] = []
+    # Already-uploaded ids go first so their prompt positions are stable across a
+    # batch; local files are uploaded after and appended in the order given.
+    ref_asset_ids: list[str] = list(args.ref_asset_id)
     if args.image_ref:
         log(f"uploading {len(args.image_ref)} reference image(s)…")
         for ref in args.image_ref:
