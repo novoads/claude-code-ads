@@ -223,7 +223,7 @@ Wait for the answer. This is a reading of their video, not an approval to spend.
 │   NO  → describe the product in the prompt text and say so to the user: Seedance will
 │         invent a design, render it, and charge for it.
 │
-├─ Is it a series (source > 15s)?
+├─ Is it a series (the >15s route the user picked, not every >15s source)?
 │   YES → referenceAssetIds, and pass the SAME ids to every clip:
 │           @Image1 = the product, @Image2 = the person if one is on screen.
 │         Repeat the actor tag verbatim in every clip. Never "the same woman".
@@ -265,12 +265,22 @@ on an earlier clip's output any more. Five generations per organization may be i
 once; a sixth comes back `429` with `details.reason` of `concurrency_limit`, which is
 solved by waiting for a slot and not by backing off harder.
 
-**Offer the mini draft.** `seedance-2.0-mini` is the same grid, the same fields and the same
-prompt at half the price, back in 2–3 minutes instead of 3–8. A clone is exactly the case
+**Offer the mini draft.** `seedance-2.0-mini` is the same grid and the same prompt at half the
+price, back in 2–3 minutes instead of 3–8. Its fields are the same **except `resolution`**,
+which it does not take at all — it renders 720p, and sending the key is a `400`. A clone is
+exactly the case
 for it: the first render is where you find out whether your reading of the source survived
 into the prompt. Draft on mini, re-price with `model` set to the final tier, and show both
 numbers side by side. `SKILL.md` makes the tier an explicit question, asked once per
 workflow.
+
+**Ask how many variations, and which kind — here, not at generation time.** Default 1. Two
+different things share the word: the **same script rendered N times** (identical payload,
+seed-level variety only) or **N script variants** (distinct dialogue adaptations on one beat
+structure). A clone usually wants the second. Ask it now, because everything downstream needs
+the answer: step 6 writes N scripts, step 7 gates them together, and step 9 prices each one
+before the single yes. Asking at step 11 means the user approved a spend for one prompt and
+is then handed three.
 
 Tell the user which mode you picked and why.
 
@@ -289,7 +299,7 @@ The creative core. Working from step 3:
 - Read it back at a natural pace against the target duration: 2.5 to 3 words per second for
   a dense product line, closer to 1.5 for a calm one.
 - **Script variants.** If they asked for N *script variants* rather than N renders of one
-  script (step 11), write N distinct adaptations that share the beat structure, the
+  script (step 5), write N distinct adaptations that share the beat structure, the
   silent-beat placement and the per-line word counts, and differ in the hook angle, the
   claim emphasized, or the CTA. They are alternative readings of the same source, not
   escalating rewrites — do not let variant 3 drift into a different ad.
@@ -315,7 +325,9 @@ for a polished voiceover source.
 **If the mode is a one-shot compression, read
 [seedance-2-ugc-v2.md](../prompt-library/seedance-2-ugc-v2.md) as well — for structure and
 mode only.** Take the beats-inside-one-render mechanics from v2 and the prompt craft from
-v1, which is the scope that file's own contract sets. **Your source beat map wins over its
+v1, which is the scope that file's own contract sets — and say which came from which when
+you present the prompt, so a wrong borrow is visible before it renders. **Your source beat
+map wins over its
 beat doctrine.** v2 defaults to one-shot and tells you to keep silent beats out of the base;
 a clone is not writing a base video, it is reproducing one. If the source has a silent beat,
 the clone has a silent beat, and v2 does not get a vote on that.
@@ -345,8 +357,10 @@ Then:
 - **Write it in the source's language** if that is what the user wants rendered. Nothing on
   the API pushes back on a Spanish or Portuguese prompt.
 
-**Duration:** source ≤ 15s → match it, rounded to an integer in 4–15. Source > 15s → split.
-Validate against the spoken word count; `SKILL.md` carries the table.
+**Duration:** source ≤ 15s → match it, rounded to an integer in 4–15. Source > 15s → whichever
+route the user picked in step 5: one ≤15s render for a compression, or one duration per clip
+for a series. Never re-decide it here. Validate against the spoken word count; `SKILL.md`
+carries the table.
 
 ### Step 7: Dialogue confirmation gate
 
@@ -386,8 +400,11 @@ Rules:
 
 Three decisions:
 
-1. **`language`** — the language the ad is rendered in, defaulted from what whisper
-   detected. State it in the gate above and write the prompt in it.
+1. **`language`** — declared, not controlling. **The prompt is what decides the spoken
+   language**: the render says whatever the quoted line says, and nothing rejects a body
+   whose `language` disagrees with it. Default the field from what whisper detected, state
+   it in the gate above, and then actually write the dialogue in that language — the field
+   records the ad for later reporting, it does not translate anything.
 2. **Whether the clone speaks at all.** A silent source clones silent, and that takes
    **both halves**: `audioEnabled: false` in the `POST /v1/videos` body, **and** the
    silence written into the prompt prose (`silent b-roll, no spoken dialogue`). The flag
@@ -517,12 +534,10 @@ curl -sS -X POST https://api.novoads.ai/v1/videos \
   key here and the user approved one video and receives another — billed at the `720p`
   schedule, which is the quiet half of the same bug. `audioEnabled` is the mirror case: it
   belongs **only** here, because `POST /v1/estimates` refuses it.
-- **Ask how many variations, and which kind.** Default 1. Two different things share the
-  word: the **same script rendered N times** (identical payload, seed-level variety only)
-  or **N script variants** (distinct dialogue adaptations on one beat structure, step 6).
-  A clone usually wants the second. Either way there is no batch parameter, so it is N
-  calls and N charges; script variants additionally mean N prompts through one gate
-  (step 7) and N estimates (step 9).
+- **The variation count came from step 5**, and by now it has been through gate 1 (step 7)
+  and priced per variant (step 9). Do not ask again here, and do not fire a count the user
+  has not approved a price for. Either kind is N calls and N charges — there is no batch
+  parameter.
 - **At most five in flight** across the organization, counting every clip and every
   variation. Fire five, then start the next as each reaches a terminal state.
 - **Log each submission immediately** — one line appended to `logs/novoads-api.jsonl` with
