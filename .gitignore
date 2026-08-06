@@ -33,6 +33,15 @@ references/
 !skills/*/references/
 !skills/*/references/**
 
+# ...and the same for shared/references/, which is docs too: craft.md and the
+# README describing the media folders above. `references/` matches a directory of
+# that name at ANY depth, so without these two lines a new file here is swallowed
+# silently — `shared/references/README.md` only survives because it was tracked
+# before the rule existed, and git ignores nothing it already tracks. That is the
+# trap: the directory looks fine in `git status` right up until you add to it.
+!shared/references/
+!shared/references/**
+
 
 # Disposable one-off thumbnail iteration scripts (not the canonical skill script)
 scripts/generate-thumbnails.sh

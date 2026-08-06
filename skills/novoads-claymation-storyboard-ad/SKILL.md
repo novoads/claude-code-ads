@@ -307,9 +307,14 @@ Gates 2 through 8 are `novoads-pixar-storyboard-ad`'s, unchanged, including:
   then three, because a sixth concurrent generation is refused with
   `concurrency_limit` and that is a real refusal, not a queue.
 - **Gate 5** — one voice, chosen once. **Gate 6** — the music bed.
-- **Gate 7** — trim each clip to its narration plus 0.5 seconds, concat, mix at
-  VO 100% / clip audio 28% / music 10%, composite the end card from the real
-  photograph, transcribe and read it back.
+- **Gate 7** — trim each clip to its narration plus 0.5 seconds, concat, mix,
+  composite the end card from the real photograph, transcribe and read it back.
+  **Read the levels out of the Pixar skill rather than from here** — the mix is
+  per beat, not one recipe, and this line used to restate it as a flat
+  `VO 100% / clip 28% / music 10%`. That recipe was written when every beat was
+  a VO beat. This genre has a SYNC beat (beat 3), where the clip's own audio IS
+  the dialogue, and 28% buries it under a caption spelling out words the viewer
+  cannot hear. One number cannot serve both cases, so this file states none.
 - **Gate 8** — captions, and the **BLOCKING** caption gate.
   **A garbled brand name is a failed run, not a note in the report.**
 

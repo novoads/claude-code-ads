@@ -429,10 +429,18 @@ belongs to specific studios and models will hand you near-copies of their charac
 2. **The turn snapped in one frame**, not a slow focus pull.
 3. **Voices:** narrator distinct from characters, no overlap, right language, no announcer
    delivery.
-4. **Product fidelity** — the specific identifying details survived, and under Doctrine D
+4. **Transcribe the render and read it back against the approved script.** Not by ear on
+   one playback — the failure is quiet and the render still returns `succeeded`. A
+   reference image pins the LABEL; nothing pins the AUDIO, and they fail independently.
+   Measured across three clones of one source: every glyph of the on-screen wordmark was
+   correct while the brand name was never once spoken as written, and one take swapped a
+   named ingredient for a different compound. A coined or hyphenated brand name is the
+   high-risk case — the model resolves it to the nearest ordinary word. Respell it
+   phonetically inside the quoted line and re-render that beat only.
+5. **Product fidelity** — the specific identifying details survived, and under Doctrine D
    nothing grew eyes or limbs.
-5. **The hero card cut** reads as intentional, not as a seam.
-6. **Uncanny valley** on any human, especially children.
+6. **The hero card cut** reads as intentional, not as a seam.
+7. **Uncanny valley** on any human, especially children.
 
 Fix by subtraction. A failed render gets shorter lines and fewer beats, not more
 instructions.
