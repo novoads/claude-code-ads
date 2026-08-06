@@ -5,13 +5,19 @@ from #13. That ordering lives in this sentence rather than in the commit history
 the repo squash-merges and commit order does not survive the merge.
 
 Unlike [EVALS-ugc-base-and-broll.md](../prompt-library/EVALS-ugc-base-and-broll.md), which
-was written from an observed failing run, these four come from two places: the
-deployed-spec verification at the top of this PR (`info.version` **2.10.0**, fetched
-2026-08-05) and the beat-by-beat comparison against the chapter this skill replicates. One
-assertion in E4 was measured directly against the local script; it says so where it lands.
+was written from an observed failing run, E1–E4 come from two places: the deployed-spec
+verification at the top of the #17 PR (`info.version` **2.10.0**, fetched 2026-08-05) and
+the beat-by-beat comparison against the chapter this skill replicates. One assertion in E4
+was measured directly against the local script; it says so where it lands.
+
+**E5 and E6 were added against deployed spec `2.11.0` (fetched 2026-08-06) and are the
+opposite kind: both were measured live before the text was written.** E5 comes from an
+observed failure on the author's own machine; E6 from a capability the API gained after
+E1–E4 were written.
 
 E1, E2 and E3 are text assertions against the plan and the request bodies — checkable
-before a credit is spent. E4 is the same, plus one local behaviour that was run.
+before a credit is spent. E4 is the same, plus one local behaviour that was run. E5 and E6
+are backed by a live probe whose every charged call is named in the PR description.
 
 ---
 
@@ -151,8 +157,125 @@ on a source with no audio stream.
 
 ---
 
+## E5 — The words come from the API, and whisper is the fallback
+
+**Scenario.** A clean machine — the state every first-time reader of this repo is in — with
+a key, ffmpeg, and no transcription stack. The source ad speaks.
+
+**Observed failure (measured 2026-08-06).** On the author's own machine,
+`python3 -c "import whisper"` raises `ModuleNotFoundError`. `whisper-cli` IS on `PATH` via
+Homebrew, and per #16 it ships with only a test-stub model, so it returns an **empty**
+transcript rather than an error. Step 2 as written picks the first of those and crashes;
+a reader who installs the second gets silence that a QA pass scores as "every line missing"
+— a tooling failure wearing the costume of a bad render.
+
+This is the same prerequisite #16 retired from this pack **two hours before** this skill
+merged, and the README already calls whisper *"optional — offline only … not required for
+the API path."* Step 2 never got the memo.
+
+**Measured replacement (same probe).** `POST /v1/uploads` with `contentType: "video/mp4"`
+→ `PUT` → `POST /v1/transcripts` with that `assetId` returned `200` in one call:
+`model: "scribe-v2"`, `status: "succeeded"`, auto-detected `language`, 38 words with
+`start`/`end` in **seconds**, 5 segments, an `srt`, for **0.1 credits**. The five segments
+are the beat boundaries step 3 needs, already cut.
+
+One thing worth knowing beyond the install: scribe-v2 rendered **"Owala FreeSip"
+letter-correct**, where whisper renders out-of-vocabulary brands phonetically ("oh wallah").
+The brand check in a §7 QA pass gets easier, not just cheaper. It agreed with whisper on
+"chucks" for the source's spoken "chugs", which independently confirms that one as a render
+artifact rather than a transcription artifact.
+
+**Assertions.**
+
+- Step 2's primary path is `POST /v1/transcripts`, reached by uploading the source.
+- whisper survives as an **offline fallback**, documented the way `broll-overlay` documents
+  it — including that `whisper-cli` with no model returns an empty transcript rather than an
+  error, and that whisper reports milliseconds where this API reports seconds.
+- The prerequisites block stops making whisper a hard requirement; nothing in the API path
+  asks the reader to `pip3 install` anything.
+- `language` in step 8 defaults from what **the transcript returned**, not from what whisper
+  detected.
+- A repeat transcription of the same source is recognised as free — `creditsCharged: 0`,
+  served from storage.
+- Word and segment timings are read as **seconds**. A fallback run converts.
+
+**Fails if:** the skill requires whisper before it will start; or the API path is offered as
+the fallback and the local install as the default; or the milliseconds-vs-seconds difference
+goes unstated in the fallback branch.
+
+---
+
+## E6 — A product still is one call, and it chains by assetId
+
+**Scenario.** The user brings a source ad and a product description, but **no product
+photo**. The chapter this skill replicates never hits this case: its product still came from
+a pre-built folder of twelve. This repo's `references/products/` holds a `.gitkeep`.
+
+**Observed gap.** Step 5's no-photo branch offers exactly one route — *"describe the product
+in the prompt text and say so to the user: Seedance will invent a design, render it, and
+charge for it."* That is the most expensive answer available. The cheap one is a real
+still, and the skill does not mention `POST /v1/images` anywhere in its 39 KB.
+
+**Measured for this PR (2026-08-06).** `POST /v1/images` on `gpt-image-2` returned `200`
+synchronously for **0.3 credits**, and its `images[]` entry carries **`assetId` beside
+`url`** — added in deployed spec `2.11.0`, after this skill was written. The `assetId` was
+then accepted by `POST /v1/videos` in `referenceAssetIds`: a token-pinned probe came back
+with the `@Image2`-unresolvable error, which is raised *after* the ownership gate and the
+images-only gate and *before* any charge — so both gates passed on a `/v1/images` id, for
+free. **There is no download-and-reupload hop.**
+
+**Assertions.**
+
+- The no-photo branch offers `POST /v1/images` first, priced through `POST /v1/estimates`
+  like any other spend, and consented to before it fires.
+- The returned `assetId` is passed **directly** into `referenceAssetIds` or
+  `startImageAssetId`. The skill never instructs a download followed by
+  `POST /v1/uploads` — that mints a second asset and throws away the anchor.
+- The `url` is understood as expiring (3600s) and the `assetId` as durable. Chaining is off
+  the id, never the URL.
+- "Seedance will invent a design and charge for it" survives only as the third option, after
+  a real photo and a generated still — not as the only alternative to a photo.
+- Whatever the source, the pinned still is the same `assetId` across a mini draft, every
+  script variant and every clip of a series.
+
+**Fails if:** the skill still presents "no photo" as a binary between a user-supplied file
+and an invented design; or it generates a still and then re-uploads its bytes; or it chains
+from the expiring URL.
+
+---
+
+## Open question for the next acceptance run — the 100–260 word ceiling
+
+**Not an assertion. A measurement to take.** Step 6 and the UGC formula's checklist both
+cap a prompt at **100–260 words**, and this pack inherited that line verbatim from the fork
+— same rule, same file, same line number. The chapter this skill replicates shipped a
+**357-word** prompt, 37% over that ceiling, and its author rated the result *"a solid nine
+out of ten."*
+
+Nothing on the API enforces it: `GET /v1/models` reports `maxPromptCharacters: 4000` for
+`seedance-2.0` (verified live 2026-08-06), and 357 words is roughly 2,100 characters. So the
+ceiling is craft lore, and it is currently lore we cannot source.
+
+**The ceiling is deliberately NOT changed in this PR.** One rated render is not evidence,
+and loosening a limit on the strength of a competitor's YouTube video is exactly the kind of
+unpinned claim this repo refuses elsewhere. Instead: the next acceptance run should render
+one variant at the 100–260 ceiling and one at 340–360 from the **same** beat map and the
+same references, and compare beat fidelity, label legibility and dialogue pacing. Until that
+exists, the ceiling stands as written.
+
+---
+
 ## Notes on evidence strength
 
+- **E5 and E6 are the strongest evidence in this file** — both were probed live against
+  prod before their text was written, and every charged call is named with its
+  `creditsCharged` in the PR description. E5's failure half was observed on a real machine,
+  not reasoned about.
+- **E5's and E6's negative halves were proven free.** A source video's `assetId` in
+  `referenceAssetIds` is refused by name with `invalid_input` and **nothing is charged** —
+  the reference gates run before the debit, which the API asserts with a test. That is what
+  lets "upload for reading, never for rendering" be a rule the platform enforces rather than
+  a convention the skill hopes for.
 - **E4's extraction behaviour is measured** — a generated 6s silent mp4 pushed through the
   real script during this PR. Everything else in E4 is read off the deployed spec.
 - **E3 is spec-backed**: `CreateEstimateRequestVideo` carries `resolution` in the deployed

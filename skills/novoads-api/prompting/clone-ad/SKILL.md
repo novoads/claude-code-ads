@@ -20,16 +20,17 @@ transcribe the dialogue, extract the visual style and beat structure, then gener
 - **analyze-video** → the output is a reusable markdown formula saved to `prompt-library/`.
 - **clone-ad** → the output is a rendered video delivered to the user.
 
-Steps 1 to 3 are the same local analysis in both, and they cost nothing. Everything from
-step 9 on spends credits.
+Steps 1 to 3 are the same analysis in both. The only charge in that half is the transcript
+in step 2 — a fraction of a credit, and free on a re-read of the same source. Everything
+from step 9 on is the real spend.
 
 ## What this API changes about cloning
 
-The analysis half of this skill is untouched — frames, transcript and beat structure are
-local work on the user's file. The generation half has three differences worth knowing
-before you promise anything. All three were established with free `400` probes that reject
-before any charge, and re-verified field-for-field against the deployed spec `2.10.0`
-(2026-08-05):
+The analysis half is nearly untouched: frames and the beat structure are local work on the
+user's file, and the transcript is one cheap API call instead of a local install (step 2).
+The generation half has three differences worth knowing before you promise anything. All three were established with free `400` probes that reject
+before any charge, and re-verified field-for-field against the deployed spec `2.12.0`
+(2026-08-06):
 
 | The old shape | Here |
 |---|---|
@@ -41,7 +42,7 @@ Also gone, in the same probe: `endFrame`, `projectId` (this
 API has products, not projects), `duration` (it is `durationSeconds`) and `referenceImages`
 (it is `referenceAssetIds`).
 
-**`resolution` was on that list and has come back.** It is a real field on `seedance-2.0` — `480p`, `720p`, `1080p`, `4k`, default `720p` (verified live against spec 2.10.0, 2026-08-05). A clone should normally match the source's tier, which for a social ad is `720p`; going above it is a **spend** decision (`1080p` ≈2.5x the base, `4k` ≈5x) that gets priced with `POST /v1/estimates` and approved like any other. `480p` costs the same as `720p`. **A clone rendered as a series pays the multiplier on every clip** — check the tier before you fan out. Never send the key on `seedance-2.0-mini`, which renders 720p only.
+**`resolution` was on that list and has come back.** It is a real field on `seedance-2.0` — `480p`, `720p`, `1080p`, `4k`, default `720p` (verified live against spec 2.12.0, 2026-08-06). A clone should normally match the source's tier, which for a social ad is `720p`; going above it is a **spend** decision (`1080p` ≈2.5x the base, `4k` ≈5x) that gets priced with `POST /v1/estimates` and approved like any other. `480p` costs the same as `720p`. **A clone rendered as a series pays the multiplier on every clip** — check the tier before you fan out. Never send the key on `seedance-2.0-mini`, which renders 720p only.
 
 **And one the old shape got wrong in the other direction:** aspect ratio is not
 `9:16`-or-`16:9`. Seedance takes `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` — probed live, `1:1`
@@ -52,13 +53,16 @@ instead of being letterboxed into a vertical frame.
 
 ```bash
 which ffmpeg || echo "MISSING — run: brew install ffmpeg"
-python3 -c "import whisper; print('whisper OK')" 2>/dev/null || echo "MISSING — run: pip3 install openai-whisper"
 ./scripts/check-novoads-env.sh
 ```
 
-`extract-frames.sh` and whisper both need ffmpeg. The env check has to return 200 before
-step 9, and it is worth running first: discovering a bad key after the user has approved a
-dialogue script is a bad look.
+**ffmpeg and a working key are the whole list.** `extract-frames.sh` needs ffmpeg; the
+transcript comes from `POST /v1/transcripts` (step 2) and needs nothing installed. The env
+check has to return 200 before step 9, and it is worth running first: discovering a bad key
+after the user has approved a dialogue script is a bad look.
+
+whisper is **optional, and only for working offline** — see the fallback in step 2. Do not
+ask the user to install it before starting. A clean machine can clone an ad.
 
 ## Workflow
 
@@ -67,14 +71,29 @@ dialogue script is a bad look.
 | Input | Required | Notes |
 |---|---|---|
 | **Source video** | yes | The ad to clone. `.mp4`, `.mov`, `.webm` |
-| **Product photo** | strongly recommended | Becomes `startImageAssetId` or `@Image1` in `referenceAssetIds`. Without it Seedance invents its own product design, renders it, and charges for it |
-| **Product / offer description** | if no photo | Features, audience, selling points. Used to rewrite the dialogue and the product references |
+| **Product photo** | strongly recommended | Becomes `startImageAssetId` or `@Image1` in `referenceAssetIds`. Without one, see "no photo" below — the answer is not "let Seedance invent it" |
+| **Product / offer description** | if no photo | Features, audience, selling points. Used to rewrite the dialogue and the product references, and to generate a still if they want one |
 | **A photo of the person** | optional | Only if the clone is a series — it is what holds one face across clips |
 | **Brand voice** | optional | Check `MASTER_CONTEXT.md` first. If its brand blocks are empty, ask for tone and audience |
 
 **Check `references/` at the repo root before asking.** `references/products/` for product
 shots, `references/influencers/` for people, `references/aesthetics/` for style boards. If
-the photo is already there, offer to use it.
+the photo is already there, offer to use it. These folders ship empty — a `.gitkeep` is not
+a product shot, so an empty listing means "ask", not "there is nothing to use".
+
+**No photo? Three routes, in this order — and the last one is the expensive one.**
+
+1. **A real photo of the real product.** Always the best clone. Ask for it first.
+2. **Generate a still with `POST /v1/images`** — one synchronous call, priced through
+   `POST /v1/estimates` and consented to like any other spend. Its response carries an
+   **`assetId`** that goes straight into `referenceAssetIds` (step 10). This is the right
+   answer for a concept product, a product that does not exist yet, or a user who simply
+   has no usable shot. It does **not** eat a render slot: images have their own concurrency
+   ceiling, counted apart from `POST /v1/videos` in both directions, so sourcing a still
+   never delays a clip and clips in flight never delay the still.
+3. **Describe it in the prompt text only.** Say plainly what this means: Seedance invents a
+   design, renders it, and charges for it, and the same product will look different in
+   every clip of a series. Reach for this when the product is generic enough not to matter.
 
 If they hand over only a video and say "clone this for my product", ask for a photo or a
 description before going any further. Cloning a style onto a product you cannot see is
@@ -100,25 +119,66 @@ bash "skills/novoads-api/prompting/analyze-video/scripts/extract-frames.sh" \
 The script takes any count as its third argument — evenly spaced, no cap — so the top row
 costs context, not credits. Use it when the ask is explicitly for a frame-by-frame read.
 
-Outputs: `frame_001.jpg` … `frame_NNN.jpg`, `audio.wav` (16 kHz mono, whisper-ready), and
-`metadata.txt` with duration, resolution and fps. Read the duration — step 5 branches on it.
+Outputs: `frame_001.jpg` … `frame_NNN.jpg`, `audio.wav` (16 kHz mono), and `metadata.txt`
+with duration, resolution and fps. Read the duration — step 5 branches on it.
 
-### Step 2: Transcribe the audio
+### Step 2: Transcribe the source
+
+**The words come from the API.** Upload the source and transcribe it — two calls, nothing
+installed:
+
+```bash
+# 1. mint an upload slot for the SOURCE video (measure the bytes, never estimate them)
+curl -sS -X POST https://api.novoads.ai/v1/uploads \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" -H "Content-Type: application/json" \
+  -d "{\"contentType\":\"video/mp4\",\"sizeBytes\":$(stat -f%z source.mp4)}"
+
+# 2. PUT the bytes with EXACTLY the returned headers, then:
+curl -sS -X POST https://api.novoads.ai/v1/transcripts \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" -H "Content-Type: application/json" \
+  -d '{"assetId":"<the source assetId>"}'
+```
+
+`POST /v1/uploads` takes `video/mp4`, `video/quicktime` and `video/webm` — the three
+formats step 0 accepts. The transcript comes back in the **same response**, not polled for:
+`text`, `words[]` with `start`/`end`, `segments[]`, an `srt`, and the detected `language`.
+
+**Uploading the source is for READING it, never for rendering from it.** See the boundary
+in step 10 — the source's `assetId` must never reach `referenceAssetIds`,
+`startImageAssetId`, or any other generation input.
+
+Record the full transcript, the per-segment timestamps and text, the total word count, and
+the language. The language matters twice: it is what you send as `language`, and it is what
+you write the adapted prompt in. **The `segments[]` are beat candidates** — they are cut at
+the source's own pauses, which is where step 3's beat map usually wants its boundaries.
+
+Two things worth knowing:
+
+- **Timings are in seconds**, matching `metadata.txt`. No conversion.
+- **Re-transcribing the same source is free** — `creditsCharged: 0`, served from storage. Do
+  not cache it by hand to avoid a charge that will not happen.
+
+**Offline fallback — whisper.** Only when there is no key or no network:
 
 ```python
 import whisper
-model = whisper.load_model("base")
-result = model.transcribe("/tmp/clone-ad-analysis/audio.wav")
+result = whisper.load_model("base").transcribe("/tmp/clone-ad-analysis/audio.wav")
 ```
 
-Record the full transcript, the per-segment timestamps and text (`result["segments"]`), the
-total word count, and the detected language. The language matters twice: it is what you
-send as `language`, and it is what you write the adapted prompt in.
+Two traps this pack has already paid for, the same ones
+[broll-overlay](../../../../shared/skills/broll-overlay/SKILL.md) documents:
 
-**Check the file exists before loading it.** A source with no audio stream leaves
-`audio.wav` unwritten: `extract-frames.sh` catches ffmpeg's failure, prints
-`No audio stream found (silent video)` and exits `0`, so nothing upstream errors and the
-missing file is the only signal you get.
+- **whisper reports milliseconds where this API reports seconds.** Convert, or every beat
+  boundary lands 1000× off.
+- **`whisper-cli` with no model downloaded returns an EMPTY transcript rather than an
+  error.** Homebrew installs the binary with a test stub, so the failure is silent and reads
+  exactly like an ad whose every line went missing. `pip3 install openai-whisper` **plus a
+  model download** — the binary alone is not enough.
+
+**A silent source.** `audio.wav` is left unwritten when there is no audio stream:
+`extract-frames.sh` catches ffmpeg's failure, prints `No audio stream found (silent video)`
+and exits `0`, so the missing file is the only signal you get. On the API path the same
+thing surfaces as a transcript with no words.
 
 ```bash
 test -f /tmp/clone-ad-analysis/audio.wav || echo "silent source — skip to step 3"
@@ -212,16 +272,18 @@ Wait for the answer. This is a reading of their video, not an approval to spend.
 │   NO  → two routes, and the USER picks between them.
 │         See "Over 15 seconds is a choice" below. Do not default to either.
 │
-├─ Did they give a product photo?
-│   YES → upload it, and pick one mode:
+├─ Do you have a product image — theirs, or one you generated?
+│   YES → upload it (or reuse the assetId POST /v1/images already returned), then pick
+│         one mode:
 │           startImageAssetId  — the ad opens ON the product, held up or on a surface.
 │                                It animates that photo as the literal first frame.
 │           referenceAssetIds  — the ad builds a scene the product was never photographed
 │                                in. It composites the references instead, and the prompt
 │                                addresses them as @Image1, @Image2 … by array position.
 │         Never both: a body carrying both is a 400 that says they are separate modes.
-│   NO  → describe the product in the prompt text and say so to the user: Seedance will
-│         invent a design, render it, and charge for it.
+│   NO  → offer POST /v1/images before falling back to prose (step 0). Prose-only means
+│         Seedance invents a design, renders it, charges for it, and re-invents it on
+│         every clip of a series.
 │
 ├─ Is it a series (the >15s route the user picked, not every >15s source)?
 │   YES → referenceAssetIds, and pass the SAME ids to every clip:
@@ -402,7 +464,8 @@ Three decisions:
 
 1. **`language`** — declared, not controlling. **The prompt is what decides the spoken
    language**: the render says whatever the quoted line says, and nothing rejects a body
-   whose `language` disagrees with it. Default the field from what whisper detected, state
+   whose `language` disagrees with it. Default the field from the `language` the transcript
+   returned (step 2), state
    it in the gate above, and then actually write the dialogue in that language — the field
    records the ad for later reporting, it does not translate anything.
 2. **Whether the clone speaks at all.** A silent source clones silent, and that takes
@@ -436,7 +499,7 @@ see the bullet below.
 Returns `credits`, `balance`, `sufficient` and a `warnings` array, plus `shortBy` and
 `topUpUrl` when it is short. The body is strict and takes exactly six fields: `kind`,
 `prompt`, `model`, `durationSeconds`, `language`, `resolution` — checked field-for-field
-against `CreateEstimateRequestVideo` in spec `2.10.0` (2026-08-05). `aspectRatio`,
+against `CreateEstimateRequestVideo` in spec `2.12.0` (2026-08-06). `aspectRatio`,
 `audioEnabled`, the asset fields and `productId` are a `400` here.
 
 - **Pass `model` explicitly.** It defaults to `seedance-2.0`, and mini is half the price —
@@ -493,17 +556,40 @@ set. Then generate.
    Both are signed into the URL: `image/jpeg; charset=utf-8` is a `403`, and so is a
    `Content-Length` that does not match the bytes. Measure `sizeBytes`, do not estimate it.
 
-3. **Keep the `assetId`.** It is durable across calls, models and sessions — the whole
+3. **A still you generated is already an asset — do not upload it again.** `POST /v1/images`
+   returns `assetId` beside `url` on every image (deployed spec `2.11.0`). Pass that id
+   straight into `referenceAssetIds` or `startImageAssetId`. Downloading the bytes and
+   pushing them back through `POST /v1/uploads` mints a **second** asset and throws away the
+   anchor the rest of the workflow is pinned to. The `url` expires in 3600 seconds; the
+   `assetId` does not — chain from the id, never from the URL.
+
+4. **Keep the `assetId`.** It is durable across calls, models and sessions — the whole
    series, the mini draft and the final render all reuse it. The presigned *upload URL*
    expires in 900 seconds; the id does not.
 
-4. If a reference's longest side is under 1024 px, upscale with Lanczos to 1080 px on the
+5. If a reference's longest side is under 1024 px, upscale with Lanczos to 1080 px on the
    long side and re-encode as RGB JPEG at quality 90–95. (No minimum is documented for this
    API; the practice carries over from a sibling API and is unverified here.)
 
-References are **images only** — `image/jpeg`, `image/png`, `image/webp` — even though
-`POST /v1/uploads` will also take a video. The source ad itself is never uploaded; it is
-input to your eyes, not to the model.
+**The source ad: upload it to READ it, never to RENDER from it.**
+
+`POST /v1/uploads` takes video, and step 2 uses that on purpose — the source is uploaded so
+`POST /v1/transcripts` can read its words. That is the whole extent of it. **The source's
+`assetId` must never appear in `referenceAssetIds`, in `startImageAssetId`, or in any other
+generation input.** It is input to your eyes and to the transcriber; it is never input to
+the model that renders.
+
+This is not a convention you have to remember — the API enforces it, for free, before any
+charge. A source video's id in `referenceAssetIds` comes back:
+
+```
+400 invalid_input — referenceAssetIds accepts image uploads only; <id> is not one.
+                    Video and audio references are not available on this endpoint.
+```
+
+Generation references are **images only**: `image/jpeg`, `image/png`, `image/webp`. There is
+no video-to-video path on this API, so a clone is never built by feeding the original in.
+What carries a source's style into a clone is your reading of it, written into the prompt.
 
 ### Step 11: Generate
 
@@ -607,7 +693,7 @@ Full detail in [reference.md](../../reference.md).
 | `startImageAssetId` **XOR** `referenceAssetIds` | Separate modes on the model. A body with both is a `400` whose message says exactly that. Nothing is charged |
 | `referenceAssetIds` ≤ **9**, images only | Ten is `Too big: expected array to have <=9 items`. A video asset id is refused: references are images |
 | No `referenceVideos`, no `referenceAudios`, no `endFrame`, no `projectId` | All `400 Unrecognized key`. Nothing is charged, and no clone workflow can depend on them |
-| `resolution` — **`seedance-2.0` only**, `480p` `720p` `1080p` `4k`, default `720p` | Real, and re-verified against spec 2.10.0 (2026-08-05). **It multiplies the bill** — `1080p` ≈2.5x the base, `4k` ≈5x, and a series pays it per clip. Price the tier at `POST /v1/estimates`; `480p` saves nothing. `400 Unrecognized key` on `seedance-2.0-mini` and the three non-Seedance models |
+| `resolution` — **`seedance-2.0` only**, `480p` `720p` `1080p` `4k`, default `720p` | Real, and re-verified against spec 2.12.0 (2026-08-06). **It multiplies the bill** — `1080p` ≈2.5x the base, `4k` ≈5x, and a series pays it per clip. Price the tier at `POST /v1/estimates`; `480p` saves nothing. `400 Unrecognized key` on `seedance-2.0-mini` and the three non-Seedance models |
 | `audioEnabled` — **Seedance only**, optional, default `true` | Send `false` for a silent clone. `400 Unrecognized key` on the three non-Seedance video models, and on `POST /estimates` for every model |
 | `durationSeconds` 4–15, integer | Out-of-grid values are rejected, never rounded. Default is **5** |
 | `aspectRatio` `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | Default is **`16:9`**. Set it, or a vertical clone ships landscape |
