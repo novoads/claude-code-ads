@@ -8,6 +8,6 @@ Contents:
 
 - `shared/CLAUDE.md` — base Claude Code session rules, included by the root `CLAUDE.md`.
 - `shared/skills/` — skills that aren't tied to a single generative API (image-ad prompting
-  library, pixar-style-ad, claymation-ad, caption-video, meta-ad-builder, gemini-omni-flash).
+  library, caption-video, meta-ad-builder, gemini-omni-flash).
 - `shared/scripts/` — `sync-skill.sh` (copies skills into `.claude/` and `.cursor/`) and
   `check-context.sh` (the SessionStart orientation banner).

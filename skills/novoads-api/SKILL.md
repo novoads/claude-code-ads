@@ -79,7 +79,7 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | A photoreal still: a person, a product in a scene | `nano-banana-pro` |
 | A different look on a still, or a second opinion on one | `reve-2.1` |
 | A Pixar-style 3D animated ad | read `shared/skills/pixar-style-ad/prompting/guide.md`: storyboard on `gpt-image-2`, animate each beat on `seedance-2.0` + `startImageAssetId`, stitch with ffmpeg. Runnable scripts in `shared/skills/pixar-style-ad/scripts/`. Nothing on the API rejects, checks or comments on a stylized prompt — the guide is the only thing that will tell you whether the beat works |
-| A claymation / Aardman-style ad | read `shared/skills/claymation-ad/prompting/guide.md`, same shape over 8 beats |
+| A claymation / stop-motion clay ad | read `skills/novoads-claymation-storyboard-ad/SKILL.md`, same shape over 8 beats |
 | Captions burned onto a finished MP4 | **Two real paths — offer both.** `POST /v1/captions`: one call, 30 preset styles, no local dependencies, **costs credits** and returns only a new MP4 (never an SRT or the caption text). Or `shared/skills/caption-video/prompting/guide.md`: **free**, any style you can write, and it gives you a Whisper transcript you can hand-correct — but needs Whisper, HyperFrames and an ffmpeg chroma-key composite locally. See *Burned-in captions* below. A clip rendered with `audioEnabled: false` can only go the local route |
 | Meta image-ad creatives from a brief or a template | read `shared/skills/image-ad-prompting/OVERVIEW.md` first, then `chatgpt-image-ad` or `nano-banana-image-ad` |
 | To reverse-engineer an existing image ad into a reusable template | the `image-ad-clone` skill |

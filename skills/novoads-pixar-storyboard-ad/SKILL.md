@@ -523,10 +523,47 @@ ffmpeg -i stitched.mp4 -i vo.mp3 -i music.mp3 -filter_complex \
   -map 0:v -map "[a]" -c:v copy -c:a aac master.mp4
 ```
 
-**The levels are the recipe: VO 100%, clip audio 28%, music 10%.** They are not
-a starting point to taste — they are what keeps the narration intelligible over a
-clip that has its own dialogue in it. If the narration is fighting something,
-lower the clip track before you raise the voice.
+**The clip track is TWO different things and one level cannot serve both.** On a
+VO beat the clip audio is ambience and belongs at about 28%. **On a SYNC beat the
+clip audio IS the dialogue and belongs at 100%**, alongside the narrator, because
+attenuating it is attenuating the only line in the shot.
+
+Measured, and the reason this is stated as a rule: a run mixed at a flat 28%
+buried its SYNC beat so far down that an independent judge measured the line at
+-36 dB under a caption that said the words the viewer could not hear. The ad had
+a caption for a line nobody could hear. That is worse than no line.
+
+So split the clip track before you mix:
+
+```bash
+# SYNC beats keep their own audio at full; VO beats drop to ambience level
+ffmpeg -i beat1-sync.mp4 -vn -c:a aac sync1.m4a
+ffmpeg -i beat2-vo.mp4   -vn -af "volume=0.28" -c:a aac amb2.m4a
+# …then place each on the timeline with adelay, exactly as the VO lines are placed
+```
+
+**The music bed is set by MEASUREMENT, not by a multiplier.** `volume=0.10` is
+-20 dB applied to a source whose own level you did not check, and on a quiet
+generated bed that lands somewhere inaudible: measured on a real run at -33 to
+-40 dB, which is a bed that was paid for and never heard. Normalize it to a known
+level first, then place it a fixed distance under the voice:
+
+```bash
+# bring the bed to a known loudness, THEN sit it ~18 dB under the narration
+ffmpeg -i music.mp3 -af "loudnorm=I=-30:TP=-2:LRA=7" -c:a aac bed.m4a
+```
+
+**Master the finished mix to -16 LUFS and verify it.** Vertical social placements
+sit near -16; a mix delivered at -22 plays quiet against everything around it and
+the viewer reads that as cheap. Measure, do not assume:
+
+```bash
+ffmpeg -i master.mp4 -af loudnorm=I=-16:TP=-1.5:LRA=11 -c:v copy master-loud.mp4
+ffmpeg -i master-loud.mp4 -af ebur128=framelog=quiet -f null -    # read Integrated
+```
+
+If the narration is fighting something, lower the AMBIENCE track before you raise
+the voice. Never lower a SYNC beat's own track to make room.
 
 **If you hear a line twice, the mix is not the problem.** That beat's prompt
 carried the narrator's words and Seedance rendered them, and no level will fix
@@ -556,9 +593,25 @@ ffmpeg -i beat5-trimmed.mp4 -loop 1 -i endcard.png -filter_complex \
   -c:a copy beat5-carded.mp4
 ```
 
+**Match the card's background to the render before you composite it.** A retail
+photo shot on near-white dropped onto a warm cream field leaves a visible
+rectangle seam, and the seam is the first thing a viewer sees on the last frame.
+Sample the render's own background colour and pad the card to it, or key the
+photo's white out entirely.
+
+**Do not let the card be a frozen frame in silence.** Hold the beat's own room
+tone under it and let the music resolve rather than cut. A warm animated film
+that ends on a still, silent packshot ends on the worst-made object in the ad.
+
 **Then read the wordmark at full crop.** Pull the frame, crop the label, look at
 it at full size. A contact sheet at thumbnail size is too small to catch a single
 missing letter, which is exactly how the first one shipped.
+
+**And review the CLIPS at full size, not on the contact sheet.** Measured on a
+run that used this file: a payoff beat rendered TWO cots and TWO babies, and it
+survived a contact-sheet review because at thumbnail width the second cot reads
+as furniture. The contact sheet is for judging whether beat 3 follows beat 2. It
+is not for judging whether beat 3 is correct.
 
 ### Verify what it actually says, before it ships
 
@@ -796,6 +849,15 @@ uncanny faces, no dead eyes
   thing carrying the ad, which is a face.
 - **Dead air between beats.** The clips were not trimmed to their narration. Go
   back to Gate 7.
+- **A caption for a line nobody can hear.** The SYNC beat's own audio was mixed
+  at the ambience level. Its track goes at 100%, not 28%. See Gate 7.
+- **The music bed cannot be heard at all.** It was set with a multiplier instead
+  of a measurement. Normalize the bed to a known loudness first.
+- **The whole ad plays quiet.** It was never mastered. -16 LUFS, verified with
+  `ebur128`, not assumed.
+- **The render duplicated a prop or a character.** Measured: one cot and one baby
+  came back as two. Name the count in the prompt ("exactly one cot, exactly one
+  baby") and negate the clone, and review the clip at full size.
 - **`insufficient_credits`.** The error carries `required` and `available`.
   Report both and the top-up path. Do not retry.
 
