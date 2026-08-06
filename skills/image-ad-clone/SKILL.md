@@ -1,6 +1,18 @@
 ---
 name: image-ad-clone
-description: Use when the user wants to reverse-engineer an existing image ad into a reusable prompt template. Validates via the Novoads API — picks gpt-image-2, nano-banana-pro, or reve-2.1 at Phase 1. Triggers on "clone this ad as a template", "reverse engineer this ad", "turn this ad into a prompt", "extract a template", "make this ad reusable", "add to my prompt library", "study this ad and make a template". Input is an EXISTING ad image; does NOT trigger for fresh generation (use chatgpt-image-ad or nano-banana-image-ad).
+description: >-
+  Clones a STATIC IMAGE ad into a reusable prompt TEMPLATE. The deliverable is a
+  parameterized library entry — placeholders, variables and per-model notes, appended to
+  the shared image-ad library — not a finished ad. Reads the frame structurally,
+  round-trips the draft prompt through gpt-image-2, nano-banana-pro or reve-2.1 until it
+  reproduces, then replaces every brand-specific with a {placeholder} and proves the
+  generalized version still renders on a different brand. Use when asked to "clone this ad
+  as a template", "reverse engineer this ad", "turn this ad into a prompt", "extract a
+  template", "make this ad reusable", "add this to my prompt library", or "study this ad
+  and make a template". Two neighbours it is NOT: generating a finished image ad from a
+  brief or an existing template is chatgpt-image-ad or nano-banana-image-ad, and cloning a
+  VIDEO ad is clone-ad. If the source is a still and the user wants one finished picture
+  rather than something reusable, they do not want this skill.
 ---
 
 # image-ad-clone
