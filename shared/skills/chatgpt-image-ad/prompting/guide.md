@@ -41,7 +41,7 @@ These come from the live API contract (`GET /v1/openapi.json` is the authority):
 4. **No platform/screenshot chrome in output.** The `NO_CHROME_SUFFIX` is always on (unless you explicitly `--allow-chrome` for the rare UGC screen-recording aesthetic). Output is the standalone ad creative — the static image that gets uploaded.
 5. **Edge-safe rule always on.** Text and focal subjects must sit inside the central 84% of the canvas. Backgrounds may bleed.
 6. **Glyph-safety rule always on.** Plain words inside body-text blocks. Emoji OK in headlines.
-7. **No edit mode.** There is no inpainting, masking or img2img path on this API. "Change the background of this image" is a fresh generation with the original passed as a reference.
+7. **Edit mode exists here, and only here.** `sourceAssetId` on `POST /v1/images` (spec `2.10.0`, `gpt-image-2` only) edits an existing image from a prompt — so "change the background of this image" is an edit, not a re-draw. What does NOT exist is masking, region selection or an img2img strength dial: the change is described in words. `sourceAssetId` and `aspectRatio` are mutually exclusive, because an edit's output tracks the source's shape.
 
 ## Aspect ratios
 
