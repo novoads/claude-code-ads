@@ -278,6 +278,11 @@ charged for. Two consequences worth building around:
   are wanted. It is the wrong trade when the four are independent deliverables, because it
   puts three unrecoverable images behind a single response.
 
+  Since spec `2.12.0` this costs you nothing in throughput: images have their **own** budget
+  of **12** concurrent jobs, so twelve single-image calls run at once and each response is
+  independently recoverable. Fire the batch twelve wide rather than serialising it — 36
+  images is three waves, not thirty-six calls in a row.
+
 If a call does time out, do **not** re-send it — there are no idempotency keys, so a retry
 renders and charges again. Check `GET /generations` first and match on `createdAt`; a job
 that landed is already there, and image 1 is retrievable even though its siblings are not.
@@ -593,8 +598,11 @@ About 4% of `seedance-2.0` renders run past 10 minutes. Failures are usually rep
 | Requests per key | 60 per minute |
 | Requests per organization | 180 per minute, across every key it holds |
 | Requests per client address, pre-authentication | 1,200 per minute |
-| Concurrent generations per organization | 5 (`429`, `error.code` `rate_limited`, `details.reason` `concurrency_limit`, `Retry-After` 15s) |
+| Concurrent **video** generations per organization | 5 (`429`, `error.code` `rate_limited`, `details.reason` `concurrency_limit`, `Retry-After` 15s) |
+| Concurrent **image** generations per organization | **12** (`429`, `details.reason` `image_concurrency_limit`) — its own budget since spec `2.12.0`, not carved out of the 5 above |
 | Concurrent **caption** jobs per organization | 10 (`429`, `details.reason` `caption_concurrency_limit`) — a separate budget from the 5 above |
+| Concurrent **transcript** jobs per organization | 10 (`429`, `details.reason` `transcript_concurrency_limit`), where `POST /transcripts` is offered — again its own budget |
+| Concurrent **voice-over** jobs per organization | 10 (`429`, `details.reason` `voiceover_concurrency_limit`), where `POST /voiceovers` is offered — again its own budget |
 | JSON request body | 64 KB |
 | Upload size | 100 MB |
 | Upload URL lifetime | 900 seconds |
@@ -607,6 +615,8 @@ Every response carries `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateL
 - The pre-auth ceiling reports `Retry-After` and **no** `X-RateLimit-*` headers at all.
 
 Concurrency detail worth knowing: the count covers the organization's **API surface only**, so dashboard renders do not consume an integration's slots, and a row stops counting after 30 minutes unfinished, so a stuck job cannot jam an organization permanently. Reads, estimates and uploads are not affected by it.
+
+The video and image budgets are counted by two queries that cannot see each other's rows, and that separation runs **both ways**: a batch of images in flight never refuses a `POST /videos`, and five videos rendering never refuse a `POST /images`. Before `2.12.0` images spent video slots and both halves of that were false. So do not treat a `429` on one as a reason to stop calling the other — branch on `details.reason`, which is exactly what it is for.
 
 Cloudflare's edge timeout of roughly 100 seconds is the real ceiling on any single request, which is why video generation is asynchronous and image generation is not (it fits).
 
@@ -650,7 +660,7 @@ response names the field and the limit.
 
 **There is no second shape.** Until spec `2.0.0` a prompt-rule failure was also a 400, carrying `details.rule` and `details.violations[]`. Those keys no longer appear on any response — the rules that replaced them are **advisory only** and arrive as the `warnings` array on a `200` from `/estimates`, never as an error. Code that branches on `details.rule` is reading for something that will never arrive; code that wants the craft advice reads `warnings` off the estimate. (The earlier claim here that `warnings` was itself removed in spec `3.0.0` was wrong — deployed spec is `2.6.0` and it returns the field; verified live 2026-08-04.)
 
-### The five causes of a 429
+### The eight causes of a 429
 
 Every one carries `details.reason` and a `Retry-After` header. Those two are the documented
 contract: sleep on the header, branch on the reason. `error.details` is a free-form object, so a
@@ -659,13 +669,16 @@ only extra it does name. Do not branch on an undocumented `details` key.
 
 | `details.reason` | Cause | What to do |
 |---|---|---|
-| `concurrency_limit` | 5 generations already in flight for the organization; `details.inFlight` says how many | Wait for one to reach a terminal state, then submit. A longer backoff does not help; a finished job does. Generation endpoints only. |
+| `concurrency_limit` | 5 **video** generations already in flight for the organization; `details.inFlight` says how many | Wait for one to reach a terminal state, then submit. A longer backoff does not help; a finished job does. Video generation only — images have their own queue below. |
+| `image_concurrency_limit` | **12 image generations already in flight** for the organization (verified against the deployed spec `2.12.0`, 2026-08-06) | Same shape: wait, do not slow down. Counted **separately** from `concurrency_limit` in both directions — images never block a render, renders never block an image. |
 | `caption_concurrency_limit` | **10 caption jobs already in flight** for the organization (verified in spec 2.6.0, 2026-08-04) | Same shape as above: wait, do not slow down. Counted **separately** from `concurrency_limit`, deliberately — a batch of captions can never block your next render, and vice versa. |
+| `transcript_concurrency_limit` | **10 transcripts already in flight** for the organization, where `POST /transcripts` is offered (verified against the deployed spec `2.12.0`, 2026-08-06) | Wait. A transcript is synchronous, so this bounds how many you can hold open at once and is often the first ceiling a batch meets. |
+| `voiceover_concurrency_limit` | **10 voice-overs already in flight** for the organization, where `POST /voiceovers` is offered (verified against the deployed spec `2.12.0`, 2026-08-06) | Wait — but on a two-second TTS call, not on your renders. Easy to misread as "stop generating video" when renders are legitimately in flight; they are unrelated queues. |
 | `key_limit` | 60 requests per minute on this key | Honor `Retry-After`. The `X-RateLimit-*` trio tracks this ceiling and only this one. |
 | `organization_limit` | 180 requests per minute across every key the organization holds | Honor `Retry-After`. `X-RateLimit-*` will still show room on your key — correct, not a broken limiter. Minting another key does not raise it. |
 | `client_limit` | 1,200 requests per minute from one address, **pre-authentication** | Honor `Retry-After`. Carries no `X-RateLimit-*` trio. |
 
-An agent that reads only "429 means slow down" backs off on the wrong axis when the real problem is five jobs in flight.
+An agent that reads only "429 means slow down" backs off on the wrong axis when the real problem is jobs in flight — and, with five separate concurrency queues, it may be backing off the wrong queue entirely. Branch on `details.reason`.
 
 ### The 500 rule
 
