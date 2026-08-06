@@ -660,13 +660,30 @@ Then:
 
 1. Save under `outputs/<descriptive-subfolder>/` — `outputs/clone-northbrook-balm/`, not the
    job id — and name the files for what they are.
-2. **Open the folder** so they can watch immediately: `open "<dir>"` on macOS, `xdg-open` on
+2. **Copy the source video in beside them**, as `source-<what-it-is>.mp4`. A copy, not a
+   symlink and not the path it arrived on. A clone is only evidence next to the thing it
+   cloned, and every other resting place for the source is temporary: `/tmp` is swept, a
+   downloads folder is cleared, a competitor's URL rots. Measured 2026-08-06 — a finished
+   three-variant run was reopened four days later with its three ads intact and its source
+   gone, which left no way to show the clone had been faithful to anything.
+3. **Transcribe every finished clip and diff it against the approved script.** One
+   `POST /v1/transcripts` per clip, 0.1 credits each, and it is the only thing that catches
+   a spoken line that drifted. A reference image pins the **label**; nothing pins the
+   **audio**, and the two fail independently. Measured 2026-08-06 across three clones of one
+   source: the on-screen label was glyph-perfect in all three while the brand name was spoken
+   as "Magnesium", "Magnesium" and "Magneum" — never once as written — and one clip swapped
+   `L-theanine` for **`L-Thiamine`**, a different compound, in a script that had already
+   passed the dialogue gate. Digits survived intact ("310 milligrams" rendered correctly).
+   - **A coined or hyphenated brand name is the high-risk case**: the model resolves it to
+     the nearest ordinary word. Spell it phonetically inside the quoted line and re-check.
+   - Report the diff per clip. A clone that says the wrong brand name is a failed render
+     even though the API returned `succeeded` and charged for it.
+4. **Open the folder** so they can watch immediately: `open "<dir>"` on macOS, `xdg-open` on
    Linux, `explorer` on Windows. Try `open` first and fall back silently.
-3. **Open the source video beside them**, then present the clones as a numbered list. The
+5. **Open the source video beside them**, then present the clones as a numbered list. The
    comparison that decides whether this worked is against the original, not among the
-   variants — and the source is already on disk from step 1, so this is one more `open`
-   call, not a feature.
-4. For a series, present each clip, then offer to stitch with ffmpeg using **absolute
+   variants — and after item 2 the source is sitting in the same folder.
+6. For a series, present each clip, then offer to stitch with ffmpeg using **absolute
    paths**:
 
    ```bash
@@ -675,9 +692,9 @@ Then:
    ```
 
    Re-encode if the codecs differ. Hand back both the stitched file and the individual clips.
-5. Report the total spend by summing the `creditsCharged` values the API returned — those,
+7. Report the total spend by summing the `creditsCharged` values the API returned — those,
    never a number you calculated from a rate.
-6. If a job came back `failed` or `blocked`, say which and quote the `error` it carries.
+8. If a job came back `failed` or `blocked`, say which and quote the `error` it carries.
 
 Next steps worth offering: iterate the one beat that missed rather than re-firing the whole
 set, hand the file to the `meta-ad-builder` skill to publish it as a Meta creative, or burn
@@ -725,6 +742,7 @@ quote when reporting a problem.
 | Job `status: failed` or `blocked` | Read the `error` on the job | If it is content-related, rewrite. If it is a provider failure, credits are already refunded |
 | The clone looks nothing like the source | The reading was wrong, not the render | Go back to the beat map with the user before spending again. Change **one** element per iteration — framing, or pacing, or the anchor — never three |
 | The label came back garbled | Seedance preserves logos and destroys printed text | Say in the prompt that the label stays sharp and unchanged, and check the reference photo actually shows it sharp |
+| The clip **says** the wrong brand name | The reference image pinned the label, not the voice. There is no audio equivalent of a reference asset, so a coined name resolves to the nearest ordinary word — and the render still returns `succeeded` and still charges | Catch it with the transcript diff in step 12.3, never by ear on one playback. Respell the name phonetically inside the quoted line and re-render that clip only. The label being perfect tells you nothing about the audio |
 | Source longer than 15s | Not a failure | Present the two routes from step 5 and let the user pick. Do not split on your own initiative |
 
 ## Related files
