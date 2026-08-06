@@ -19,7 +19,7 @@ copies — read these from the repo you are working in.
 1. **This file** — endpoint, auth, upload flow, workflow phases.
 2. `shared/skills/image-ad-prompting/OVERVIEW.md` — the ecosystem hub: which skill, which model, what the family does and doesn't do.
 3. `shared/skills/chatgpt-image-ad/prompting/guide.md` — model-specific prompting (what gpt-image-2 is good/bad at, when to switch to nano-banana-pro).
-4. `shared/skills/image-ad-prompting/prompting/prompt-library.md` — 37 validated templates with per-model notes.
+4. `shared/skills/image-ad-prompting/prompting/prompt-library.md` — 40 validated templates with per-model notes.
 5. `shared/skills/image-ad-prompting/prompting/safety-suffixes.md` — the 3 always-on guards.
 6. `skills/chatgpt-image-ad/scripts/generate_image.py` — the helper script (Python stdlib only).
 
@@ -32,7 +32,7 @@ concurrency, the upload contract — the `novoads-api` skill's `reference.md` is
 2. **No platform/screenshot chrome in output.** `NO_CHROME_SUFFIX` is always on (override with `--allow-chrome` only when the ad's concept *requires* chrome — rare).
 3. **Edge-safe + glyph-safety suffixes always on** unless `--no-safe-zone` is explicit. They fix real failures; don't remove silently.
 4. **Max 4 reference images.** `referenceAssetIds` caps at 4 on `gpt-image-2` (`nano-banana-pro` takes up to 14, `reve-2.1` 8 — spec 2.7.0). The script enforces it.
-5. **Every brand mark that appears in the frame is passed as a reference asset.** Not a tip — a rule. This model invents brand-shaped content on any surface the prompt leaves unspecified, and it states it as fact. Measured over a 34-template run on one real product (2026-08-04): the label was faithful in **all 34** because a reference pinned it, while unpinned marks failed three ways — a billboard invented a *back-of-can view* carrying "OUR WATER IS SOURCED FROM THE AUSTRIAN ALPS…" with an icon row and a barcode, a prop thermos rendered a **Hydro Flask logo**, and a publication wordmark drifted. So: pin the product, pin the logo, pin any third-party mark the concept needs; and for product surfaces the ad does **not** show, say so — *"front label only; do NOT render the back of the can, no invented label copy, no ingredient text, no sourcing statement, no barcode."* One retry with that wording cured the fabricated claim completely. Unpinned means invented.
+5. **Every brand mark that appears in the frame is passed as a reference asset.** Not a tip — a rule. This model invents brand-shaped content on any surface the prompt leaves unspecified, and it states it as fact. Measured over a 34-template run on one real product (2026-08-04): the label was faithful in **all 34** because a reference pinned it, while unpinned marks failed three ways — a billboard invented a *back-of-can view* carrying "OUR WATER IS SOURCED FROM THE AUSTRIAN ALPS…" with an icon row and a barcode, a prop thermos rendered a **Hydro Flask logo**, and a publication wordmark drifted. So: pin the product, pin the logo, pin any third-party mark the concept needs; and for product surfaces the ad does **not** show, say so — *"front label only; do NOT render the back of the can, no invented label copy, no ingredient text, no sourcing statement, no barcode."* One retry with that wording cured the fabricated claim completely. Unpinned means invented. **Pass it as `--pin-block "<one-line product description>"`** rather than writing the clause by hand: the script wraps the shared library's standard 346-character guard around your description, counts it against the 4,000-char cap, and refuses pre-network naming the pin block's share if it does not fit. Hand-written pin blocks ran ~700 characters and were the single largest cause of a refused prompt.
 6. **No Meta upload from this skill.** Image generation only. Hand off via filesystem paths.
 7. **Always show a live cost estimate before generating, and get an explicit yes.** The price comes from `POST /v1/estimates` in this session — never from memory, never from `logs/novoads-api.jsonl`, never from `MASTER_CONTEXT.md`. There are no credit numbers written down anywhere in this repo, on purpose.
 
@@ -303,7 +303,7 @@ that is `image-ad-clone`'s job.
 
 - `shared/skills/image-ad-prompting/OVERVIEW.md` — ecosystem hub, read first
 - `shared/skills/chatgpt-image-ad/prompting/guide.md` — gpt-image-2 strengths/limits, retry playbook
-- `shared/skills/image-ad-prompting/prompting/prompt-library.md` — 37 validated templates
+- `shared/skills/image-ad-prompting/prompting/prompt-library.md` — 40 validated templates
 - `shared/skills/image-ad-prompting/prompting/template-format.md` — entry skeleton for new templates
 - `shared/skills/image-ad-prompting/prompting/safety-suffixes.md` — the 3 always-on guards
 - the **`image-ad-clone`** skill — reverse-engineers an existing ad into a reusable library entry

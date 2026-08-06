@@ -19,7 +19,7 @@ copies — read these from the repo you are working in.
 1. **This file** — endpoint, auth, upload flow, workflow phases.
 2. `shared/skills/image-ad-prompting/OVERVIEW.md` — the ecosystem hub: which skill, which model, what the family does and doesn't do.
 3. `shared/skills/nano-banana-image-ad/prompting/guide.md` — model-specific prompting (what Nano Banana Pro is good/bad at, when to switch to gpt-image-2).
-4. `shared/skills/image-ad-prompting/prompting/prompt-library.md` — 37 validated templates with per-model notes.
+4. `shared/skills/image-ad-prompting/prompting/prompt-library.md` — 40 validated templates with per-model notes.
 5. `shared/skills/image-ad-prompting/prompting/safety-suffixes.md` — the 3 always-on guards.
 6. `skills/nano-banana-image-ad/scripts/generate_image.py` — the helper script (Python stdlib only).
 
@@ -32,7 +32,7 @@ concurrency, the upload contract — the `novoads-api` skill's `reference.md` is
 2. **No platform/screenshot chrome in output.** `NO_CHROME_SUFFIX` is always on (override only with `--allow-chrome`).
 3. **Edge-safe + glyph-safety suffixes always on** unless `--no-safe-zone` is explicit.
 4. **Max 14 reference images.** `referenceAssetIds` caps at 14 on `nano-banana-pro` (spec 2.7.0; `gpt-image-2` takes 4, `reve-2.1` 8). The script enforces it — and 2-4 well-chosen references usually beat many.
-5. **Every brand mark that appears in the frame is passed as a reference asset.** Not a tip — a rule. Image models invent brand-shaped content on any surface the prompt leaves unspecified, and state it as fact. Measured on the sibling model over a 34-template run (2026-08-04): the product label was faithful in **all 34** because a reference pinned it, while unpinned marks failed three ways — an invented back-of-can panel carrying a sourcing claim nobody wrote, a **Hydro Flask logo** on a prop thermos, and a drifted publication wordmark. This model's 14-reference headroom makes the rule cheap to follow: pin the product, the logo, and any third-party mark the concept needs. For product surfaces the ad does **not** show, say so explicitly (*"front label only; no invented label copy, no barcode"*). Unpinned means invented.
+5. **Every brand mark that appears in the frame is passed as a reference asset.** Not a tip — a rule. Image models invent brand-shaped content on any surface the prompt leaves unspecified, and state it as fact. Measured on the sibling model over a 34-template run (2026-08-04): the product label was faithful in **all 34** because a reference pinned it, while unpinned marks failed three ways — an invented back-of-can panel carrying a sourcing claim nobody wrote, a **Hydro Flask logo** on a prop thermos, and a drifted publication wordmark. This model's 14-reference headroom makes the rule cheap to follow: pin the product, the logo, and any third-party mark the concept needs. For product surfaces the ad does **not** show, say so explicitly (*"front label only; no invented label copy, no barcode"*). Unpinned means invented. **Pass it as `--pin-block "<one-line product description>"`** rather than writing the clause by hand: the script wraps the shared library's standard 346-character guard around your description, counts it against the 4,000-char cap, and refuses pre-network naming the pin block's share if it does not fit. Hand-written pin blocks ran ~700 characters and were the single largest cause of a refused prompt.
 6. **No Meta upload from this skill.** Image generation only. Hand off via filesystem paths.
 7. **Always show a live cost estimate before generating, and get an explicit yes.** The price comes from `POST /v1/estimates` in this session — never from memory, never from `logs/novoads-api.jsonl`, never from `MASTER_CONTEXT.md`. There are no credit numbers written down anywhere in this repo, on purpose. Nano Banana Pro costs more per image than gpt-image-2, so the model choice is worth surfacing when you show the quote.
 
@@ -207,7 +207,7 @@ write them to `./generated/run-<ts>.jsonl` for downstream consumption.
 
 - `shared/skills/image-ad-prompting/OVERVIEW.md` — ecosystem hub, read first
 - `shared/skills/nano-banana-image-ad/prompting/guide.md` — model-specific prompting, retry playbook
-- `shared/skills/image-ad-prompting/prompting/prompt-library.md` — 37 validated templates
+- `shared/skills/image-ad-prompting/prompting/prompt-library.md` — 40 validated templates
 - the **`image-ad-clone`** skill — reverse-engineers an existing ad into a reusable library entry
 - the **`chatgpt-image-ad`** skill — sibling for typography-heavy / UI-mimicry templates
 - the **`novoads-api`** skill — the API contract underneath all of this

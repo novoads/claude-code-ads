@@ -313,7 +313,7 @@ The entry must include:
 
 ## Naming convention for new templates
 
-If the save target already has T1–T39 (the seeded templates), continue with T40, T41, … Use semantic suffixes if helpful: `T40 — Lifestyle hero`, `T41 — Carousel cover`. Keep the `T<n>` part for cross-skill referencing.
+If the save target already has T1–T42, continue with T43, T44, … Use semantic suffixes if helpful: `T43 — Lifestyle hero`, `T44 — Carousel cover`. Keep the `T<n>` part for cross-skill referencing.
 
 ## Out of scope
 

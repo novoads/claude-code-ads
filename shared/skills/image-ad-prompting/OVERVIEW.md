@@ -2,7 +2,7 @@
 
 **One-line summary:** three skills + one shared prompt library let you generate standalone Meta image-ad creatives on any of the Novoads image models — ChatGPT Image 2, Nano Banana Pro, Reve 2.1 — and reverse-engineer existing ads into reusable templates. Output is image files. Meta-side uploading is handled by a *separate* `meta-ad-builder` skill, not by these.
 
-**Read this whole file** at the start of any session where the user mentions: making an ad, image creative, ad library, gpt-image-2, ChatGPT Image 2, Nano Banana, Nano Banana Pro, Reve, cloning an ad, reverse-engineering an ad, or anything in the `T1–T39` template namespace.
+**Read this whole file** at the start of any session where the user mentions: making an ad, image creative, ad library, gpt-image-2, ChatGPT Image 2, Nano Banana, Nano Banana Pro, Reve, cloning an ad, reverse-engineering an ad, or anything in the `T1–T42` template namespace.
 
 ---
 
@@ -12,9 +12,11 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │ SHARED BRAIN (no SKILL.md — referenced by all 3 skills below)   │
 │ shared/skills/image-ad-prompting/                               │
-│   ├ prompting/prompt-library.md   37 validated templates        │
+│   ├ prompting/prompt-library.md   40 validated templates        │
 │   ├ prompting/template-format.md  entry-format skeleton         │
 │   ├ prompting/safety-suffixes.md  3 always-on prompt guards     │
+│   ├ scripts/check_library.py      the evals, runnable, free     │
+│   ├ EVALS-image-ad-prompting.md   what they check and why       │
 │   └ OVERVIEW.md                   this file                     │
 ├─────────────────────────────────────────────────────────────────┤
 │ GENERATOR SKILLS (produce image files)                          │
@@ -110,7 +112,7 @@ resulting library entry has `Model notes:` for more than one.
 
 ## The shared prompt library
 
-`prompting/prompt-library.md` ships with **37 validated full prompts** (tags T1 through T39,
+`prompting/prompt-library.md` ships with **40 validated full prompts** (tags T1 through T42,
 with intentional gaps at T16/T22 from the source Uni1 lineage). Every entry has:
 
 - **When to use** — positioning fit
@@ -139,8 +141,33 @@ recurring rendering failures across every modern image model. If you need to dis
 specific run, use `--allow-chrome` or `--no-safe-zone` flags and document why.
 
 The suffixes count against the model's 4,000-character prompt cap, and together they run to
-roughly 1,500. A template prompt that is already near the cap can push the final prompt over
-it — the failure is a `400` naming the limit, before anything is charged.
+exactly **1,575**. A template prompt that is already near the cap pushes the final prompt
+over it — the script measures and refuses pre-network, naming the exact overage, so this
+costs a round trip rather than credits.
+
+**Budget the pin block before you write the fill.** Pinning every brand mark is mandatory
+(unpinned marks get invented), and the standard pin block costs 400 characters, leaving
+**2,025** for a template body. **23 of the 40 templates** have that much room; three (T8,
+T11, T14) exceed 2,425 and are refused as written, before any brand fill. Pass the block as
+`--pin-block "<product description>"` rather than hand-writing it — the hand-written ones ran
+~700 characters and were the largest single cause of a refusal. Per-template headroom:
+
+```bash
+python3 shared/skills/image-ad-prompting/scripts/check_library.py --verbose
+```
+
+## Evals
+
+The library ships evals, and they need no key and no credits:
+
+```bash
+python3 shared/skills/image-ad-prompting/scripts/check_library.py            # run them
+python3 shared/skills/image-ad-prompting/scripts/check_library.py --selftest # prove they can fail
+```
+
+They cover the prompt budget, conflicting element counts, documented model limits, the
+transcribe-verify rule, and the entry format. Run them before landing a library change.
+[EVALS-image-ad-prompting.md](EVALS-image-ad-prompting.md) says what each one caught.
 
 ---
 
@@ -208,8 +235,8 @@ A clone run is many generations — the iteration cap alone allows four, plus th
 different-brand test and any cross-model check. **Estimate the whole run up front, not each
 call**, so the user approves a total rather than being asked six times.
 
-The library is append-only. New templates start at T40 (next available number after the
-seeded T1-T39).
+The library is append-only. New templates start at T43 — the next free number after the
+seeded T1-T39 and the T40-T42 added since.
 
 ---
 
@@ -258,6 +285,6 @@ shared/skills/
 ## For human onboarding
 
 If you're a human reading this for the first time:
-- See [prompt-library.md](prompting/prompt-library.md) for the 37 validated ad templates.
+- See [prompt-library.md](prompting/prompt-library.md) for the 40 validated ad templates.
 - See [chatgpt-image-ad/SKILL.md](../../../skills/chatgpt-image-ad/SKILL.md) and [nano-banana-image-ad/SKILL.md](../../../skills/nano-banana-image-ad/SKILL.md) for hands-on usage.
 - The `image-ad-clone` skill is for *making new templates*, not generating ads — only invoke it when you want to add to the library.

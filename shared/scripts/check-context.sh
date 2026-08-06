@@ -172,7 +172,7 @@ done
       printf '\n📖 Read first: %s\n' "$overview_path"
     fi
     if [[ -n "$library_path" ]]; then
-      printf '📚 Library:    %s (37 validated templates)\n' "$library_path"
+      printf '📚 Library:    %s (40 validated templates)\n' "$library_path"
     fi
     printf '   Aspect-ratio compatibility matrix is at the top of the library.\n'
     printf '   Output is image files; Meta upload is the separate meta-ad-builder skill.\n'

@@ -49,7 +49,7 @@ from the live request schemas (`GET /v1/openapi.json` is the authority):
 | `4:3` | ❌ | ✅ |
 | `5:4` | ❌ | ✅ |
 
-**Every ratio used by the 37 templates in this file (`1:1`, `2:3`, `9:16`) renders natively on
+**Every ratio used by the 40 templates in this file (`1:1`, `2:3`, `9:16`) renders natively on
 all three models.** No template in this library needs a fallback-and-crop — that whole class of
 workaround is gone. The gap only bites a bespoke prompt asking for `3:2`, `3:4`, `4:3` or `5:4`,
 and the fix there is to route it to `nano-banana-pro` or `reve-2.1`.
@@ -70,9 +70,46 @@ the product label was faithful in **all 34** because a reference pinned it, and 
 brand element that was *not* pinned either drifted or was fabricated — including a
 back-of-pack view invented whole, carrying a sourcing claim about a real brand that
 appeared in no prompt. The model fills unspecified surfaces with plausible brand-shaped
-content; silence reads as an invitation. Where a template shows only one face of a product,
-say so in the prompt: *"front label only; do NOT render the back, no invented label copy,
-no ingredient text, no sourcing statement, no barcode."*
+content; silence reads as an invitation.
+
+### The standard pin block
+
+Do not hand-write that constraint per run — the hand-written ones came out at ~700
+characters and were the single largest cause of a refused prompt. Paste this block, fill the
+one placeholder, and change nothing else:
+
+```
+[BRAND PIN] {brand.product_description}, reproduced exactly as it appears in the reference image — same wordmark, same colours, same proportions, front face only. Do NOT render the back of the pack, invented label copy, ingredient lists, sourcing or health claims, or a barcode. Every word in this image is one this prompt specifies or one already printed on the reference.
+```
+
+The generator scripts carry it as `--pin-block "<product description>"`, which appends the
+guard for you and counts it against the cap before anything is sent.
+
+**Its budget is 400 characters** — 346 of fixed guard plus about 54 for the description.
+Keep the description terse (`forest-green pouch with white AG1 wordmark`), because every
+character it gains comes off the template body.
+
+### What actually fits
+
+The cap is **4,000 characters on every model**, and it is measured on the *final* prompt —
+your body plus the three always-on suffixes, which are **1,575** characters together. So a
+template body has **2,425** characters to work in, and **2,025** once the pin block is in.
+
+| | chars |
+|---|---|
+| Model prompt cap (`gpt-image-2`, `nano-banana-pro`, `reve-2.1`) | 4,000 |
+| − always-on safety suffixes (all three) | 1,575 |
+| = room for a template body, unpinned | **2,425** |
+| − the standard pin block | 400 |
+| = room for a template body, pinned | **2,025** |
+
+**23 of the 40 templates** have room for the standard pin block as written; the rest need a
+trim first. Three of them — T8, T11 and T14 — are over 2,425 and so are refused as written,
+before any brand fill. The refusal is free: `generate_image.py` measures the final prompt
+and dies pre-network, naming the exact overage. Run
+`python3 ../scripts/check_library.py --verbose` for every template's current headroom, and
+read [EVALS-image-ad-prompting.md](../EVALS-image-ad-prompting.md) L1 for why the long ones
+have not simply been shortened.
 
 Every generation is charged and there are no free re-rolls, so price the run with a live
 `POST /v1/estimates` and get the user's OK first. That call is free and it is the only
@@ -846,6 +883,12 @@ Modern minimal data-viz aesthetic — clean, Apple-Health-inspired. No additiona
 - **gpt-image-2:** clean. Geometric shapes + text labels render reliably.
 - **nano-banana-pro:** clean for the bars; small segment labels can blur. Bump pastel tones higher-contrast if using nano-banana.
 
+**Documented limit — segment heights are drawn approximately.** The bars are sized by eye,
+not computed from a value, so the stack reads as a proportion rather than measuring one.
+Fine here, because this template's claim is "many things versus one thing" and not a
+figure. If a run needs the segments to be numerically true, composite the chart instead of
+generating it — same limit as T38, measured there at ~9% overshoot.
+
 ---
 
 ## T18 — Flowchart "old way" vs "new way"
@@ -1542,13 +1585,21 @@ Modern, brutalist-meets-premium typography aesthetic. The type makes the joke; t
 
 **Variables:** `{contact_name}`, `{messages[]}` (4 bubbles total: 2 incoming grey, 2 outgoing blue including 1 with a rich link card preview), `{rich_card.url}`, `{rich_card.title}`, `{rich_card.description}`
 
+**Element structure:** grey text → blue text → blue link card → grey text. Four bubbles.
+State the structure, not just the number — a bare count leaves the model to decide which
+kind of bubble is missing, and the link card is the one that carries the product.
+
+> **Declared divergence from the Kruse source.** Upstream opens this prompt at *three*
+> bubbles and closes it at *four*; this copy says four throughout, which is what rendered
+> correctly when measured on 2026-08-06.
+
 **Template prompt** (AG1-validated example — swap brand-specifics per Variables above):
 ```
-9:16 portrait static ad creative, 1080x1920, edge-to-edge — a fake iOS Messages app conversation thread with EXACTLY THREE message bubbles (one from a friend, one with a product photo, one reply). Standalone ad creative. Pure white background ~#FFFFFF.
+9:16 portrait static ad creative, 1080x1920, edge-to-edge — a fake iOS Messages app conversation thread with EXACTLY FOUR message bubbles in this order: a grey incoming text, a blue outgoing text, a blue outgoing rich link card, a grey incoming text. Standalone ad creative. Pure white background ~#FFFFFF.
 
 Top of the canvas (~10% height): a Messages app conversation header — centered, a small circular contact avatar (~40px) with a dark grey "A" letter inside, then below it the contact name "Alex" in regular black SF Pro, then below in smaller grey: "Today 9:47 AM". On the far right of the header, a small blue FaceTime-camera icon. NO iOS status bar, NO back button.
 
-Below the header, an EXACT THREE-bubble vertical chat sequence with comfortable spacing between bubbles. Plain text only, no emoji, no special glyphs.
+Below the header, an EXACT FOUR-bubble vertical chat sequence with comfortable spacing between bubbles. Plain text only, no emoji, no special glyphs.
 
 BUBBLE 1 (incoming, left-aligned):
 - Light grey rounded bubble (~#E9E9EB) with black sans-serif text inside:
@@ -1753,6 +1804,14 @@ Modern data-led editorial design. The big number is the hero; the chart proves i
 **Model notes:**
 - **gpt-image-2:** clean. Strong on the stat number + chart axis labels.
 - **nano-banana-pro:** stat number renders fine at giant size; chart axis labels can blur. Acceptable.
+
+**Documented limit — the chart is drawn approximately, not plotted.** `gpt-image-2` sizes a
+bar or a plotted point by eye, not by the number beside it: measured 2026-08-06, this
+template's `204` bar overshot its own axis by about 9% while every label came back exact.
+That is the model working as designed, not a defect to retry — a fresh render redraws it
+approximately too. **If the chart has to be numerically true, composite it: generate the ad
+without the chart and lay a real chart over it, or accept that the picture is decorative and
+the number in the copy is the claim.** The same applies to T17's stacked bars.
 
 ---
 

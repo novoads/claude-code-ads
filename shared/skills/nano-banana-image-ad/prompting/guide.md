@@ -3,7 +3,7 @@
 This guide is the brain for the **`nano-banana-image-ad`** skill — generating standalone Meta ad creatives with **Nano Banana Pro** (`nano-banana-pro`, Google's Gemini Pro Image) on the Novoads API.
 
 For the shared template library and entry format, see:
-- [prompt-library.md](../../image-ad-prompting/prompting/prompt-library.md) — 37 validated templates
+- [prompt-library.md](../../image-ad-prompting/prompting/prompt-library.md) — 40 validated templates
 - [template-format.md](../../image-ad-prompting/prompting/template-format.md) — how to write a new entry
 - [safety-suffixes.md](../../image-ad-prompting/prompting/safety-suffixes.md) — the 3 always-on prompt guards
 - [OVERVIEW.md](../../image-ad-prompting/OVERVIEW.md) — the ecosystem hub
