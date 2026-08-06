@@ -1793,6 +1793,162 @@ Cinematic museum lighting: a soft warm pool of light around the plinth, rest of 
 
 ---
 
+## T40 — Scratch-off ticket stat grid
+
+**When to use:** a promo/offer ad that has to carry 4-6 hard numbers at once (feature count, language count, turnaround, price) without reading as a spec sheet. The lottery-ticket metaphor makes a stat grid feel like a prize reveal, and the unscratched sixth panel is a built-in "there's more" tease. Best for a limited-time discount or trial offer.
+
+**Aspect ratio:** `1:1` — native on all three models.
+
+**Reference image:** the brand's logo mark (and wordmark if it is a separate lockup). This template is a photoreal prop, not a product shot: the reference supplies the monogram that gets printed on the card and tiled inside the unscratched panel. `nano-banana-pro` picked up a circular monogram from a flat PNG and re-rendered it as printed ink on the card correctly.
+
+**Variables:** `{brand.name}` (wordmark on the card header), `{brand.color_accent}` (hairline rules, headline, footer URL — one accent only; the rest of the card is black + silver foil), `{ad.headline}` (short all-caps promise, 3-4 words), `{serial}` (fake ticket serial, top-right), `{stat_panels[]}` (exactly 5 filled panels: an icon, a number/short value, and a 1-3 word label each — panel 4 is the offer and renders largest), `{ad.fine_print}` (two lines of legal/offer terms in caps), `{brand.url}` (footer, next to a globe icon)
+
+**Template prompt** (fill the placeholders; validated fill below):
+```
+1:1 photorealistic product shot of a physical scratch-off lottery ticket.
+
+BACKGROUND: matte black granular surface filling the frame, soft light from upper left falling off to near-black at lower right. Small silver scratch-foil flakes scattered around the card, crumbled into denser piles at the bottom-left and bottom-right corners, catching specular highlights.
+
+SUBJECT: one square matte-black card-stock ticket lying flat, rotated 8 degrees counter-clockwise, 74% of frame width, fully visible with clear black margin on all four sides, soft contact shadow. A thin {brand.color_accent} hairline frames its inner border.
+
+HEADER: centered {brand.color_accent} geometric-sans wordmark "{brand.name}" preceded by a small circular monogram badge. Top-right corner: small light-grey monospace serial "{serial}".
+
+HEADLINE: under the wordmark, one line of heavy condensed italic caps in {brand.color_accent} reading "{ad.headline}", spanning nearly the full inner width, with a hand-drawn marker underline below it with uneven ends.
+
+PANEL GRID: six rounded panels in two rows of three, each outlined by a thin {brand.color_accent} hairline. Five are scratched open — textured brushed-silver foil with scratch striations and torn edges revealing dark print:
+- R1C1: small dark icon, then {stat_1_value} large in dark ink, then "{stat_1_label}" small dark bold caps.
+- R1C2: small dark icon, then {stat_2_value} large in dark ink, then "{stat_2_label}" small dark bold caps.
+- R1C3: small dark icon, then "{stat_3_line1}" dark caps, then "{stat_3_line2}" dark caps.
+- R2C1 (wider): "{offer_value}" very large dark condensed caps, "{offer_label}" smaller dark caps below, hand-drawn dark underline.
+- R2C2: small party-popper icon, then "MATCH" and "& WIN!" dark bold caps on two lines.
+- R2C3: UNSCRATCHED — flat dark-grey panel, no foil, printed with a tiled 4x4 pattern of the small monogram in lighter grey.
+
+FOOTER BAND: left, a real black-and-white barcode. Center, two lines of tiny light-grey caps: "{ad.fine_print_line1}" / "{ad.fine_print_line2}". Right, a small {brand.color_accent} globe icon then "{brand.url}" in small {brand.color_accent}.
+
+TYPE: geometric grotesque throughout; heavy condensed italic headline, heavy panel numbers, tight small-caps labels, legible fine print.
+
+EXCLUDE: no hands, no people, no device frames, no watermark.
+```
+
+**Example fill** (Northwind, a stand-in brand — swap in the real one):
+`{brand.name}` = "Northwind" · `{brand.color_accent}` = warm cream `#EFE7D8` · `{ad.headline}` = "INSTANT WORKFLOW JACKPOT" · `{serial}` = "0000001" · panels = `40+ / TEMPLATES`, `12 / INTEGRATIONS`, `SET UP / IN 5 MINS`, offer `$1 / FIRST 7 DAYS`, `MATCH & WIN!` · fine print = "LIMITED TIME ONLY. 7-DAY TRIAL, THEN FROM $29/MO." / "CANCEL ANYTIME. TERMS APPLY." · `{brand.url}` = "northwind.example"
+
+**Note — the numbers are the ad.** Every value in the panels is a claim in a distributable creative. Read them off the brand's own published pricing and feature pages at fill time; do not carry a number from memory and do not let the model round one for you. A stat grid is exactly the layout where an invented figure looks most authoritative.
+
+**Note:** the accent is doing a lot of work here — one color against black and silver. A restrained brand (warm cream on black) reads as *premium foil stamping*; a saturated accent reads as *lottery kiosk*. Both are valid, they are different ads.
+
+**Model notes:**
+- **nano-banana-pro:** strong — **preferred**. Photoreal foil with real scratch striations and torn edges, correct 6-panel grid including the wider offer panel, card fully in frame with the black margin the prompt asked for.
+- **gpt-image-2:** renders it legibly but takes a steeper camera angle and lets the card bleed off the left and right edges despite the always-on edge-safe suffix; the foil flattens to a uniform grey and the wider offer panel reverts to equal width. Usable as a variant, not as the primary.
+- **reve-2.1:** untested — validate before using on that model.
+
+---
+
+## T41 — Brutalist headline over a social-post embed
+
+**When to use:** social proof where the *proof* is a real post someone already wrote. The brutalist headline states the claim, the embedded post substantiates it, and the hand-drawn annotations keep it from reading as a corporate case study. Strong for founder-led or community-led brands.
+
+**Aspect ratio:** `4:5` — native on all three models.
+
+**Reference image:** the brand's wordmark and/or logo mark for the footer lockup. No product shot is needed; this template is entirely typographic.
+
+**Requires `--allow-chrome`.** The embedded post is the creative, not a screenshot wrapper, so the always-on no-chrome suffix must be waived or the model strips the card's author row. This is the documented exception, not a workaround.
+
+**Variables:** `{ad.headline_prefix}` (2 heavy sans words, e.g. "HOW TEAMS"), `{ad.headline_verb}` ("USE"), `{brand.name}` (rendered as the outlined script word), `{canvas.color}` (flat background hex), `{author.name}`, `{author.title}`, `{author.degree}` (e.g. "1st", "2e"), `{post_body[]}` (3-5 short paragraphs; exactly one gets a highlighter swash), `{highlight.color}`, `{brand.color_accent}` (starburst + marker annotations), `{platform_label}` (the circled callout, e.g. "on LinkedIn")
+
+**Template prompt:**
+```
+4:5 vertical flat graphic ad composition, not a photograph.
+
+BACKGROUND: flat {canvas.color} canvas, no texture or gradient.
+
+HEADLINE: upper third, flush left, two lines with very tight leading. Line 1 "{ad.headline_prefix}" and the word "{ad.headline_verb}" on line 2 are set in an extremely heavy black condensed sans, all caps, near-black. The word "{brand.name}" follows on line 2 but is set in large hand-drawn cursive script rendered as white fill with a black outline only — wider and more playful than the sans beside it, same baseline.
+
+ANNOTATION: just below the left end of the headline, the small handwritten marker word "By" in {brand.color_accent}, slightly tilted.
+
+CENTER CARD: vertically centered white rounded-rectangle card with a soft shadow, inset from the canvas edges, containing a rendered professional-network post:
+- Top row: small square profile photo of a person at far left; then "{author.name}" in bold dark text, a small blue-and-white verification badge, a grey dot, and grey "{author.degree}". Below the name, small grey text "{author.title}". Below that, small grey "21 h" and a small grey globe icon.
+- Body: {N} short left-aligned dark-grey paragraphs in a plain UI sans, separated by blank lines:
+  "{post_body_1}"
+  "{post_body_2}" — this whole sentence sits on a {highlight.color} highlighter swash.
+  "{post_body_3}"
+  "{post_body_4}"
+
+DECORATION: on the left edge, a solid {brand.color_accent} jagged starburst blob overlapping the card's lower-left corner, tucked behind the card.
+
+CALLOUT: below the card on the right, the handwritten marker phrase "{platform_label}" in {brand.color_accent} tilted slightly upward, circled by a hand-drawn ellipse in the same ink.
+
+FOOTER: bottom center, the "{brand.name}" wordmark preceded by a small monogram badge. Bottom right, a black pill-shaped outline button containing a long rightward arrow.
+
+TYPE: two families only — ultra-heavy condensed grotesque for the headline, neutral UI sans for the card. Script word and marker notes are hand-lettered.
+
+EXCLUDE: no photographic background, no phone or browser frame, no engagement row, no scrollbars, no nav bars.
+```
+
+**Example fill** (Northwind, a stand-in brand — swap in the real one, and see the warning below before you fill the author):
+headline "HOW TEAMS / USE *Northwind*" · `{canvas.color}` = pale sand `#F3EFE7` · `{brand.color_accent}` = signal orange `#E8552D` · `{highlight.color}` = highlighter yellow `#FFE066` · author = the brand's own co-founder, "Co-founder at Northwind", 1st · body = four short paragraphs lifted verbatim from a post that founder actually published ("We shipped the thing we kept asking other people to build for us." / "Set it up once and the weekly status thread writes itself." highlighted / "No new tool to learn. It reads the boards you already keep." / "I answer every support message myself. No bots, no queue.") · callout = "on LinkedIn"
+
+**Note — attribution is not a placeholder you may invent.** This template renders a named person with a verification badge. Fill it only with a post that person actually published, or with your own founder's words. A fabricated endorsement attributed to a real name is the one failure mode of this layout that no model will catch for you.
+
+**Model notes:**
+- **gpt-image-2:** clean — **preferred**. Closest to the source proportions, flat canvas stays flat, and the highlighter swashes land as tidy rectangles behind exactly the clause specified. The outlined script word renders with correct counter shapes.
+- **nano-banana-pro:** also faithful and arguably more striking — it scales the headline and card up and tightens the margins, and renders the highlighter as a painted brush stroke rather than a flat swash. A different ad, not a worse one; pick by whether you want editorial or poster.
+- **reve-2.1:** untested — validate before using on that model.
+
+---
+
+## T42 — Editorial testimonial card
+
+**When to use:** the calmest social-proof layout in the library — one quote, three result bullets, one attribution. No product, no photography, no chrome. Good for a premium or B2B read, and cheap to re-fill for every customer you can quote.
+
+**Aspect ratio:** `9:16` — native on all three models. The layout is vertically stacked with deliberate empty margins top and bottom, so it survives a `4:5` crop.
+
+**Reference image:** brand wordmark / logo mark for the badge and footer lockup. Text-only template; no product shot needed.
+
+**Variables:** `{brand.name}` (in the badge, lowercase with a period), `{headline.sans_clause}` (the first half of the sentence, e.g. "replaces the"), `{headline.serif_clause}` (second half, set in editorial serif italic — this is where the number or the punch goes), `{quote.body}` (one sentence, first person), `{result_bullets[]}` (exactly 3, short), `{author.name}`, `{author.title}`, `{brand.color_primary}` (badge fill), `{canvas.color}`
+
+**Template prompt:**
+```
+9:16 vertical flat editorial ad composition, not a photograph.
+
+BACKGROUND: flat {canvas.color} canvas, no texture, gradient or vignette.
+
+HEADLINE LOCKUP: upper-middle third, horizontally centered, two lines reading as one sentence split across two typefaces:
+- Line 1: a {brand.color_primary} rounded-rectangle badge holding the lowercase wordmark "{brand.name}" in a heavy sans, immediately followed on the same baseline by "{headline.sans_clause}" in medium-weight near-black neutral sans.
+- Line 2: "{headline.serif_clause}" in a large editorial SERIF ITALIC, near-black, centered beneath line one.
+
+QUOTE CARD: vertically centered white rounded-rectangle card, thin light-grey border, very soft shadow, inset from the canvas edges with generous internal padding:
+- A large grey decorative opening double-quote at the top-left of the inner area.
+- Left-aligned near-black neutral sans body: "{quote.body}" then a three-item bulleted list with small round dots:
+  "{bullet_1}"
+  "{bullet_2}"
+  "{bullet_3}"
+  A large grey decorative closing double-quote sits immediately after the last bullet's text.
+- Below the list, an attribution pill: a smaller white rounded rectangle with a thin light-grey border holding, at left, a small square profile photo, then two stacked lines — "{author.name}" in bold dark small text with a small blue-and-white verification badge, and beneath it "{author.title}" in grey micro text. At the pill's right end, grey micro text "23h".
+
+FOOTER: below the card, horizontally centered with generous space above and below, the "{brand.name}" wordmark preceded by a small monogram badge.
+
+TYPE: two families plus the badge — neutral grotesque for UI and body, editorial serif italic for the second headline line. Hierarchy: headline largest, quote body medium, attribution smallest.
+
+COMPOSITION: vertically stacked and centered — headline, card, wordmark — with large empty margins at the top and bottom. Calm, editorial, text-only.
+
+EXCLUDE: no photographic background, no product shot, no device or browser frame, no platform nav, no engagement row, no emoji in the body.
+```
+
+**Example fill** (Northwind, a stand-in brand — swap in the real one):
+badge "northwind." on ink navy `#16233A` · `{canvas.color}` = warm off-white `#F7F5F0` · sans clause "replaces the" · serif clause "Monday status meeting" · bullets "Set up in 5 minutes" / "12 integrations, one dashboard" / "$1 for the first 7 days" · `{quote.body}`, `{author.name}` and `{author.title}` = **left as placeholders on purpose** — fill them from a customer who has agreed to be quoted, and see the warning below.
+
+**Note — never lift a testimonial from a brand's site into an ad fill without verifying the customer is real.** Marketing pages carry illustrative personas alongside genuine customers and rarely label which is which; a quote that is fine as landing-page copy becomes an advertising claim about a named individual the moment it lands in a creative. Get the name, the title and the sentence from someone you can point to. Same attribution warning as T41: only quote people who actually said it.
+
+**Note:** the split-typeface headline is the whole idea — the sans clause sets up, the serif italic clause lands. Put the number in the serif half.
+
+**Model notes:**
+- **gpt-image-2:** clean — **preferred**. Card proportions and serif-italic weight are closest to the reference, and the three bullets stay on three lines.
+- **nano-banana-pro:** faithful too, with a smaller card and more negative space around it — reads more like a print ad than a social card. Both are shippable; this one crops better to `4:5`.
+- **reve-2.1:** untested — validate before using on that model.
+
+---
+
 ## Adding new templates
 
 When a new ad reference is worth turning into a template, use the `image-ad-clone-*` skill (one per model — chatgpt or nano-banana) to:

@@ -450,11 +450,13 @@ def main() -> int:
     final_prompt = build_prompt(args.prompt, args.allow_chrome, args.no_safe_zone)
     if len(final_prompt) > MAX_PROMPT_CHARS:
         overflow = len(final_prompt) - MAX_PROMPT_CHARS
+        suffix_chars = len(final_prompt) - len(args.prompt)
         log(
             f"error: prompt is {len(final_prompt)} characters after the always-on safety "
             f"suffixes; {args.model} caps at {MAX_PROMPT_CHARS}. Trim about {overflow} "
             f"characters from --prompt (the suffixes add ~"
-            f"{len(final_prompt) - len(args.prompt)})."
+            f"{suffix_chars}). Your --prompt must be <= "
+            f"{MAX_PROMPT_CHARS - suffix_chars} characters with the current flags."
         )
         return 2
 
