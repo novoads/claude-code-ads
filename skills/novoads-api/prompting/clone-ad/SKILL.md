@@ -1,12 +1,16 @@
 ---
 name: clone-ad
-description: >
-  Clone an existing video ad for a different product or offer on the Novoads API. Analyzes
-  the source video's style, pacing, camera work, dialogue and tone, then adapts it into a
-  new Seedance 2.0 prompt and renders it for the user's product. End to end: input video →
-  analysis → adapted prompt → estimate → generation → delivery. Use when someone says
-  "clone this ad", "make this ad but for my product", "recreate this video for my brand",
-  or hands over a video ad plus a product photo and asks for something similar.
+description: >-
+  Clones a VIDEO ad end to end for a different product or offer, on the Novoads API. The
+  deliverable is a finished rendered MP4 — the WHOLE ad, not its opening, and not a
+  template. Reads the source's style, pacing, camera work, dialogue and tone, adapts it
+  into a Seedance 2.0 prompt, prices it, renders it, files the source beside the clones and
+  diffs each clip's transcript against the approved script. Use when asked to "clone this
+  ad", "clone this video ad", "make this ad but for my product", "recreate this video for
+  my brand", or when handed a video ad plus a product photo with a request for something
+  similar. Two neighbours it is NOT: a STATIC IMAGE ad is image-ad-clone, and rebuilding
+  only the first few seconds — where the hook ends and why it works — is a hook skill, not
+  this one. If the source does not move, this is the wrong skill.
 ---
 
 # Clone ad — Seedance 2.0
