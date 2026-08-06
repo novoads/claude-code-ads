@@ -49,7 +49,7 @@ These come from the live API contract (`GET /v1/openapi.json` is the authority):
 4. **No platform/screenshot chrome in output.** `NO_CHROME_SUFFIX` is always on (unless `--allow-chrome`).
 5. **Edge-safe rule always on.** Text and focal subjects must sit inside the central 84% of the canvas.
 6. **Glyph-safety rule always on.** Plain words inside body-text blocks; emoji OK in headlines.
-7. **No edit mode.** No inpainting, no mask, no `--source`, no img2img — on any model on this API. "Swap the background" is a fresh generation with the original passed as a reference.
+7. **No edit mode on THIS model.** `nano-banana-pro` does not publish `sourceAssetId`: no inpainting, no mask, no `--source`, no img2img. Here, "swap the background" is a fresh generation with the original passed as a reference. It is **not** true of the API as a whole — `gpt-image-2` does edit from a prompt (spec `2.10.0`), so route a genuine edit to `chatgpt-image-ad` instead of re-drawing it here.
 
 ## Aspect ratios
 

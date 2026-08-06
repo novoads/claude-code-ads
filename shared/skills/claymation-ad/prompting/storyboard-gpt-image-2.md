@@ -4,7 +4,9 @@
 
 The call is `POST /v1/images` and it is **synchronous** — the still comes back on the response, there is nothing to poll. Send `aspectRatio: "9:16"` explicitly on every call; `gpt-image-2` defaults to `1:1`.
 
-**There is no image-edit path on this API** — no `source`, no mask, no img2img, on any of the three image models. When a beat is nearly right, the only move is a fresh generation with the previous still passed as a reference. That is a new image that resembles the old one, not an edit of it, and it is billed as a new image.
+**There IS an image-edit path, on this model only** — `sourceAssetId` on `POST /v1/images`, `gpt-image-2` and no other. Pass the beat still you want to fix plus a prompt naming only what changes, and the rest of the frame is left alone. There is still no mask and no img2img strength dial, and it is billed as a full image. An earlier version of this file said no edit path existed at all; that stopped being true at deployed spec `2.10.0`.
+
+`sourceAssetId` and `aspectRatio` are mutually exclusive — an edit's output tracks the source's shape, and sending both is a 400. So an edit cannot reframe a beat: to change the aspect you must re-generate, passing the previous still in `referenceAssetIds` instead. That re-generation is a new image resembling the old one, not an edit of it.
 
 ## Universal prompt structure
 

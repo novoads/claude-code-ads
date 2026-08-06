@@ -30,11 +30,13 @@ For the shared library, see:
 
 4. **Never write brand-specific text into the final template.** Wordmarks, product names, slogans, specific photographs, hex colors specific to the source brand — all become `{placeholders}`. Only structural content (layout descriptions, photography style, typography family, composition rules) remains literal.
 
-5. **Save to the user's library, do not silently overwrite.** Default save target is the shared library at `shared/skills/image-ad-prompting/prompting/prompt-library.md`. If the target template name (e.g., `T40 — Lifestyle hero`) collides with an existing entry, ask the user before overwriting.
+5. **A v1 faithful clone is an internal working artifact and is never publishable.** Phase 4 deliberately reproduces the source *including* its wordmark, its registered marks and any real customer testimonial in it — that is what makes it a structural check. It is evidence, not creative: it never goes in an ad account, a deck, a social post or a case study. **Placeholderization (Phase 6) is where brand-specifics and real testimonials die**, and nothing leaves this workflow until they have. A quoted review carries a real person's name; invent the fill, never inherit it.
 
-6. **Document model notes for more than one model when you can.** Even if the user only cares about one right now, the library entry's value is portability — a `gpt-image-2: clean / nano-banana-pro: weak on small text` note saves future you from picking the wrong model.
+6. **Save to the user's library, do not silently overwrite.** Default save target is the shared library at `shared/skills/image-ad-prompting/prompting/prompt-library.md`. If the target template name (e.g., `T40 — Lifestyle hero`) collides with an existing entry, ask the user before overwriting.
 
-7. **Price the whole run up front, once.** A clone is not one generation. Phase 4 plus the Phase 5 iteration cap plus the Phase 7 test fill plus an optional Phase 8 cross-check is **six or more charged calls**, and every one of them is billed. Show the user a total from live estimates before Phase 4 and get one explicit yes — do not ask six times, and do not discover the cost at the end.
+7. **Document model notes for more than one model when you can.** Even if the user only cares about one right now, the library entry's value is portability — a `gpt-image-2: clean / nano-banana-pro: weak on small text` note saves future you from picking the wrong model.
+
+8. **Price the whole run up front, once.** A clone is not one generation. Phase 4 plus the Phase 5 iteration cap plus the Phase 7 test fill plus an optional Phase 8 cross-check is **six or more charged calls**, and every one of them is billed. Show the user a total from live estimates before Phase 4 and get one explicit yes — do not ask six times, and do not discover the cost at the end.
 
 ## Cost — the one thing this workflow gets wrong if you let it
 
@@ -65,9 +67,18 @@ correct per call and silently under-reports across a batch — one response that
 instead of landing in the log is enough, and a 2026-08-05 nine-call run reported 3.00 credits
 across 8 calls when the truth was 3.5 across 9. So read the `balance` that `POST /v1/estimates`
 returns **before the first charged call and again after the last** (the estimate is free; this
-adds no cost), and report both: the summed `creditsCharged` and the balance delta. **When they
-disagree, trust the delta** — your sum is missing a call, not the other way round — and say
-which number you are reporting.
+adds no cost), and report both: the summed `creditsCharged` and the balance delta.
+
+**When they disagree, the delta wins only if you are the sole spender on the organization.** The
+balance is org-wide, so anything else charging that key lands in your delta. Measured 2026-08-06:
+a three-call probe summed 0.9 (correct — 0.3 × 3) while the full-window delta read 2.4, because
+parallel sessions were generating against the same org; the balance moved 3.4 credits between two
+runs in which this workflow spent nothing at all. The fix is not to distrust the delta, it is to
+**bracket tightly**: read the balance immediately before and immediately after *each* charged
+call, not once around the whole batch. Tight brackets in that same run reproduced 0.3 exactly.
+So: report both numbers, prefer the delta when the brackets are tight and the org is quiet,
+prefer the per-call `creditsCharged` when other work is in flight, and **say which one you chose
+and why** — a number reported without that context is the failure mode this rule exists to stop.
 
 The estimate is free and it is the **only** legitimate source of a price. It says nothing about
 the prompt — no endpoint here does — so re-read the clone prompt against the template rules
@@ -178,6 +189,15 @@ enough to call it "good." **Cap at 4 iterations** — beyond that, the prompt ha
 problem and needs more dramatic editing rather than tweaking. Every iteration is charged; track
 the running total and report it at the end.
 
+**Upload the original once — and every render is addressable after that.** The `assetId` from
+`POST /v1/uploads` is durable and reusable without limit, so the source ad is uploaded one time
+and passed to Phase 4, all four Phase 5 iterations, Phase 7 and Phase 8 off that one id. Since
+deployed spec `2.11.0` the *generated* images are addressable the same way: every entry in an
+`images[]` response carries its own `assetId`, and `referenceAssetIds` and `sourceAssetId` both
+accept it directly. So an iteration can be anchored to the previous render — `referenceAssetIds:
+[original, v1]` to say "keep what v1 got right, fix the header" — with no download and no
+re-upload. Re-uploading a file you already have an id for is the bug, not the safe move.
+
 ### Phase 6: Generalize into placeholders
 
 This is where the template becomes reusable. Walk back through the v1 prompt and replace every `[BRAND]`-marked element from Phase 2 with a `{placeholder}` variable. Use the standard placeholder vocabulary:
@@ -211,6 +231,39 @@ Pick a different brand and substitute test values into every placeholder. Genera
 3. Read as a coherent ad, not a frankenstein
 
 If the test fails, the structure breaks under different brand assumptions — return to Phase 6 and refine the placeholder set. Often the fix is a placeholder that was missed (e.g. you hardcoded a font feel that's specific to one brand).
+
+**The second way to run this phase: edit the source instead of re-describing it.** `POST /v1/images`
+takes `sourceAssetId` (`gpt-image-2` only) — pass the ORIGINAL ad and a prompt that names only what
+changes, and the model repaints those zones while leaving the rest of the frame alone. That is
+exactly what Phase 7 is trying to prove, so it is the better instrument here:
+
+```bash
+./skills/image-ad-clone/scripts/validate_image.py --model gpt-image-2 \
+  --prompt "$(cat /tmp/swap.prompt)" --source-image original-ad.jpg \
+  --out iterations/clone-<date>/T40/test-fill --env-file .env
+```
+
+Measured on a 2026-08-06 A/B (one source, three renders, `gpt-image-2`, 0.3 credits each):
+
+- **Phase 4 is NOT the place for it.** Given the same full faithful-reproduction prompt, the edit
+  arm came back *worse* than the reference arm at identical cost — it recoloured a headline block
+  that the reference arm got right. A full redraw is not an edit; describing the whole frame to an
+  edit endpoint wastes what makes it an edit.
+- **Phase 7 is.** Given a short prompt naming only the brand zones, the edit arm transplanted
+  wordmark, footer URL and a tiled monogram while holding foil texture, torn scratch edges, panel
+  grid, barcode, fine print, camera angle and lighting exactly — in one call, with no placeholder
+  prompt to engineer.
+- **It drifts typography.** In that same run the headline came back restyled from condensed sans to
+  a brush italic although nothing asked for it. **Pin the type explicitly** in a swap prompt
+  ("headline stays bold condensed uppercase sans"), and check it first when you compare.
+
+An edit is a check on the STRUCTURE, not a substitute for the template. The deliverable of Phase 7
+is still a placeholder set that survives a different brand — if the edit passes and the
+placeholderized prompt does not, the template is what is broken.
+
+**Do not confuse the aspect-ratio rules.** An edit's output tracks the source's shape, so a
+`sourceAssetId` and an `aspectRatio` together are a 400. The validator refuses the pair locally,
+before spending.
 
 ### Phase 8: Cross-model validation (optional but recommended)
 
@@ -266,9 +319,9 @@ If the save target already has T1–T39 (the seeded templates), continue with T4
 
 - **Generating real ads / uploading to Meta.** The `meta-ad-builder` skill. This skill produces templates only.
 - **Reverse-engineering video ads.** Image only. Refuse with: *"This skill is for static image ads. Video reverse-engineering isn't supported in this version."*
-- **Multi-template extraction in one run.** One reference → one template per skill invocation. A folder of N references is N independent runs — and they may run in parallel: the API allows **5 generations in flight per organization** and refuses the 6th with an explicit error (it does not queue), so stagger anything beyond 5. Price the whole batch up front per the Cost section — one free estimate per distinct final prompt, one combined range, ONE consent before the first charged call.
+- **Multi-template extraction in one run.** One reference → one template per skill invocation. A folder of N references is N independent runs — and they may run in parallel: since deployed spec `2.12.0` images have their **own** concurrency budget of **12** in flight per organization (`429`, `details.reason` `image_concurrency_limit`), counted separately from the 5-video budget in both directions, so a clone batch may run twelve wide and never blocks a render. Stagger only beyond 12. (Before `2.12.0` images spent video slots and the number here was 5 — if a `429` says `concurrency_limit` rather than `image_concurrency_limit`, you are reading the video queue.) Price the whole batch up front per the Cost section — one free estimate per distinct final prompt, one combined range, ONE consent before the first charged call.
 - **Modifying existing templates in the library.** If the user wants to revise T3, treat it as a new run pointed at the same library entry — show the diff and ask before overwriting.
-- **Editing the source image.** There is no image-edit path on this API. Cloning means re-generating from a prompt, which is what this whole workflow is.
+- **Editing the source image *as the way to build the template*.** There IS an image-edit path — `sourceAssetId` on `POST /v1/images`, `gpt-image-2` only — but a template is a *prompt*, and an edit produces a picture without producing the prompt that made it. Use it where it belongs (Phase 7) and never as a shortcut past Phases 3-6. An earlier version of this file said flatly that no edit path existed; that stopped being true at deployed spec `2.10.0`.
 
 ## Files this skill writes to (in user space)
 

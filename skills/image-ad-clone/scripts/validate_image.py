@@ -11,6 +11,12 @@ So this one takes --model, applies that model's own grid, and refuses nothing.
 
 `reve-2.1` is reachable only from here — it has no generator skill of its own.
 
+It also carries the clone workflow's EDIT path: --source-image / --source-asset-id
+send `sourceAssetId` (gpt-image-2 only), which repaints named zones of an existing
+image while leaving the rest of the frame alone. That is Phase 7's second instrument
+— see the guide. It is mutually exclusive with --aspect-ratio, because an edit's
+output tracks the source's shape.
+
 Novoads generates images synchronously — the POST blocks for the render (typically
 60-90 seconds) and returns the finished images. There is nothing to poll.
 
@@ -326,20 +332,26 @@ def build_prompt(prompt: str, allow_chrome: bool, no_safe_zone: bool) -> str:
 def generate(
     model: str,
     prompt: str,
-    aspect_ratio: str,
+    aspect_ratio: str | None,
     num_images: int,
     ref_asset_ids: list[str],
     product_id: str | None,
     base_url: str,
     auth_hdr: str,
+    source_asset_id: str | None = None,
 ) -> dict:
     """One synchronous POST /v1/images. Returns the finished ImageJob."""
     body: dict = {
         "model": model,
         "prompt": prompt,
-        "aspectRatio": aspect_ratio,
         "numImages": num_images,
     }
+    # An edit's output tracks the source's shape, so the two are mutually
+    # exclusive — the API answers the pair with a 400.
+    if source_asset_id:
+        body["sourceAssetId"] = source_asset_id
+    else:
+        body["aspectRatio"] = aspect_ratio
     if ref_asset_ids:
         body["referenceAssetIds"] = ref_asset_ids
     if product_id:
@@ -368,10 +380,27 @@ def main() -> int:
     )
     p.add_argument(
         "--aspect-ratio",
-        required=True,
         choices=sorted(ALL_RATIOS),
-        help="Canvas ratio. Checked against the chosen model's grid. The API defaults "
-             "to 1:1 if omitted, which is rarely the ad you want.",
+        help="Canvas ratio. Checked against the chosen model's grid. Required UNLESS "
+             "you pass a source to edit, with which it is mutually exclusive. The API "
+             "defaults to 1:1 if omitted, which is rarely the ad you want.",
+    )
+    p.add_argument(
+        "--source-image",
+        type=Path,
+        metavar="PATH",
+        help=(
+            "EDIT this local image instead of drawing a new one (uploaded for you). "
+            "gpt-image-2 only. Phase 7's second instrument: pass the ORIGINAL ad and a "
+            "prompt naming only the brand zones that change. Counts against the "
+            "reference cap, since that is what it becomes at the provider."
+        ),
+    )
+    p.add_argument(
+        "--source-asset-id",
+        metavar="ASSET_ID",
+        help="Same as --source-image but for an assetId already uploaded — including "
+             "the assetId of an image this API generated.",
     )
     p.add_argument(
         "--n",
@@ -426,8 +455,37 @@ def main() -> int:
     )
     args = p.parse_args()
 
+    if args.source_image and args.source_asset_id:
+        log("error: pass --source-image OR --source-asset-id, not both.")
+        return 2
+
+    editing = bool(args.source_image or args.source_asset_id)
+
+    if editing and args.model != "gpt-image-2":
+        log(
+            f"error: editing a source is gpt-image-2 only; {args.model} has no edit "
+            f"mode on this API. Drop the source, or switch --model."
+        )
+        return 2
+
+    if editing and args.aspect_ratio:
+        log(
+            "error: --aspect-ratio cannot be combined with a source. An edit's output "
+            "tracks the source image's shape; the API refuses the pair with a 400. "
+            "Preserving that shape is the point of an edit."
+        )
+        return 2
+
+    if not editing and not args.aspect_ratio:
+        log("error: --aspect-ratio is required unless you pass a source to edit.")
+        return 2
+
+    if args.source_image and not args.source_image.exists():
+        log(f"error: --source-image not found: {args.source_image}")
+        return 2
+
     allowed = MODELS[args.model]["ratios"]
-    if args.aspect_ratio not in allowed:
+    if args.aspect_ratio and args.aspect_ratio not in allowed:
         log(
             f"error: {args.model} does not accept aspect ratio '{args.aspect_ratio}'. "
             f"It takes: {' '.join(sorted(allowed))}. The request schema is strict, so "
@@ -440,9 +498,12 @@ def main() -> int:
         return 2
 
     max_refs = MODELS[args.model]["max_refs"]
-    if len(args.image_ref) > max_refs:
+    # A source becomes a reference at the provider, so it spends one slot.
+    total_refs = len(args.image_ref) + (1 if editing else 0)
+    if total_refs > max_refs:
         log(
-            f"error: too many --image-ref ({len(args.image_ref)}); {args.model} "
+            f"error: too many reference images ({total_refs} = {len(args.image_ref)} "
+            f"--image-ref" + (" + 1 source" if editing else "") + f"); {args.model} "
             f"caps at {max_refs}"
         )
         return 2
@@ -475,10 +536,16 @@ def main() -> int:
     slug = slugify(args.prompt)
 
     chrome_state = "allowed" if args.allow_chrome else "stripped"
+    shape = "source-shaped (edit)" if editing else args.aspect_ratio
     log(
-        f"validating {args.n} image(s) model={args.model} aspect={args.aspect_ratio} "
+        f"validating {args.n} image(s) model={args.model} aspect={shape} "
         f"chrome={chrome_state} refs={len(args.image_ref)} -> {args.out}/"
     )
+
+    source_asset_id = args.source_asset_id
+    if args.source_image:
+        log("uploading the source image to edit…")
+        source_asset_id = upload_reference(args.source_image, base_url, auth_hdr)
 
     ref_asset_ids: list[str] = []
     if args.image_ref:
@@ -490,7 +557,7 @@ def main() -> int:
     try:
         job = generate(
             args.model, final_prompt, args.aspect_ratio, args.n, ref_asset_ids,
-            product_id, base_url, auth_hdr,
+            product_id, base_url, auth_hdr, source_asset_id,
         )
     except Exception as e:  # noqa: BLE001
         log(f"generation FAILED — {e}")
@@ -526,7 +593,7 @@ def main() -> int:
             "width": w,
             "height": h,
             "prompt": args.prompt,
-            "aspect_ratio": args.aspect_ratio,
+            "aspect_ratio": args.aspect_ratio or "source",
             "model": job.get("model", args.model),
             "credits_charged": credits,
         })

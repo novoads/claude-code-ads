@@ -22,12 +22,14 @@ Paths below are **from the repo root**. This skill is copied into `.claude/skill
 
 ## Hard rules
 
-Inherits all 7 hard rules from the shared guide (strip platform chrome, validate by generating,
-test the generalized version, no brand-specific text in the final template, never silently
-overwrite, document model notes, price the whole run up front). Plus:
+Inherits all 8 hard rules from the shared guide (strip platform chrome, validate by generating,
+test the generalized version, no brand-specific text in the final template, a v1 clone is never
+publishable, never silently overwrite, document model notes, price the whole run up front). Plus:
 
 8. **Model is one of `gpt-image-2`, `nano-banana-pro`, `reve-2.1`.** Those are the three image models on this API. The choice happens in Phase 1 once the user picks (or the agent auto-detects).
 9. **Never write a `Model notes` claim for a model you didn't actually run.** Mark it `untested`. An invented note is worse than a missing one.
+
+10. **A v1 faithful clone never leaves this workflow.** Phase 4 reproduces the source *including* its wordmark, registered marks and any real customer testimonial — that is what makes it a structural check, and it makes it unpublishable. It is evidence, never creative: not into an ad account, a deck, a post or a case study. **Phase 6 is where brand-specifics and real testimonials die.** Invent the test fill; never inherit a real person's quoted review.
 
 ## Picking the model in Phase 1
 
@@ -81,6 +83,33 @@ takes `--model`, applies that model's own aspect-ratio grid, and is the only pat
 It shares everything else with the generators: the same three always-on safety suffixes, the
 same upload flow, each model's own reference cap (`gpt-image-2` 4, `nano-banana-pro` 14,
 `reve-2.1` 8), the same local prompt-length check before spending.
+
+### Editing a source (Phase 7's second instrument)
+
+`POST /v1/images` accepts `sourceAssetId` — **`gpt-image-2` only** — which repaints the zones a
+prompt names and leaves the rest of the frame alone:
+
+```bash
+./skills/image-ad-clone/scripts/validate_image.py \
+  --model gpt-image-2 \
+  --prompt "$(cat /tmp/swap.prompt)" \
+  --source-image original-ad.jpg \
+  --out iterations/clone-<date>/T40/test-fill \
+  --env-file .env
+```
+
+`--source-asset-id` takes an id already uploaded, including one this API generated.
+
+**Use it in Phase 7, not Phase 4.** Measured 2026-08-06 on one source, three renders: given the
+full faithful-reproduction prompt an edit came back *worse* than the reference-image arm at the
+same price, and given a short brand-swap prompt it held texture, grid, barcode, fine print and
+lighting through a wordmark transplant in a single call. It also restyled a headline typeface
+nobody asked it to change — pin the type in the swap prompt. Full write-up in the guide's Phase 7.
+
+Two refusals happen locally, before any spend: `--aspect-ratio` alongside a source (an edit's
+output tracks the source's shape, and the API 400s the pair), and a source on any model but
+`gpt-image-2`. The source also spends one slot of the reference cap, because that is what it
+becomes at the provider.
 
 ## Dependencies
 
@@ -141,7 +170,7 @@ rendering at a mapped ratio, not the original.
 4. **Phase 4: Generate with reference.** Price the run and get a yes first. Pass `--image-ref <reference>` and the matched ratio. Synchronous; blocks 60–90s.
 5. **Phase 5: Compare and iterate.** Refine on the deltas. Cap 4 iterations. Track running credits.
 6. **Phase 6: Generalize into placeholders** (`{brand.name}`, `{brand.color_primary}`, etc.).
-7. **Phase 7: Test the generalized template** against a DIFFERENT brand. If structure breaks, refine the placeholder set.
+7. **Phase 7: Test the generalized template** against a DIFFERENT brand. If structure breaks, refine the placeholder set. Optionally cross-check the structure by *editing* the original with `--source-image` and a brand-swap prompt — see the validator section.
 8. **Phase 8: Cross-model validation (recommended).** Run the same template on another model. Document real deltas only.
 9. **Phase 9: Document the template** per `template-format.md`.
 10. **Phase 10: Save and confirm.** Append to the library, print the path, move PNGs to a permanent iteration dir, report total credits charged.
