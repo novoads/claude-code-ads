@@ -22,12 +22,12 @@ For any video where the model speaks, the spoken line gets its own approval befo
 
 ## Image-ad skill ecosystem (cross-API)
 
-This repo ships a 3-skill ecosystem for generating standalone Meta image-ad creatives. **Read [shared/skills/image-ad-prompting/OVERVIEW.md](shared/skills/image-ad-prompting/OVERVIEW.md) before invoking any of these skills** — it explains the decision tree (gpt-image-2 vs Nano Banana), the shared 37-template library, the hand-off to the separate `meta-ad-builder` skill, and what's out of scope.
+This repo ships a 3-skill ecosystem for generating standalone Meta image-ad creatives. **Read [shared/skills/image-ad-prompting/OVERVIEW.md](shared/skills/image-ad-prompting/OVERVIEW.md) before invoking any of these skills** — it explains the decision tree (gpt-image-2 vs Nano Banana), the shared 40-template library, the hand-off to the separate `meta-ad-builder` skill, and what's out of scope.
 
 Quick map:
 - **Generate from a brief** → `chatgpt-image-ad` (typography / UI mimicry) or `nano-banana-image-ad` (photoreal / lifestyle / multi-ref).
 - **Clone an existing ad into a reusable template** → `image-ad-clone` (single backend-agnostic skill; asks you which generator to validate against at Phase 1, optionally cross-validates against the other backend at Phase 8).
-- **Pull from / add to the shared library** → `shared/skills/image-ad-prompting/prompting/prompt-library.md` (37 ready-to-use validated prompts).
+- **Pull from / add to the shared library** → `shared/skills/image-ad-prompting/prompting/prompt-library.md` (40 ready-to-use validated prompts).
 - **Hand off finished images to Meta** → separate `meta-ad-builder` skill; the image-ad skills produce images only.
 
 
@@ -39,7 +39,7 @@ Quick map:
 - **Skills:**
   - `novoads-api` — the spine: endpoints, auth, the two gates, uploads, polling, error branching, and the prompt libraries.
   - `generate-youtube-thumbnail` — YouTube thumbnail batch workflow on top of the image endpoint.
-  - **Image-ad ecosystem** (3 skills + shared 37-template library) — see [shared/skills/image-ad-prompting/OVERVIEW.md](shared/skills/image-ad-prompting/OVERVIEW.md):
+  - **Image-ad ecosystem** (3 skills + shared 40-template library) — see [shared/skills/image-ad-prompting/OVERVIEW.md](shared/skills/image-ad-prompting/OVERVIEW.md):
     - `chatgpt-image-ad` — generate via `gpt-image-2` (typography / UI-mimicry creatives)
     - `nano-banana-image-ad` — generate via `nano-banana-pro` (photoreal / lifestyle creatives)
     - `image-ad-clone` — single backend-agnostic skill that reverse-engineers existing ads into reusable templates (asks which backend to validate against at Phase 1; optionally cross-validates at Phase 8)

@@ -6,7 +6,7 @@ description: Use when the user wants to reverse-engineer an existing image ad in
 # image-ad-clone
 
 Take an existing image ad and turn it into a reusable, parameterizable prompt template that
-gets appended to the shared **37-template image-ad library**. The template is validated by
+gets appended to the shared **40-template image-ad library**. The template is validated by
 round-tripping it through a Novoads image model and comparing against the original.
 
 ## Read order
@@ -17,7 +17,7 @@ Paths below are **from the repo root**. This skill is copied into `.claude/skill
 1. **This file** — model choice, the validator, what's fixed at the repo layer.
 2. `shared/skills/image-ad-clone/prompting/guide.md` — the full 10-phase workflow (visual analysis → draft prompt → generate-with-reference → iterate → generalize → test → cross-model validate → document → save).
 3. `shared/skills/image-ad-prompting/prompting/template-format.md` — entry skeleton.
-4. `shared/skills/image-ad-prompting/prompting/prompt-library.md` — destination for the new entry. 37 validated templates already there; new entries go at T40+.
+4. `shared/skills/image-ad-prompting/prompting/prompt-library.md` — destination for the new entry. 40 validated templates already there; new entries go at T40+.
 5. `shared/skills/image-ad-prompting/OVERVIEW.md` — ecosystem context.
 
 ## Hard rules
@@ -70,9 +70,17 @@ This skill has its own caller: `skills/image-ad-clone/scripts/validate_image.py`
   --prompt "$(cat /tmp/v1.prompt)" \
   --aspect-ratio <ratio> \
   --image-ref <reference.png> \
+  --pin-block "<one-line product description>" \
   --out iterations/clone-tmp \
   --env-file .env
 ```
+
+**`--pin-block` is how the brand pin gets counted.** It wraps your description in the shared
+library's standard 346-character guard — front face only, no invented label copy, no
+fabricated claims — and measures the result against the 4,000-char cap *before* the network,
+naming the pin block's share if it overflows. Write the clause by hand and you get the
+~700-character version that was the single largest cause of a refused prompt. A clone run
+that skips it inherits the failure it exists to prevent: unpinned marks come back invented.
 
 Why a separate script rather than the generators': the two generator skills are **model-locked
 by brand contract**, so a production run can't drift models by accident. Cloning has the

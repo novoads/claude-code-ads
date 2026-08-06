@@ -3,7 +3,7 @@
 This guide is the brain for the **`chatgpt-image-ad`** skill — generating standalone Meta ad creatives with **ChatGPT Image 2** (`gpt-image-2`) on the Novoads API.
 
 For the shared template library and entry format, see:
-- [prompt-library.md](../../image-ad-prompting/prompting/prompt-library.md) — 37 validated templates
+- [prompt-library.md](../../image-ad-prompting/prompting/prompt-library.md) — 40 validated templates
 - [template-format.md](../../image-ad-prompting/prompting/template-format.md) — how to write a new entry
 - [safety-suffixes.md](../../image-ad-prompting/prompting/safety-suffixes.md) — the 3 always-on prompt guards
 - [OVERVIEW.md](../../image-ad-prompting/OVERVIEW.md) — the ecosystem hub
@@ -90,7 +90,7 @@ Verify in this exact order; bail on the first failure with a fix-it message.
 
 ### Phase 3: Prompt rewrite
 
-**First check the prompt library** ([prompt-library.md](../../image-ad-prompting/prompting/prompt-library.md)). It has 37 validated parameterizable templates with per-model notes.
+**First check the prompt library** ([prompt-library.md](../../image-ad-prompting/prompting/prompt-library.md)). It has 40 validated parameterizable templates with per-model notes.
 
 #### 3a — Check the prompt library
 

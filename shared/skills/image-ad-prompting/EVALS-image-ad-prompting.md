@@ -1,0 +1,189 @@
+# image-ad-prompting evals
+
+The shared template library is not a skill — it has no `SKILL.md` and it never
+makes a call. It is the input three skills paste into a paid endpoint, which
+makes its failures quieter than a skill's: nothing here throws, and a template
+that is wrong renders beautifully and charges normally.
+
+Every scenario below is a real failure observed in a run, not a hypothetical.
+
+The mechanical half runs as:
+
+```bash
+python3 shared/skills/image-ad-prompting/scripts/check_library.py            # the checks
+python3 shared/skills/image-ad-prompting/scripts/check_library.py --verbose  # + per-template budgets
+python3 shared/skills/image-ad-prompting/scripts/check_library.py --selftest # prove each check can fail
+```
+
+No network, no key, no credits — it reads markdown and does arithmetic. Run it
+before landing any library change. `--selftest` exists because a check that
+cannot fail is not a check: each row mutates the real library in memory and
+asserts the corresponding check goes red.
+
+The three always-on suffixes are **imported** from
+`skills/chatgpt-image-ad/scripts/generate_image.py` rather than restated, so the
+budget arithmetic cannot drift from the script that enforces it.
+
+The rest are human checks against a real run. Do them before publishing a
+template.
+
+---
+
+## Automated
+
+### L1 — the template fits the cap it will be sent under
+
+**Why:** the cap is measured on the *final* prompt, and the final prompt is not
+the one you wrote — the generator appends 1,575 characters of always-on suffix
+first. A template that reads as 2,900 characters is a 4,484-character request.
+The API answers `400` and the script refuses before the network, so this costs a
+round trip rather than credits, but a template nobody can send is not a template.
+
+**Check:** every body ≤ **2,425** characters (4,000 − 1,575). Automated.
+
+**Three templates fail this today and are grandfathered in `BASELINE_OVER_CAP`:
+T8 (+170), T11 (+377), T14 (+484).** They are refused as written, for every
+brand. They have not simply been shortened because **every body in this library
+is a validated artifact** — the text is worth what it is worth because someone
+round-tripped it through a model and looked at the output. Trimming one to buy a
+green check, without the credits to re-render and confirm the trim was cosmetic,
+degrades the library to satisfy its own test. So the baseline records the debt
+instead, and it may only shrink: a template that starts fitting fails until its
+row is deleted, and a new template that overflows fails immediately.
+
+The trim itself is not hard when someone funds it. T11 and T14 both repeat
+constraints their own `**Note:**` says the suffixes already enforce — T11 states
+"exactly two comments" four separate times, T14 closes with a no-chrome list that
+`NO_CHROME_SUFFIX` carries verbatim. That is where the characters are.
+
+### L1b — the pin-block headroom is published, and current
+
+**Why:** pinning every brand mark is mandatory (see L-H2), and the pin block
+costs 400 characters. Half the library is too long to carry it. A run discovers
+this *after* writing a full brand fill, and the natural repair — trimming the pin
+block — removes the guard that stops the model inventing label copy. Whichever
+way it resolves, the run has already been shaped by a number nobody published.
+
+**Check:** the library header states how many templates have room for the
+standard pin block, and the checker recomputes it. **23 of 40** as of 2026-08-06.
+Editing any template body moves the number and reddens the check. Automated.
+
+### L2 — one count per countable element
+
+**Why:** `GLYPH_SAFETY_SUFFIX` promises to "render the EXACT count of
+conversation elements the prompt specifies". Hand it two counts and the guard
+becomes the bug — it enforces one of them, and which one is a draw.
+
+T34 opened at "EXACTLY THREE message bubbles", defined `BUBBLE 1` through
+`BUBBLE 4`, and closed at "exactly the four bubbles". Measured 2026-08-06:
+restated as four throughout, it rendered four correctly.
+
+**Check:** for every template, the counts stated in prose agree with each other
+and with the number of rows the prompt goes on to define (`BUBBLE 1:`,
+`MESSAGE 2:`, …). Automated.
+
+**The count alone is not the fix.** T34 now names the structure —
+*grey text → blue text → blue link card → grey text* — because a bare number
+leaves the model to choose which kind of bubble to drop, and the link card is the
+one carrying the product. Prefer a structure to a count wherever the elements are
+not interchangeable. That is a **declared divergence from the Kruse source**,
+recorded on the entry.
+
+### L3 — art that encodes a number is a documented limit, not a bug
+
+**Why:** `gpt-image-2` draws a bar or a plotted point by eye. Measured
+2026-08-06 on T38: the `204` bar overshot its own axis by about **9%**, while
+every label came back exact. This reads like a defect and is not one — a retry
+redraws it approximately too, so the retry is a second charge for the same
+result. Filed as a bug it burns credits; filed as a limit it changes the design.
+
+**Check:** every template in `NUMERIC_ART_TEMPLATES` (T17, T38) says so in its
+Model notes, where the consuming skill reads it. Automated.
+
+The recorded answer: if a chart must be numerically true, composite it — generate
+the ad without it and lay a real chart over it. Otherwise the picture is
+decorative and the claim lives in the copy.
+
+### L4 — spoken audio implies transcribe-verify
+
+**Why:** this library ships still images and has no audio at all, which is
+exactly why the rule needs an owner outside the skill that discovered it. A
+reference asset pins the **label**; nothing pins the **audio**; they fail
+independently. Measured 2026-08-06 across three clones of one source: every glyph
+of the on-screen wordmark was perfect in all three, while the brand name was
+spoken as "Magnesium", "Magnesium" and "Magneum" — never once as written — and
+one clip substituted **L-Thiamine** for L-theanine, a different compound, in a
+script that had already passed the dialogue gate. Each render returned
+`succeeded` and charged.
+
+So the perfect label an image skill produces is **not** evidence about a sibling
+skill's voice track, and a session that has just watched this library pin a
+wordmark faithfully is exactly the session likely to assume otherwise.
+
+**Check:** every skill in `SPOKEN_AUDIO_SKILLS` carries a transcribe-verify step.
+Automated. Landed for `clone-ad` in public #28.
+
+### L5 — the entry format holds
+
+**Why:** the format is what makes an entry usable without reading the whole file:
+a missing `Model notes` means a consuming skill cannot route, and an aspect ratio
+off the grid is a `400` on a strict request schema.
+
+**Check:** every entry carries When to use / Aspect ratio / Reference image /
+Variables / Model notes, and the ratio is on some model's grid. Automated.
+
+### L6 — every stated template count is the real one
+
+**Why:** the library said **"37 templates" in 26 places across 12 files** while
+shipping 40. T40–T42 were appended and no counter moved. Every one of those
+claims is load-bearing in the way that matters: a session reads "37 validated
+templates", finds T1–T39, and stops looking — so the three newest templates were
+invisible to the skills that exist to use them. Nothing failed; the library just
+quietly got smaller than it was.
+
+**Check:** every `.md` and `.sh` in the repo that claims a library template count
+claims the measured one. Automated.
+
+The pattern deliberately matches *library* claims only. **"across 34 templates on
+one real product"** is a measured run size — a historical fact that stays 34
+forever — and rewriting it to match the library would turn a true sentence into a
+false one. `--selftest` asserts both directions.
+
+---
+
+## Human
+
+### L-H1 — visual QA reads the whole frame, not the changed part
+
+**Why:** an edit is a fresh render. The 2026-08-05 T36 edit stripped the
+third-party logo it was asked to strip and also moved the thermos and changed a
+dashboard stat. Checking only the region you named certifies an image that
+drifted everywhere else.
+
+**Check:** human. Read the full output against the reference, not the diff you
+intended.
+
+### L-H2 — unpinned means invented
+
+**Why:** across 34 templates on one real product, the label was faithful in all
+34 because a reference pinned it, and **every** brand element that was not pinned
+drifted or was fabricated: a back-of-pack view invented whole, carrying a
+sourcing claim about a real brand that appeared in no prompt; a third-party logo
+on a prop; a publication wordmark drifted. The model fills unspecified surfaces
+with plausible brand-shaped content.
+
+**Check:** human. Before generating, list every mark that will appear in the
+frame — product, publication, prop, competitor — and confirm each is either a
+reference asset or named in the standard pin block. After generating, read every
+word in the image and confirm it was specified or is printed on a reference.
+
+### L-H3 — the fill still says what the template meant
+
+**Why:** the checks above read the template, not your fill. A faithful fill of
+template prose plus a real product runs longer than the AG1 example it was
+validated on, and the natural response to a refusal is to cut whichever sentence
+looks least load-bearing.
+
+**Check:** human. When a fill overflows, cut from the *description* half of the
+pin block or trim your own copy — never the guard clause, and never the
+structural instructions the template's Model notes call out as fragile.

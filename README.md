@@ -7,7 +7,7 @@ skills carry the part that decides whether the render is any good: the prompt.
 
 Eight models are live on the API. Five make video (**Seedance 2.0**, **Seedance 2.0 Mini**,
 **Omni Flash**, **Veo 3.1**, **Sora 2**) and three make stills (**GPT Image 2**, **Nano Banana
-Pro**, **Reve 2.1**). On top of them this repo ships five Seedance prompt formulas, a 37-template
+Pro**, **Reve 2.1**). On top of them this repo ships five Seedance prompt formulas, a 40-template
 static-ad library, Pixar and claymation pipelines, YouTube thumbnails, caption burn-in, and a Meta
 publishing step.
 
@@ -150,12 +150,12 @@ Every returned image gets a **QA look** — hands, fingers, faces, merged object
 defect is regenerated with a corrected prompt, capped at 2 retries, and the extra credits are
 reported at the end.
 
-### 📸 Static Meta image ads (37-template library)
+### 📸 Static Meta image ads (40-template library)
 
 > "Make me an Apple Notes-style ad for my product" · "Generate a Forbes editorial ad" ·
 > "Clone this comparison-table ad as a template"
 
-A three-skill family over a shared library of **37 validated prompt templates** — Apple Notes
+A three-skill family over a shared library of **40 validated prompt templates** — Apple Notes
 lists, editorial hero, fake Google search, comparison tables, sticky-note flatlays, Slack threads,
 ChatGPT-conversation ads, iMessage screenshots, magazine covers, billboards, museum exhibits,
 weather UI, scratch-off tickets, founder letters, dating-app cards, and more.
@@ -273,7 +273,7 @@ than routing you somewhere else. There is likewise no b-roll or scene endpoint �
 | [`skills/novoads-pixar-ad/`](skills/novoads-pixar-ad/) | A product URL or photo → a finished 15-second stylized 3D ad in ONE generation call, voice-over and in-scene dialogue rendered natively. Ships a character sheet, a composition key frame and a dual-track script. [`references/story-arcs.md`](skills/novoads-pixar-ad/references/story-arcs.md) holds the arcs; [`evals.md`](skills/novoads-pixar-ad/evals.md) the scored cases. |
 | [`skills/novoads-pixar-storyboard-ad/`](skills/novoads-pixar-storyboard-ad/) | The multi-beat version, when 15 seconds and one shot are not enough: a reviewed storyboard, one clip per beat, narrator voice-over layered into the gaps, then local assembly. Stills chain by `assetId`, so holding one character across separately-rendered beats needs no re-upload. [`references/formulas.md`](skills/novoads-pixar-storyboard-ad/references/formulas.md) holds the four genre roles with a variable table and a worked still and clip prompt for each; [`references/NOTICE.md`](skills/novoads-pixar-storyboard-ad/references/NOTICE.md) the upstream MIT notice for the craft it adapts. |
 | [`skills/novoads-claymation-storyboard-ad/`](skills/novoads-claymation-storyboard-ad/) | The clay sibling. Same pipeline as the Pixar storyboard skill; what it owns is the hand-sculpted clay look and a longer, quieter arc built on a named protagonist. [`references/formulas.md`](skills/novoads-claymation-storyboard-ad/references/formulas.md) holds the eight beats, the subject-lock fragments and the clay QA checklists; [`references/NOTICE.md`](skills/novoads-claymation-storyboard-ad/references/NOTICE.md) the upstream MIT notice. |
-| [`shared/skills/image-ad-prompting/`](shared/skills/image-ad-prompting/) | Shared brain for the image-ad family: [`OVERVIEW.md`](shared/skills/image-ad-prompting/OVERVIEW.md), the [37-template library](shared/skills/image-ad-prompting/prompting/prompt-library.md), safety suffixes, entry format. |
+| [`shared/skills/image-ad-prompting/`](shared/skills/image-ad-prompting/) | Shared brain for the image-ad family: [`OVERVIEW.md`](shared/skills/image-ad-prompting/OVERVIEW.md), the [40-template library](shared/skills/image-ad-prompting/prompting/prompt-library.md), safety suffixes, entry format. |
 | [`shared/skills/gemini-omni-flash/`](shared/skills/gemini-omni-flash/) | Prompting guide for `omni-flash`, scoped to what this API actually exposes. |
 | [`shared/skills/caption-video/`](shared/skills/caption-video/) | Out-of-band caption burn-in for any finished MP4. |
 | [`shared/skills/broll-overlay/`](shared/skills/broll-overlay/) | Overlay b-roll cutaways on a finished MP4 — local ffmpeg, no credits. Validates the EDL, renders atomically, and verifies duration, audio and every window. |

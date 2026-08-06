@@ -72,6 +72,26 @@ GLYPH_SAFETY_SUFFIX = (
     "additional comments, messages, replies, or responses."
 )
 
+# The standard pin block from the shared library header. Everything a run writes
+# is the product description; the guard clause below is fixed, and it is fixed
+# because the hand-written ones ran ~700 characters and were the single largest
+# cause of a refused prompt.
+#
+# It exists because of what happens without it: across 34 templates on one real
+# product, every brand element NOT pinned by a reference either drifted or was
+# invented — including a back-of-pack view carrying a sourcing claim about a real
+# brand that appeared in no prompt. The model fills unspecified surfaces with
+# plausible brand-shaped content; silence reads as an invitation.
+#
+# Full text and budget: shared/skills/image-ad-prompting/prompting/prompt-library.md
+PIN_BLOCK_PREFIX = "\n\n[BRAND PIN] "
+PIN_BLOCK_GUARD = (
+    ", reproduced exactly as it appears in the reference image — same wordmark, same colours, "
+    "same proportions, front face only. Do NOT render the back of the pack, invented label copy, "
+    "ingredient lists, sourcing or health claims, or a barcode. Every word in this image is one "
+    "this prompt specifies or one already printed on the reference."
+)
+
 # Novoads POST /v1/uploads accepts exactly these image types. GIF is not among them.
 MEDIA_TYPES = {
     ".png": "image/png",
@@ -304,8 +324,19 @@ def upload_reference(local_path: Path, base_url: str, auth_hdr: str) -> str:
     return asset_id
 
 
-def build_prompt(prompt: str, allow_chrome: bool, no_safe_zone: bool) -> str:
+def build_pin_block(description: str) -> str:
+    """The standard pin block, wrapped around a one-line product description."""
+    return PIN_BLOCK_PREFIX + description.strip().rstrip(".") + PIN_BLOCK_GUARD
+
+
+def build_prompt(
+    prompt: str, allow_chrome: bool, no_safe_zone: bool, pin_block: str | None = None
+) -> str:
     final = prompt
+    # The pin block sits inside the safety suffixes: it is part of what to draw,
+    # they are constraints on the whole frame, and they stay outermost.
+    if pin_block:
+        final += build_pin_block(pin_block)
     if not allow_chrome:
         final += NO_CHROME_SUFFIX
     if not no_safe_zone:
@@ -452,6 +483,16 @@ def main() -> int:
         action="store_true",
         help="Skip the edge-safe suffix. Use only if you genuinely need text to bleed.",
     )
+    p.add_argument(
+        "--pin-block",
+        metavar="PRODUCT_DESCRIPTION",
+        help=(
+            "Append the shared library's standard brand-pin block, wrapped around this "
+            "one-line product description (e.g. 'forest-green pouch with white AG1 "
+            "wordmark'). Keep it terse — the guard clause is 346 characters and every "
+            "character here comes off your prompt's budget. Unpinned marks get invented."
+        ),
+    )
     args = p.parse_args()
 
     if args.model != LOCKED_MODEL:
@@ -500,17 +541,31 @@ def main() -> int:
         )
         return 2
 
-    final_prompt = build_prompt(args.prompt, args.allow_chrome, args.no_safe_zone)
+    final_prompt = build_prompt(
+        args.prompt, args.allow_chrome, args.no_safe_zone, args.pin_block
+    )
     if len(final_prompt) > MAX_PROMPT_CHARS:
+        # Pre-network on purpose: the API would answer 400 and charge nothing, but
+        # a refusal here also names what to cut, and it names the pin block's share
+        # rather than leaving a run to trim the guard that stops invented copy.
         overflow = len(final_prompt) - MAX_PROMPT_CHARS
-        suffix_chars = len(final_prompt) - len(args.prompt)
+        pin_chars = len(build_pin_block(args.pin_block)) if args.pin_block else 0
+        suffix_chars = len(final_prompt) - len(args.prompt) - pin_chars
+        pin_note = (
+            f" and the pin block {pin_chars}" if pin_chars else ""
+        )
         log(
             f"error: prompt is {len(final_prompt)} characters after the always-on safety "
             f"suffixes; {LOCKED_MODEL} caps at {MAX_PROMPT_CHARS}. Trim about {overflow} "
-            f"characters from --prompt (the suffixes add ~"
-            f"{suffix_chars}). Your --prompt must be <= "
-            f"{MAX_PROMPT_CHARS - suffix_chars} characters with the current flags."
+            f"characters from --prompt (the suffixes add ~{suffix_chars}{pin_note}). "
+            f"Your --prompt must be <= "
+            f"{MAX_PROMPT_CHARS - suffix_chars - pin_chars} characters with the current flags."
         )
+        if pin_chars:
+            log(
+                "note: trim your own copy or the pin block's product description — never the "
+                "guard clause. An unpinned mark is an invented mark."
+            )
         return 2
 
     env = load_env(args.env_file)
