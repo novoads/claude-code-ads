@@ -4,12 +4,16 @@ description: >-
   Build a 30 to 60 second stylized 3D animated ad as a STORYBOARD — four to six
   separate beats, each rendered from its own key frame, with narration laid into
   the gaps, a music bed under it and captions burned on, assembled locally with
-  ffmpeg. Produces a cast sheet, a beat board, a per-beat still, a per-beat clip,
-  a per-gap voice-over line, and the exact generation calls in order. Trigger
-  when the user wants a MULTI-SHOT animated spot: "a 30 second animated ad", "a
-  storyboard ad", "several scenes", "a longer Pixar-style ad", "an animated ad
-  with a voice-over", or hands you a product and asks for something with an arc
-  rather than a single shot. Do NOT use for a single 15-second animated shot
+  ffmpeg. Carries the genre's beat formulas: an anthropomorphized problem
+  character that speaks the pain in first person, a protagonist reveal, a mascot
+  mechanism-of-action scene, and a composited end card. Produces a cast sheet, a
+  beat board, a per-beat still, a per-beat clip, a per-gap voice-over line, and
+  the exact generation calls in order. Trigger when the user wants a MULTI-SHOT
+  animated spot: "a 30 second animated ad", "a storyboard ad", "several scenes",
+  "a longer Pixar-style ad", "an animated ad with a voice-over", "an animated ad
+  with the [object] character", "show how it works with little mascots", or
+  hands you a product and asks for something with an arc rather than a single
+  shot. Do NOT use for a single 15-second animated shot
   (use novoads-pixar-ad, which is one call and cheaper), for talking-head UGC
   (the default Novoads flow), for cloning a competitor's video (use clone-hook),
   or for a static image ad (use clone-static-ad).
@@ -29,6 +33,12 @@ seconds, use that skill instead and say so.
 Everything that skill says about STORY — the gates, the doctrines, the word
 budget per beat, the IP rules — still applies. Read it. This file covers only
 what changes when there are five shots instead of one.
+
+**The beat formulas live in [`references/formulas.md`](references/formulas.md).**
+That file is the craft: the four genre roles, the variable tables, and a worked
+still prompt and a worked clip prompt for each. This file is the pipeline. Read
+the formulas before you write the board, because the board is where the roles
+are assigned and it is the last cheap place to get them wrong.
 
 ## Before anything: this runs on a Novoads account
 
@@ -89,6 +99,15 @@ in its still.
     true` for ambience.
   - **Narration native to the clip**: put `NARRATOR: "…"` in the prompt and
     generate NO voice-over for that beat. Its voice will not match the others.
+- **At least one beat must be SYNC.** The rule above is a warning against
+  doubling a line, and it is easy to over-obey: make every beat a VO beat and the
+  ad becomes a slideshow with a voice talking over it. Measured — T12 shipped
+  three beats, all VO, no character ever spoke, and it lost to the reference ad
+  on exactly that. The genre's opening move is a problem character saying its own
+  complaint out loud, and it only lands when the voice comes out of the face.
+- **The product appears in its own beats and on the end card. Nowhere else.** A
+  product held in every shot reads as a catalogue. Roles B and D show it; the
+  hook and the mechanism scene do not. See `references/formulas.md`.
 - **One continuous voice.** Pick the narrator voice ONCE, from `list_voices`,
   and use that same `voiceId` for every line. A voice that changes between beats
   reads as a different ad — which is also why native per-beat narration does not
@@ -149,6 +168,15 @@ an age or gender token anywhere in the prompt), and the labelHold clause answers
 `label_without_hold`, which fires on the word "bottle" alone. Drop either and the
 same beat comes back with a warning that is telling you the truth.
 
+**The one warning to ignore: `missing_actor_descriptor` on a beat with no human
+in it.** The lint reads prompts as talking-head UGC, where a shot without an age
+or gender token gets a randomly cast person. A role-A beat is a hair clump with
+eyes, or a blob of congestion, and it has no age and no gender to state. The rule
+is answering a question the beat does not ask. This is the only lint output this
+skill tells you to overrule, and only on a beat whose subject is genuinely not a
+person — a beat that merely FORGOT to describe its human is the case the rule
+exists for, and it looks identical from here. Check which one you wrote.
+
 ## The board
 
 Before a single call, write the board. It is the artifact the operator approves,
@@ -165,6 +193,17 @@ film. Every beat still references it. Skipping it is the most expensive shortcut
 available here — five beats with five differently-imagined characters is not an
 ad, and no amount of prompt discipline recovers it afterwards.
 
+Write the cast sheet TEXT first, from the template in
+[`references/formulas.md`](references/formulas.md), and render the image from it.
+The template has the slots that matter — including the **terse tag**, the 11 to
+30 character wardrobe-anchored phrase repeated verbatim in every later beat. Our
+renders re-cast on every cut, so "the same woman" names nobody; one measured run
+came back with three visibly different women across five beats.
+
+If the ad has a mascot scene, the cast sheet carries the mascots too: one canvas
+with the lead, the problem character and the mascot trio settles all three
+designs for the price of one image.
+
 ### Style lock — one paragraph, pasted verbatim into every prompt
 
 Write it once. Location palette, one named practical light source, lens and
@@ -177,15 +216,65 @@ look." The trademark risk is higher for this aesthetic than for any other,
 because it belongs to specific studios and the models will hand you near-copies
 of their characters if invited.
 
+This is the genre default. Change the palette and the light source to the
+product's world; keep the structure and the render vocabulary.
+
+<!-- eval:style-lock:start -->
+```
+Stylized 3D animated feature film look. Soft volumetric golden-hour lighting from
+a large window, warm cosy palette of cream, butter yellow, dusty pink and soft
+sage. Subsurface scattering on skin, painterly background, shallow depth of field
+with creamy bokeh. Characters have large expressive eyes with multiple specular
+catchlights, stylized but believable proportions, smooth simplified hands, soft
+hair strands with subsurface glow. Rich material detail: waffle-knit fabric
+weave, ceramic glaze, glass refraction. Slightly desaturated colour grade.
+Every character reads mid-emotion, caught a moment before a smile or a sigh,
+never blank-staring. Vertical 9:16 composition.
+```
+<!-- eval:style-lock:end -->
+
+**The mid-emotion line is the genre's oldest craft rule and the easiest to
+lose.** A character rendered at rest reads as a mannequin however good the
+lighting is; the whole look depends on faces caught between expressions. It sits
+in the style lock rather than in prose because that is the block that actually
+reaches every prompt.
+
+And the negative block, pasted at the end of every prompt, still and clip alike:
+
+<!-- eval:negative-block:start -->
+```
+no live-action footage, no photorealistic humans, no uncanny faces, no dead eyes,
+no anime style, no 2D cel-shaded look, no flat illustration,
+no named or copyrighted animated film characters, no harsh fluorescent lighting,
+no extra fingers, no melted features, no morphing between frames,
+no warped product labels, no on-screen text, no subtitles, no captions
+```
+<!-- eval:negative-block:end -->
+
+`no named or copyrighted animated film characters` is the IP line and it is not
+optional. `no on-screen text, no subtitles, no captions` is what stops the render
+inventing its own captions, which it does unprompted and which then collide with
+the ones burned on in Gate 8.
+
 ### Beat board — the table you get approved
 
-| # | Beat | Seconds | Track | Visual |
-|---|---|---|---|---|
-| 1 | Hook — the want, stated out loud | 5 | SYNC | … |
-| 2 | Problem — the attempt fails | 5 | VO | … |
-| 3 | Low point — the private defeat | 4 | SYNC | … |
-| 4 | Turn — the product arrives and is used | 6 | VO | … |
-| 5 | Payoff — warmth, then the hero card | 5 | VO closes | … |
+Two things are decided here: what happens (the skeleton) and how the genre says
+to shoot it (the role). The roles are in
+[`references/formulas.md`](references/formulas.md); this is where they are
+assigned.
+
+| # | Beat | Genre role | Seconds | Track | Visual |
+|---|---|---|---|---|---|
+| 1 | Hook — the want, stated out loud | A. anthropomorphized problem | 5 | SYNC | … |
+| 2 | Problem — the attempt fails | A. second problem character, or the human low | 5 | VO | … |
+| 3 | Low point — the private defeat | B. protagonist reveal | 4 | SYNC | … |
+| 4 | Turn — the product arrives and is used | C. mascot mechanism | 6 | VO | … |
+| 5 | Payoff — warmth, then the hero card | D. CTA and end card | 5 | VO closes | … |
+
+That mapping is the default, not the only one. Role A can hold two beats as a
+montage; role B can take the SYNC beat as a first-person testimonial. What does
+not move: **role A opens** and **role D closes**, and at least one of them is
+SYNC.
 
 Rules for the board:
 
@@ -193,7 +282,10 @@ Rules for the board:
    way to get glitched physics. Splitting them is what a storyboard is FOR.
 2. **Give each beat its own setup.** Five beats in one location at one shot size
    reads as boring no matter how clean the arc is. Change location at least once;
-   vary shot size (medium → close → wide).
+   vary shot size (medium → close → wide). Measured against the reference ad this
+   skill was rebuilt to match: its beats each had their own world — a macro
+   problem shot, a lit interior, a stylized interior cross-section, a card — and
+   T12's three all shared one. That is the difference a viewer names first.
 3. **The low point is the shortest beat and the most important one.** Everything
    rides on that face.
 4. **Word budget is per beat, not per ad.** Two spoken lines per 5-second beat is
@@ -320,8 +412,12 @@ that fails after the mix has cost the mix too.
 5. The clip's own audio is usable — ambience and in-scene voices, not a music bed
    competing with the narration you are about to lay over it.
 
-Fix by subtraction. A failed beat gets a shorter prompt and fewer clauses, not
-more instructions.
+**The repair depends on the failure, and the two repairs are opposites.** A beat
+that did two things, smeared its action or glitched its physics gets a SHORTER
+prompt: fewer clauses, one action, the actor named in it. A beat that grew a
+sixth finger, melted a feature or drifted a label gets ONE added negative naming
+that artefact exactly. Getting it backwards is why a beat gets re-rolled three
+times. The table in `references/formulas.md` has both cases.
 
 ## Gate 5 — the voice-over
 
@@ -388,6 +484,26 @@ ffmpeg -i beat2.mp4 -t <vo+0.5> -c:v libx264 -c:a aac beat2-trimmed.mp4
 
 A beat with no narration keeps its own length.
 
+**Trimming is the default, not the only option.** Measure both and pick per beat:
+
+| Option | When | How |
+|---|---|---|
+| **A. Trim the clip to the VO** (default) | The VO is shorter than the clip. Most beats. | Re-encode to `vo + 0.5s`: 0.25s lead, 0.25s tail. |
+| **B. Extend the VO to fill the clip** | The visual needs its full length to land: a long camera move, the mascot mechanism, a CTA hold. | Add one or two words, or a second short line. Re-render the take and re-measure. |
+
+The allowed micro-buffer is about 0.25s of lead and 0.25s of tail. Anything past
+that is dead air, and dead air at the end of a beat is the single most common
+tell that an ad was assembled rather than shot.
+
+**If the VO is LONGER than the clip, never speed it up.** No `atempo`. Split the
+line across two beats, or re-render the beat at a longer duration. A voice at
+1.1x is audible as a voice at 1.1x, and it costs the ad its calm.
+
+**Re-check the caption's vertical position after trimming.** The frame at the new
+cut is not the frame that was there before, so a caption band that sat over clean
+floor can land on a face or a label. This is why captions are burned AFTER the
+trim and the mix, never before: the timings and the safe area both move.
+
 ### Concatenate, then mix
 
 ```bash
@@ -417,6 +533,32 @@ carried the narrator's words and Seedance rendered them, and no level will fix
 it — re-render the beat with the narration removed from the prompt. The
 transcribe-verify step below is what catches this, and it is why that step is not
 optional.
+
+### The end card is composited, never rendered
+
+The last beat ends on the real product photograph, dropped over the render. Do
+not ask the model to draw the card: asking it to draw a card is asking it to
+regenerate a wordmark from scratch, and it will get it wrong. Measured on this
+family of runs — `Novoads.ai` came back as `Novads.ai` in every frame with the
+label-hold clause present and the key frame spelled correctly, and `Owala` came
+back as `ovola`. The model carries a MARK, which is a shape, and destroys TYPE.
+
+```bash
+# 1. find the cut to the card (expect a dissolve, not the hard cut you asked for)
+ffmpeg -i beat5-trimmed.mp4 -vf "select='gt(scene,0.3)',showinfo" -f null - 2>&1 | grep pts_time
+# 2. measure the product's bounding box in BOTH the rendered card and the real
+#    photo, then scale and position the real one to match. Matching by eye jumps.
+# 3. fade the real card in on the render's own dissolve curve, at full opacity
+#    BEFORE the wordmark becomes legible, or the misspelling ghosts through
+ffmpeg -i beat5-trimmed.mp4 -loop 1 -i endcard.png -filter_complex \
+  "[1:v]scale=<w>:-1,format=rgba,fade=t=in:st=<t0>:d=0.4:alpha=1[card];\
+   [0:v][card]overlay=<x>:<y>:enable='gte(t,<t0>)'" \
+  -c:a copy beat5-carded.mp4
+```
+
+**Then read the wordmark at full crop.** Pull the frame, crop the label, look at
+it at full size. A contact sheet at thumbnail size is too small to catch a single
+missing letter, which is exactly how the first one shipped.
 
 ### Verify what it actually says, before it ships
 
@@ -449,19 +591,66 @@ generate_captions  assetId: <the master>, preset: <a style>
 
 `list_caption_presets` shows the styles and their prices; the basic tier is 0.4
 credits per billed minute and the dynamic tier is 0.8. A 25-second ad bills one
-minute — the minimum — either way.
+minute — the minimum — either way. **Read the list rather than trusting the names
+below**; presets are added and the tiers are the product surface, not this file.
 
-**READ THE CAPTIONS BEFORE YOU SHIP. They are TRANSCRIBED, not taken from your
-script**, so they inherit every mishearing the transcript does — and brand names
-are what they mishear. Measured on a real run: a voice-over saying "Owala
-FreeSip" was captioned **"Olaf. Free sip water"**, and "bottles" came back
-"bootles". A caption that renames the product is worse than no caption, and
-nothing upstream warns you.
+### Which preset, and why it is not a free choice
 
-Two fixes, in order of preference: keep the brand name out of the NARRATION and
-put it on screen as the hero card instead, which is where a wordmark belongs
-anyway; or burn the captions locally from your own script, where you own every
-character. The server pass is the cheap default, not the safe one.
+The genre's caption look is a specific thing: heavy sans-serif, white fill, a
+thick dark outline, roughly 7% of frame height, sitting in the lower third but
+clear of the platform UI, changing per phrase rather than per word. That is what
+a hand-burned caption track was built to produce, and it is what to match when
+picking from the list.
+
+| You want | Reach for | Note |
+|---|---|---|
+| The default heavy-outline social look | a basic-tier preset such as `hustle`, `slay` or `flex` | 0.4 cr/min. Fixed styling, which is the point: it will not surprise you |
+| Per-phrase emphasis, a punchline that pops | a dynamic-tier preset such as `glide` or `fusion` | 0.8 cr/min. Context-aware animation, worth it on a hook beat |
+| A quiet, typographic register | `simple`, `plain` or `lowkey` | Basic tier. Right when the ad is doing the work and the captions should not |
+
+Two things the preset cannot do for you, and both are yours:
+
+- **Placement against the frame.** The preset picks a band; your role D still is
+  what leaves the lower third clean for it. Ask for the negative space in the
+  still prompt, not in the caption call.
+- **The words.** Presets style a transcript; they do not correct one. See the
+  gate above.
+
+**Burning locally is the fallback, not the default.** Take it when the transcript
+keeps mangling a name you cannot move to the card, or when a brand's caption
+styling is contractual. You then own the timing, the font licence and the safe
+area. At this length that is five phrases of timing to get right by hand, which
+is why it is the fallback.
+
+```
+╔═══════════════════════════════════════════════════════════════════════╗
+║  CAPTION GATE — BLOCKING. Read every caption against the script.      ║
+║  A garbled brand name is a FAILED RUN, not a note in the report.      ║
+╚═══════════════════════════════════════════════════════════════════════╝
+```
+
+**Captions are TRANSCRIBED, not taken from your script**, so they inherit every
+mishearing the transcript does — and brand names are what they mishear. Measured
+on real runs: a voice-over saying "Owala FreeSip" was captioned **"Olaf. Free sip
+water"**; "bottles" came back "bootles"; and a run whose own transcript read
+`NoseFrida 1499` shipped captions reading **"Nos Frida 1499."** — the brand split
+in half and the price read as a number nobody says out loud.
+
+**That class of defect blocks the ship.** Do not deliver a master with it and
+mention it in the notes; that is what happened to T12 and the caption was the
+first thing a viewer read. Compare the burned captions word by word against the
+board's script. If a brand name, a product name or a number is wrong in even one
+frame, the run is not finished.
+
+Three fixes, in order of preference:
+
+1. **Keep the brand name out of the NARRATION entirely** and put it on screen as
+   the composited end card, which is where a wordmark belongs anyway. This is the
+   only fix that removes the failure mode rather than catching it.
+2. **Keep numbers out of the narration too.** A price spoken aloud is a price the
+   transcript writes as digits. Put it on the card.
+3. **Burn the captions locally from your own script**, where you own every
+   character. The server pass is the cheap default, not the safe one.
 
 Burning captions locally is the fallback, not the default. The server pass reads
 the audio you just mixed and places words on it; a local burn means you own the
@@ -478,11 +667,14 @@ Deliver in this order, no preamble:
    `novoads-pixar-ad`.
 3. **ANGLE** — the enemy this ad attacks.
 4. **DOCTRINE** — C or D (see `novoads-pixar-ad`), and why.
-5. **CAST + STYLE LOCK** — the paragraph that will be pasted into every prompt.
-6. **BEAT BOARD** — the table. Word count per beat against the two-line ceiling.
+5. **CAST + STYLE LOCK** — the cast sheet text, including the terse tag, and the
+   paragraph that will be pasted into every prompt.
+6. **BEAT BOARD** — the table, with the genre role assigned per beat. Word count
+   per beat against the two-line ceiling. At least one SYNC beat.
 7. **COST** — the `estimate_cost` figures, announced in one line.
 8. Then generate: cast sheet, all stills, **stop at the board gate**, clips, VO,
-   music, assemble, verify, caption.
+   music, assemble, composite the end card, verify, caption, **read the captions
+   against the script before calling it finished**.
 
 ## The calls
 
@@ -592,7 +784,16 @@ uncanny faces, no dead eyes
   product photo over the final beat, which is what the sibling skill's Doctrine C
   does and why.
 - **The captions renamed the product.** They are transcribed from the audio, not
-  from your script. See Gate 8.
+  from your script. Blocking, not a note. See Gate 8.
+- **Every beat is a VO beat and the ad feels flat.** The doubling rule was
+  over-obeyed. At least one beat must be SYNC, and role A is the one that wants
+  it: a problem character speaking its own complaint is the genre's opening move.
+- **The beats all look like the same shot.** No role was assigned, so every beat
+  became a setup shot. Each beat gets its own world and its own shot size, and
+  the roles in `references/formulas.md` are what produce that variety for free.
+- **The product is in every frame.** It belongs in roles B and D and on the end
+  card. In the hook and the mechanism scene it is a distraction from the only
+  thing carrying the ad, which is a face.
 - **Dead air between beats.** The clips were not trimmed to their narration. Go
   back to Gate 7.
 - **`insufficient_credits`.** The error carries `required` and `available`.
@@ -608,5 +809,9 @@ uncanny faces, no dead eyes
 - Use the real brand and the real packaging from the photo. Never invent a brand
   and never blank-label the product.
 - On-screen text is short words and numbers only, never sentences.
+- No em dashes in ad copy. Never say "free" — the entry offer is the $1 trial.
+- The end card is composited from the real photograph. Never rendered.
 - If a fact cannot be verified from the source given, leave it out and say so.
 - Transcribe the master before you call it finished.
+- Read the burned captions against the script. A garbled brand name blocks the
+  ship.
