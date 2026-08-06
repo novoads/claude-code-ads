@@ -1,5 +1,15 @@
 @shared/CLAUDE.md
 
+## Craft doctrine
+
+Three rules span every skill that produces video with speech: **transcribe-verify** (a
+reference pins the label, nothing pins the audio), **the per-beat mix** (a SYNC beat's own
+audio is dialogue, not ambience), and **no dead space** (trim every beat to its narration).
+They are stated once in [shared/references/craft.md](shared/references/craft.md). Read it
+before writing a QA step, a mix or a trim into any skill, and point at it rather than
+restating it — a restatement is how the clay skill shipped a mix recipe that had already
+been fixed in the skill it was ported from.
+
 # Novoads-specific session rules
 
 - **API:** Novoads REST API — `https://api.novoads.ai/v1`. `NOVOADS_BASE_URL` overrides the **host only**; callers append `/v1/…`.

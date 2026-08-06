@@ -507,6 +507,9 @@ Check `mean_volume` is not near-silent (the renders measured here came back −1
 
 #### 3. Transcribe — the only check that hears the brand name
 
+> Doctrine: [shared/references/craft.md](../../shared/references/craft.md) § 1. The commands
+> below are this surface's; the rule is not this skill's.
+
 ```bash
 ffmpeg -y -v error -i ad.mp4 -ar 16000 -ac 1 -c:a pcm_s16le /tmp/ad-qa.wav
 ```

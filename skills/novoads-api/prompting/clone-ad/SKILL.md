@@ -666,7 +666,7 @@ Then:
    downloads folder is cleared, a competitor's URL rots. Measured 2026-08-06 — a finished
    three-variant run was reopened four days later with its three ads intact and its source
    gone, which left no way to show the clone had been faithful to anything.
-3. **Transcribe every finished clip and diff it against the approved script.** One
+3. **Transcribe every finished clip and diff it against the approved script.** (Doctrine: [shared/references/craft.md](../../../../shared/references/craft.md) § 1.) One
    `POST /v1/transcripts` per clip, 0.1 credits each, and it is the only thing that catches
    a spoken line that drifted. A reference image pins the **label**; nothing pins the
    **audio**, and the two fail independently. Measured 2026-08-06 across three clones of one

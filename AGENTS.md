@@ -20,6 +20,16 @@ Every credit number shown to a user must come from a live `POST /v1/estimates` c
 
 For any video where the model speaks, the spoken line gets its own approval before the cost gate. The two gates are separate and neither implies the other.
 
+## Craft doctrine
+
+Three rules span every skill that produces video with speech: **transcribe-verify** (a
+reference pins the label, nothing pins the audio), **the per-beat mix** (a SYNC beat's own
+audio is dialogue, not ambience), and **no dead space** (trim every beat to its narration).
+They are stated once in [shared/references/craft.md](shared/references/craft.md). Read it
+before writing a QA step, a mix or a trim into any skill, and point at it rather than
+restating it — a restatement is how the clay skill shipped a mix recipe that had already
+been fixed in the skill it was ported from.
+
 ## Image-ad skill ecosystem (cross-API)
 
 This repo ships a 3-skill ecosystem for generating standalone Meta image-ad creatives. **Read [shared/skills/image-ad-prompting/OVERVIEW.md](shared/skills/image-ad-prompting/OVERVIEW.md) before invoking any of these skills** — it explains the decision tree (gpt-image-2 vs Nano Banana), the shared 37-template library, the hand-off to the separate `meta-ad-builder` skill, and what's out of scope.
