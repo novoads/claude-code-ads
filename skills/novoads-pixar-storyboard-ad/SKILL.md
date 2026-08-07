@@ -15,8 +15,8 @@ description: >-
   hands you a product and asks for something with an arc rather than a single
   shot. Do NOT use for a single 15-second animated shot
   (use novoads-pixar-ad, which is one call and cheaper), for talking-head UGC
-  (the default Novoads flow), for cloning a competitor's video (use clone-hook),
-  or for a static image ad (use clone-static-ad).
+  (the default Novoads flow), for cloning a competitor's video (use an
+  ad-clone workflow), or for a static image ad (use a static image-ad skill).
 ---
 
 # Novoads Pixar Storyboard Ad

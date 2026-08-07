@@ -15,7 +15,8 @@ description: >-
   clay one", or a reference video with sculpted clay characters in it. Do NOT
   use for the smooth 3D animated look (use novoads-pixar-storyboard-ad, or
   novoads-pixar-ad for a single 15-second shot), for talking-head UGC (the
-  default Novoads flow), or for a static image ad (use clone-static-ad).
+  default Novoads flow), or for a static image ad (use a static image-ad
+  skill).
 ---
 
 # Novoads Claymation Storyboard Ad
