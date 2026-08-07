@@ -90,21 +90,23 @@ Discriminated on `kind`, and strict. Any field not listed is a 400.
 |---|---|---|
 | `kind` | required, `"video"` | required, `"image"` |
 | `prompt` | required | required |
-| `model` | `seedance-2.0` (default), `seedance-2.0-mini`, `omni-flash`, `veo-3.1`, `sora-2` | `gpt-image-2` (default), `nano-banana-pro`, `reve-2.1` |
-| `durationSeconds` | 4 to 15 | n/a |
+| `model` | `seedance-2.0` (default), `seedance-2.5`, `seedance-2.0-mini`, `omni-flash`, `veo-3.1`, `sora-2` | `gpt-image-2` (default), `nano-banana-pro`, `reve-2.1` |
+| `durationSeconds` | 4 to 30 | n/a |
 | `resolution` | `480p` `720p` `1080p` `4k` — **range-checked per model** | n/a |
 | `numImages` | n/a | 1 to 4 |
 | `language` | `en` `es` `pt` `fr` `de` `it` `zh` `ja` `ko` `ar` `hi` | same |
 
-All eight models price here, `veo-3.1` and `sora-2` included (verified live, 2026-08-02).
+All nine models price here, `veo-3.1` and `sora-2` included (verified live, 2026-08-02; `seedance-2.5` added to the enum in deployed spec `2.13.0`, 2026-08-07).
 
-**`resolution` is accepted here because it moves the price** — on `seedance-2.0`, `1080p` is ≈2.5x the `720p` base and `4k` ≈5x (verified live 2026-08-04). Like `durationSeconds`, the enum in the table is the schema's union and **not** what any one model accepts: the service range-checks it against the named model, so `{"model":"seedance-2.0-mini","resolution":"1080p"}` comes back `400 resolution must be one of 720p for seedance-2.0-mini` while `720p` prices cleanly (verified live 2026-08-04). Full per-model table and the mini caveat under *POST /videos → `resolution`*.
+**The `4 to 30` span is the OUTER bound across the whole set, and no model renders all of it.** Only `seedance-2.5` goes past 15 seconds; asking `seedance-2.0` for 20 is a `400` here rather than a quote for something it cannot render. The spec says so in the field's own description — read `GET /v1/models` for the per-model grid.
+
+**`resolution` is accepted here because it moves the price** — on `seedance-2.0`, `480p` is ≈half the `720p` base, `1080p` is ≈2.5x it and `4k` ≈5x (the 480p arm re-priced 2026-08-07; the rest verified live 2026-08-04). Like `durationSeconds`, the enum in the table is the schema's union and **not** what any one model accepts: the service range-checks it against the named model, so `{"model":"seedance-2.0-mini","resolution":"1080p"}` comes back `400 resolution must be one of 720p for seedance-2.0-mini` while `720p` prices cleanly (verified live 2026-08-04). Full per-model table and the mini caveat under *POST /videos → `resolution`*.
 
 There is **no `styleFamily`** on either arm. The field was deleted from the whole API in spec `2.0.0`, and both arms are strict, so a body carrying it comes back `400 (root): Unrecognized key: "styleFamily"` (verified live, 2026-08-02).
 
 There is **no `audioEnabled`** on either arm, and that is deliberate rather than an omission: the field does not move the price, and this endpoint takes only fields that do. Sending it is `400 Unrecognized key: "audioEnabled"` even on `seedance-2.0`, where the *generation* call accepts it (verified live, 2026-08-02). Price the render without it; send it on `POST /videos`.
 
-**`durationSeconds` is validated against the *named model's* grid here, not against the 4–15 span in the table.** Same behavior as the prompt ceiling: `{"model":"sora-2","durationSeconds":11}` comes back `400 durationSeconds must be one of 4, 8, 12 for sora-2.` while `8` prices cleanly (verified live, 2026-08-02). So the free call catches an out-of-grid duration before the paid one does — one more reason to run it every time.
+**`durationSeconds` is validated against the *named model's* grid here, not against the 4–30 span in the table.** Same behavior as the prompt ceiling: `{"model":"sora-2","durationSeconds":11}` comes back `400 durationSeconds must be one of 4, 8, 12 for sora-2.` while `8` prices cleanly (verified live, 2026-08-02). So the free call catches an out-of-grid duration before the paid one does — one more reason to run it every time.
 
 Response:
 
@@ -120,7 +122,7 @@ Response:
 
 **`warnings` never refuses the call and never changes `credits`** — and it false-positives. See *Prompt rules* below before you act on one.
 
-Pass `model` explicitly. Video schedules differ by 2x across the set, image schedules by more than 3x.
+Pass `model` explicitly. **At the same length the video schedules span more than 10x across the set, and more than 28x across every cell the deployment publishes** once length and resolution are counted too (both figures are derived by the API itself and printed in the `model` field's description — they moved when `seedance-2.5`'s thirty-second grid landed). Image schedules differ by more than 3x. Pricing the wrong model is a quote that disagrees with the invoice.
 
 **The schema's 20,000-character `prompt` ceiling is not the one that binds.** The service applies the *named model's* limit here too, so a 5,000-character prompt priced as `seedance-2.0` is rejected at the estimate, for free, exactly as the paid call would reject it. Omit `model` and it is judged as `seedance-2.0`. Only `omni-flash` genuinely accepts 20,000.
 
@@ -136,26 +138,29 @@ This endpoint refuses a churned organization with a 403, on purpose. `sufficient
 
 Per-model request bodies, all `.strict()`.
 
-**Shared by all five video models:** `model`, `prompt`, `durationSeconds`, `aspectRatio`, `language`, `startImageAssetId`, `productId`. Only `model` and `prompt` are required. Beyond that the variants differ, and every difference is a `400` rather than a dropped field:
+**Shared by all six video models:** `model`, `prompt`, `durationSeconds`, `aspectRatio`, `language`, `startImageAssetId`, `productId`. Only `model` and `prompt` are required. Beyond that the variants differ, and every difference is a `400` rather than a dropped field:
 
-- **`referenceAssetIds`** — the two Seedance variants only. `omni-flash`, `veo-3.1` and `sora-2` have no such field.
-- **`audioEnabled`** — the two Seedance variants only. See below.
+- **`referenceAssetIds`** — the three Seedance variants only. `omni-flash`, `veo-3.1` and `sora-2` have no such field.
+- **`audioEnabled`** — the three Seedance variants only. See below.
 
 There is **no `styleFamily`** on any variant. It was deleted from the API in spec `2.0.0` along with the blocking prompt rules it scoped, and the variants are strict, so sending it is a `400`.
 
 | `model` | `durationSeconds` (default) | `aspectRatio` | `refs` | `audio` | Prompt max |
 |---|---|---|---|---|---|
 | `seedance-2.0` | 4–15, any integer (**5**) | `16:9` (default) `9:16` `1:1` `4:3` `3:4` `21:9` | ≤9 | yes | 4,000 |
-| `seedance-2.0-mini` | same (**10**) | same | ≤9 | yes | 4,000 |
+| `seedance-2.5` | **4–30, any integer** (**5**) | same | ≤9 | yes | 4,000 |
+| `seedance-2.0-mini` | 4–15, any integer (**10**) | same | ≤9 | yes | 4,000 |
 | `omni-flash` | 4, 6, 8, 10 (**8**) | `9:16` (default) `16:9` | — | — | 20,000 |
 | `veo-3.1` | 4, 6, 8 (**8**) | `9:16` (default) `16:9` | — | — | 4,000 |
 | `sora-2` | 4, 8, 12 (**4**) | `9:16` (default) `16:9` | — | — | 4,000 |
 
-Defaults that bite: **Seedance defaults to `16:9`**, alone among the five — every other model already defaults to `9:16`. On duration, `seedance-2.0` defaults to 5 and mini to 10, `omni-flash` to 8, `sora-2` to 4, and **`veo-3.1` to 8, which is also its maximum** — the only model here that defaults to its ceiling. An out-of-grid `durationSeconds` is rejected, never rounded. Set both fields explicitly on any ad.
+Defaults that bite: **the three Seedance variants default to `16:9`**, alone among the six — every other model already defaults to `9:16`. On duration, `seedance-2.0` and `seedance-2.5` default to 5 and mini to 10, `omni-flash` to 8, `sora-2` to 4, and **`veo-3.1` to 8, which is also its maximum** — the only model here that defaults to its ceiling. An out-of-grid `durationSeconds` is rejected, never rounded. Set both fields explicitly on any ad.
+
+**`seedance-2.5` is the only model here that renders past 15 seconds**, and its grid is the same continuous integer range Seedance has always had — 4, 5, 6 … 29, 30, with no gaps. It is otherwise shaped exactly like `seedance-2.0`: same six aspect ratios, same `16:9` default, same 9 reference images, same `audioEnabled` toggle, same 4,000-character prompt ceiling. **The one place it is narrower is `resolution`** — see that section.
 
 ### `audioEnabled`
 
-A boolean on **`seedance-2.0` and `seedance-2.0-mini` only**, default `true` — omit it and the endpoint renders exactly what it rendered before the field existed. It controls the synchronized sound effects, ambient sound and lip-synced speech the model generates from the prompt.
+A boolean on **the three Seedance variants only** — `seedance-2.0`, `seedance-2.5` and `seedance-2.0-mini` — default `true`, so omitting it renders exactly what the endpoint rendered before the field existed. It controls the synchronized sound effects, ambient sound and lip-synced speech the model generates from the prompt.
 
 Send `false` for a clip that is meant to be silent: a pipeline laying its own voice-over in post otherwise pays for a voice track it throws away, and a product cutaway built to run muted comes back with sound effects nobody hears.
 
@@ -165,7 +170,7 @@ Verified live 2026-08-02, each probe pinned with an out-of-grid `durationSeconds
 
 | Sent to | Result |
 |---|---|
-| `seedance-2.0`, `seedance-2.0-mini` | accepted — the only complaint was the pinned duration |
+| `seedance-2.0`, `seedance-2.0-mini` (and `seedance-2.5`, from its published variant) | accepted — the only complaint was the pinned duration |
 | `omni-flash`, `veo-3.1`, `sora-2` | `400 Unrecognized key: "audioEnabled"` |
 | `POST /estimates`, any model | `400 Unrecognized key: "audioEnabled"` |
 
@@ -183,7 +188,7 @@ Confirmed against the deployed spec `2.0.0` on 2026-08-02 (the `1.2.0`-era note 
 |---|---|---|
 | What the model does with it | Animates the image as the **first frame** | **Composites** the images as visual references — a character, a product, a wardrobe, a setting |
 | How many | 1 | Up to **9** |
-| Which models | all five | `seedance-2.0` and `seedance-2.0-mini` only — the `omni-flash`, `veo-3.1` and `sora-2` variants omit the field, and all three are strict (`400 Unrecognized key`, verified live 2026-08-02) |
+| Which models | all six | the three Seedance variants only — `seedance-2.0`, `seedance-2.5`, `seedance-2.0-mini`. The `omni-flash`, `veo-3.1` and `sora-2` variants omit the field, and all three are strict (`400 Unrecognized key`, verified live 2026-08-02) |
 | Addressed in the prompt | no | yes: `@Image1`, `@Image2` … in the order you send them |
 
 **Sending both is a 400**, not a merge: they select different modes on the provider.
@@ -192,24 +197,38 @@ Confirmed against the deployed spec `2.0.0` on 2026-08-02 (the `1.2.0`-era note 
 
 An `@ImageN` token pointing past the end of the array is refused **before the charge** — an unresolvable reference is a content failure at the provider, and a 400 is a better answer than a refunded render.
 
-### `resolution` — on `seedance-2.0` only, and it is a price field
+### `resolution` — on `seedance-2.0` and `seedance-2.5`, and it is a price field
 
-Verified live 2026-08-04 against deployed spec **2.6.0**. The earlier note here — that no variant had the field and `GET /models` published no output size — described an older deployment and is superseded.
+Verified live 2026-08-04 against deployed spec **2.6.0**; `seedance-2.5`'s row read off deployed spec **2.13.0**, 2026-08-07. The earlier note here — that no variant had the field and `GET /models` published no output size — described an older deployment and is superseded.
 
 | `model` | `resolution` accepted | Default |
 |---|---|---|
 | `seedance-2.0` | `480p`, `720p`, `1080p`, `4k` | `720p` |
+| `seedance-2.5` | **`480p`, `720p` — and nothing above** | `720p` |
 | `seedance-2.0-mini` | **none — the variant has no such property** | 720p, fixed |
 | `omni-flash`, `sora-2` | **none** | 720p, fixed |
 | `veo-3.1` | **none** | 1080p, fixed |
 
+**`seedance-2.5` does not inherit 2.0's high tiers, and that is a provider fact rather than a rollout gap.** Neither provider serves the model above 720p at all, so `1080p` and `4k` are a `400` on it and always will be. Do not carry a resolution across a model switch: a workflow that renders `seedance-2.0` at `1080p` and then swaps the model id to `seedance-2.5` is a rejected request, not a downgrade.
+
 **`GET /v1/models` now publishes this**: each entry carries `resolutions[]` and `defaultResolution`. That is the authority — read it rather than trusting this table, which is a snapshot.
 
-**It changes the price**, which makes it unlike every other output-shape field here. Relative to the `720p` base on `seedance-2.0`: `480p` is **the same**, `1080p` is **≈2.5x**, `4k` is **≈5x**. Those ratios are for warning a user before they ask for 4k — **the number they approve still comes from `POST /estimates`**, and this repo holds no rate table (see SKILL.md gate 2).
+**It changes the price**, which makes it unlike every other output-shape field here. Relative to the `720p` base, each tier is its own credit schedule rather than a surcharge on the one below it:
+
+| `resolution` | `seedance-2.0` | `seedance-2.5` |
+|---|---|---|
+| `480p` | **≈half** the base | **≈half** the base |
+| `720p` | base (default) | base (default) |
+| `1080p` | ≈2.5x | **not accepted** |
+| `4k` | ≈5x | **not accepted** |
+
+**`480p` changed on 2026-08-07.** It used to cost the same as `720p`, so there was no reason to ask for it. The family-wide reprice that shipped alongside `seedance-2.5` put it at roughly half — a price *decrease* on live models, so nothing that rendered yesterday costs more today, but a workflow that skipped `480p` on the old advice should reconsider it. **It is only reachable on the two models that take the field**: `seedance-2.0-mini` still publishes no `resolution` property and still range-checks the estimate arm to `720p`, whatever the dashboard charges for a mini draft.
+
+Those are ratios, not a rate card — they exist so you can warn a user that `4k` is a five-fold decision before they ask for it. **The number they approve still comes from `POST /estimates`**, and this repo holds no rate table (see SKILL.md gate 2).
 
 **`POST /estimates` takes `resolution`** on the video arm and prices it, so the quote can track the tier you actually intend to render.
 
-**The `seedance-2.0-mini` split-brain, verified live 2026-08-04.** The estimate arm's `resolution` enum is shared across all five models, but the server range-checks it per model:
+**The `seedance-2.0-mini` split-brain, verified live 2026-08-04.** The estimate arm's `resolution` enum is shared across all six models, but the server range-checks it per model:
 
 | Call | Result |
 |---|---|
@@ -313,7 +332,7 @@ Response `202`: `jobId`, `status`, `creditsCharged`, `model`. `model` is always 
 
 `GET /caption-presets` → `{ "presets": [{ "id", "tier", "credits" }] }`. Verified live 2026-08-04: **30 presets — 21 `basic` at 0.4 credits/billed minute, 9 `dynamic` at 0.8.** The `dynamic` nine are `glass`, `whisper`, `glide`, `glide2`, `fusion`, `terminal`, `handwritten`, `backdrop`, `backdrop2`.
 
-The meter is `rate x whole minutes, rounded up, minimum one`, **doubled again above the 1080p tier, measured on the SHORT edge** — a portrait `1080x1920` is 1080p held sideways and is *not* doubled; a true 4K source is. Duration and resolution are read from the file at request time, not declared. Everything this API generates is ≤15s, so it bills exactly one minute.
+The meter is `rate x whole minutes, rounded up, minimum one`, **doubled again above the 1080p tier, measured on the SHORT edge** — a portrait `1080x1920` is 1080p held sideways and is *not* doubled; a true 4K source is. Duration and resolution are read from the file at request time, not declared. Everything this API generates is ≤30s (`seedance-2.5`'s ceiling; every other model stops at 15), so it still bills exactly one minute.
 
 **`POST /estimates` has a third arm for this:** `{ "kind": "caption", "preset", jobId | assetId }`. `preset` is required; the source is optional but **name it for anything over a minute**, because a sourceless quote is the one-minute minimum. Verified live 2026-08-04: sourceless `casper` → `credits: 0.4`; sourceless `glass` → `credits: 0.8`. No prompt, so no `warnings`.
 
@@ -554,7 +573,9 @@ curl -sS -X POST https://api.novoads.ai/v1/products \
 
 The catalog: per model `id`, `displayName`, `kind`, `endpoint`, `credits`, `representativeOutput`, `aspectRatios`, `durationsSeconds`, `maxPromptCharacters`, and — on video models — **`resolutions[]` and `defaultResolution`** (verified live 2026-08-04; the earlier note that this endpoint published no output size is superseded).
 
-**`resolutions[]` is the authority on which tiers a model takes.** Live on 2026-08-04: `seedance-2.0` returns `["480p","720p","1080p","4k"]`; `seedance-2.0-mini`, `omni-flash` and `sora-2` return `["720p"]`; `veo-3.1` returns `["1080p"]`. Read it instead of hardcoding a set — a value outside a model's list is a `400`, not a downscale. Note that only `seedance-2.0` exposes `resolution` as a *request* field: for the fixed-tier models, `resolutions[]` reports what they render, not something you may send.
+**`resolutions[]` is the authority on which tiers a model takes.** Live on 2026-08-04, plus `seedance-2.5` from deployed spec `2.13.0` on 2026-08-07: `seedance-2.0` returns `["480p","720p","1080p","4k"]`; **`seedance-2.5` returns `["480p","720p"]`**; `seedance-2.0-mini`, `omni-flash` and `sora-2` return `["720p"]`; `veo-3.1` returns `["1080p"]`. Read it instead of hardcoding a set — a value outside a model's list is a `400`, not a downscale. Note that only `seedance-2.0` and `seedance-2.5` expose `resolution` as a *request* field: for the fixed-tier models, `resolutions[]` reports what they render, not something you may send.
+
+**`durationsSeconds` is the same kind of authority for length**, and since 2.13.0 the entries no longer agree with each other: `seedance-2.5` publishes 4 … 30, every other model stops at or below 15. Read the model's own array rather than assuming a family shares a grid.
 
 **`credits` prices `representativeOutput`, and that unit is not the same across models** — one model's representative output is 5 seconds of video, another's is 10. Comparing the two `credits` numbers directly compares different things. For a real comparison, price both at `POST /v1/estimates` with the same `durationSeconds`.
 
@@ -578,6 +599,7 @@ Measured on production renders (all providers, succeeded only, p10 to p90):
 | model | typical wait | median | observed in this repo |
 |---|---|---|---|
 | `seedance-2.0` | 3 to 8 minutes | ~5 minutes | **~171s, ~171s, ~154s** (2026-08-02/03, n=3) |
+| `seedance-2.5` | not published | — | — |
 | `seedance-2.0-mini` | 2 to 3 minutes | ~2.3 minutes | — |
 | `omni-flash` | not published | — | — |
 | `veo-3.1` | not published | — | — |
@@ -585,7 +607,7 @@ Measured on production renders (all providers, succeeded only, p10 to p90):
 
 The right-hand column is `createdAt` → first observed `succeeded` at 15-second poll granularity, so it is an upper bound on a handful of renders — not a distribution, and not a contradiction of the fleet range next to it. **Quote the fleet range where there is one and say the number is a range.** Both renders anyone here has actually timed came back under three minutes, so "about five minutes" is a promise the API did not make: a user told five who waits nine has been misled, and the p90 says nine happens.
 
-For `omni-flash`, `veo-3.1` and `sora-2` there is no published range at all. Say the wait is unknown rather than borrowing Seedance's.
+For `seedance-2.5`, `omni-flash`, `veo-3.1` and `sora-2` there is no published range at all. Say the wait is unknown rather than borrowing another model's — and for `seedance-2.5` specifically, do not borrow `seedance-2.0`'s on the strength of the shared family name: a thirty-second render is six times the output of the five-second clips those numbers were measured on.
 
 About 4% of `seedance-2.0` renders run past 10 minutes. Failures are usually reported faster than successes, but their tail is much worse, so a wait that is far past p90 is more likely a slow success than a silent failure.
 

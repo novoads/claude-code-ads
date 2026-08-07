@@ -5,11 +5,11 @@ Make AI video ads and static image ads from **Claude Code** or **Cursor**, again
 account. The agent does the mechanical part — upload, price, generate, poll, download — and the
 skills carry the part that decides whether the render is any good: the prompt.
 
-Eight models are live on the API. Five make video (**Seedance 2.0**, **Seedance 2.0 Mini**,
-**Omni Flash**, **Veo 3.1**, **Sora 2**) and three make stills (**GPT Image 2**, **Nano Banana
-Pro**, **Reve 2.1**). On top of them this repo ships five Seedance prompt formulas, a 40-template
-static-ad library, Pixar and claymation pipelines, YouTube thumbnails, caption burn-in, and a Meta
-publishing step.
+Nine models are live on the API. Six make video (**Seedance 2.0**, **Seedance 2.5**, **Seedance 2.0
+Mini**, **Omni Flash**, **Veo 3.1**, **Sora 2**) and three make stills (**GPT Image 2**, **Nano
+Banana Pro**, **Reve 2.1**). On top of them this repo ships five Seedance prompt formulas, a
+40-template static-ad library, Pixar and claymation pipelines, YouTube thumbnails, caption burn-in,
+and a Meta publishing step.
 
 Two rules run through the whole pack, and they are the reason it is safe to point an agent at a
 billing API:
@@ -119,6 +119,25 @@ tier — is [seedance-2.md](skills/novoads-api/prompting/prompt-library/seedance
 price and comes back in 2–3 minutes. Upload once, draft on Mini, re-price naming the final tier,
 render once. The agent asks which tier you want before the first Seedance call of a workflow.
 
+### 🎬 Seedance 2.5 — the long one
+
+Any integer duration from **4 to 30 seconds**, which makes it the only model here that renders past
+15 in a single call. Everything else is 2.0's shape: the same six aspect ratios, the same nine
+`referenceAssetIds`, the same `audioEnabled` toggle, the same 4,000-character prompt ceiling — so
+the five Seedance formulas apply unchanged.
+
+Two differences worth knowing before you pick it. It renders **`480p` and `720p` only** — no
+`1080p`, no `4k`, on either provider — so a resolution carried over from a 2.0 workflow is a
+rejected request rather than a downgrade. And it is the **dearest** model on the API at the same
+length; thirty seconds of it is the most expensive single call this API takes. Price it, like
+everything else, at `POST /v1/estimates`.
+
+> "Make a 30-second Seedance 2.5 ad — the founder walks through the workshop and explains why they
+> built it"
+
+A longer clip wants **more beats**, not slower delivery. If the script only fills 15 seconds, render
+15 seconds on `seedance-2.0`, which is cheaper at that length.
+
 ### 🎬 Omni Flash — fast vertical clips
 
 > "Give me a fast 8-second vertical clip of the product on a kitchen counter, no dialogue"
@@ -195,8 +214,9 @@ skill.
   parameterized formula into the prompt library. Nothing is charged until an optional test render.
 - **[clone-ad](skills/novoads-api/prompting/clone-ad/SKILL.md)** — the same local analysis, but the
   output is a rendered clip, so both gates apply. There is no video-to-video on this API: a source
-  longer than 15s becomes a series of clips held together by passing the same reference images to
-  each one.
+  longer than the chosen model's ceiling becomes a series of clips held together by passing the same
+  reference images to each one — though `seedance-2.5` reaches 30s in one call, so some sources that
+  used to need two clips now need one.
 
 ### 📤 Publish as a paused Meta ad
 
@@ -237,12 +257,13 @@ want to compare models yourself.
 
 ## Supported models
 
-All eight are live on `api.novoads.ai/v1`. Grids below come from `GET /v1/models` — that endpoint
+All nine are live on `api.novoads.ai/v1`. Grids below come from `GET /v1/models` — that endpoint
 is the current answer, this table is a map.
 
 | Model | Kind | Duration | Aspect ratios | Prompt cap | Notes |
 |---|---|---|---|---|---|
 | **`seedance-2.0`** | Video | 4–15s, any integer | `16:9` `9:16` `1:1` `4:3` `3:4` `21:9` | 4,000 chars | The flagship. Native audio + lip-sync, mutable with `audioEnabled: false`. `startImageAssetId` **or** up to 9 `referenceAssetIds`, never both. Fleet range 3–8 min; one render here came back in ~171s. |
+| **`seedance-2.5`** | Video | **4–30s, any integer** | same as above | 4,000 chars | The only model here that renders past 15s. Otherwise 2.0's shape — audio toggle, 9 reference images, six ratios. **`480p` / `720p` only, no `1080p` or `4k`.** Dearest per second; nothing has timed one, so quote the wait as unknown. |
 | **`seedance-2.0-mini`** | Video | 4–15s, any integer | same as above | 4,000 chars | Same grid, same formulas, half the price, back in 2–3 min. The drafting tier. |
 | **`omni-flash`** | Video | `4` `6` `8` `10` | `9:16` `16:9` | **20,000 chars** | No reference images. Defaults to `9:16` and 8s. Best for long structured briefs and silent b-roll. |
 | **`veo-3.1`** | Video | `4` `6` `8` | `9:16` `16:9` | 4,000 chars | Start frame only, no reference images. Defaults to 8s — the one model that defaults to its own ceiling. Shot-evolution prompting. Unmeasured here: no render time on record. |
@@ -255,9 +276,14 @@ Image calls take `numImages` 1–4. The `referenceAssetIds` cap is **per model**
 `nano-banana-pro`, 8 on `reve-2.1`, 4 on `gpt-image-2` — and images have no start-frame concept. Videos are
 asynchronous (`202` + `jobId`, poll to a terminal status); images come back in the response body.
 
-`audioEnabled` is a Seedance-only boolean (default `true`); send `false` for a clip meant to run
-silent. The other three video models are strict and `400` on it, as does `POST /v1/estimates` for
-every model — it does not move the price.
+`audioEnabled` is a Seedance-only boolean (default `true`) — all three variants take it; send
+`false` for a clip meant to run silent. The other three video models are strict and `400` on it, as
+does `POST /v1/estimates` for every model — it does not move the price.
+
+`resolution` is on **`seedance-2.0` and `seedance-2.5` only**, and it is the one output-shape field
+that moves the price: each tier is its own credit schedule, not a surcharge on the one below it.
+Since 2026-08-07 `480p` costs roughly **half** of `720p` rather than the same, which makes it a real
+draft tier on both. `seedance-2.5` stops at `720p`.
 
 **Kling 3 is not on this API and is not queued for it.** Its prompt library sits in
 `skills/novoads-api/prompting/prompt-library/` as craft only; the agent will say so plainly rather
