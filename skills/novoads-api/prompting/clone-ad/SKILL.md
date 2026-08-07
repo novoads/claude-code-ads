@@ -28,6 +28,18 @@ Steps 1 to 3 are the same analysis in both. The only charge in that half is the 
 in step 2 — a fraction of a credit, and free on a re-read of the same source. Everything
 from step 9 on is the real spend.
 
+## If the `shared/` files are not on disk
+
+Then `novoads-api` was installed on its own from skills.sh and the rest of the pack stayed behind.
+Everything under `skills/novoads-api/` still travels with you; what is gone is
+`shared/references/craft.md` (the doctrine step 3's transcript diff cites) and
+`shared/skills/caption-video/prompting/guide.md` (the out-of-band caption burn). Fetch either from
+`https://raw.githubusercontent.com/novoads/claude-code-ads/main/<path>`. The b-roll overlay step is
+a folder of scripts rather than one file and only exists in the full pack, so reach it with
+`git clone https://github.com/novoads/claude-code-ads.git`. `scripts/check-novoads-env.sh` and
+`MASTER_CONTEXT.md` are absent too: set `NOVOADS_API_KEY` in the environment yourself, and ask the
+user for brand voice and product instead of reading it.
+
 ## What this API changes about cloning
 
 The analysis half is nearly untouched: frames and the beat structure are local work on the

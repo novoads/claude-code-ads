@@ -10,6 +10,18 @@ Generate one or more **standalone Meta ad image creatives** via Novoads' `POST /
 with `model: "nano-banana-pro"`. Hands the image paths off to your Meta-ad-builder skill —
 this skill does not upload to Meta itself.
 
+## If the `shared/` files are not on disk
+
+Then this skill was installed on its own from skills.sh and the rest of the pack stayed behind.
+Fetch each missing file from `https://raw.githubusercontent.com/novoads/claude-code-ads/main/<path>`,
+where `<path>` is one of `shared/skills/image-ad-prompting/OVERVIEW.md`,
+`shared/skills/image-ad-prompting/prompting/prompt-library.md`,
+`shared/skills/image-ad-prompting/prompting/safety-suffixes.md` and
+`shared/skills/nano-banana-image-ad/prompting/guide.md`. Or take everything at once with
+`git clone https://github.com/novoads/claude-code-ads.git`. That install has no
+`scripts/check-novoads-env.sh` either, so set `NOVOADS_API_KEY` in the environment yourself and
+let the first call report the key.
+
 ## Read order
 
 Paths below are **from the repo root**. This skill is copied into `.claude/skills/` and

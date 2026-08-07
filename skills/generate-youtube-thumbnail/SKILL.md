@@ -21,13 +21,14 @@ Trigger on phrases like:
 
 ## Read order
 
-Paths below are **from the repo root**. This skill is copied into `.claude/skills/` and
-`.cursor/skills/` by `sync-skill.sh`, so a relative link out of it would break in those copies.
+Paths below are **relative to this skill's own folder**, and every file they name ships inside
+it. That holds wherever the folder lands: the repo, the `.claude/skills/` and `.cursor/skills/`
+copies `sync-skill.sh` makes, or a standalone install of just this skill.
 
 1. **This file** — workflow, decision tree, batch generation
-2. `shared/skills/generate-youtube-thumbnail/prompting/guide.md` — likeness alignment, expressions cheat sheet, prompt structure
-3. `shared/skills/generate-youtube-thumbnail/prompting/formulas.md` — 5 proven thumbnail formulas with templates
-4. `skills/generate-youtube-thumbnail/scripts/generate-batch.sh` — the batch script (upload once → generate → download)
+2. `prompting/guide.md` — likeness alignment, expressions cheat sheet, prompt structure
+3. `prompting/formulas.md` — 5 proven thumbnail formulas with templates
+4. `scripts/generate-batch.sh` — the batch script (upload once → generate → download)
 
 For the API contract itself — error codes, rate limits, the upload flow — the `novoads-api`
 skill's `reference.md` is the authority.
@@ -128,7 +129,7 @@ a flaw in it is paid for N times.
 
 ### 4. Pick a formula
 
-See `shared/skills/generate-youtube-thumbnail/prompting/formulas.md` for the 5 proven formulas.
+See `prompting/formulas.md` for the 5 proven formulas.
 Match the user's intent:
 
 | User says... | Use formula |
@@ -141,7 +142,7 @@ Match the user's intent:
 
 ### 5. Compose prompts
 
-Follow the template in `shared/skills/generate-youtube-thumbnail/prompting/guide.md`:
+Follow the template in `prompting/guide.md`:
 
 ```
 YouTube thumbnail, 16:9 landscape.
@@ -265,8 +266,8 @@ concept doesn't depend on photoreal likeness, pricing both is worth the two free
 
 ## See also
 
-- `shared/skills/generate-youtube-thumbnail/prompting/guide.md` — likeness alignment, expressions, prompt structure
-- `shared/skills/generate-youtube-thumbnail/prompting/formulas.md` — 5 proven CTR formulas with prompt templates
-- `skills/generate-youtube-thumbnail/scripts/generate-batch.sh` — the batch generator
+- `prompting/guide.md` — likeness alignment, expressions, prompt structure
+- `prompting/formulas.md` — 5 proven CTR formulas with prompt templates
+- `scripts/generate-batch.sh` — the batch generator
 - the **`novoads-api`** skill — endpoint, upload flow, error codes, rate limits
 - the **`nano-banana-image-ad`** skill — the same model, pointed at Meta ad creatives
