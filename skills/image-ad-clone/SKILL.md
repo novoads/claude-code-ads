@@ -21,6 +21,20 @@ Take an existing image ad and turn it into a reusable, parameterizable prompt te
 gets appended to the shared **40-template image-ad library**. The template is validated by
 round-tripping it through a Novoads image model and comparing against the original.
 
+## If the `shared/` files are not on disk
+
+Then this skill was installed on its own from skills.sh, and the library it is supposed to append
+to came with nothing. Fetch each missing file from
+`https://raw.githubusercontent.com/novoads/claude-code-ads/main/<path>`, where `<path>` is one of
+`shared/skills/image-ad-clone/prompting/guide.md`,
+`shared/skills/image-ad-prompting/prompting/template-format.md`,
+`shared/skills/image-ad-prompting/prompting/prompt-library.md` and
+`shared/skills/image-ad-prompting/OVERVIEW.md`. Cloning the whole pack with
+`git clone https://github.com/novoads/claude-code-ads.git` is the better move here, because the
+deliverable is an entry written back into `prompt-library.md` and a raw fetch gives you nowhere to
+save it. That install has no `scripts/check-novoads-env.sh` either, so set `NOVOADS_API_KEY` in the
+environment yourself and let the first call report the key.
+
 ## Read order
 
 Paths below are **from the repo root**. This skill is copied into `.claude/skills/` and
