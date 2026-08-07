@@ -26,6 +26,9 @@ Need an account? The entry offer is a **$1 trial** — not a free tier, and it c
 the API like any other live plan:
 **[novoads.ai](https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack)**
 
+*Claude and Claude Code are products of Anthropic. This is an independent skill pack built by
+Novoads for Claude Code; it is not affiliated with or endorsed by Anthropic.*
+
 ## Prerequisites
 
 The core workflow — upload a photo, price it, generate a video or an image, poll, download — is
@@ -48,8 +51,8 @@ Linux: `apt install curl jq ffmpeg nodejs python3`. Windows: WSL2 — the shell 
 ### 1. Clone
 
 ```bash
-git clone https://github.com/novohq-ai/novoads-claude-code-v2.git
-cd novoads-claude-code-v2
+git clone https://github.com/novoads/claude-code-ads.git
+cd claude-code-ads
 ```
 
 ### 2. Run setup
