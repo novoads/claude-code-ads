@@ -9,8 +9,8 @@ description: >-
   animated-film-look ad: "make a Pixar style ad for this", "3D animated ad", "make it look
   like an animated movie", "cute 3D character ad", "15 second animated ad", or pastes a
   product URL or photo asking for an emotional animated spot. Do NOT use for talking-head
-  UGC (that is the default Novoads flow), for cloning a specific competitor video (use
-  clone-hook), or for a static image ad (use clone-static-ad).
+  UGC (that is the default Novoads flow), for cloning a specific competitor video (use an
+  ad-clone workflow), or for a static image ad (use a static image-ad skill).
 ---
 
 # Novoads Pixar Ad
