@@ -21,10 +21,14 @@ template below are mirrors — change them together. One or two status lines, th
 > and tell me." It is skipped over SSH, in CI, and under `NOVOADS_SETUP_NO_OPEN=1`.)*
 >
 > **What you can ask for now:**
-> - "Make a UGC video ad for my product" — Seedance 2.0/2.5, Veo 3.1, Sora 2
-> - "Make a static image ad from this photo" — 40-template library
-> - "Clone this ad" plus an image of one you like
-> - Pixar or claymation story ads, YouTube thumbnails, burned-in captions, generated music
+> - "Make a UGC video ad for my product" — a presenter speaks your script
+> - "Make static image ads from this photo" — the 40-template library, run in batches
+> - "Clone this ad" plus a competitor's image — rebuilt as a template you can refill
+> - "Clone this video ad" plus a competitor's clip — beat map, adapted script, your product
+> - "Make a Pixar-style ad" or "a claymation ad" — storyboard, voice-over, music, captions
+> - "Find my competitor's live ads" — pulls their real creatives from the Meta Ad Library
+> - "Publish this to Meta Ads" — needs Meta credentials; I'll open `.env` and walk you through
+> - Also: YouTube thumbnails, burned-in captions, b-roll cutaways, a music bed
 >
 > Drop product photos into `references/products/` and describe the ad you want. Every
 > generation is priced by a live estimate and shown to you before anything is spent.

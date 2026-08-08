@@ -162,10 +162,14 @@ print_orientation() {
   echo ""
   echo "── What you can ask for ─────────────────────────────────────────────"
   echo "  Open this folder in Claude Code or Cursor and describe the ad:"
-  echo "    • \"Make a UGC video ad for my product\"    — Seedance 2.0/2.5, Veo 3.1, Sora 2"
-  echo "    • \"Make a static image ad from this photo\" — 40-template library"
-  echo "    • \"Clone this ad\" plus an image of one you like"
-  echo "    • Pixar or claymation story ads, YouTube thumbnails, burned-in captions, generated music"
+  echo "    • \"Make a UGC video ad for my product\" — a presenter speaks your script"
+  echo "    • \"Make static image ads from this photo\" — the 40-template library, run in batches"
+  echo "    • \"Clone this ad\" plus a competitor's image — rebuilt as a template you can refill"
+  echo "    • \"Clone this video ad\" plus a competitor's clip — beat map, adapted script, your product"
+  echo "    • \"Make a Pixar-style ad\" or \"a claymation ad\" — storyboard, voice-over, music, captions"
+  echo "    • \"Find my competitor's live ads\" — pulls their real creatives from the Meta Ad Library"
+  echo "    • \"Publish this to Meta Ads\" — needs Meta credentials, added to .env"
+  echo "    • Also: YouTube thumbnails, burned-in captions, b-roll cutaways, a music bed"
   echo "  Drop product photos into references/products/ — the agent asks about"
   echo "  your product the first time you ask for an ad, not before."
   echo "─────────────────────────────────────────────────────────────────────"
@@ -178,38 +182,38 @@ print_orientation() {
 # and the one human step degrades into a sentence asking someone to go find a
 # dotfile in a folder they just cloned. Opening the file is the whole fix.
 #
-# GUI editors only, deliberately: $EDITOR on this path is vim with no terminal
-# attached, which hangs or dies, and either way the run stops being about the
-# key. Skipped over SSH and in CI, where there is nothing to open, and
-# NOVOADS_SETUP_NO_OPEN=1 turns it off. It can never fail the run — the closing
-# message stands on its own and this only decides which sentence it uses.
+# The opening itself belongs to shared/scripts/open-env.sh, which owns the
+# platform rules — GUI editors only, because $EDITOR on this path is vim with no
+# terminal attached, which hangs or dies and either way the run stops being
+# about the key; skipped over SSH, in CI, with no display server, and under
+# NOVOADS_SETUP_NO_OPEN=1. Its contract is two exit codes and no output: 0 means
+# the file is genuinely on screen, anything else means deliberately skipped, and
+# the caller prints its own sentence. So this function decides one thing, which
+# sentence the closing message uses, and it can never fail the run.
+#
+# The helper may be ABSENT. Skills here install standalone, and someone may run
+# this script from a partial tree, so a missing shared/ is an ordinary state
+# rather than a broken one: skip silently, leave ENV_OPENED at 0, and let the
+# closing message fall back to "paste it into .env".
 #
 # Written with `if` rather than `[[ ... ]] && return`: under `set -e` a bare
 # AND-list is the kind of construct that takes an exit status with it, and the
 # same footgun already cost this script a run (see the `read -rs` note below).
 open_env_file() {
-  if [[ "${NOVOADS_SETUP_NO_OPEN:-}" == "1" ]]; then return 0; fi
-  if [[ -n "${CI:-}" ]]; then return 0; fi
-  if [[ -n "${SSH_CONNECTION:-}${SSH_TTY:-}${SSH_CLIENT:-}" ]]; then return 0; fi
-  if [[ ! -f "$ROOT/.env" ]]; then return 0; fi
+  local helper="$ROOT/shared/scripts/open-env.sh"
+  if [[ ! -f "$helper" ]]; then return 0; fi
 
-  case "$(uname -s)" in
-    Darwin)
-      # -t forces the default TEXT editor. `.env` has no extension, so without it
-      # macOS resolves the open against a file type nothing is registered for.
-      if ! command -v open >/dev/null 2>&1; then return 0; fi
-      if ! open -t "$ROOT/.env" >/dev/null 2>&1; then return 0; fi
-      ;;
-    Linux)
-      # No display server means no GUI editor to open into.
-      if [[ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then return 0; fi
-      if ! command -v xdg-open >/dev/null 2>&1; then return 0; fi
-      if ! xdg-open "$ROOT/.env" >/dev/null 2>&1; then return 0; fi
-      ;;
-    *)
-      return 0
-      ;;
-  esac
+  # `|| rc=$?` rather than a bare call: the helper exits 3 on every skip, and
+  # under `set -e` an unguarded non-zero would end the run right here — the one
+  # thing this function promises never to do.
+  #
+  # Only 0 is treated as "opened". Every other status skips, which is stricter
+  # than the documented 0/3 pair on purpose: an unexpected code is a bug in the
+  # helper, and the safe reading of one is that the file is NOT on screen. The
+  # closing message then says "paste it into .env", which is true either way.
+  local rc=0
+  bash "$helper" "$ROOT/.env" || rc=$?
+  if [[ "$rc" != "0" ]]; then return 0; fi
 
   ENV_OPENED=1
   echo "Opened .env in your editor. Paste the key on the NOVOADS_API_KEY line."
@@ -278,10 +282,14 @@ print_agent_close() {
   fi
   echo ""
   echo "What you can ask for now:"
-  echo "- \"Make a UGC video ad for my product\" — Seedance 2.0/2.5, Veo 3.1, Sora 2"
-  echo "- \"Make a static image ad from this photo\" — 40-template library"
-  echo "- \"Clone this ad\" plus an image of one you like"
-  echo "- Pixar or claymation story ads, YouTube thumbnails, burned-in captions, generated music"
+  echo "- \"Make a UGC video ad for my product\" — a presenter speaks your script"
+  echo "- \"Make static image ads from this photo\" — the 40-template library, run in batches"
+  echo "- \"Clone this ad\" plus a competitor's image — rebuilt as a template you can refill"
+  echo "- \"Clone this video ad\" plus a competitor's clip — beat map, adapted script, your product"
+  echo "- \"Make a Pixar-style ad\" or \"a claymation ad\" — storyboard, voice-over, music, captions"
+  echo "- \"Find my competitor's live ads\" — pulls their real creatives from the Meta Ad Library"
+  echo "- \"Publish this to Meta Ads\" — needs Meta credentials; I'll open .env and walk you through"
+  echo "- Also: YouTube thumbnails, burned-in captions, b-roll cutaways, a music bed"
   echo ""
   echo "Drop product photos into references/products/ and describe the ad you want."
   echo "Every generation is priced by a live estimate and shown to you before"

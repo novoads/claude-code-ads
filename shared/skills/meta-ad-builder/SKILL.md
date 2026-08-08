@@ -20,6 +20,19 @@ workspace — into a live Meta ad. The skill covers three phases: **research**
 (optional) → **copy** → **deploy**. It talks to the Meta Marketing API directly
 via ported, parameterized Python scripts.
 
+> **Meta credentials required before any deploy work.** Run
+> `bash scripts/check-meta-env.sh` first — before uploading a creative, before
+> creating anything in the ad account, before the first Meta call of any phase.
+> On a non-zero exit, stop and ask the user for what it printed. It has already
+> uncommented the two required lines in `.env` and opened the file, so the ask
+> is "paste these two values", not "go find the docs". Read its Live-app warning
+> out to them: a development-mode app passes every check and then fails at ad
+> creation. Until the check passes, nothing is uploaded, no partial ad or
+> creative exists and nothing is charged — which is exactly why it runs first,
+> since a deploy that dies halfway orphans uploaded assets in a live ad account.
+> This key is deliberately lazy: the pack asks for it here, at the moment
+> someone wants to publish, and never during setup.
+
 ## When to use this skill
 
 Trigger on phrases like:
@@ -101,6 +114,14 @@ Run `bash scripts/check-meta-env.sh` to verify credentials before anything else.
 It checks the token, the `ads_management` scope, ad-account reachability and the
 Page — a token that passes `/me` but carries no ads scopes is a real failure mode
 it now catches.
+
+**When credentials are missing it sets the user up rather than only complaining.**
+It uncomments the two required lines in `.env` (they ship commented out, and a
+token typed onto a commented line fails the next run identically — the most
+likely way this path breaks in practice), opens the file, and prints where each
+value comes from plus the Live-app warning. Relay what it printed; it is written
+to be read out. It leaves the four optional keys commented, never touches a line
+the user has already edited, and exits 1 either way.
 
 ## Workflow
 
