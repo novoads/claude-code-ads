@@ -250,17 +250,21 @@ Full text in `prompting/safety-suffixes.md`. **Do not silently disable these** �
 recurring rendering failures across every modern image model. If you need to disable one for a
 specific run, use `--allow-chrome` or `--no-safe-zone` flags and document why.
 
-The suffixes count against the model's 4,000-character prompt cap, and together they run to
-exactly **1,575**. A template prompt that is already near the cap pushes the final prompt
-over it — the script measures and refuses pre-network, naming the exact overage, so this
-costs a round trip rather than credits.
+The suffixes count against the prompt cap of whichever model you send to, and together they
+run to exactly **1,575**. **That cap is per model**, not one number: 32,000 on `gpt-image-2`,
+50,000 on `nano-banana-pro`, 4,000 on `reve-2.1` (deployed spec 2.16.0, verified 2026-08-08).
+The script measures the final prompt against the model it is locked to, or the one you named,
+and refuses pre-network with the exact overage, so an overflow costs a round trip rather than
+credits.
 
-**Budget the pin block before you write the fill.** Pinning every brand mark is mandatory
-(unpinned marks get invented), and the standard pin block costs 400 characters, leaving
-**2,025** for a template body. **23 of the 40 templates** have that much room; three (T8,
-T11, T14) exceed 2,425 and are refused as written, before any brand fill. Pass the block as
-`--pin-block "<product description>"` rather than hand-writing it — the hand-written ones ran
-~700 characters and were the largest single cause of a refusal. Per-template headroom:
+**Where the budget still bites: `reve-2.1`, and nowhere else.** Its 4,000 leaves 2,425 for a
+template body, or 2,025 once the mandatory 400-character pin block is in, and **23 of the 40
+templates** have that much room while three (T8, T11, T14) exceed even 2,425. The other two
+models leave more than 30,000, which every template in this library clears with room to spare,
+so on the production path the length arithmetic is no longer a constraint on what you write.
+Pass the pin block as `--pin-block "<product description>"` rather than hand-writing it: the
+standard guard is the wording that was measured to stop invented label copy. Per-template
+headroom, per model:
 
 ```bash
 python3 shared/skills/image-ad-prompting/scripts/check_library.py --verbose

@@ -30,7 +30,7 @@ headline capabilities below, and a prompt written against them wastes a paid ren
 | Image to video | yes, via **`startImageAssetId`** (one image, becomes the first frame) |
 | `durationSeconds` | **enum: 4, 6, 8, 10 only.** Not the continuous 4–15 grid Seedance has. Out-of-grid values are rejected, never rounded. Defaults to 8 |
 | `aspectRatio` | **`9:16` (default) or `16:9`.** That is the whole grid — no `1:1`, no `4:3`, no `21:9`. Seedance's wider grid does not apply here |
-| Prompt ceiling | **By far the largest on this API.** This model is the one place the long, layered prompts below actually fit |
+| Prompt ceiling | **20,000, by far the largest of any VIDEO model here**, where the rest sit at 4,000. This model is the one place the long, layered prompts below actually fit. It is not the largest on the API: since deployed spec 2.16.0 two image models are roomier still (`nano-banana-pro` 50,000, `gpt-image-2` 32,000), which is a fact about `POST /images` and changes nothing about a video call |
 | `language` | yes |
 
 **What does NOT work here, no matter how the sections below are worded:**

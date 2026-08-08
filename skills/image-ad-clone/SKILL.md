@@ -103,9 +103,12 @@ This skill has its own caller: `skills/image-ad-clone/scripts/validate_image.py`
 
 **`--pin-block` is how the brand pin gets counted.** It wraps your description in the shared
 library's standard 346-character guard — front face only, no invented label copy, no
-fabricated claims — and measures the result against the 4,000-char cap *before* the network,
-naming the pin block's share if it overflows. Write the clause by hand and you get the
-~700-character version that was the single largest cause of a refused prompt. A clone run
+fabricated claims — and measures the result against **the cap of the `--model` you named**
+*before* the network, naming the pin block's share if it overflows. Those caps are 32,000 on
+`gpt-image-2`, 50,000 on `nano-banana-pro` and 4,000 on `reve-2.1` (deployed spec 2.16.0,
+verified 2026-08-08), so an overflow here is almost always a `reve-2.1` run. When it happens,
+the script also names the roomier models: switching `--model` is usually the better repair,
+because trimming loses clone fidelity the cross-check was meant to test. A clone run
 that skips it inherits the failure it exists to prevent: unpinned marks come back invented.
 
 Why a separate script rather than the generators': the two generator skills are **model-locked
@@ -200,7 +203,7 @@ rendering at a mapped ratio, not the original.
 
 1. **Phase 1: Preflight + model choice.** Reference image resolves; `.env` has `NOVOADS_API_KEY`; validator located. **Ask which model to validate against** (or auto-detect).
 2. **Phase 2: Visual analysis.** Describe the reference structurally — aspect ratio, format type, layout, typography, color palette, photography style, every text string verbatim, decorative elements, chrome to strip, and `[BRAND]` vs `[STRUCTURE]` for each.
-3. **Phase 3: Draft v1 prompt** (brand-specifics intact). The three always-on safety suffixes take 1,575 of the 4,000-character cap, so **draft v1 to ~2,425 characters** — that is your whole budget on default flags, and the validator prints the exact number when you overflow.
+3. **Phase 3: Draft v1 prompt** (brand-specifics intact). The three always-on safety suffixes take 1,575 characters off whatever the chosen model's cap is, leaving **30,425 on `gpt-image-2`, 48,425 on `nano-banana-pro`, 2,425 on `reve-2.1`**. On the first two, write the prompt the clone needs and stop thinking about length. On `reve-2.1`, 2,425 is the whole budget on default flags, and a faithful six-panel clone wants more than that. The validator prints the exact number when you overflow.
 4. **Phase 4: Generate with reference.** Price the run and get a yes first. Pass `--image-ref <reference>` and the matched ratio. Synchronous; blocks 60–90s.
 5. **Phase 5: Compare and iterate.** Refine on the deltas. Cap 4 iterations. Track running credits.
 6. **Phase 6: Generalize into placeholders** (`{brand.name}`, `{brand.color_primary}`, etc.).

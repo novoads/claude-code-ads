@@ -248,9 +248,13 @@ There are **no idempotency keys.** See the 500 note below.
 
 | `model` | `aspectRatio` | `referenceAssetIds` | `numImages` | Prompt max |
 |---|---|---|---|---|
-| `gpt-image-2` (default) | `1:1` (default) `4:5` `2:3` `9:16` `16:9` `21:9` | up to **4** | 1 to 4 | 4,000 |
-| `nano-banana-pro` | `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9` | up to **14** | 1 to 4 | 4,000 |
-| `reve-2.1` | same as Nano Banana Pro | up to **8** | 1 to 4 | 4,000 |
+| `gpt-image-2` (default) | `1:1` (default) `4:5` `2:3` `9:16` `16:9` `21:9` | up to **4** | 1 to 4 | **32,000** |
+| `nano-banana-pro` | `1:1` `2:3` `3:2` `3:4` `4:3` `4:5` `5:4` `9:16` `16:9` `21:9` | up to **14** | 1 to 4 | **50,000** |
+| `reve-2.1` | same as Nano Banana Pro | up to **8** | 1 to 4 | **4,000** |
+
+**The prompt ceiling is per model too, since deployed spec 2.16.0.** It was 4,000 on all three before that; now only `reve-2.1` carries that number, `gpt-image-2` takes 32,000 and `nano-banana-pro` 50,000. Read off the live per-model request schemas and verified on 2026-08-08. The consequence worth knowing is the reverse of the reference cap's: a prompt written for one model is not automatically sendable to another, and a run that switches `model` to `reve-2.1` for a second opinion can be refused on length alone with nothing else changed. The refusal is a `400` and charges nothing.
+
+**One thing this does not cover: `POST /estimates` does not share these numbers.** Its own request schema caps `prompt` at 50,000 for every image model, so a 20,000-character `reve-2.1` prompt prices cleanly and is then refused by `POST /images`. A clean estimate is proof of the price, not of the length.
 
 **The reference cap is per model and is not uniform.** `gpt-image-2` takes 4, `nano-banana-pro` 14, `reve-2.1` 8. Do not carry one number across the set — the bodies are strict, so a fifth reference to `gpt-image-2` is `400 Too big: expected array to have <=4 items` rather than a silently dropped image, which is the good outcome: a dropped reference is a paid render missing the product. Verified live 2026-08-04 against spec 2.7.0 (which raised `nano-banana-pro` from 4 to 14), each probe pinned with an out-of-range `numImages` so no body could be valid: 15 refs on `nano-banana-pro` → too big, 14 → accepted; 9 on `reve-2.1` → too big, 8 → accepted; 5 on `gpt-image-2` → too big. Standing re-check: `./scripts/verify-image-caps.sh`.
 

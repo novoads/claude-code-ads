@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
-# Claims audit for the per-model referenceAssetIds caps.
+# Claims audit for the per-model image caps: referenceAssetIds AND prompt characters.
 #
 # This repo states API limits in scripts and docs; the API moves without asking us.
-# The caps drifted once already (spec 2.7.0 raised nano-banana-pro from 4 to 14 and
-# the pack said 4 for two days), so this script is the standing alarm:
+# Both caps have drifted already. Spec 2.7.0 raised nano-banana-pro's references from
+# 4 to 14 and the pack said 4 for two days. Spec 2.16.0 then split the prompt ceiling,
+# which had been a single 4,000 on every model, into three different numbers, and the
+# pack enforced 4,000 locally for a day: generators died pre-network on prompts the
+# API would have taken whole. So this script is the standing alarm for both:
 #
 #   1. Fetches the LIVE openapi.json (public, no key) and extracts each image
-#      model's referenceAssetIds maxItems — matched by the schema's `model` enum
-#      value, never by schema name, so a schema rename cannot mis-map a cap.
+#      model's referenceAssetIds maxItems and prompt maxLength — matched by the
+#      schema's `model` enum value, never by schema name, so a schema rename cannot
+#      mis-map a cap.
 #   2. Asserts the three generator/validator scripts ENFORCE those caps, by
 #      running them: cap+1 refs must be refused naming the cap; cap refs must
 #      pass the gate (and then die at a nonexistent --env-file, BEFORE any
-#      network call — nothing here needs a key and nothing can spend).
-#   3. Greps the docs for resurrected universal-cap claims.
+#      network call — nothing here needs a key and nothing can spend). The prompt
+#      ceiling gets the same treatment, measured at the exact boundary: a body one
+#      character past what the always-on suffixes leave must be refused naming the
+#      cap, and a body exactly at it must pass.
+#   3. Greps the docs for resurrected universal-cap claims, of either kind.
 #
 # Modes:
 #   (default)  full audit, hard exit 1 on any mismatch — run before shipping cap
@@ -28,9 +35,10 @@ SOFT=0
 [[ "${1:-}" == "--soft" ]] && SOFT=1
 BASE="${NOVOADS_BASE_URL:-https://api.novoads.ai}"
 
-# The one expected table. Scripts and docs are checked AGAINST this; this is
-# checked against the live spec. Update it only from verified spec output.
-EXPECTED='gpt-image-2=4 nano-banana-pro=14 reve-2.1=8'
+# The one expected table, `model=refs:promptchars`. Scripts and docs are checked
+# AGAINST this; this is checked against the live spec. Update it only from verified
+# spec output. Last verified: deployed spec 2.16.0 on 2026-08-08.
+EXPECTED='gpt-image-2=4:32000 nano-banana-pro=14:50000 reve-2.1=8:4000'
 
 STATUS=0
 problem() {
@@ -45,8 +53,11 @@ if [[ -z "$SPEC_JSON" ]]; then
 else
   MISMATCH="$(printf '%s' "$SPEC_JSON" | python3 -c "
 import json, sys
-expected = dict(kv.split('=') for kv in '''$EXPECTED'''.split())
-expected = {k: int(v) for k, v in expected.items()}
+expected = {}
+for kv in '''$EXPECTED'''.split():
+    name, _, caps = kv.partition('=')
+    refs, _, chars = caps.partition(':')
+    expected[name] = (int(refs), int(chars))
 spec = json.load(sys.stdin)
 live = {}
 for schema in spec.get('components', {}).get('schemas', {}).values():
@@ -54,13 +65,19 @@ for schema in spec.get('components', {}).get('schemas', {}).values():
     model = props.get('model') or {}
     names = model.get('enum') or ([model['const']] if 'const' in model else [])
     refs = props.get('referenceAssetIds') or {}
+    prompt = props.get('prompt') or {}
     for name in names:
-        if name in expected and 'maxItems' in refs:
-            live[name] = refs['maxItems']
+        # Only the /images arms carry BOTH a reference cap and a prompt cap. The
+        # estimate arm names the same models but publishes one maxLength across
+        # every kind, so requiring both keys is what keeps it out of this table.
+        if name in expected and 'maxItems' in refs and 'maxLength' in prompt:
+            live[name] = (refs['maxItems'], prompt['maxLength'])
 for name, want in sorted(expected.items()):
-    got = live.get(name)
-    if got != want:
-        print(f'{name}: repo says {want}, live spec says {got}')
+    got = live.get(name) or (None, None)
+    if got[0] != want[0]:
+        print(f'{name} references: repo says {want[0]}, live spec says {got[0]}')
+    if got[1] != want[1]:
+        print(f'{name} prompt chars: repo says {want[1]}, live spec says {got[1]}')
 " 2>/dev/null || echo "spec parse failed")"
   [[ -n "$MISMATCH" ]] && problem "live-spec drift — $MISMATCH"
 fi
@@ -93,6 +110,51 @@ check_script "skills/image-ad-clone/scripts/validate_image.py" 4 --model gpt-ima
 check_script "skills/image-ad-clone/scripts/validate_image.py" 14 --model nano-banana-pro
 check_script "skills/image-ad-clone/scripts/validate_image.py" 8 --model reve-2.1
 
+# The prompt ceiling, at the exact boundary. The gate measures the FINAL prompt,
+# meaning the body plus the three always-on suffixes, so the boundary is not the
+# cap itself: it is the cap minus whatever those suffixes weigh. Read that weight
+# from the script under test rather than restating it here, so an edited suffix
+# moves this check along with it.
+suffix_chars() { # <script>
+  python3 - "$ROOT/$1" <<'PY'
+import importlib.util, sys
+path = sys.argv[1]
+spec = importlib.util.spec_from_file_location("_gen", path)
+mod = importlib.util.module_from_spec(spec)
+sys.argv = [path]  # the module parses args only under __main__
+spec.loader.exec_module(mod)
+print(len(mod.NO_CHROME_SUFFIX) + len(mod.SAFE_ZONE_SUFFIX) + len(mod.GLYPH_SAFETY_SUFFIX))
+PY
+}
+
+check_prompt_cap() { # <script> <cap> [extra args...]
+  local script="$1" cap="$2"; shift 2
+  local suffixes out body
+  suffixes="$(suffix_chars "$script")"
+  if ! [[ "$suffixes" =~ ^[0-9]+$ ]]; then
+    problem "$script — could not read the always-on suffix length; prompt cap unchecked"
+    return
+  fi
+  # One character past the boundary → must refuse, naming the cap.
+  body="$(python3 -c "print('x' * ($cap - $suffixes + 1))")"
+  out="$(python3 "$ROOT/$script" "$@" --prompt "$body" --aspect-ratio 1:1 \
+    --out /tmp/vc-out --env-file /nonexistent/none 2>&1)" \
+    && problem "$script accepted a prompt 1 char over the $cap ceiling"
+  [[ "$out" == *"$cap"* ]] || problem "$script prompt refusal does not name cap $cap: $out"
+  # Exactly at the boundary → the gate must OPEN (the script then dies at the fake
+  # .env, which proves it got past the length check without touching the network).
+  body="$(python3 -c "print('x' * ($cap - $suffixes))")"
+  out="$(python3 "$ROOT/$script" "$@" --prompt "$body" --aspect-ratio 1:1 \
+    --out /tmp/vc-out --env-file /nonexistent/none 2>&1)" \
+    && problem "$script with a prompt exactly at $cap exited 0 (should die at the fake .env)"
+  [[ "$out" == *".env not found"* ]] || problem "$script refused a prompt exactly at the $cap ceiling: $out"
+}
+check_prompt_cap "skills/chatgpt-image-ad/scripts/generate_image.py" 32000
+check_prompt_cap "skills/nano-banana-image-ad/scripts/generate_image.py" 50000
+check_prompt_cap "skills/image-ad-clone/scripts/validate_image.py" 32000 --model gpt-image-2
+check_prompt_cap "skills/image-ad-clone/scripts/validate_image.py" 50000 --model nano-banana-pro
+check_prompt_cap "skills/image-ad-clone/scripts/validate_image.py" 4000 --model reve-2.1
+
 # ── 3. docs carry no resurrected universal-cap claim ─────────────────────────
 #
 # These patterns match the CLAIM, in every phrasing found in the pack — not just
@@ -118,7 +180,29 @@ RESIDUE="$(grep -rn -i \
 [[ -n "$RESIDUE" ]] && problem "universal-cap claim resurfaced:
 $RESIDUE"
 
+# The same check for the PROMPT ceiling, which spec 2.16.0 split three ways. Scoped
+# to the image-ad family, because "4,000 characters" is still the true and current
+# figure for five video models and a repo-wide grep would drown in them. Inside these
+# paths a universal 4,000 claim is by definition about images, and wrong.
+IMAGE_PATHS=()
+for p in "$ROOT/skills/chatgpt-image-ad" "$ROOT/skills/nano-banana-image-ad" \
+         "$ROOT/skills/image-ad-clone" "$ROOT/shared/skills/chatgpt-image-ad" \
+         "$ROOT/shared/skills/nano-banana-image-ad" "$ROOT/shared/skills/image-ad-clone" \
+         "$ROOT/shared/skills/image-ad-prompting"; do
+  [[ -e "$p" ]] && IMAGE_PATHS+=("$p")
+done
+PROMPT_RESIDUE="$(grep -rn -i \
+  -e "4,\?000 characters on every" \
+  -e "4,\?000-char\(acter\)\? cap" \
+  -e "every image model's prompt ceiling" \
+  -e "prompt ceiling is 4,\?000" \
+  -e "cap is 4,\?000" \
+  -e "the 4,\?000-character cap" \
+  --include="*.md" --include="*.py" "${IMAGE_PATHS[@]}" 2>/dev/null || true)"
+[[ -n "$PROMPT_RESIDUE" ]] && problem "universal 4,000 prompt-cap claim resurfaced (it is per model since 2.16.0):
+$PROMPT_RESIDUE"
+
 if [[ $STATUS -eq 0 ]]; then
-  echo "image-caps audit OK — spec, scripts, and docs agree on: $EXPECTED"
+  echo "image-caps audit OK — spec, scripts, and docs agree on refs:prompt-chars: $EXPECTED"
 fi
 exit $STATUS
