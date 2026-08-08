@@ -468,6 +468,12 @@ audio plus narration is a complete mix.
 
 This is where the seams either disappear or announce themselves.
 
+**Do the assembly in `outputs/<ad-name>/`, not in the directory you started in.** The
+downloaded beats, `beats.txt`, the trimmed clips, the placed VO lines and the master are one
+run's working set — a dozen of them loose in a repo root is a diff somebody else has to
+explain. Make the directory before the first download and stay in it; every path below is
+relative to it.
+
 ### Trim to the narration, not to the clip
 
 For each beat: the clip is as long as you asked for, and the line inside it is

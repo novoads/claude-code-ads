@@ -324,6 +324,12 @@ restate here: trim to the VO or extend the VO to fill the shot, **never
 `atempo`** a long line to fit, and re-check the caption's vertical position
 after trimming because the frame at the new cut is not the frame that was there.
 
+**Do the assembly in `outputs/<ad-name>/`, not in the directory you started in.** The
+downloaded beats, `beats.txt`, the trimmed clips, the placed VO lines and the master are one
+run's working set — a dozen of them loose in a repo root is a diff somebody else has to
+explain. That includes the judder pass above: `master.mp4` and `master-judder.mp4` live
+there too.
+
 Two caption looks fit this genre, and the preset guidance in the Pixar skill's
 Gate 8 is how you choose between them. The default is the heavy white sans with
 a thick dark outline. The alternative, and the one the genre's own reference ads
