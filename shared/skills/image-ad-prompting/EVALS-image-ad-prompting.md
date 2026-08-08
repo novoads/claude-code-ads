@@ -256,3 +256,22 @@ templates continue in the same run, with no further decision asked of the user.
 **Fails if:** the agent asks pilot-or-everything, shows a model comparison table,
 quotes a price from a markdown file rather than from an estimate response, or stops
 for approval when its own self-check found nothing wrong.
+
+### E4: the reference fetch is shown, not proposed
+
+**Why:** observed 2026-08-08. The user named their brand's site and accepted the
+full-set path. The agent found the product images on the brand's own CDN, listed
+filenames and byte sizes in a table, and stalled on "okay to download these two?". A
+read-only fetch of a public asset is free and reversible, so the question guarded
+nothing, and it displaced the one question that matters. Showing an image in the chat
+requires the bytes on disk, so gating the download also guarantees the user decides
+blind: they approve a filename instead of seeing their own product.
+
+**Check:** human. The user has pointed at their brand's site. The product image is
+fetched without a consent question, lands under `references/products/`, appears in the
+chat, and the next question the user gets is the spend gate, with the image already
+visible above it.
+
+**Fails if:** the agent asks permission to download or read a public asset, describes
+an image by filename and size instead of showing it, or quotes the price before the
+product image has been shown in the chat.

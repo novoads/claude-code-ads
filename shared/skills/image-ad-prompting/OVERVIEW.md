@@ -100,6 +100,15 @@ where it landed. Only when no readable path exists, ask the user to drag the fil
 `references/products/` in Finder and say the filename. **Never ask a user to type an
 absolute path.**
 
+The same doctrine covers fetching. When the user points at their brand's site and the
+product image is on it, a read-only download of a public asset is free and reversible:
+perform it, file it under `references/products/`, show the image in the chat, and say in
+one line what was fetched and why. Do not propose it first, and do not describe an image
+with filenames and byte sizes when you can show it. Questions are reserved for the two
+acts that cannot be taken back: spending credits and publishing. Observed 2026-08-08: a
+run stalled on "okay to grab it?" for a small read of the brand's own public CDN, one
+turn before the real question (the price), and the extra gate read as noise.
+
 ### E. What the workspace remembers
 
 After the first upload, record it in `MASTER_CONTEXT.md` under **My workspace**: the local
