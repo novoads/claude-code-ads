@@ -66,10 +66,19 @@ ALLOW=(
   'shared/scripts/check-context\.sh::printf .  . AGENT: a connected Novoads MCP connector is NOT a substitute'
   'shared/scripts/check-context\.sh::printf .    Never call mcp__novoads__\* tools from this repo\.'
 
-  # 7. This script and the workflow that runs it.
+  # 7. This script, its sibling guard, and the workflow that runs them both.
+  #    check-no-gag.sh names this file and quotes the connector rule it does NOT
+  #    match, so it trips this grep for the same reason this file exempts itself:
+  #    a rule has to be able to name the thing it is drawing a boundary against.
   'scripts/check-no-mcp\.sh::.*'
+  'scripts/check-no-gag\.sh::.*'
   '\.github/workflows/guard\.yml::.*'
 )
+
+# NOTE for anyone verifying a change here: `git grep` searches TRACKED files
+# only, so running this on a new-but-unstaged guard file reports a green that
+# means nothing. `git add` first, then run. That exact gap shipped a red CI on
+# PR #51 after a local pass.
 
 # ── Scan ─────────────────────────────────────────────────────────────────────
 violations=0
