@@ -123,8 +123,7 @@ SPOKEN_AUDIO_SKILLS = (
     "skills/novoads-api/SKILL.md",
     "skills/novoads-api/prompting/clone-ad/SKILL.md",
     "skills/novoads-pixar-ad/SKILL.md",
-    "skills/novoads-pixar-storyboard-ad/SKILL.md",
-    "skills/novoads-claymation-storyboard-ad/SKILL.md",
+    "skills/novoads-claymation-ad/SKILL.md",
 )
 TRANSCRIBE_PATTERN = re.compile(r"transcri(be|pt)", re.I)
 

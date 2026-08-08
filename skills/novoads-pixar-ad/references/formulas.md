@@ -1,6 +1,6 @@
 # Beat formulas — the genre library
 
-The per-beat prompt formulas for `novoads-pixar-storyboard-ad`. `SKILL.md` owns
+The per-beat prompt formulas for `novoads-pixar-ad`. `SKILL.md` owns
 the pipeline: the gates, the costs, the calls, the SYNC/VO track rule. This file
 owns the CRAFT: what each beat is, the variables it takes, and a worked prompt
 for the still and for the clip.
@@ -343,10 +343,10 @@ This is the one place our doctrine and the source genre part company, and it is
 worth stating plainly:
 
 - **A SYNC beat** carries its spoken line in the prompt, in double quotes, and
-  gets NO `generate_voiceover` take. The render generates the voice and the lip
+  gets NO `POST /v1/voiceovers` take. The render generates the voice and the lip
   sync in the same call.
 - **A VO beat** carries no speech in the prompt at all. It says the shot is a
-  voiceover shot, and the line is laid in afterwards from `generate_voiceover`.
+  voiceover shot, and the line is laid in afterwards from `POST /v1/voiceovers`.
 - **Never both in one beat.** A narrator line in the prompt plus a VO take of the
   same words plays every line twice.
 

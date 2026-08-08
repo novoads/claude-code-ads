@@ -30,7 +30,7 @@ Trigger on phrases like:
 - "research competitor ads" / "pull <brand>'s ads from the Ad Library"
 
 Do **not** use this skill to *generate* creative — that's `pixar-style-ad`,
-`novoads-claymation-storyboard-ad`, `generate-youtube-thumbnail`, `uni1-image-ad`, etc. Do not use
+`novoads-claymation-ad`, `generate-youtube-thumbnail`, `uni1-image-ad`, etc. Do not use
 it to write AdTable/Airtable rows — that's `adtable-light`. This skill is the
 *direct Meta Marketing API* deployment step.
 
