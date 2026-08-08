@@ -598,7 +598,7 @@ curl -sS -X POST https://api.novoads.ai/v1/captions \
 
 `POST /v1/videos/{jobId}/captions` is the same operation with the source in the path. It is the natural call when the source is a job, and it cannot express the upload case at all (an `assetId` contains slashes and is not a path segment). Either one is fine; prefer `POST /v1/captions` if you want one code path for both sources.
 
-Response is `202` with `jobId`, `status`, `creditsCharged`, and `model` (always `veed/subtitles` — this endpoint has one renderer and it is not in `GET /v1/models`, because a caption is applied to a video rather than generating one). **Poll the returned `jobId` at `GET /v1/generations/{jobId}` to a terminal status, then `…/watch` for the file** — the same sequence as a render, and the caption job is a separate row with its own status and its own refund.
+Response is `202` with `jobId`, `status`, `creditsCharged`, and `model` (always `captions-v1` — this endpoint has one renderer and it is not in `GET /v1/models`, because a caption is applied to a video rather than generating one). **Poll the returned `jobId` at `GET /v1/generations/{jobId}` to a terminal status, then `…/watch` for the file** — the same sequence as a render, and the caption job is a separate row with its own status and its own refund.
 
 ### Presets and price
 

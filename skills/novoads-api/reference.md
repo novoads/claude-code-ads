@@ -326,7 +326,7 @@ Both bodies are strict (`additionalProperties: false`). **Exactly one of `jobId`
 
 **A workflow that needs the WORDS uses `POST /transcripts`, not this.** That endpoint returns text, word-level timings and an SRT in one synchronous call, and it runs on the BASE video — which is where you want it anyway, because b-roll placement is read from the transcript before the captions step. Captioning and transcribing are two operations, priced separately.
 
-Response `202`: `jobId`, `status`, `creditsCharged`, `model`. `model` is always **`veed/subtitles`** — fixed, and deliberately not in `GET /models`, because that endpoint answers what this API can *generate* with and a caption is applied to a video that already exists.
+Response `202`: `jobId`, `status`, `creditsCharged`, `model`. `model` is always **`captions-v1`** — a fixed identifier, identical on every caption job, deliberately not in `GET /models`, because that endpoint answers what this API can *generate* with and a caption is applied to a video that already exists.
 
 ### Presets and pricing
 
@@ -380,7 +380,7 @@ Response `200`:
 | `jobId` | Addressable afterwards at `GET /generations/{jobId}`, whose `outputUrl` presigns the same JSON. |
 | `status` | Always `"succeeded"` — the transcript is right here. |
 | `creditsCharged` | What this call **was billed**. `0` most often means the transcript was already stored (see below); it also covers a rare race where the job's charge had already been reversed. Treat `0` as "not billed", not as "served from cache". |
-| `model` | Always `scribe-v2`. |
+| `model` | Always `transcript-v1` — a fixed identifier, identical on every transcript. Do not branch on it. |
 | `language` | What the transcriber detected, **verbatim, as ISO-639-3** — `"spa"`, `"eng"`. Not the two-letter code. |
 | `durationSeconds` | Length of the source. |
 | `text` | The whole transcript as one string. |
