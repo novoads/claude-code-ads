@@ -36,6 +36,90 @@ template renders wrong on both of the other two, not as a default route.
 
 ---
 
+## Presenting choices to the user
+
+**The tables and decision trees in this file are the agent's routing doctrine, not a menu
+for the user.** The model comparison below, the decision tree after it, and every entry's
+`Model notes:` block exist so the agent can decide. A user who is shown them is being asked
+to do the job they came here to hand over. Observed 2026-08-07: a first-time user typed "I
+want to create image ads" and got a two-engine capability matrix plus a four-item brief, and
+the run ended there.
+
+Every turn has the same shape: **one decision, already made, with an escape hatch.**
+Recommend, say why in one line, offer exactly one alternative. The evals for this section are
+E1 to E3 in [EVALS-image-ad-prompting.md](EVALS-image-ad-prompting.md).
+
+### A. No product named yet
+
+Ask one question. Do not ask for aspect ratio, variant count or reference paths yet, and do
+not name a model.
+
+```
+What are we advertising?
+1) Your product (recommended): paste a link, or drop a photo right here.
+2) No product yet? Say "pick something trendy" and I will mock up a demo ad (a test artifact, not something to publish).
+```
+
+### B. Product known: the plan
+
+Do not offer a template menu, and do not ask pilot-or-everything. The full set is the
+default:
+
+```
+1) Run the full template set (recommended): every format that fits your product, one total price shown before anything generates. I make the first few, check them against your product and brand myself, and continue automatically when they read right. I stop and show you only if something is off.
+2) Have your own idea? Describe it and I will build 3 custom takes.
+```
+
+The self-check inside option 1 is an **internal checkpoint, not a user decision.** Generate
+the first three to five, read them against the brief for product identity, brand voice and
+text legibility, then continue the remaining templates in the same run. Stop and show
+evidence only when the miss is *systematic*: the product rendered from the wrong angle, a
+wordmark drifting across every output, dense text garbled on every template that carries it.
+One bad frame in an otherwise clean set is a retry, not a checkpoint.
+
+### C. Custom path: the engine, pre-picked
+
+On the template path the engine is never mentioned. The entry's `Model notes:` block decides
+it, silently. Option 2 above is the only path where no template decides, so it is the only
+place the engine reaches the user, and it arrives already chosen:
+
+```
+1) GPT Image 2 (recommended): your concept is text-forward and this engine nails typography.
+2) Nano Banana Pro: pick this instead for photoreal (product in hand, lifestyle, multi-reference scenes).
+```
+
+The one-line reason is **derived from the actual concept**, not pasted. Swap which one is
+recommended when the concept is photoreal, keeping the same shape. When the concept carries
+no format signal either way, recommend GPT Image 2.
+
+### D. A file arriving in chat
+
+When a product image lands in the conversation, file it yourself: read the image's source
+path from the message and copy it to `references/products/<product-slug>.<ext>`, then say
+where it landed. Only when no readable path exists, ask the user to drag the file into
+`references/products/` in Finder and say the filename. **Never ask a user to type an
+absolute path.**
+
+### E. What the workspace remembers
+
+After the first upload, record it in `MASTER_CONTEXT.md` under **My workspace**: the local
+reference path, the `assetId` that `POST /v1/uploads` returned, and the `productId`. On the
+first creative request for a brand, offer to create the product record with
+`POST /v1/products`, which writes a record rather than a render (contract in the
+`novoads-api` skill's `reference.md`). Later sessions read the cached `assetId` and
+`productId` back instead of re-uploading the same bytes or asking the same question twice.
+
+### F. Money
+
+One total, from one live `POST /v1/estimates`, before anything generates. That response
+already carries `balance` and `sufficient`, so the quote and the "can you afford it" answer
+are the same call, and there is no second question to ask. When the full set does not fit the
+balance, do not fail and do not hand the arithmetic back: recommend the subset that does fit,
+say which formats it covers, and keep it one decision. **A credit figure may never come from
+a markdown file**, including this one, which carries none.
+
+---
+
 ## One endpoint, three models
 
 Every image in this ecosystem comes from the same call: **`POST /v1/images`**, which is
@@ -91,9 +175,12 @@ The user's first sentence usually tells you which way to branch.
 - **Cloning** (they shared an ad image and want it as a reusable prompt) → the single
   `image-ad-clone` skill (it asks which model to validate against at Phase 1).
 
-**Step 2: Pick the model.**
+**Step 2: Pick the model. This step is internal.**
 
-Skim what the user wants and match it to model strengths:
+On the template path it is already decided: the entry's `Model notes:` block names one, and
+the question never reaches the user. Decide from this table when no template applies, then
+present the result as a pre-made recommendation with one line of reason, in the shape rule C
+gives above. The table itself is never shown.
 
 | The user wants... | Pick |
 |---|---|
@@ -101,6 +188,7 @@ Skim what the user wants and match it to model strengths:
 | Handheld whiteboard signs, napkin handwritten testimonials, sticky-note + product flatlays, letter-board signs, lifestyle scenes, OOH/transit photography, scratch-off tickets, **photoreal / material-rich / multi-reference** ads | **`nano-banana-image-ad`** |
 | A second opinion after both of the above rendered the same template wrong, or a deliberately different look on a concept that already works | **`reve-2.1`**, via `image-ad-clone`'s chooser or by naming the model on the call |
 | Ambiguous? | Look up the matching template in `prompting/prompt-library.md` and read its `Model notes:` block — every entry recommends one. |
+| No template applies **and** the concept carries no format signal either way | **`chatgpt-image-ad`** is the tiebreak. `gpt-image-2` is also the API default, so an unqualified call already lands there. |
 
 **Step 3: For cloning, the `image-ad-clone` skill handles all three models.** At Phase 1 it
 asks the user (or auto-detects from the reference's typography-vs-photo balance) which model
