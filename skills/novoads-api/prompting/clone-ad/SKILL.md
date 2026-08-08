@@ -334,7 +334,7 @@ series described below, so it does not measure this route at all.
 its output in as clip 2's reference video — has no path here: references are images only.
 That is not a downgrade. This repo's own animation rule says the same thing on its own
 merits: *"Don't chain by using an animated end-frame as the next beat's anchor — drift
-compounds"* (`skills/novoads-claymation-storyboard-ad/references/formulas.md`). Every clip
+compounds"* (`skills/novoads-claymation-ad/references/formulas.md`). Every clip
 anchoring to the same approved stills is the more stable pattern, and because the `assetId`
 is **durable across calls, models and sessions**, it costs one upload for the whole series.
 Re-uploading the same bytes mints a second asset and throws away the anchor.

@@ -1,34 +1,30 @@
 ---
-name: novoads-claymation-storyboard-ad
+name: novoads-claymation-ad
 description: >-
-  Build a 40 to 70 second hand-sculpted stop-motion CLAY ad as a STORYBOARD —
-  five to eight separate beats, each rendered from its own key frame, with a
-  storyteller narration laid into the gaps, a music bed under it and captions
-  burned on, assembled locally with ffmpeg. Carries the genre's narrative arc:
-  a named protagonist, an inciting moment, a social beat, quiet despair, a
-  sculpted clay infographic, discovery, transformation and a resolution card.
-  Also recreates a found clay ad: hand it a reference video and it reads the
-  video's own beats with analyze_ad before writing the board. Produces a cast
-  sheet, a beat board, a per-beat still, a per-beat clip, a per-gap voice-over
-  line, and the exact generation calls in order. Trigger on "claymation ad",
-  "stop-motion ad", "clay ad", "plasticine characters", "make an ad like this
-  clay one", or a reference video with sculpted clay characters in it. Do NOT
-  use for the smooth 3D animated look (use novoads-pixar-storyboard-ad, or
-  novoads-pixar-ad for a single 15-second shot), for talking-head UGC (the
-  default Novoads flow), or for a static image ad (use a static image-ad
-  skill).
+  Builds a hand-sculpted stop-motion CLAY ad on the Novoads REST API as a
+  STORYBOARD: five to eight beats, each rendered from its own key frame, a
+  storyteller narration laid into the gaps, a music bed, captions burned on,
+  assembled locally with ffmpeg. Carries the genre's arc (named protagonist,
+  inciting moment, social beat, quiet despair, sculpted clay infographic,
+  discovery, transformation, resolution card), and also recreates a found clay
+  ad by reading the reference video locally with ffmpeg and Whisper. Use for
+  ANY clay or stop-motion ask at ANY length: "claymation ad", "stop-motion
+  ad", "clay ad", "a quick clay ad", "plasticine characters", "make an ad like
+  this clay one", or a reference video with sculpted clay characters in it.
+  There is no one-call tier here, so ffmpeg is required. Not for the smooth 3D
+  animated look (use novoads-pixar-ad, which covers every Pixar-style length),
+  talking-head UGC (novoads-api), or a static image ad.
 ---
 
-# Novoads Claymation Storyboard Ad
+# Novoads Claymation Ad
 
 One product in. A 40 to 70 second hand-sculpted clay ad out, cut from five to
 eight separately rendered beats, with narration, music and captions.
 
-This is the **sibling** of `novoads-pixar-storyboard-ad` and it runs the same
-pipeline: the same gates, the same calls, the same still gate, the same local
-assembly. Read that skill for the pipeline. **This file owns two things it does
-not: the clay look, and a narrative arc that is longer and quieter than the
-Pixar one.**
+This is the **sibling** of `novoads-pixar-ad` and it runs the same pipeline: the
+same gates, the same calls, the same still gate, the same local assembly. Read
+that skill for the pipeline. **This file owns two things it does not: the clay
+look, and a narrative arc that is longer and quieter than the Pixar one.**
 
 The two are not interchangeable, and the difference is not decoration:
 
@@ -44,16 +40,27 @@ Picking the wrong one is not a style mistake, it is a story mistake. If the
 product's pain is a moment, that is the Pixar skill. If it is a season of
 someone's life, it is this one.
 
+**Every clay ask lands here, including the short ones.** There is no one-call
+clay tier. A five-beat short is the small end of this pipeline, not a different
+door: still per-beat renders, still ffmpeg, still an assembly.
+
 ## Before anything: this runs on a Novoads account
 
-1. A Novoads account with credits. https://novoads.ai
-2. The connector at `https://novoads.ai/api/mcp`, added to **the surface you are
-   actually using**:
-   - **Claude Code** — `claude mcp add --transport http novoads https://novoads.ai/api/mcp`,
-     then `/mcp` to authenticate, then **restart Claude Code**.
-   - **claude.ai** — add it as a connector in settings.
+1. A Novoads account with credits. https://novoads.ai — the entry offer is a **$1
+   trial**, never call it free.
+2. **An API key in `.env` at the repo root**, as `NOVOADS_API_KEY=novo_…`. Check
+   it with `./scripts/check-novoads-env.sh`; if it is missing, run
+   `./scripts/setup.sh`. That is the whole setup: `curl` and `jq`, one key, no
+   connector to add and no session to restart.
 3. **ffmpeg on your machine.** The assembly happens here, not on the server.
    `ffmpeg -version` before you start.
+
+**Every HTTP mechanic here belongs to the pack, not to this skill.** Auth, strict
+bodies, status codes, the poll loop, rate limits and error envelopes are written
+out once in [`skills/novoads-api/SKILL.md`](../novoads-api/SKILL.md) and its
+[`reference.md`](../novoads-api/reference.md). The per-call fields this genre
+needs are in `novoads-pixar-ad`'s *The calls* section, which this file shares
+unchanged.
 
 ## What one run costs
 
@@ -72,8 +79,8 @@ Two shapes, and the choice is the operator's:
 **The clips are 82% of the bill either way**, and a still costs a eleventh of the
 clip it produces. That is the whole economic argument for the board gate.
 
-Check it rather than trust it. `estimate_cost` prices every one of these kinds
-and spends nothing.
+Check it rather than trust it. `POST /v1/estimates` prices every one of these
+kinds and spends nothing.
 
 **Say the shape out loud before pricing it.** An 8-beat clay ad is the most
 expensive thing in this family, and the honest question at Gate 0 is whether
@@ -82,10 +89,10 @@ this genre is for. But the operator decides that, not you.
 
 ## Hard constraints
 
-Everything in `novoads-pixar-storyboard-ad`'s Hard constraints section applies
-unchanged: one call per beat, 4 to 15 seconds, 9:16, `audioEnabled: true`, a
-narrator line in the prompt OR the VO track and never both, one continuous
-voice, no `styleFamily` field. Read them there.
+Everything in `novoads-pixar-ad`'s Hard constraints section applies unchanged:
+one call per beat, 4 to 15 seconds, 9:16, `audioEnabled: true`, a narrator line
+in the prompt OR the VO track and never both, one continuous voice, no
+`styleFamily` field. Read them there.
 
 Three are different here:
 
@@ -103,39 +110,38 @@ Three are different here:
 
 ### A. From a product
 
-Run `novoads-pixar-storyboard-ad`'s Gate 0 and Gate 1 unchanged: is the pain
-emotional, visible on a face, in a relationship, impulse-priced; then the product
-read. One extra question at this length: **does this product have a before and an
-after that a viewer would recognise a month apart?** The transformation beat is
-the spine of the clay arc, and a product with no visible change does not have one.
+Run `novoads-pixar-ad`'s Gate 0 and Gate 1 unchanged: is the pain emotional,
+visible on a face, in a relationship, impulse-priced; then the product read. One
+extra question at this length: **does this product have a before and an after
+that a viewer would recognise a month apart?** The transformation beat is the
+spine of the clay arc, and a product with no visible change does not have one.
 
 ### B. From a found video
 
 The other entry, and the one this genre is usually asked for: someone shows you a
 clay ad and wants theirs. Do not guess at its structure from the thumbnail.
 
-```
-upload_asset  contentType: "video/mp4", sizeBytes: <n>
-              → { uploadUrl, assetId, headers } — PUT the bytes with `headers`
-                VERBATIM. Content-Type and Content-Length are signed into the
-                URL, so an omitted Content-Type is a 403, not an upload.
-      │
-      ▼
-analyze_ad    assetId: <the reference>, question: "the beats and the narration"
-              → summary, hook boundary with the observable signal behind it,
-                beats, on-screen text, casting, layout zones
-```
+**Read the reference locally.** Follow
+[`skills/novoads-api/prompting/analyze-video/SKILL.md`](../novoads-api/prompting/analyze-video/SKILL.md):
+frames out with ffmpeg, dialogue out with Whisper, then read the beats off what
+you extracted. It costs nothing, needs no key, and — unlike a fixed-window
+reader — it covers the whole runtime, which is what a 60-second arc needs.
 
-**`analyze_ad` reads the first 20 seconds of a video.** A 60-second clay ad is
-therefore read down to its opening third, which is enough for the hook, the
-casting and the palette, and is NOT enough for the arc. Watch the rest yourself
-and write the remaining beats by hand. A board that claims eight beats from a
-20-second read is a board with five invented beats in it.
+**There is no ad-analysis endpoint on this API.** Structured hook/beat/casting
+breakdown lives on the MCP connector as `analyze_ad`, deliberately, and this
+skill does not reach for it: the local path is the one path here, and it is
+already installed because ffmpeg is a hard dependency of the assembly. See
+[`reference.md`](../novoads-api/reference.md) § *Base URL and auth*.
 
-Then map what it returns onto the arc below, and **write our own story**. Recreate
-the FORMAT, never the script: their protagonist, their brand and their claims are
-theirs. What transfers is the shape, the palette, the pacing and the narrator
-persona.
+Two things to hold on to whichever way you read it:
+
+- **Sample the whole video, not its opening.** A clay ad spends its first third
+  on setup, so a read that stops early gives you the hook, the casting and the
+  palette and none of the arc. A board that claims eight beats from a partial
+  read is a board with invented beats in it.
+- **Write our own story.** Recreate the FORMAT, never the script: their
+  protagonist, their brand and their claims are theirs. What transfers is the
+  shape, the palette, the pacing and the narrator persona.
 
 ## The clay look
 
@@ -291,23 +297,25 @@ slots that matter most here:
   eyelids, and the arc needs a life already in progress.
 - **The terse tag**, 11 to 30 characters, anchored on wardrobe. Our renders
   re-cast on every cut, so this is what carries one face across eight beats.
-- **A narrator persona**, chosen once from `list_voices` and reused for every
+- **A narrator persona**, chosen once from `GET /v1/voices` and reused for every
   line. Warm storyteller and wry observer are the two that fit; pick one and say
   which.
 
 ## The gates
 
-Gates 2 through 8 are `novoads-pixar-storyboard-ad`'s, unchanged, including:
+Gates 2 through 8 are `novoads-pixar-ad`'s, unchanged, including:
 
-- **Gate 2** — price every kind once, multiply, announce in one line, proceed.
+- **Gate 2** — price every kind once with `POST /v1/estimates`, multiply,
+  announce in one line, proceed.
 - **Gate 3** — every still before any clip, each chained on the cast sheet and
-  the previous still, then **STOP at the board gate**. At eight beats the stills
-  are 27 credits and the clips are 304. This gate is worth more here than
-  anywhere else in the family.
+  the previous still by the `assetId` that `POST /v1/images` returns, then
+  **STOP at the board gate**. At eight beats the stills are 27 credits and the
+  clips are 304. This gate is worth more here than anywhere else in the family.
 - **Gate 4** — clips in waves of at most five. **Eight beats is two waves**, five
-  then three, because a sixth concurrent generation is refused with
-  `concurrency_limit` and that is a real refusal, not a queue.
-- **Gate 5** — one voice, chosen once. **Gate 6** — the music bed.
+  then three, because a sixth concurrent `POST /v1/videos` comes back `429` with
+  `details.reason: concurrency_limit`, and that is a real refusal, not a queue.
+- **Gate 5** — one voice, chosen once from `GET /v1/voices` and passed as
+  `voiceId` on every `POST /v1/voiceovers`. **Gate 6** — the music bed.
 - **Gate 7** — trim each clip to its narration plus 0.5 seconds, concat, mix,
   composite the end card from the real photograph, transcribe and read it back.
   **Read the levels out of the Pixar skill rather than from here** — the mix is
@@ -353,37 +361,36 @@ shot. Name the one thing that changed and say that everything else is unchanged.
 
 Deliver in this order, no preamble:
 
-1. **PRODUCT READ** — or, on entry B, the `analyze_ad` breakdown of the reference
-   with a line saying how much of it was actually read.
+1. **PRODUCT READ** — or, on entry B, the breakdown of the reference with a line
+   saying how much of it was actually read.
 2. **FIT** — one line confirming Gate 0, or a plain refusal naming a better
    format. If the pain is a moment rather than a season, hand off to
-   `novoads-pixar-storyboard-ad` and say so.
+   `novoads-pixar-ad` and say so.
 3. **ARC LENGTH** — 5-beat short or 8-beat full, and why, with both prices.
 4. **CAST + STYLE LOCK** — the cast sheet text including the name and the terse
    tag, and the paragraph pasted into every prompt.
 5. **BEAT BOARD** — the table. At least one SYNC beat.
-6. **COST** — the `estimate_cost` figures, announced in one line.
+6. **COST** — the `POST /v1/estimates` figures, announced in one line.
 7. Then generate: cast sheet, all stills, **stop at the board gate**, clips, VO,
    music, assemble, composite the end card, verify, caption, **read the captions
    against the script before calling it finished**.
 
 ## The calls
 
-Identical to `novoads-pixar-storyboard-ad`'s call list, plus one:
-
-```
-analyze_ad        assetId, question?
-                  → { summary, hook, beats, onScreenText, casting, layoutZones }
-                    READS THE FIRST 20 SECONDS OF A VIDEO. Free of render cost,
-                    not free of tokens. Entry B only.
-```
+Identical to `novoads-pixar-ad`'s call list — `POST /v1/uploads`,
+`/v1/estimates`, `/v1/images`, `/v1/videos`, `GET /v1/voices`,
+`POST /v1/voiceovers`, `/v1/music`, `/v1/captions`, `/v1/transcripts`, and
+`GET /v1/generations/{jobId}` with its `/watch` — with the fields each one takes.
+Entry B adds no endpoint: the reference read is local ffmpeg and Whisper, and
+spends nothing.
 
 ### Worked beat prompt
 
-A finished **beat 3** (social validation) `generate_video` prompt: the SYNC beat,
+A finished **beat 3** (social validation) `POST /v1/videos` prompt: the SYNC beat,
 one action, style lock and material detail included, negatives at the end.
 `lib/generation/__tests__/claymation-storyboard-skill-prompts.test.ts` reads this
-exact block and runs it through the same rule engine `estimate_cost` lints with.
+exact block and runs it through the same rule engine `POST /v1/estimates` lints
+with.
 
 <!-- eval:beat-prompt:start -->
 ```
@@ -424,8 +431,8 @@ features, no on-screen text, no subtitles, no captions
 
 ## Failure modes
 
-Everything in `novoads-pixar-storyboard-ad`'s Failure modes list applies. Four
-are this skill's own:
+Everything in `novoads-pixar-ad`'s Failure modes list applies. Four are this
+skill's own:
 
 - **The clay turned into plastic by the end of the clip.** The most common
   failure here. The material detail block was thin or the negative block was

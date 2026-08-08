@@ -26,7 +26,7 @@ references/
 
 # ...except a skill's OWN reference DOCS, which are part of the skill and must
 # ship with it. `references/` above is about media a user supplies; a file like
-# skills/novoads-pixar-ad/references/story-arcs.md is documentation the SKILL.md
+# skills/novoads-pixar-ad/references/formulas.md is documentation the SKILL.md
 # links to, and silently excluding it publishes a skill with a dead link.
 # (Git cannot re-include a file whose parent directory is excluded, hence both
 # lines: the directory first, then its contents.)
