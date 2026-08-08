@@ -12,7 +12,7 @@ six-block animation prompt structure, and the clay-specific QA checklists.
 
 What is ours and is not his: the API mechanics (`/v1` and MCP, `assetId`
 chaining, the wave size, the duration grid), the SYNC/VO audio doctrine, the
-`analyze_ad` entry for recreating a found video, the gates and their cost
+second entry for recreating a found video, the gates and their cost
 announcements, the composited end card, the blocking caption-garble gate, and
 every rule derived from our own measured runs.
 

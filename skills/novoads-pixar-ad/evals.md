@@ -1,130 +1,195 @@
 # novoads-pixar-ad evals
 
-Every scenario is a real failure mode, either from the renders behind
-`references/seedance-prompt-rules.md` or from the review that produced this skill.
+Every scenario is a real failure mode of MULTI-SHOT assembly — the class of
+problem a single-call render avoids by construction, and the price this skill
+pays for an arc. There is no single-call tier here to fall back to, so these are
+not optional: they are the whole risk surface of the only path this genre has.
 
 The machine-checkable half runs in CI as
-`lib/generation/__tests__/pixar-skill-prompts.test.ts`, and spends no credits — it runs the
-worked prompts from this skill against the same `validatePrompt` the server calls. That
-test is the seam between this skill and the prompt rules; without it the two were designed
-together and verified separately.
+`lib/generation/__tests__/pixar-storyboard-skill-prompts.test.ts` and spends
+nothing. It covers two things: the worked beat prompt against the same rule
+engine `POST /v1/estimates` lints with, and **every number this skill quotes**,
+derived from the config the server actually reads. That second half is unusual
+for a skill eval and it is the important one — a cost table or a concurrency
+limit that drifts does not fail loudly, it fails on someone's sixth paid call.
 
-The rest are human checks against a real render. Run them before publishing a new version.
+The rest are human checks against a real run. Do them before publishing a new
+version.
+
+> **The style family is not something this skill sends.** `styleFamily` was
+> deleted from the whole API in spec `2.0.0`, along with the blocking prompt
+> rules it scoped. Nothing a reader of this skill can call takes it.
 
 ---
 
-> **The style family is not something this skill sends.** `styleFamily` was deleted from
-> the whole API in spec `2.0.0`, along with the blocking prompt rules it scoped. It
-> survives only as a parameter of the internal rule engine, which the three automated
-> evals below drive directly. Nothing a reader of this skill can call takes it.
+### E0 — it runs on `.env` and `curl`, with no MCP connector configured
 
-### E1 — the worked prompt survives the rules under the stylized family
+**Why:** this skill was MCP-native until the REST port, and the failure it
+guards against is silent: a reader who never added a connector gets a file that
+names tools their session does not have, and the run dies before the first
+image. The pack's own contract is one key in `.env`; if any step still needs
+something else, the port is incomplete.
 
-**Why:** the whole skill is prompt text that a stranger's Claude feeds to our rule engine —
-today through `estimate_cost`, which reports every hit as advice. If a doctrine paragraph
-here produces a prompt that trips `chained_motion`, nobody finds out from a TypeScript
-test; they find out reading a wall of warnings on a prompt this file told them to write.
+**Check:** human, in a fresh clone with `NOVOADS_API_KEY` in `.env` and **no**
+Novoads MCP server registered. Confirm the run reaches the board gate — the
+product read, the four estimate calls, the cast sheet and five stills — using
+nothing but `curl` and `ffmpeg`. Then grep the skill and its `references/` for
+the old tool names (`estimate_cost`, `generate_image`, `generate_video`,
+`upload_asset`, `list_voices`, `generate_voiceover`, `generate_music`,
+`generate_captions`, `get_generation`, `list_generations`, `transcribe_video`):
+zero hits outside a sentence that is explicitly about the MCP surface.
 
-**Check:** the SKILL.md worked example validates with zero errors under the `pixar` family.
+---
+
+### E1 — the worked beat prompt lints clean
+
+**Why:** the skill is prompt text a stranger's Claude feeds to our rule engine.
+If the worked example trips `chained_motion` — two actions joined by "then" —
+the file is demonstrating the exact mistake its central rule exists to prevent.
+
+**Check:** zero errors and zero warnings under the UGC default, which is the only
+family anything can ask for. Automated.
+
+---
+
+### E2 — the quoted prices are the charged prices
+
+**Why:** Gate 2's table is what an operator approves the run against, and it is
+six numbers that live in four different config files. A stale one is a promise
+the invoice breaks.
+
+**Check:** each row derived from `calculateSeedanceCredits`,
+`IMAGE_TO_AD_CREDIT_COST_PER_IMAGE`, `calculateTtsCredits` and
+`MUSIC_CREDIT_COST`, and the total re-added. Automated.
+
+---
+
+### E3 — the wave size is the real concurrency cap
+
+**Why:** the one misquote that turns into a refused call halfway through a paid
+run. "Waves of five" against a cap of three means five clips submitted, three
+accepted, two refused, and an operator watching a partial ad.
+
+**Check:** `MAX_CONCURRENT_API_GENERATIONS` is 5 and the skill says five.
 Automated.
 
 ---
 
-### E2 — the same shapes DO trip the rules under the `ugc` default
+### E4 — the board gate actually stops
 
-**Why:** the lint `estimate_cost` runs is the `ugc` one. The worked prompt does NOT trip it
-— measured, zero warnings — so it is the wrong probe for this mechanism, and Gate 2's claim
-that a disciplined prompt scores clean rests on that measurement. What these four pin is
-the other half of the same sentence: the shortcuts this genre reaches for are exactly what
-does fire, so a reader who sees one knows they drifted from this file.
+**Why:** it is the reason this skill is survivable. Eighteen centi-credits to
+learn the character is wrong, versus a hundred and eighty-seven. A run that
+renders the stills and keeps going has removed the only cheap decision point in
+the flow.
 
-**Check:** four shapes this genre genuinely produces — a terse narrator line, a timecoded
-table, the word "cinematic", two beats joined by "then" — each error under the default
-family and each pass under `pixar`. Automated.
-
----
-
-### E3 — a silent render still errors under the stylized family
-
-**Why:** scoping was never an escape hatch. `no_spoken_line` is universal because a silent
-actor is a wasted render in any style, and it became an error only after it fired *after*
-42 credits were already spent. It refuses nothing now, but it is still the one warning to
-take every time.
-
-**Check:** a stylized prompt with no quoted line and no silent/b-roll statement errors.
-Automated.
+**Check:** human. Run it end to end and confirm it shows all six images together
+and waits. Reviewer says "beat 3 does not follow beat 2" and confirms no clip was
+rendered.
 
 ---
 
-### E3b — a timed-out image is recovered, not re-generated
+### E5 — the character survives five separate renders
 
-**Why:** measured in prod 2026-07-29 — two `generate_image` calls took 74s and 66s against
-a client that gave up around 60. Both succeeded, both were charged, neither result reached
-the caller. Recovering them took an SSH into prod. The failure is not the timeout, it is
-that a caller who times out cannot name the work it paid for.
+**Why:** this is THE failure mode of multi-shot generation and the entire reason
+for the cast sheet. Five beats with five differently-imagined leads is not an ad,
+and nothing recovers it after the clips exist.
 
-**Check:** human. Force or wait for a timeout on a still, then call `list_generations` and
-confirm the job is there with an `outputUrl`. Confirm the skill did NOT generate again.
-
----
-
-### E4 — the still gate actually stops
-
-**Why:** the gate is the reason this skill is survivable on a trial balance. Six
-centi-credits to learn the direction is wrong, versus seventy-six. A skill that renders the
-character sheet and keeps going has removed the only cheap decision point in the flow.
-
-**Check:** human. Run the skill end to end and confirm it stops after the key frame and
-waits. Reviewer says "no, warmer" and confirms nothing was rendered.
+**Check:** human. Put beat 1 and beat 5 side by side at full size. Same face,
+same wardrobe, same proportions. If not, the stills were chained wrong — and the
+fix is 15 centi-credits of stills, not 150 of clips.
 
 ---
 
-### E5 — Doctrine D does not grow a face
+### E6 — the grade does not drift
 
-**Why:** the constraint is the whole pitch. Every expressive beat is supposed to double as
-a real feature demo, and the moment the product has eyes it is a mascot rather than a
-demonstration.
+**Why:** the style lock is pasted verbatim precisely because rewording it between
+beats is invisible while writing and obvious on playback.
 
-**Check:** human. Render a Doctrine D product and confirm no eyes, mouth, eyebrows, limbs
-or hopping — only movements the real product makes.
-
----
-
-### E6 — the low point lands
-
-**Why:** it is the two seconds the ad lives on, and it is the first thing to go when the
-word budget is tight. QC lists it first for that reason.
-
-**Check:** human. Watch 0:06–0:08 with the sound off. If the emotional state is not legible
-on the face (or the mechanism), the render failed regardless of how good the rest looks.
+**Check:** human. Watch the cut with the sound off. Palette, light direction and
+lens should read as one film. A beat that looks like a different afternoon means
+its still needs re-rendering, not its clip.
 
 ---
 
-### E7 — the cost announcement matches what was actually spent
+### E7 — no dead air at the seams
 
-**Why:** the skill announces a number before spending. If that number is wrong the
-announcement is worse than none, because the operator stopped checking.
+**Why:** the most reliable tell that an ad was assembled rather than shot, and
+the one Gate 7 exists to prevent. A clip is as long as you asked for; the line
+inside it is whatever length it is.
 
-**Check:** human. Compare the `estimate_cost` figure with the balance delta after a full
-run. They should differ by zero.
-
----
-
-### E8 — the no-retry warning fires on a thin balance
-
-**Why:** one run is 76 of a 100-credit trial grant. A trial user gets exactly one render and
-no retry, and the skill is supposed to say so *before* firing rather than let them discover
-it.
-
-**Check:** human, on a trial account. Confirm the skill says the balance covers one render
-and not a retry.
+**Check:** human. Every beat's audio should carry to within about half a second
+of its cut. Silence at the end of a beat means the trim was skipped.
 
 ---
 
-### E9 — no invented brands
+### E8 — the narration is intelligible over the clip audio
 
-**Why:** house rule, and the failure is subtle: a blank-label product looks like a
-deliberate style choice rather than a mistake, so it ships.
+**Why:** every beat renders with `audioEnabled: true`, so the clips carry their
+own dialogue and ambience. Two voices at similar levels is a mix nobody can
+follow, and the fix is counter-intuitive — lower the clip, do not raise the voice.
 
-**Check:** human. The rendered product carries the real brand from the uploaded photo, not
-a plausible-looking invention and not a blank label.
+**Check:** human, on phone speakers rather than headphones. Every narration word
+should be legible. If not, the clip track is above 28%.
+
+---
+
+### E9 — the master says what the script says
+
+**Why:** measured, and not theoretical: a render once delivered "And wake up,
+we're rested" for a scripted "And wake up rested", confirmed across five
+transcription passes. At five beats there are five chances for it.
+
+**Check:** human, from the transcript. Read it against the beat board line by
+line. A dropped or altered word in the offer line is worth re-rendering that
+beat.
+
+---
+
+### E10 — one voice across every line
+
+**Why:** `GET /v1/voices` is read once and the id reused. A second read that
+happens to pick a different voice produces an ad that changes narrator
+mid-story, which reads as a mistake rather than a choice.
+
+**Check:** human. Listen to beat 2 and beat 5 back to back. Same voice. Confirm
+the run's log shows ONE `voiceId` across every `POST /v1/voiceovers` call.
+
+---
+
+### E11 — a missing flagged endpoint degrades, and says so
+
+**Why:** `POST /v1/music` and `POST /v1/transcripts` are behind deployment flags,
+and where they are off the path answers `400` rather than a `404` — which reads
+like a malformed request rather than a capability the account does not have. On
+such a deployment the skill must skip the step in one sentence and finish the ad,
+not stall or invent a workaround.
+
+**Check:** human, on an account without music. Confirm the run checks
+`GET /v1/openapi.json` rather than guessing, says so plainly, mixes without a
+bed, and still delivers a finished master.
+
+---
+
+### E12 — the cost announcement matches what was spent
+
+**Why:** the skill announces a number before spending 18 credits. If that number
+is wrong the announcement is worse than none, because the operator stopped
+checking.
+
+**Check:** human. Compare the announced total with the balance delta after a full
+run. They should differ by zero. A voice-over line longer than the estimate's
+sample is the likeliest source of a gap — and it should be pennies, not credits.
+
+---
+
+### E13 — a timed-out call is recovered, not re-run
+
+**Why:** there are fifteen or more paid calls per run, and no idempotency keys on
+this API, so a blind retry at beat 4 pays twice for the same clip. Two calls make
+this easy to get wrong: `POST /v1/videos` returns before the render finishes, and
+`POST /v1/images` blocks for 60 to 90 seconds and can time out on work that was
+already done and already charged.
+
+**Check:** human. Force or wait for a timeout, then confirm the skill called
+`GET /v1/generations`, found the job by `createdAt` and prompt, and took its
+`outputUrl` — and did NOT generate again.

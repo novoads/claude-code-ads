@@ -1,6 +1,6 @@
 # Beat formulas — the clay narrative library
 
-The per-beat prompt formulas for `novoads-claymation-storyboard-ad`. `SKILL.md`
+The per-beat prompt formulas for `novoads-claymation-ad`. `SKILL.md`
 owns the pipeline, the style lock, the negative block and the material detail
 block. This file owns the eight beats: what each is, the variables it takes, and
 worked prompts.
@@ -91,7 +91,7 @@ SUPPORTING CHARACTER (beat 3)
 
 NARRATOR (voice-over, never on screen)
 - Persona: warm storyteller, mid-pace / wry observer, dry
-- Chosen ONCE from list_voices. One voiceId for every line in the ad.
+- Chosen ONCE from `GET /v1/voices`. One voiceId for every line in the ad.
 
 SETTING, primary (beats 1, 6, 8)
 - <a small sunlit kitchen with green-painted cabinets, red gingham tablecloth,
@@ -352,7 +352,7 @@ frame".
 ### The AUDIO block: SYNC and VO
 
 Same doctrine as the Pixar skill. A SYNC beat carries its line in the prompt in
-double quotes and gets NO `generate_voiceover` take. A VO beat carries no speech
+double quotes and gets NO `POST /v1/voiceovers` take. A VO beat carries no speech
 at all and says so. Never both in one beat, or every line plays twice.
 
 In this genre most beats are VO, because the narrator is the form. **Beat 3 is
