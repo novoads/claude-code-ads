@@ -268,7 +268,11 @@ five read right, continue into the remainder in the same run. Stop and show the 
 when the problem is systematic (a brand wordmark drifting, the product rendered from the
 wrong angle), because that flaw is worth catching before 30 more images carry it.
 
-**4. The remainder.** Every other template whose `Model notes` block marks `gpt-image-2`
+**4. The remainder.** When this run was entered through OVERVIEW's option 1, this
+engine's set is one half of one plan: the templates the library routes to the other
+generator ride the same total and render in the same run
+(`shared/skills/image-ad-prompting/OVERVIEW.md` § Presenting choices to the user).
+Every other template whose `Model notes` block marks `gpt-image-2`
 clean or preferred. **Count them from `prompt-library.md` at run time; do not carry a number
 from a previous run or from another product's library** — entries get added, and Model notes
 get corrected by exactly the kind of run you are doing now. Templates marked `acceptable`,

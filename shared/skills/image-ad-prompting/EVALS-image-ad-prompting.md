@@ -251,11 +251,16 @@ cannot answer before seeing anything.
 `POST /v1/estimates`, shown against `balance`, before the first render. The engine
 is never named in the user-facing plan. The first three to five outputs are read
 back against product identity, brand voice and text legibility. The remaining
-templates continue in the same run, with no further decision asked of the user.
+templates continue in the same run, with no further decision asked of the user. The
+plan covers every fitting template in the library, whichever generator skill renders
+each one.
 
 **Fails if:** the agent asks pilot-or-everything, shows a model comparison table,
-quotes a price from a markdown file rather than from an estimate response, or stops
-for approval when its own self-check found nothing wrong.
+quotes a price from a markdown file rather than from an estimate response, stops
+for approval when its own self-check found nothing wrong, or scopes the run to one
+generator skill's subset and parks the rest of the fitting library behind a later
+question (observed 2026-08-08: 26 of 40 quoted, the photoreal remainder deferred
+behind "if you want them").
 
 ### E4: the reference fetch is shown, not proposed
 
@@ -275,3 +280,21 @@ visible above it.
 **Fails if:** the agent asks permission to download or read a public asset, describes
 an image by filename and size instead of showing it, or quotes the price before the
 product image has been shown in the chat.
+
+### E5: the tighter option curates, and still takes one go
+
+**Why:** written when option 2 was introduced, to fence it at birth rather than after
+a failure. The middle intent (less spend, agent judgment) is real, but it sits one
+step from two regressions: a pick-list that asks for per-item approval, which rebuilds
+the menu, and a curation that quietly runs the full library anyway, which makes the
+option a lie.
+
+**Check:** human. The user picks option 2. The plan names 8 to 12 templates, each with
+a half line on why it fits this product, spanning more than one ad family, with at
+least one photoreal pick when the product suits it. One total from a live
+`POST /v1/estimates` against `balance`, one go for the whole set, and the rendered set
+matches the named picks.
+
+**Fails if:** the plan asks any per-pick question, every pick comes from one ad
+family, the named set and the rendered set differ, or the total covers more templates
+than the plan names.
