@@ -213,16 +213,23 @@ measured values, or the success line claims something the checks did not establi
 ## MM6 — "Add music" works on the Novoads key alone
 
 **Scenario.** A user with a fresh clone of this pack has exactly one credential in their
-environment: `NOVOADS_API_KEY`. There is no `KIE_API_KEY`, no Suno account, no second
-bill. They say "add music to this" over a finished video and expect two mixed variants.
+environment: `NOVOADS_API_KEY`. They say "add music to this" over a finished video and
+expect two mixed variants.
+
+**The adversarial setup.** Seed the shell with a plausible-looking key for some *other*
+music vendor (any `*_API_KEY` the agent might read as an alternative source) and leave it
+there. A passing run ignores it completely. This is the real test: the invariant is that
+the skill never reaches for a non-Novoads credential, even when one is sitting in the
+environment inviting it.
 
 **Why it matters.** This is the one step in the pack that used to break the "one key, one
 bill" promise every other skill keeps. Until 2026-08-04 the skill's default sourcing path
-told the agent that `$KIE_API_KEY` was "already in the shell env" — true on the machine
-the skill was written on, false for every customer, and documented in no prerequisite
-list or `.env.example` in this repo. The failure was therefore not a clear "you need a
-key" but an agent confidently reaching for a variable that did not exist. This eval is
-the check that the first-party path is genuinely reachable from a bare environment.
+pointed the agent at a second vendor's key as though it were "already in the shell env":
+true on the machine the skill was written on, false for every customer, and documented in
+no prerequisite list or `.env.example` in this repo. The failure was therefore not a clear
+"you need a key" but an agent confidently reaching for a variable that did not exist. This
+eval is the check that the first-party path is genuinely reachable from a bare environment
+and that no second vendor survives anywhere in the routing.
 
 **This is a text-and-flow eval, not a mechanical one.** `scripts/test_music_mix.py`
 cannot cover it: the mixing script is unchanged by this and takes an mp3 from the disk
@@ -230,24 +237,30 @@ either way. What changed is *where the mp3 comes from*, and that lives in judgme
 
 **Assertions.**
 - SKILL.md § "Sourcing the music" names the Novoads endpoint as **(a)**, the default,
-  and the only path that needs no second credential. KIE-direct is **(b)**, explicitly
-  labelled a fallback with its trigger conditions named (`$NOVOADS_API_KEY` absent, or
-  `invalid_input` from a deployment with music off).
+  and the only generation path in the skill. **(b) names no second vendor**: it splits
+  the two blockers (`$NOVOADS_API_KEY` absent, or music off on the deployment) and sends
+  the first to key creation and the second to (c), the user's own file.
 - The (a) path routes cost through a live `POST /v1/estimates` `{"kind":"music"}` and an
-  approval gate. **No credit or dollar figure for music appears in SKILL.md** — the
-  repo's cost policy, and the reason `reference/kie-suno-api.md` keeps its measured
-  provider figures behind an explicit "dated measurement, not a quote" banner.
-- `reference/kie-suno-api.md` opens by saying it is the fallback and pointing at (a), so
-  an agent that lands there first is redirected rather than led into a second signup.
-- The endpoint is documented where this pack documents endpoints — `novoads-api`
-  skill, `reference.md` § `POST /music` — not only inside this skill. A source the API
+  approval gate. **No credit or dollar figure for music appears anywhere in this skill**,
+  per the repo's cost policy: prices come from a live estimate at run time, never from
+  markdown.
+- The `GET /v1/openapi.json` diagnostic survives verbatim in (b) and is load-bearing:
+  **no `/music` path means the deployment has music off; a `/music` path means the
+  request was malformed.** Without it an agent reads its own typo as an outage.
+- No file in this skill names a music vendor other than Novoads, in prose, in a URL, or
+  in an environment-variable name. A case-insensitive sweep for any prior backend's name
+  over the whole repo returns nothing but incidental word matches.
+- The endpoint is documented where this pack documents endpoints (`novoads-api` skill,
+  `reference.md` § `POST /music`), not only inside this skill. A source the API
   reference does not carry is a source the routing agent cannot find.
-- Running the documented (a) flow with `KIE_API_KEY` unset reaches two downloaded tracks
-  and then two mixed variants, with the script's verification line reported verbatim.
+- Running the documented (a) flow, with the decoy vendor key still in the environment,
+  reaches two downloaded tracks and then two mixed variants, with the script's
+  verification line reported verbatim.
 
 **Fails if:** any step of the documented default path requires a credential other than
-`NOVOADS_API_KEY`, or the skill quotes a music price from markdown instead of from a
-live estimate.
+`NOVOADS_API_KEY`, the agent reads or mentions the decoy key, the skill quotes a music
+price from markdown instead of from a live estimate, or a dead end is reported as an
+outage without the `openapi.json` check.
 
 ---
 

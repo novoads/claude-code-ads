@@ -55,22 +55,28 @@ the one charge — so the 2–3 variants above cost one generation, not three. D
 **both** `audio[].url`; they are presigned at read time, so re-poll rather than reuse a
 stale one. Tracks run one to two minutes whatever you hint — the script trims them.
 
-**(b) Generated via the KIE Suno API directly — fallback.** Only when
-`$NOVOADS_API_KEY` is absent, or when music is genuinely off on that deployment. Confirm
-which before switching: `invalid_input` is also what a typo'd body returns, so the
-reliable test is the free, keyless `GET /v1/openapi.json` — **no `/music` path means the
-deployment has music off; a `/music` path means your request was wrong.** Do not send a
-user to a second signup over a malformed field. (b) needs a **second** credential,
-`$KIE_API_KEY`, which most users of this pack do not have. `reference/kie-suno-api.md`
-carries the live shapes and the two gotchas: `callBackUrl` is required in practice
-despite being documented optional, and errors arrive as HTTP 200 with a non-200 `code`.
+**(b) When (a) is not available, diagnose before you improvise.** There is no second
+generation vendor in this pack. Two different things can block (a), and they have
+different answers:
+
+- **`$NOVOADS_API_KEY` is absent.** Stop. Do not look for another credential. Tell the
+  user to create a key at
+  [novoads.ai/dashboard/settings?tab=api](https://novoads.ai/dashboard/settings?tab=api)
+  and put it in `.env` (see `scripts/setup.sh`), then resume.
+- **Music is off on that deployment.** `invalid_input` is also what a typo'd body
+  returns, so confirm which before concluding anything. The reliable test is the free,
+  keyless `GET /v1/openapi.json`: **no `/music` path means the deployment has music
+  off; a `/music` path means your request was malformed.** If music really is off, say
+  so plainly and fall back to (c). If the path is there, fix your body and retry (a).
+
+Never send a user to a second signup, and never over a malformed field.
 
 **(c) A file the user supplies.** Always allowed, no questions. Licensing is theirs.
 
-Music from (a) and (b) is **AI-generated** and its clearance is the user's call, not
+Music from (a) is **AI-generated** and its clearance is the user's call, not
 this skill's to guarantee: Novoads' terms §11 "AI-Generated Music" make no
-representation that it is free of third-party rights and put use — their jurisdiction,
-their platforms — on the customer. Say that once for client-facing or paid media, and
+representation that it is free of third-party rights and put use (their jurisdiction,
+their platforms) on the customer. Say that once for client-facing or paid media, and
 improvise no legal advice past it.
 
 ## Hard rule: mixing always goes through the script
