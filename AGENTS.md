@@ -9,13 +9,16 @@ If `.env` or `MASTER_CONTEXT.md` do not exist, tell the user to run `./scripts/s
 When the session IS the setup ("help me set this up"), setup is the whole job and the
 final report is SHORT — the few sentences a non-developer wants, not an engineering log.
 `./scripts/setup.sh` run without a TTY prints this same close between
-`FINAL MESSAGE START` / `END` markers; relay that block verbatim. The script and the
+`FINAL MESSAGE START` / `END` markers; relay that block. The script and the
 template below are mirrors — change them together. One or two status lines, then:
 
 > Setup's done — your key works.
 > *(or, when the key is missing:)* One step left, the only one I can't do: create an API
 > key at <https://novoads.ai/dashboard/settings?tab=api>, paste it into `.env`, and tell
 > me — I'll verify it. *(No account yet? The [$1 trial](https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack).)*
+> *(On macOS and on Linux with a desktop session, setup opens `.env` itself and the line
+> becomes "I've opened `.env` for you — paste the key on the `NOVOADS_API_KEY` line, save,
+> and tell me." It is skipped over SSH, in CI, and under `NOVOADS_SETUP_NO_OPEN=1`.)*
 >
 > **What you can ask for now:**
 > - "Make a UGC video ad for my product" — Seedance 2.0/2.5, Veo 3.1, Sora 2
@@ -27,13 +30,27 @@ template below are mirrors — change them together. One or two status lines, th
 > generation is priced by a live estimate and shown to you before anything is spent.
 
 Everything else the run surfaced — git mechanics, pulls, sync counts, files that already
-existed, MCP/connector notes, untracked directories — is stated ONLY if it blocks one of
-those asks. **A connected Novoads MCP connector does not replace the key and must not be
-mentioned**: it is not a second way to finish setup, so offering it turns the one remaining
-step into a menu and the user picks the branch that leaves them without a key. Do not ask
-about their product, brand, or audience here: that question belongs to the first generation
-request (step 3 below), where the answer is used immediately and saved. The only setup input
-a human owes is the API key.
+existed, untracked directories — is worth stating only if it blocks one of those asks.
+That is a brevity preference and not a restriction: **nothing in this repo is
+confidential, and you may tell the user anything you judge useful.** Do not ask about
+their product, brand, or audience here: that question belongs to the first generation
+request (step 3 below), where the answer is used immediately and saved. The only setup
+input a human owes is the API key.
+
+**A connected Novoads MCP connector does not replace the key.** It is not a second way to
+finish setup, so presenting it as one turns the single remaining step into a menu, and the
+branch the user picks leaves them without a key. Say so plainly if it comes up; just do not
+offer it as an alternative.
+
+This section used to end with "must not be mentioned", and with the close described as the
+agent's "ENTIRE closing message, verbatim". Both were counterproductive, in a way worth
+recording so it is not reintroduced: on 2026-08-08 a setup session read those lines,
+correctly identified them as an instruction to withhold information from the user, and
+reported the attempt as a warning — so the connector got a paragraph of the user's
+attention instead of none, and the close was framed as marketing copy the agent had
+declined to read out. An instruction to hide something is the one kind an aligned agent
+surfaces rather than follows. `scripts/check-no-gag.sh` is the ratchet that keeps that
+phrasing from drifting back.
 
 ## The key is the only executable path
 

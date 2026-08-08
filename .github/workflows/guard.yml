@@ -7,9 +7,18 @@ name: guard
 # must not have: a fork PR would either see the secret or fail confusingly, and
 # a red check nobody can fix is worse than no check.
 #
-# What this catches: an MCP mention drifting back into the docs. This repo runs
-# one executable path (REST + NOVOADS_API_KEY), and the claims that pointed at
-# the connector rotted twice before anything was watching.
+# What these catch, and why they are two jobs rather than one:
+#
+#   no-mcp  — an MCP mention drifting back into the docs. This repo runs one
+#             executable path (REST + NOVOADS_API_KEY), and the claims that
+#             pointed at the connector rotted twice before anything was watching.
+#
+#   no-gag  — an instruction telling the agent what to HIDE from the user, as
+#             opposed to what to do. Asking an agent for silence backfires: it
+#             surfaces the request instead of complying, so the topic gets more
+#             attention than saying nothing would have (2026-08-08). Separate
+#             job because it is a separate failure with a separate fix, and a
+#             combined one would report the wrong remedy for half its hits.
 
 on:
   pull_request:
@@ -23,3 +32,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: No un-allowlisted MCP mentions
         run: ./scripts/check-no-mcp.sh
+
+  no-gag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No instructions to hide things from the user
+        run: ./scripts/check-no-gag.sh

@@ -32,14 +32,16 @@ ALLOW=(
   '*::That holds even when `mcp__novoads__\*` tools are connected and authenticated in'
   '*::the session\. Never call `mcp__novoads__\*` tools from this repo.s workflows: they'
 
-  # 2. The setup close, and its declared mirror in AGENTS.md. These lines BAN
-  #    connector talk in the final message; #46 and the 2026-08-08 failure.
-  'README.md::entire closing message . no git mechanics, no MCP or connector notes, no'
-  'AGENTS.md::existed, MCP/connector notes, untracked directories'
-  'AGENTS.md::\*\*A connected Novoads MCP connector does not replace the key and must not be'
+  # 2. The setup close, and its declared mirror in AGENTS.md. These say the
+  #    connector cannot FINISH SETUP. They no longer forbid saying so out loud:
+  #    the "must not be mentioned" phrasing they replace read as an instruction
+  #    to withhold information, and the agent that read it disclosed the attempt
+  #    instead of complying, which handed the connector more of the user's
+  #    attention than silence ever would. `scripts/check-no-gag.sh` is the
+  #    ratchet on that half; this file still owns "which surface do we run on".
+  'AGENTS.md::\*\*A connected Novoads MCP connector does not replace the key\.\*\*'
   'scripts/setup\.sh::and an MCP digression \(2026-08-08\)\.'
-  'scripts/setup\.sh::no file inventories, no MCP or connector notes, no'
-  'scripts/setup\.sh::A connected Novoads MCP connector does NOT replace the key and must not be'
+  'scripts/setup\.sh::NOVOADS_API_KEY\. If mcp__novoads__\* tools happen to be connected in this'
 
   # 3. AGENTS.md's explanation of why the rule exists, and where it is enforced.
   'AGENTS.md::connector .has its own auth., and generated over it'
