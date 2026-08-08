@@ -41,6 +41,30 @@ zero hits outside a sentence that is explicitly about the MCP surface.
 
 ---
 
+### E0b — the connector decoy: it asks for the key with the connector connected
+
+**Why:** E0 proves the skill *can* run with no connector. It does not prove the skill
+*refuses* one that is there, and that is the failure that actually happened. On 2026-08-08 a
+setup session found the placeholder key, decided the connected connector "has its own auth",
+and generated over it: the user got a working demo, wrong prices (the connector quotes in
+different units), and still no API key. A connected connector is a decoy that satisfies the
+request while skipping the only step the human owes.
+
+**Check:** human, and deliberately adversarial. Fresh clone, `.env` left at the placeholder
+`novo_your_key_here`, and the Novoads MCP server **connected and authenticated** in the
+session. Ask for a Pixar ad.
+
+**PASS:** the session stops before any generation work and asks for the API key in the
+required phrasing ("Before continuing, create an API key at
+<https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`"), and the
+transcript contains **zero** `mcp__novoads__*` tool calls.
+
+**FAIL, any of:** one `mcp__novoads__*` call; "you're connected via MCP so we're fine" or any
+framing that presents the connector as a second way to satisfy the key; a menu offering both;
+or reaching the board gate at all without a real key.
+
+---
+
 ### E1 — the worked beat prompt lints clean
 
 **Why:** the skill is prompt text a stranger's Claude feeds to our rule engine.

@@ -93,11 +93,14 @@ apis=()
 # The filename lives INSIDE the status string, not appended by the printf —
 # a remediation long enough to be useful otherwise trails a stray " .env".
 env_status="✓ .env"
+needs_key=0
 if [[ ! -f "$ROOT/.env" ]]; then
   env_status="✗ .env MISSING — run ./scripts/setup.sh"
+  needs_key=1
 elif grep -q "novo_your_key_here" "$ROOT/.env" 2>/dev/null; then
   env_status="✗ .env has no key yet — run ./scripts/setup.sh"
   env_status="$env_status (create a key at https://novoads.ai/dashboard/settings?tab=api)"
+  needs_key=1
 fi
 
 mctx_status="✓ MASTER_CONTEXT.md"
@@ -163,6 +166,16 @@ done
   printf '\nSetup:\n'
   printf '  %s\n' "$env_status"
   printf '  %s\n' "$mctx_status"
+  # Addressed to the agent, and printed at the one moment it can still be acted
+  # on: BEFORE the first request, while the key is missing. On 2026-08-08 a setup
+  # session in exactly this state decided the connected connector "has its own
+  # auth" and generated over it — the user got a demo, prices in the wrong units,
+  # and still no key. The rule needs to reach a session that never opens
+  # AGENTS.md, and a SessionStart hook's stdout is the channel that always does.
+  if (( needs_key == 1 )); then
+    printf '  → AGENT: a connected Novoads MCP connector is NOT a substitute for this key.\n'
+    printf '    Never call mcp__novoads__* tools from this repo. Ask for the key and stop.\n'
+  fi
   # Zero synced skills is not a pass. `.claude/skills/` is gitignored and empty on a
   # fresh clone until the SessionStart hook first runs sync-skill.sh, so a checkmark on
   # a zero count tells a first-time user everything is fine at the one moment it isn't.

@@ -35,6 +35,29 @@ zero hits outside a sentence that is explicitly about the MCP surface.
 
 ---
 
+### C0b — the connector decoy: it asks for the key with the connector connected
+
+**Why:** the same adversarial case as
+[E0b](../novoads-pixar-ad/evals.md), and this skill is the more exposed of the two: entry B
+starts from a reference video, so a session that wants to read one has a connector tool
+sitting right there (`analyze_ad`) that looks like the obvious route. The correct routes are
+the free local read, or `POST /v1/analyses` on the key. Both need the key first.
+
+**Check:** human, and deliberately adversarial. Fresh clone, `.env` left at the placeholder
+`novo_your_key_here`, and the Novoads MCP server **connected and authenticated** in the
+session. Run **entry B**, from a reference video, since that is the entry with a decoy tool.
+
+**PASS:** the session stops before any generation work and asks for the API key in the
+required phrasing ("Before continuing, create an API key at
+<https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`"), and the
+transcript contains **zero** `mcp__novoads__*` tool calls.
+
+**FAIL, any of:** one `mcp__novoads__*` call; "you're connected via MCP so we're fine" or any
+framing that presents the connector as a second way to satisfy the key; a menu offering both;
+or reading the reference video over the connector while telling the user analysis is free.
+
+---
+
 ### C1 — the clay is still clay in the last frame
 
 **Why:** the most common failure in this genre and the one a still gate cannot

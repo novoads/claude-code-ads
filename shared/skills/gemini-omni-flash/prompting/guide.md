@@ -4,10 +4,9 @@ Prompting brain for Google DeepMind's **Gemini Omni Flash** video model ("Gemini
 Prompting-only folder — no `SKILL.md`, so `sync-skill.sh` won't register it as a skill. Read it
 before composing any `omni-flash` prompt.
 
-**Where you call it from this workspace:** `POST /v1/videos` with `"model": "omni-flash"`, or the
-Novoads MCP `generate_video` tool with the same model. Async — it returns a `jobId` you poll at
-`GET /v1/generations/{jobId}`. Every HTTP detail comes from the `novoads-api` skill and its
-`reference.md`.
+**Where you call it from this workspace:** `POST /v1/videos` with `"model": "omni-flash"`, and
+nowhere else. Async — it returns a `jobId` you poll at `GET /v1/generations/{jobId}`. Every HTTP
+detail comes from the `novoads-api` skill and its `reference.md`.
 
 **Sources** (scraped 2026-07-09):
 - <https://deepmind.google/models/gemini-omni/prompt-guide/>
@@ -427,8 +426,8 @@ through those surfaces is detectable as AI-generated and labeled as such.
 
 ## Surfaces
 
-**In this workspace:** `POST /v1/videos` with `"model": "omni-flash"`, or the Novoads MCP
-`generate_video` tool. That is the only surface these instructions run against.
+**In this workspace:** `POST /v1/videos` with `"model": "omni-flash"`. That is the only surface
+these instructions run against.
 
 Google's own surfaces, for context on where the documentation above came from: Gemini app · Google
 Flow · YouTube Shorts · Google AI Studio · Gemini API · Google Enterprise Agent Platform.

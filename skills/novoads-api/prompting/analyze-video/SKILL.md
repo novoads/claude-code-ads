@@ -27,6 +27,16 @@ are local work on the user's own file: no calls, no credits. Only step 7, the op
 render, spends anything, and it runs through the two gates in [SKILL.md](../../SKILL.md)
 like every other generation.
 
+**There is a hosted alternative, and it is not the default.** `POST /v1/analyses` reads an
+uploaded ad into a structured breakdown (hook boundary, beat timeline, on-screen text,
+casting, layer zones) in one synchronous call, flat **1 credit**, priced through
+`POST /v1/estimates` with `{"kind":"analysis"}` first like every other spend. Two reasons it
+is the fallback and not the front door here: the local path costs nothing and reads the whole
+runtime, while `/analyses` defaults to the first 20 seconds (120 is the ceiling, and raising
+it trades hook precision for coverage). Reach for it when ffmpeg is not installed, when the
+user wants zone labels rather than prose, or when the frame read has already failed. Offer it
+with the price attached and let the user choose; never substitute it silently for step 1.
+
 **The 15-second constraint is the whole design problem.** `seedance-2.0` and
 `seedance-2.0-mini` take any integer 4 to 15 seconds, and the reference video is usually
 30 to 60. Your template has to distil the style into what fits one 15-second clip, and say
@@ -40,6 +50,16 @@ how to recreate the longer arc across a series of clips.
   is unavailable, ask the user to paste the dialogue instead.
 
 Neither is a Novoads dependency. Both run locally on the user's file.
+
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
 
 ## Inputs
 

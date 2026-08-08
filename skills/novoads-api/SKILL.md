@@ -24,6 +24,16 @@ Spend your effort on the prompt and on confirming the spoken line. The HTTP is m
 - **Check:** `./scripts/check-novoads-env.sh`
 - **Never** print API keys, commit `.env`, or paste a key into `MASTER_CONTEXT.md`.
 
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
 ### If the key is missing or the API returns 401 or 403
 
 Run `./scripts/setup.sh`, or tell the user to create a key at <https://novoads.ai/dashboard/settings?tab=api>. Prefer the editor: ask them to paste the key **inside `.env`** rather than into chat. If they do paste it in chat, write `.env` for them, confirm "saved to `.env`" **without repeating the key**, and tell them chat history may retain secrets, so the key is worth rotating if that transcript could be shared.

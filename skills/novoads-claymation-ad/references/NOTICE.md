@@ -10,7 +10,7 @@ What was adapted: the eight-beat narrative arc, the cast-and-continuity sheet
 shape, the subject-lock fragment technique, the material-detail block, the
 six-block animation prompt structure, and the clay-specific QA checklists.
 
-What is ours and is not his: the API mechanics (`/v1` and MCP, `assetId`
+What is ours and is not his: the API mechanics (`/v1`, `assetId`
 chaining, the wave size, the duration grid), the SYNC/VO audio doctrine, the
 second entry for recreating a found video, the gates and their cost
 announcements, the composited end card, the blocking caption-garble gate, and

@@ -10,7 +10,7 @@ What was adapted: the four-role genre arc, the cast-and-continuity sheet shape,
 the per-role variable tables, the six-block animation prompt structure, and the
 cross-beat continuity and QA checklists.
 
-What is ours and is not his: the API mechanics (`/v1` and MCP, `assetId`
+What is ours and is not his: the API mechanics (`/v1`, `assetId`
 chaining, the wave size, the duration grid), the SYNC/VO audio doctrine, the
 gates and their cost announcements, the composited end card, the blocking
 caption-garble gate, and every rule derived from our own measured runs.

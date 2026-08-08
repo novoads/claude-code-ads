@@ -53,9 +53,9 @@ not evidence the *burn* is clean, because the burn ran its own transcription.
 
 A garbled brand name in even one frame blocks the ship.
 
-**Full procedure:** each skill's own QA step — the call differs by surface
-(`POST /v1/transcripts` on the API path, `transcribe_video` over MCP, Whisper
-locally). The rule above is what does not differ.
+**Full procedure:** each skill's own QA step — the call differs by path
+(`POST /v1/transcripts` hosted, Whisper locally). The rule above is what does
+not differ.
 
 ---
 

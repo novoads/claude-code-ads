@@ -81,6 +81,16 @@ after the user has approved a dialogue script is a bad look.
 whisper is **optional, and only for working offline** — see the fallback in step 2. Do not
 ask the user to install it before starting. A clean machine can clone an ad.
 
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
 ## Workflow
 
 ### Step 0: Gather inputs
@@ -207,6 +217,18 @@ own silence** twice: `audioEnabled: false` on the call and the silence written i
 prompt text (steps 6 and 8).
 
 ### Step 3: Compressed analysis
+
+**There is a hosted alternative, and it is not the default.** `POST /v1/analyses` returns the
+same class of read (hook boundary and the observable signal behind it, beat timeline,
+on-screen text, casting, layer zones labelled by where their pixels come from) in one
+synchronous call, flat **1 credit**, priced through `POST /v1/estimates` with
+`{"kind":"analysis"}` first like every other spend. The pass below costs nothing, covers the
+whole runtime, and you already have the frames on disk from step 1, so it stays the front
+door. Reach for `/analyses` when ffmpeg is not installed, when the clone needs zone labels
+rather than prose (`sourceType` tells you which zones are generated footage and which are
+overlay, which is the one thing a frame read guesses at), or when this pass has already
+failed. Two things to say out loud if you offer it: it is a charge, and it defaults to the
+first 20 seconds, so a 40-second source needs `maxSeconds` raised or it reads the hook only.
 
 Read **all** the extracted frames. For each, note:
 

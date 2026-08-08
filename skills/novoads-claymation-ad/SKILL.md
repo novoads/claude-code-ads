@@ -55,6 +55,16 @@ door: still per-beat renders, still ffmpeg, still an assembly.
 3. **ffmpeg on your machine.** The assembly happens here, not on the server.
    `ffmpeg -version` before you start.
 
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
 **Every HTTP mechanic here belongs to the pack, not to this skill.** Auth, strict
 bodies, status codes, the poll loop, rate limits and error envelopes are written
 out once in [`skills/novoads-api/SKILL.md`](../novoads-api/SKILL.md) and its
@@ -127,11 +137,15 @@ frames out with ffmpeg, dialogue out with Whisper, then read the beats off what
 you extracted. It costs nothing, needs no key, and — unlike a fixed-window
 reader — it covers the whole runtime, which is what a 60-second arc needs.
 
-**There is no ad-analysis endpoint on this API.** Structured hook/beat/casting
-breakdown lives on the MCP connector as `analyze_ad`, deliberately, and this
-skill does not reach for it: the local path is the one path here, and it is
-already installed because ffmpeg is a hard dependency of the assembly. See
-[`reference.md`](../novoads-api/reference.md) § *Base URL and auth*.
+**There is a hosted alternative, and it is not the default.**
+`POST /v1/analyses` returns the structured hook/beat/casting breakdown in one
+synchronous call, flat 1 credit, priced through `POST /v1/estimates` with
+`{"kind":"analysis"}`. Reach for it only when ffmpeg is missing or the local
+read has already failed: the local path costs nothing, ffmpeg is a hard
+dependency of the assembly anyway, and `/analyses` defaults to reading the
+first 20 seconds, which is exactly the setup third a clay arc cannot afford to
+lose. If you do offer it, price it first and let the user choose. See
+[`reference.md`](../novoads-api/reference.md) § *Ad analysis is on this API now*.
 
 Two things to hold on to whichever way you read it:
 

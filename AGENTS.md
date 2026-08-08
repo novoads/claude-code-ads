@@ -28,9 +28,35 @@ template below are mirrors — change them together. One or two status lines, th
 
 Everything else the run surfaced — git mechanics, pulls, sync counts, files that already
 existed, MCP/connector notes, untracked directories — is stated ONLY if it blocks one of
-those asks. Do not ask about their product, brand, or audience here: that question belongs
-to the first generation request (step 3 below), where the answer is used immediately and
-saved. The only setup input a human owes is the API key.
+those asks. **A connected Novoads MCP connector does not replace the key and must not be
+mentioned**: it is not a second way to finish setup, so offering it turns the one remaining
+step into a menu and the user picks the branch that leaves them without a key. Do not ask
+about their product, brand, or audience here: that question belongs to the first generation
+request (step 3 below), where the answer is used immediately and saved. The only setup input
+a human owes is the API key.
+
+## The key is the only executable path
+
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
+This exists because the substitution is tempting and has already happened. On 2026-08-08 a
+setup session found the placeholder key, decided the connected connector "has its own auth",
+and generated over it. Three things go wrong when a session drifts there: this repo can only
+test and ratchet the REST path, so nothing here covers what the session actually ran; the
+connector quotes costs in different units, so every price the user is shown is wrong; and the
+user ends up with a working demo and still no key, which is the one thing they had to do.
+
+The rule is repeated verbatim in every `SKILL.md` because skills are installable on their own,
+with no `AGENTS.md`, no `scripts/`, and no `.env`. `scripts/check-no-mcp.sh` is the ratchet that
+keeps it the only phrasing in the repo.
 
 ## Every session
 

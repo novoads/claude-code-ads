@@ -1,0 +1,25 @@
+name: guard
+
+# The pack's first CI, and deliberately the smallest thing that could be one.
+#
+# Only the grep ratchet runs here. Every other script in scripts/ hits the
+# network and needs a real NOVOADS_API_KEY, which a public repo's PR runners
+# must not have: a fork PR would either see the secret or fail confusingly, and
+# a red check nobody can fix is worse than no check.
+#
+# What this catches: an MCP mention drifting back into the docs. This repo runs
+# one executable path (REST + NOVOADS_API_KEY), and the claims that pointed at
+# the connector rotted twice before anything was watching.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  no-mcp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No un-allowlisted MCP mentions
+        run: ./scripts/check-no-mcp.sh

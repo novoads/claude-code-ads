@@ -19,28 +19,21 @@
 - **Depends on / blocked by:** nothing — read-only against the deployed spec.
 - **Origin:** /plan-eng-review of VIDEO-CLONE-CHAPTER-PLAN.md, 2026-08-04 (decision D6).
 
-## The cloning primitives are split across MCP and REST, and neither surface has both
+## ~~The cloning primitives are split, and neither surface has both~~ CLOSED 2026-08-08
 
-- **What:** `sourceAssetId` (image edit) exists on `POST /v1/images` but **not** on the MCP
-  `generate_image` tool — verified against the live tool schema, 2026-08-06. `analyze_ad`
-  runs the other way: it reads an uploaded **image** ad into on-screen text, layout zones and
-  casting, and it is **MCP-only** — there is no `/analyses` path in the deployed spec
-  (2.12.0). So each surface is missing the other's cloning asset. Decide whether to publish
-  `analyze_ad` on `/v1`, add `sourceAssetId` to the MCP tool, both, or neither.
-- **Why:** this pack's `image-ad-clone` is REST-based, so its Phase 2 visual analysis is done
-  by the agent's own vision — which is parity with the walkthrough this chapter mirrors, and
-  therefore not a gap in the demo. But it means the one first-party thing we have that the
-  competitor does not (a server-side ad reader returning layout zones) is unreachable from
-  the skill that would most benefit. Symmetrically, an MCP-only consumer cannot edit an image
-  at all, so the Phase 7 instrument added in this PR has no MCP equivalent.
-- **Pros:** closing either half removes an "it depends which door you came in" caveat from
-  the docs; `analyze_ad` on `/v1` would let Phase 2 stop being purely client-side.
-- **Cons:** `analyze_ad` is unbounded Gemini spend with no plan gate today (see the novoads.ai
-  note on MCP-only analyses) — publishing it on `/v1` is a cost-surface decision, not a
-  docs one. Adding `sourceAssetId` to MCP is smaller but still a tool-schema change.
-- **Depends on / blocked by:** founder call on `analyze_ad` pricing/gating before it can be
-  published anywhere.
-- **Origin:** image-clone chapter parity analysis, 2026-08-06 (finding #5).
+Both halves of this are gone. Server-side ad analysis shipped as **`POST /v1/analyses`** in
+deployed spec `2.19.0` (flat 1 credit, synchronous, priced with `{"kind":"analysis"}`), so
+the reader that returns layout zones is now reachable from the same key everything else in
+this pack uses, and the entry's central claim ("there is no `/analyses` path in the deployed
+spec") is false as of that release. The other half stopped being a question when the repo
+went single-path: this pack has exactly one executable surface, so a second surface's tool
+schema is not its problem. `image-ad-clone` Phase 2 can now offer `/analyses` as a priced
+alternative to its own vision pass, the way `clone-ad` step 3 and `analyze-video` do.
+
+- **Left over:** wire `/analyses` into `image-ad-clone` Phase 2 as the same offer-with-a-price
+  the two video skills carry. Small, and blocked on nothing.
+- **Origin:** image-clone chapter parity analysis, 2026-08-06 (finding #5). Closed by the
+  REST-only pass, 2026-08-08.
 
 ## Two structural holes under `image-ad-clone`: no evals, and no drift guard can reach it
 

@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# Ratchet: this repo has exactly ONE executable path, the REST scripts with
+# NOVOADS_API_KEY. A Novoads MCP connector in the user's session is never a
+# substitute for the key, and no workflow here may call one.
+#
+# The rule needs to NAME the thing it bans, so a blanket "no mcp anywhere" grep
+# would delete its own enforcement. This script greps every tracked file for
+# "mcp" (case-insensitive) and fails on any hit that is not on the allowlist
+# below. Line patterns, not whole files: a file earns an exemption for the exact
+# sentence that bans MCP, and stays guarded everywhere else.
+#
+# Why a dumb string grep and not something cleverer: the failure this guards
+# against is prose rotting back in, one sentence at a time, in a repo with no
+# other CI. Three of the mentions this replaced were factually wrong for months.
+#
+# Usage: ./scripts/check-no-mcp.sh    (exit 0 clean, 1 on any un-allowlisted hit)
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+# ── Allowlist ────────────────────────────────────────────────────────────────
+# Each entry: <path-glob>::<extended-regex the line must match>
+# "*" as the glob means the pattern is allowed in any tracked file. That is
+# deliberate for the three sentences of the canonical key-gate block, which is
+# repeated verbatim in AGENTS.md and in all 14 SKILL.md files precisely so a
+# solo-installed skill still carries it.
+ALLOW=(
+  # 1. The canonical key-gate block. Repeated verbatim; these are its only three
+  #    lines that say "mcp". Changing the wording here fails the guard, which is
+  #    the point: one phrasing, everywhere.
+  '*::REST key required\. A Novoads MCP connector is not a substitute\.'
+  '*::That holds even when `mcp__novoads__\*` tools are connected and authenticated in'
+  '*::the session\. Never call `mcp__novoads__\*` tools from this repo.s workflows: they'
+
+  # 2. The setup close, and its declared mirror in AGENTS.md. These lines BAN
+  #    connector talk in the final message; #46 and the 2026-08-08 failure.
+  'README.md::entire closing message . no git mechanics, no MCP or connector notes, no'
+  'AGENTS.md::existed, MCP/connector notes, untracked directories'
+  'AGENTS.md::\*\*A connected Novoads MCP connector does not replace the key and must not be'
+  'scripts/setup\.sh::and an MCP digression \(2026-08-08\)\.'
+  'scripts/setup\.sh::no file inventories, no MCP or connector notes, no'
+  'scripts/setup\.sh::A connected Novoads MCP connector does NOT replace the key and must not be'
+
+  # 3. AGENTS.md's explanation of why the rule exists, and where it is enforced.
+  'AGENTS.md::connector .has its own auth., and generated over it'
+  'AGENTS.md::`scripts/check-no-mcp\.sh` is the ratchet that'
+
+  # 4. The ONE survivor: a subordinated redirect for environments that cannot run
+  #    this repo at all (claude.ai web, Windows with no WSL and no Git Bash).
+  'README.md::connector at \*\*\[novoads\.ai/mcp\]'
+  'README.md::and it quotes costs in different units\. \*\*The skills in this repo never use it\.\*\*'
+
+  # 5. The anti-MCP evals. E0/C0 are the original ratchet; E0b/C0b are the
+  #    connector-decoy variants. They describe the failure in order to test for it.
+  'skills/novoads-(pixar|claymation)-ad/evals\.md::(E0|C0|E0b|C0b) . it runs on|connector decoy'
+  'skills/novoads-(pixar|claymation)-ad/evals\.md::(no MCP connector configured|Novoads MCP server|MCP surface|`mcp__novoads__\*`|via MCP so we.re fine)'
+  'skills/novoads-(pixar|claymation)-ad/evals\.md::this skill was MCP-native until the REST port'
+  'skills/novoads-claymation-ad/evals\.md::A reader with a key and no connector must still be able to'
+
+  # 6. The SessionStart banner. It states the rule to the agent at the one moment
+  #    it can still be acted on: key missing, before the first request.
+  'shared/scripts/check-context\.sh::session in exactly this state decided the connected connector'
+  'shared/scripts/check-context\.sh::AGENTS\.md, and a SessionStart hook.s stdout is the channel that always does\.'
+  'shared/scripts/check-context\.sh::printf .  . AGENT: a connected Novoads MCP connector is NOT a substitute'
+  'shared/scripts/check-context\.sh::printf .    Never call mcp__novoads__\* tools from this repo\.'
+
+  # 7. This script and the workflow that runs it.
+  'scripts/check-no-mcp\.sh::.*'
+  '\.github/workflows/guard\.yml::.*'
+)
+
+# ── Scan ─────────────────────────────────────────────────────────────────────
+violations=0
+allowed=0
+
+while IFS= read -r hit; do
+  file="${hit%%:*}"
+  rest="${hit#*:}"
+  lineno="${rest%%:*}"
+  content="${rest#*:}"
+
+  ok=0
+  for entry in "${ALLOW[@]}"; do
+    glob="${entry%%::*}"
+    pattern="${entry#*::}"
+    if [[ "$glob" == "*" ]] || [[ "$file" =~ ^${glob}$ ]]; then
+      if [[ "$content" =~ $pattern ]]; then
+        ok=1
+        break
+      fi
+    fi
+  done
+
+  if [[ $ok -eq 1 ]]; then
+    allowed=$(( allowed + 1 ))
+  else
+    if [[ $violations -eq 0 ]]; then
+      echo "FAIL: un-allowlisted MCP mention." >&2
+      echo "" >&2
+      echo "This repo runs one executable path: REST + NOVOADS_API_KEY. If you are" >&2
+      echo "documenting a capability, point at its /v1 endpoint. If you are stating" >&2
+      echo "the rule that bans the connector, use the canonical block verbatim (see" >&2
+      echo "AGENTS.md, 'The key is the only executable path') so it matches the" >&2
+      echo "allowlist in this script." >&2
+      echo "" >&2
+    fi
+    echo "  $file:$lineno: $content" >&2
+    violations=$(( violations + 1 ))
+  fi
+done < <(git grep -in -e mcp -- . || true)
+
+if [[ $violations -gt 0 ]]; then
+  echo "" >&2
+  echo "$violations un-allowlisted mention(s); $allowed allowlisted." >&2
+  exit 1
+fi
+
+echo "OK: no un-allowlisted MCP mentions ($allowed allowlisted)."
