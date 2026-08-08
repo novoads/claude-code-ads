@@ -8,12 +8,14 @@ If `.env` or `MASTER_CONTEXT.md` do not exist, tell the user to run `./scripts/s
 
 When the session IS the setup ("help me set this up"), setup is the whole job and the
 final report is SHORT — the few sentences a non-developer wants, not an engineering log.
-One or two status lines, then this close, verbatim:
+`./scripts/setup.sh` run without a TTY prints this same close between
+`FINAL MESSAGE START` / `END` markers; relay that block verbatim. The script and the
+template below are mirrors — change them together. One or two status lines, then:
 
 > Setup's done — your key works.
 > *(or, when the key is missing:)* One step left, the only one I can't do: create an API
-> key at <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`, then
-> I'll verify it.
+> key at <https://novoads.ai/dashboard/settings?tab=api>, paste it into `.env`, and tell
+> me — I'll verify it. *(No account yet? The [$1 trial](https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack).)*
 >
 > **What you can ask for now:**
 > - "Make a UGC video ad for my product" — Seedance 2.0/2.5, Veo 3.1, Sora 2
