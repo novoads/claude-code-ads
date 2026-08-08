@@ -35,6 +35,16 @@ brand's rather than somebody else's.
 - **Check:** `./scripts/check-novoads-env.sh`
 - **Never** print API keys, commit `.env`, or paste a key into `MASTER_CONTEXT.md`.
 
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
 A `401` means the key is wrong, revoked, or from another account. A `403` with
 `error.details.reason` of `plan_required` or `subscription_inactive` means the key is fine and
 the account has no live subscription. Different problems, different fixes — say which one it is.
@@ -45,14 +55,13 @@ The entry offer is a **$1 trial**. Never call it free.
 **If this deployment does not offer sweeps yet.** The endpoint is behind a flag that is off by
 default. With it off, `POST /v1/competitor-ads` and a `kind: "competitor-ads"` estimate both
 answer **`400 invalid_input`**, and the message names what the API *does* offer — it is not a
-`404`, and the path existing is not evidence it is enabled. On the connector the tool
-`find_competitor_ads` is simply absent from the tool list. Read that as "this deployment does not
+`404`, and the path existing is not evidence it is enabled. Read that as "this deployment does not
 sell sweeps yet", say so plainly, and stop. Do not retry it, do not work around it with a
 browser, and do not treat the 400 as a body you got wrong.
 
-**On the MCP connector**, the same sweep is the tool `find_competitor_ads`, and `estimate_cost`
-carries the same `competitor-ads` kind. Every judgement below applies unchanged; only the
-transport differs.
+`POST /v1/competitor-ads` is the only sweep this skill runs. Verified live 2026-08-08 against
+spec `2.19.0`: `HTTP 200`, ads returned, `creditsCharged: 0.2`, matching a
+`{"kind":"competitor-ads"}` estimate taken in the same session.
 
 ## Golden rules
 
@@ -415,7 +424,7 @@ nowhere, and hand over the file paths.
 
 ## Where the browser version went
 
-This skill used to drive the Chrome MCP: open the Ad Library in a tab, run an in-page extractor,
+This skill used to drive browser automation: open the Ad Library in a tab, run an in-page extractor,
 and download through the tab's own credentials. That version is retired. Its `extract.js` and
 `collect.sh` remain in the Novoads repo's git history if anyone ever needs them, and the whole
 class of failures they carried — DOM drift, Chrome silently swallowing repeated downloads, a

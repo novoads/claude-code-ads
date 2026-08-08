@@ -37,12 +37,12 @@ Novoads for Claude Code; it is not affiliated with or endorsed by Anthropic.*
 
 ## Prerequisites
 
-**None, if you use the MCP connector.** Add the Novoads connector to Claude
-(see [novoads.ai/mcp](https://novoads.ai/mcp)) and skip this whole section:
-nothing to clone, nothing to install, and it works on Windows. The repo path
-below is for people who want the full skill pack in their editor.
+**A Novoads API key, and a shell.** The key is not optional and nothing in this
+repo substitutes for it: every skill here runs one executable path, `curl`
+against `https://api.novoads.ai/v1` with `NOVOADS_API_KEY` from `.env`. Create
+one at [novoads.ai/dashboard/settings?tab=api](https://novoads.ai/dashboard/settings?tab=api).
 
-For the repo path, the core workflow (upload a photo, price it, generate a
+Beyond the key, the core workflow (upload a photo, price it, generate a
 video or an image, poll, download) is plain HTTP driven by your agent.
 **`curl` and `jq` are enough**, and both are already on most machines. Your
 first ad needs nothing from the optional table.
@@ -67,8 +67,9 @@ here blocks your first ad:
 | **Meta publishing deps** | publish finished creatives to the Meta Marketing API (`meta-ad-builder`) | `pip install -r shared/skills/meta-ad-builder/scripts/requirements.txt` |
 | **Node.js + `whisper`** | use the manual caption path instead of `POST /v1/captions`: a style outside the 30 presets, or hand-editing the wording before burn-in | `brew install node`; `pip install openai-whisper` plus a model download (the binary alone returns an EMPTY transcript, not an error) |
 
-Linux: `apt install curl jq ffmpeg python3`. Windows: use the MCP connector,
-or WSL2 for the shell scripts.
+Linux: `apt install curl jq ffmpeg python3`. Windows: **WSL2** or **Git Bash**;
+the skills here are shell scripts and `curl` calls, so they need a POSIX shell.
+No shell at all? See *Environments that cannot run this repo* at the bottom.
 
 ## Get started (5 minutes)
 
@@ -420,8 +421,15 @@ gitignored. The `SessionStart` hook runs it automatically when Claude Code opens
 - **[docs.novoads.ai](https://docs.novoads.ai)** — the full API reference (Scalar).
 - **[`GET /v1/openapi.json`](https://api.novoads.ai/v1/openapi.json)** — the machine-readable spec.
   Public, no key needed, and **the authority** whenever a file in this repo disagrees with it.
-- **[novoads.ai/mcp](https://novoads.ai/mcp)** — the MCP connector, for tools that speak MCP rather
-  than HTTP. Ad analysis (`analyze_ad`) lives there and is not on the REST API.
+
+## Environments that cannot run this repo
+
+Everything above needs a POSIX shell, `curl`, and a key in `.env`. If you have none of that
+(claude.ai on the web, or Windows with no WSL and no Git Bash), Novoads also runs a hosted
+connector at **[novoads.ai/mcp](https://novoads.ai/mcp)**. It is a **separate surface**, not a
+way to run this pack: it carries none of the skills, prompt libraries or formulas in this repo,
+and it quotes costs in different units. **The skills in this repo never use it.** They stop and
+ask for the API key instead, even in a session where the connector is already connected.
 
 ## Vendor prompting guides
 

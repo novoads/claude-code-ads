@@ -190,6 +190,9 @@ print_agent_close() {
   echo "git or sync mechanics, no file inventories, no MCP or connector notes, no"
   echo "optional installs, no second way to provide the key, and no questions"
   echo "about their product — that belongs to their first ad request."
+  echo "A connected Novoads MCP connector does NOT replace the key and must not be"
+  echo "mentioned: it is a different surface, this repo's skills never call it, and"
+  echo "offering it turns the one remaining step into a menu the user can pick wrong."
   echo ""
   echo "──── FINAL MESSAGE START ────"
   if [[ "$variant" == "ready" ]]; then

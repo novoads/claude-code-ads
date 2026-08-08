@@ -44,6 +44,16 @@ skill's `reference.md` is the authority.
   - `examples/` — real ad screenshots, comparison material
   - `style/` — example thumbnails the user wants to match aesthetically
 
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
 If references are missing or the user pastes images in chat instead of saving them, **stop and
 ask the user to drop the actual files into a project folder** (e.g. `references/youtube thumbnail/`).
 Chat paste ≠ file on disk.

@@ -26,7 +26,13 @@ It reads exactly like a revoked key or a dead subscription and is **neither**. T
 
 **The fix is the client, not the credential.** Use `curl`, as every example in this repo does. If you must call from Python, send a browser-like `User-Agent` — the default is the whole problem. Do not "fix" this by regenerating a key, checking the subscription, or telling the user their plan lapsed.
 
-Ad analysis (reading an existing ad into a structured hook, beats, casting and layout breakdown) is **not** on this API. It lives on the [MCP connector](https://novoads.ai/mcp) as `analyze_ad`. That is deliberate, not a gap to route around.
+### Ad analysis is on this API now
+
+Reading an existing ad into a structured hook, beats, casting and layout breakdown is **`POST /v1/analyses`** (spec `2.19.0`, verified live 2026-08-08). It is synchronous, the breakdown comes back in the response body, and there is no `jobId` to poll. The fee is **flat: 1 credit per call**, whatever comes back, priced through `POST /v1/estimates` with `{"kind":"analysis"}` like every other spend.
+
+That fee is why it is never the default. Frames plus a transcript on the user's own machine cost nothing and read the whole runtime; the hosted call is what you reach for when there is no ffmpeg, when the read has to be structured rather than prose, or when the frame-by-frame pass has already failed. Offer it as the paid alternative, priced first, and let the user choose.
+
+Older copies of this file said analysis was deliberately absent here. That stopped being true when `/analyses` shipped.
 
 ## Endpoints
 
@@ -39,6 +45,8 @@ Ad analysis (reading an existing ad into a structured hook, beats, casting and l
 | `POST` | `/music` | Generate a music bed from a prompt. `202`, charged, asynchronous. Returns **two** tracks. |
 | `POST` | `/captions` | Burn subtitles into a generated or uploaded video. `202`, charged, asynchronous. |
 | `POST` | `/transcripts` | The words of a video with their timings. **`200`, charged, SYNCHRONOUS — the transcript is in the response.** |
+| `POST` | `/analyses` | Read an uploaded ad (video or still) into a structured breakdown. **`200`, charged, SYNCHRONOUS.** Flat 1 credit. |
+| `POST` | `/competitor-ads` | Sweep a brand's live ads out of Meta's Ad Library. **`200`, charged, SYNCHRONOUS.** Behind a per-deployment flag. |
 | `POST` | `/videos/{jobId}/captions` | Same operation, source in the path. Generated videos only. |
 | `GET` | `/caption-presets` | The 30 caption styles, with tier and per-minute rate. |
 | `GET` | `/generations` | List jobs, filterable and paginated. |
@@ -76,7 +84,7 @@ Response `201`:
 
 **`Content-Type` and `Content-Length` are both signed into the URL.** If either differs from what was returned, storage rejects the PUT with a 403 that looks like an auth failure and is not one. `image/jpeg; charset=utf-8` is the classic way to lose an hour here. Measure the file, do not estimate it.
 
-**The `assetId` is durable and reusable, without limit.** It is the storage key itself, resolution is a stateless check plus a fresh presign on every call, and nothing consumes it: the same id works on call one and call one hundred, from `startImageAssetId`, from `referenceAssetIds`, and from the MCP tool. Upload the product photo once and reuse it across every iteration and every model. The **900 second expiry belongs to the upload URL, not to the asset** — that is the distinction most likely to be conflated.
+**The `assetId` is durable and reusable, without limit.** It is the storage key itself, resolution is a stateless check plus a fresh presign on every call, and nothing consumes it: the same id works on call one and call one hundred, from `startImageAssetId` and from `referenceAssetIds`. Upload the product photo once and reuse it across every iteration and every model. The **900 second expiry belongs to the upload URL, not to the asset** — that is the distinction most likely to be conflated.
 
 ---
 

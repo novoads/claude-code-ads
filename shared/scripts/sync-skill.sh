@@ -34,8 +34,53 @@ sync_skills_from() {
       rm -rf "$dest"
       mkdir -p "$(dirname "$dest")"
       cp -R "$skill_path" "$dest"
+      # Provenance, so prune_orphans below can tell this copy from a skill the
+      # user hand-placed in the same directory.
+      : > "$dest/.synced-from-pack"
     done
     echo "Synced $skill_name skill to .claude/skills and .cursor/skills"
+  done
+}
+
+# Delete synced skills whose source is gone. Copy-only sync means a rename leaves
+# BOTH names installed, and the stale one keeps whatever the source said before
+# the change: after #49 renamed the two storyboard skills, every machine that had
+# synced before still had `novoads-pixar-storyboard-ad` in `.claude/skills/`,
+# carrying prose the repo had already corrected. The mirrors are gitignored, so
+# no diff and no grep over tracked files can see it, and `.claude/skills/` is what
+# the editor actually loads.
+#
+# Only directories THIS script wrote are removed, identified by the marker file
+# it drops on every sync. A skill someone hand-placed in .claude/skills/ has no
+# marker and is left alone. RETIRED covers the gap the marker cannot: names that
+# went stale before the marker existed, so an install that predates this change
+# still gets cleaned. Entries can be dropped once nobody is syncing from a
+# pre-marker checkout.
+MARKER=".synced-from-pack"
+RETIRED=(novoads-pixar-storyboard-ad novoads-claymation-storyboard-ad)
+
+prune_orphans() {
+  local dest_root="$1"
+  [[ -d "$dest_root" ]] || return 0
+  for installed in "$dest_root"/*/; do
+    [[ -d "$installed" ]] || continue
+    local name reason=""
+    name=$(basename "$installed")
+    # Still a live source? Keep it.
+    [[ -f "$ROOT/skills/$name/SKILL.md" || -f "$ROOT/shared/skills/$name/SKILL.md" ]] && continue
+
+    if [[ -f "$installed/$MARKER" ]]; then
+      reason="no longer in skills/ or shared/skills/"
+    else
+      for retired in "${RETIRED[@]}"; do
+        [[ "$name" == "$retired" ]] && reason="retired from this pack" && break
+      done
+    fi
+
+    if [[ -n "$reason" ]]; then
+      rm -rf "$installed"
+      echo "Removed $name — $reason"
+    fi
   done
 }
 
@@ -46,3 +91,5 @@ fi
 
 sync_skills_from "$ROOT/skills"
 sync_skills_from "$ROOT/shared/skills"
+prune_orphans "$ROOT/.claude/skills"
+prune_orphans "$ROOT/.cursor/skills"

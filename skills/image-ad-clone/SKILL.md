@@ -154,6 +154,16 @@ becomes at the provider.
 - Optional: `PRODUCT_ID` in `.env`. Omit it and jobs land in your default product; `productId` is organizational only and does not influence what is generated.
 - Python 3.12+.
 
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
 The generator skills are **not** required to run a clone. They're where the finished template
 gets used afterwards.
 

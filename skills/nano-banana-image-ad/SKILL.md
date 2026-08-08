@@ -54,6 +54,16 @@ concurrency, the upload contract — the `novoads-api` skill's `reference.md` is
 - Optional: `PRODUCT_ID` in `.env` so generated assets are filed under a specific product. Omit it and the job lands in your default product. `productId` is **organizational only** — it does not influence what is generated.
 - Reference images on local disk (PNG/JPG/JPEG/WEBP). The script handles the upload flow internally.
 
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
 ## Configuration
 
 - **Base URL:** `https://api.novoads.ai` (or `NOVOADS_BASE_URL`). That is the **host only** — callers append `/v1/...`.

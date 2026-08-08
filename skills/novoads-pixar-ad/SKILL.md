@@ -53,6 +53,16 @@ file names the endpoint and the fields that matter to a beat.
 3. **ffmpeg on your machine.** This is the one hard local dependency: the
    assembly happens here, not on the server. `ffmpeg -version` before you start.
 
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
 A `401` is a bad or revoked key. A `403` carrying `error.details.reason` of
 `plan_required` or `subscription_inactive` is a good key on an account with no
 live subscription. Say which one it is rather than "auth failed".

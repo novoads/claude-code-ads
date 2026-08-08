@@ -43,6 +43,16 @@ If the cut is still moving, wait. Remixing is cheap; re-rendering the pipeline i
 
 ## Sourcing the music
 
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
 **(a) Generated through the Novoads API — the default.** `POST /v1/music` on the
 `$NOVOADS_API_KEY` this pack already uses: no second account, no second bill. Price it
 with `POST /v1/estimates` `{"kind":"music"}` and get approval first, like every
