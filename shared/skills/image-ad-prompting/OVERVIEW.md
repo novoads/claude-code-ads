@@ -62,13 +62,26 @@ What are we advertising?
 
 ### B. Product known: the plan
 
-Do not offer a template menu, and do not ask pilot-or-everything. The full set is the
+Do not offer a template menu, and do not ask pilot-or-everything. The full library is the
 default:
 
 ```
-1) Run the full template set (recommended): every format that fits your product, one total price shown before anything generates. I make the first few, check them against your product and brand myself, and continue automatically when they read right. I stop and show you only if something is off.
-2) Have your own idea? Describe it and I will build 3 custom takes.
+1) Run the full library (recommended): every template that fits your product, one total price shown before anything renders. I check the first few myself and keep going when they read right.
+2) Want it tighter? I pick the strongest 8 to 12 for your product, spanning every ad family, and name each pick in the plan.
+3) Have your own idea? Describe it and I will build 3 custom takes.
 ```
+
+**The full library spans every generator skill.** Templates routed to different engines
+are one plan with one total, never a deferred second pass. Observed 2026-08-08: a run
+scoped "the full set" to the one engine its own skill drives, quoted 26 of 40, and parked
+the photoreal remainder behind "if you want them", which is a menu wearing a delay.
+
+Option 2 is curation, not a menu. Pick 8 to 12 with at least one from each ad family that
+fits the product (conversation/UI, comparison/data, editorial/social proof, photoreal):
+the point of a tighter first run is learning which family works for this brand, and a
+single-family pick cannot answer that. Name each pick in the plan with a half line on why
+it fits, then take ONE go for the whole set. Per-pick approval questions rebuild the menu
+this section exists to remove.
 
 The self-check inside option 1 is an **internal checkpoint, not a user decision.** Generate
 the first three to five, read them against the brief for product identity, brand voice and
