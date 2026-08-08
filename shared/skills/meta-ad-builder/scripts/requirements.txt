@@ -1,4 +1,9 @@
 # Python dependencies for the meta-ad-builder skill.
-# Install:  python3 -m pip install -r requirements.txt
+#
+# Install into a virtualenv — a bare `python3 -m pip install` fails on a
+# Homebrew python with "error: externally-managed-environment" (PEP 668):
+#   python3 -m venv .venv-meta
+#   .venv-meta/bin/python -m pip install -r requirements.txt
+# Then run the scripts with .venv-meta/bin/python.
 requests>=2.31.0
 python-dotenv>=1.0.0
