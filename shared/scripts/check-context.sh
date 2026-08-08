@@ -61,6 +61,26 @@ if [[ -d "$ROOT/.git" ]] && git -C "$ROOT" remote get-url origin >/dev/null 2>&1
   fi
 fi
 
+# ── Untracked working-tree check ─────────────────────────────────────────────
+# A session's work-product has gitignored homes (generated/, outputs/, prompts/,
+# iterations/, logs/). Anything ELSE it writes shows up in `git status` and reaches
+# the user as a diff they did not make: on 2026-08-08 a run that composed image-ad
+# prompts into a then-unignored `prompts/` surfaced in their desktop app as a
+# "+162 / Create PR" badge over ten files they never asked to commit. Those five
+# homes are ignored now — this line is for the NEXT invented directory, which no
+# .gitignore can know about in advance.
+#
+# Top-level entries only: one name however deep the tree under it, because the
+# remediation ("move it into a home or ignore it") is the same for all of them.
+# `git status --porcelain` already collapses an untracked directory to `dir/`.
+stray_paths=()
+if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+  while IFS= read -r p; do
+    [[ -n "$p" ]] && stray_paths+=("$p")
+  done < <(git -C "$ROOT" status --porcelain 2>/dev/null \
+    | sed -n 's/^?? //p' | sed 's|/.*|/|' | sort -u)
+fi
+
 # Detect which generative APIs this repo is wired for.
 apis=()
 [[ -f "$ROOT/.env.example" ]] && grep -q "NOVOADS_API_KEY" "$ROOT/.env.example" 2>/dev/null && apis+=("Novoads")
@@ -201,6 +221,17 @@ done
     else
       printf '\n   To update: git pull   (then re-run ./scripts/sync-skill.sh if skills changed)\n'
     fi
+  fi
+
+  # Informational, never a refusal — the user may have put those files there on
+  # purpose, and a session that stops over an untracked folder is worse than a
+  # stray folder.
+  if (( ${#stray_paths[@]} > 0 )); then
+    printf '\n📂 Untracked, so it will read as YOUR diff: %s\n' \
+      "$(printf '%s, ' "${stray_paths[@]}" | sed 's/, $//')"
+    printf '   Session work-product has homes: generated/, outputs/<job>/, prompts/,\n'
+    printf '   iterations/, logs/ — all gitignored. Move it into one, or add it to\n'
+    printf '   .gitignore. Nothing is blocked either way.\n'
   fi
 
   printf '─────────────────────────────────────────────────────────────────────\n\n'

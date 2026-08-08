@@ -37,6 +37,14 @@ saved. The only setup input a human owes is the API key.
 3. The first time the user asks to generate something and `MASTER_CONTEXT.md` is missing a field that request needs (default product, brand voice), ask for it then — once — and write the answer back so no future session asks again. Ask only for what the request in hand needs; a setup-only session asks for nothing. Never write a credit number into it.
 4. After material changes, add a dated entry to **MASTER_CONTEXT.md** Changelog.
 5. Before changing any stated API limit — or whenever a preflight prints `WARN(image-caps)` — run `./scripts/verify-image-caps.sh`: the standing audit that checks the repo's per-model reference caps against the live spec, exercises the scripts' refusal gates (no key, no spend), and greps for resurrected universal-cap claims.
+6. **Everything a session writes that is not repo content goes in a gitignored home, and the session leaves `git status` as clean as it found it.** The homes already exist:
+   - `generated/` — image renders
+   - `outputs/<job>/` — video downloads and the workfiles an edit needs (beat lists, stitch lists, trimmed clips)
+   - `prompts/` — prompt files you compose so a 3,000-character prompt never goes through a shell argument
+   - `iterations/` — clone rounds (`iterations/clone-<date>/<tag>/`)
+   - `logs/` — the generation log
+
+   **Never invent a new top-level directory.** A directory that is not on that list is not ignored, and the diff lands on the user: on 2026-08-08 a session composing ten image-ad prompts created `prompts/` unprompted — the right instinct, and why it is sanctioned above rather than forbidden — but nothing ignored it yet, so the next thing the user saw was a "+162 / Create PR" badge over files they never asked for. Writing into one of these five is always in scope and never needs permission. If a run genuinely needs a home that is not here, add it to `.gitignore` in the same breath as the first file you write into it.
 
 ## Cost policy
 

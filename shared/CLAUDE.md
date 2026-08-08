@@ -27,6 +27,7 @@ belongs to the first generation request, where the answer is used immediately.
 1. Read **`MASTER_CONTEXT.md`** (repo root) for brand voice, defaults, and accumulated learnings.
 2. Use the API skill in `.claude/skills/` for API calls, prompts, and polling.
 3. The first time the user asks to generate something and `MASTER_CONTEXT.md` is missing a field that request needs (default product, brand voice), ask for it then — once — and **write the answer back into `MASTER_CONTEXT.md`** so no future session asks again. A setup-only session asks for nothing. Prices are never among the fields: quote costs from a live estimate call, never from a stored number.
+4. Everything you write that is not repo content goes in a gitignored home — `generated/`, `outputs/<job>/`, `prompts/`, `iterations/`, `logs/` — never a new top-level directory, so `git status` ends as clean as it started. If the repo's root `AGENTS.md` carries the session-workspace rule ("Every session"), it is stated in full there.
 
 ## After significant changes
 

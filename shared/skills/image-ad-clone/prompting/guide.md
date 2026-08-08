@@ -160,14 +160,19 @@ Fire one generation with the original as a reference and the matched aspect rati
 ```bash
 ./skills/image-ad-clone/scripts/validate_image.py \
   --model <gpt-image-2|nano-banana-pro|reve-2.1> \
-  --prompt "$(cat /tmp/v1.prompt)" \
+  --prompt "$(cat prompts/<tag>-v1.txt)" \
   --aspect-ratio <matched_ratio> \
   --image-ref <reference_path> \
   --out iterations/clone-tmp \
   --env-file .env
 ```
 
-(Write the prompt to a temp file to avoid shell-quoting hell.) The call is synchronous and
+(Write the prompt to a file — **`prompts/<tag>-v1.txt`** — and pass it with `$(cat …)`, to avoid
+shell-quoting hell. Name the directory: `prompts/` is gitignored and is where composed prompts
+belong, so the six or so drafts Phase 5 goes through stay out of the user's `git status`. This
+line used to say "a temp file" and nothing more, and a session that took it at its word invented
+a top-level `prompts/` of its own — correct instinct, untracked directory, a diff the user had to
+explain.) The call is synchronous and
 blocks for the render, typically 60–90 seconds — there is nothing to poll. Read the generated
 image when it returns.
 
@@ -239,7 +244,7 @@ exactly what Phase 7 is trying to prove, so it is the better instrument here:
 
 ```bash
 ./skills/image-ad-clone/scripts/validate_image.py --model gpt-image-2 \
-  --prompt "$(cat /tmp/swap.prompt)" --source-image original-ad.jpg \
+  --prompt "$(cat prompts/<tag>-swap.txt)" --source-image original-ad.jpg \
   --out iterations/clone-<date>/T40/test-fill --env-file .env
 ```
 
@@ -326,8 +331,12 @@ If the save target already has T1–T42, continue with T43, T44, … Use semanti
 ## Files this skill writes to (in user space)
 
 - The configured prompt library (default: `shared/skills/image-ad-prompting/prompting/prompt-library.md`) — appended, never silently overwritten
+- `<cwd>/prompts/<tag>-*.txt` — each draft as you compose it, so `--prompt "$(cat …)"` never fights the shell
 - `<cwd>/iterations/clone-<date>/<tag>/prompt.txt` — the final validated prompt
 - `<cwd>/iterations/clone-<date>/<tag>/v1.png`, `v2.png`, … — each iteration's output
+
+Both directories are gitignored — they are the run's work-product, not repo content. Write into
+them freely and do not invent a third one; see `AGENTS.md` ("Every session").
 
 ## Dependencies
 

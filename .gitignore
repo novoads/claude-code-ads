@@ -52,3 +52,20 @@ scripts/regen-*.sh
 # Generated ad renders are the user's output, not repo content (the script's
 # default --out is ./generated). Same reasoning as logs/*.jsonl and references/.
 generated/
+
+# Prompt files a session composes. A prompt long enough to matter does not survive
+# being typed into a shell argument, and the 4,000-character cap forces several
+# rewrites before one passes — so agents reach for files here without being told.
+# Demonstrably: on 2026-08-08 a run building image ads created `prompts/` on its
+# own, wrote ten .txt files into it, and handed the user a "+162 / Create PR" badge
+# over work they never asked to commit. The directory was the right instinct; the
+# missing line here was the bug. Same reasoning as generated/ — session
+# work-product, not repo content.
+prompts/
+
+# Clone rounds: `iterations/clone-<date>/<tag>/prompt.txt`, `v1.png`, … This is the
+# image-ad-clone skill's DOCUMENTED output dir, so following that skill exactly
+# dirtied the tree the same way — the renders are the user's evidence of a template,
+# not repo content. `git add -f iterations/<path>` still commits the rare one worth
+# keeping.
+iterations/

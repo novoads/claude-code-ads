@@ -93,7 +93,7 @@ This skill has its own caller: `skills/image-ad-clone/scripts/validate_image.py`
 ```bash
 ./skills/image-ad-clone/scripts/validate_image.py \
   --model <gpt-image-2|nano-banana-pro|reve-2.1> \
-  --prompt "$(cat /tmp/v1.prompt)" \
+  --prompt "$(cat prompts/<tag>-v1.txt)" \
   --aspect-ratio <ratio> \
   --image-ref <reference.png> \
   --pin-block "<one-line product description>" \
@@ -126,7 +126,7 @@ prompt names and leaves the rest of the frame alone:
 ```bash
 ./skills/image-ad-clone/scripts/validate_image.py \
   --model gpt-image-2 \
-  --prompt "$(cat /tmp/swap.prompt)" \
+  --prompt "$(cat prompts/<tag>-swap.txt)" \
   --source-image original-ad.jpg \
   --out iterations/clone-<date>/T40/test-fill \
   --env-file .env
