@@ -167,6 +167,52 @@ print_orientation() {
   echo "─────────────────────────────────────────────────────────────────────"
 }
 
+# The same close, addressed to the AI agent driving setup — printed INSTEAD of
+# the human-facing blocks in non-interactive mode, never alongside them. Two
+# reasons it lives here and not only in AGENTS.md:
+#
+#   1. The advertised flow starts in an EMPTY directory ("<repo url> help me
+#      set this up"), so no agent-instruction file is loaded when that session
+#      begins, and nothing guarantees one is read after the clone. This
+#      script's stdout is the one channel that flow always reads — which is
+#      how a session at a commit that already carried the AGENTS.md template
+#      (#41/#42) still closed with an engineering log, a two-option key menu,
+#      and an MCP digression (2026-08-08).
+#
+#   2. An agent shown two phrasings of the same remaining step relays both as
+#      a menu. One block, one phrasing, stated as the whole message.
+#
+# Mirrors AGENTS.md "First-time setup" — change the two together.
+print_agent_close() {
+  local variant="$1"
+  echo "AGENT: the block between the markers is your ENTIRE closing message to the"
+  echo "user, verbatim — at most one short status line above it. Nothing else: no"
+  echo "git or sync mechanics, no file inventories, no MCP or connector notes, no"
+  echo "optional installs, no second way to provide the key, and no questions"
+  echo "about their product — that belongs to their first ad request."
+  echo ""
+  echo "──── FINAL MESSAGE START ────"
+  if [[ "$variant" == "ready" ]]; then
+    echo "Setup's done — your key works."
+  else
+    echo "One step left, the only one I can't do: create an API key at"
+    echo "$KEYS_URL"
+    echo "paste it into .env, and tell me — I'll verify it."
+    echo "(No account yet? The \$1 trial: $SIGNUP_URL)"
+  fi
+  echo ""
+  echo "What you can ask for now:"
+  echo "- \"Make a UGC video ad for my product\" — Seedance 2.0/2.5, Veo 3.1, Sora 2"
+  echo "- \"Make a static image ad from this photo\" — 40-template library"
+  echo "- \"Clone this ad\" plus an image of one you like"
+  echo "- Pixar or claymation story ads, YouTube thumbnails, burned-in captions, generated music"
+  echo ""
+  echo "Drop product photos into references/products/ and describe the ad you want."
+  echo "Every generation is priced by a live estimate and shown to you before"
+  echo "anything is spent."
+  echo "──── FINAL MESSAGE END ────"
+}
+
 # ── Step 1: .env ──────────────────────────────────────────────────────────────
 if [[ ! -f "$ROOT/.env" ]]; then
   cp "$ROOT/.env.example" "$ROOT/.env"
@@ -273,6 +319,10 @@ echo ""
 if grep -q "$KEY_PLACEHOLDER" "$ROOT/.env" 2>/dev/null; then
   echo "No key set in .env yet. Skipping the connectivity check."
   echo ""
+  if [[ "$INTERACTIVE" == "0" ]]; then
+    print_agent_close needs_key
+    exit 0
+  fi
   echo "── What is left for a human ─────────────────────────────────────────"
   echo "  1. Create a key at $KEYS_URL"
   echo "     No Novoads account yet? Start the \$1 trial: $SIGNUP_URL"
@@ -290,6 +340,10 @@ fi
 # error and no next step is a user who has to guess whether anything worked.
 if bash "$ROOT/scripts/check-novoads-env.sh"; then
   echo ""
+  if [[ "$INTERACTIVE" == "0" ]]; then
+    print_agent_close ready
+    exit 0
+  fi
   echo "Setup complete."
   print_orientation
   exit 0
@@ -306,4 +360,7 @@ echo "account (403 — activate a plan). Re-run ./scripts/check-novoads-env.sh a
 if [[ "$INTERACTIVE" == "1" ]]; then
   exit 1
 fi
+echo ""
+echo "AGENT: report the diagnosis above and its one fix in a sentence or two, then"
+echo "stop. No orientation, no alternatives — nothing works until the key does."
 exit 0
