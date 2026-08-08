@@ -7,7 +7,7 @@ alwaysApply: true
 
 - If `.env` or `MASTER_CONTEXT.md` do not exist, tell the user to run `./scripts/setup.sh`.
 - At the **start** of substantive work in this repo, read **MASTER_CONTEXT.md** at the repository root for brand voice, default product, and API learnings. It carries **no prices** — that is deliberate.
-- If `MASTER_CONTEXT.md` has empty fields (default product, brand voice), offer to populate them — ask the user and write the values back. Never write a credit number into it.
+- The first time the user asks to generate something and `MASTER_CONTEXT.md` is missing a field that request needs (default product, brand voice), ask for it then — once — and write the answer back so no future session asks again. A setup-only session asks for nothing: after `setup.sh`, tell the user in plain text what they can ask for (video ads, image ads, cloning an ad, thumbnails) instead of asking questions. Never write a credit number into it.
 - After **significant** changes (new workflows, verified Novoads behaviors, brand updates), append a short **dated** entry to the Changelog section in **MASTER_CONTEXT.md**.
 - For Novoads HTTP usage, prompts, and polling, follow **`.cursor/skills/novoads-api/SKILL.md`** and linked **reference.md**.
 - **Never quote a credit cost from memory.** Prices come from a live `POST /v1/estimates` in the current session, shown and approved before anything is generated. For a video where the model speaks, the spoken line is approved separately, first.

@@ -117,7 +117,9 @@ that prices come from `/v1/estimates`.
 ### 4. Ask for something
 
 Drop a product photo into `references/products/` and say what you want. The agent picks the route,
-reads the matching prompt formula, prices it, confirms the dialogue, and generates.
+reads the matching prompt formula, prices it, confirms the dialogue, and generates. The first time
+you ask for an ad it asks what your product is and saves the answer to `MASTER_CONTEXT.md`, so no
+later session asks again — setup itself never asks; the only thing setup needs from you is the key.
 
 ## What you can make
 

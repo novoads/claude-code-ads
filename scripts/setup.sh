@@ -147,6 +147,26 @@ write_key_to_env() {
   chmod 600 "$ROOT/.env" 2>/dev/null || true
 }
 
+# What the pack makes, said at the end of both successful exit paths. Setup's
+# last words used to be about files; the user's next move is an ask, so the
+# close names the asks. Plain text rather than a prompt or a menu on purpose:
+# the same block has to land in Claude Code, Cursor, and a bare terminal, and
+# setup asks a human for exactly one thing — the key, never the product. The
+# product question belongs to the first ad request (see AGENTS.md), where the
+# answer is used immediately and saved to MASTER_CONTEXT.md.
+print_orientation() {
+  echo ""
+  echo "── What you can ask for ─────────────────────────────────────────────"
+  echo "  Open this folder in Claude Code or Cursor and describe the ad:"
+  echo "    • \"Make a UGC video ad for my product\"    — Seedance, Veo 3.1, Sora 2"
+  echo "    • \"Make a static image ad from this photo\" — 40-template library"
+  echo "    • \"Clone this ad\" + an image of an ad you like"
+  echo "    • Pixar / claymation story ads, YouTube thumbnails, captions, music"
+  echo "  Drop product photos into references/products/ — the agent asks about"
+  echo "  your product the first time you ask for an ad, not before."
+  echo "─────────────────────────────────────────────────────────────────────"
+}
+
 # ── Step 1: .env ──────────────────────────────────────────────────────────────
 if [[ ! -f "$ROOT/.env" ]]; then
   cp "$ROOT/.env.example" "$ROOT/.env"
@@ -232,7 +252,8 @@ echo ""
 if [[ ! -f "$ROOT/MASTER_CONTEXT.md" ]]; then
   cp "$ROOT/MASTER_CONTEXT.template.md" "$ROOT/MASTER_CONTEXT.md"
   echo "Created MASTER_CONTEXT.md from template."
-  echo "The agent fills in your default product and brand voice on first use."
+  echo "The agent asks for your default product the first time you request an ad,"
+  echo "and saves the answer here so it never asks again."
 else
   echo "MASTER_CONTEXT.md already exists. Skipping."
 fi
@@ -261,6 +282,7 @@ if grep -q "$KEY_PLACEHOLDER" "$ROOT/.env" 2>/dev/null; then
   echo "─────────────────────────────────────────────────────────────────────"
   echo ""
   echo "Everything else is done: .env, MASTER_CONTEXT.md, and the synced skills."
+  print_orientation
   exit 0
 fi
 
@@ -268,7 +290,8 @@ fi
 # error and no next step is a user who has to guess whether anything worked.
 if bash "$ROOT/scripts/check-novoads-env.sh"; then
   echo ""
-  echo "Setup complete. Open this folder in Claude Code or Cursor to start."
+  echo "Setup complete."
+  print_orientation
   exit 0
 fi
 

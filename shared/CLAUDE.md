@@ -14,11 +14,16 @@ If `.env` does not exist, tell the user to run `./scripts/setup.sh` or walk them
 
 If `MASTER_CONTEXT.md` does not exist, copy `MASTER_CONTEXT.template.md` to `MASTER_CONTEXT.md`.
 
+When the session IS the setup, setup is the whole job: after the script runs, close with
+plain text saying what the user can now ask for (the installed skills are the list), with
+an example ask or two. Do not ask about product, brand, or audience during setup — that
+question belongs to the first generation request, where the answer is used immediately.
+
 ## Every session
 
 1. Read **`MASTER_CONTEXT.md`** (repo root) for brand voice, defaults, and accumulated learnings.
 2. Use the API skill in `.claude/skills/` for API calls, prompts, and polling.
-3. If `MASTER_CONTEXT.md` has empty fields (default product, brand voice, defaults), offer to populate them — ask the user and **write the values back into `MASTER_CONTEXT.md`** so future sessions have them. Prices are not among them: quote costs from a live estimate call, never from a stored number.
+3. The first time the user asks to generate something and `MASTER_CONTEXT.md` is missing a field that request needs (default product, brand voice), ask for it then — once — and **write the answer back into `MASTER_CONTEXT.md`** so no future session asks again. A setup-only session asks for nothing. Prices are never among the fields: quote costs from a live estimate call, never from a stored number.
 
 ## After significant changes
 

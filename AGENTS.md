@@ -6,11 +6,19 @@ This repository is set up for AI coding agents (Cursor, Claude Code, Copilot-sty
 
 If `.env` or `MASTER_CONTEXT.md` do not exist, tell the user to run `./scripts/setup.sh`.
 
+When the session IS the setup ("help me set this up"), setup is the whole job. After
+`setup.sh` runs, close with plain text saying what the user can now ask for — a UGC video
+ad, a static image ad, cloning an ad they like, Pixar/claymation story ads, YouTube
+thumbnails — with an example ask or two. Plain text, not a question or an options menu.
+Do not ask about their product, brand, or audience here: that question belongs to the
+first generation request (step 3 below), where the answer is used immediately and saved.
+The only setup input a human owes is the API key.
+
 ## Every session
 
 1. Read **[MASTER_CONTEXT.md](MASTER_CONTEXT.md)** for brand voice, default product, and accumulated learnings. It carries **no prices** — that is deliberate, see "Cost policy" below.
 2. Follow the skill at `.cursor/skills/` or `.claude/skills/` (synced from `skills/` via `scripts/sync-skill.sh`).
-3. If `MASTER_CONTEXT.md` has empty fields (default product, brand voice, defaults), offer to populate them — ask the user and write the values back so future sessions have them. Never write a credit number into it.
+3. The first time the user asks to generate something and `MASTER_CONTEXT.md` is missing a field that request needs (default product, brand voice), ask for it then — once — and write the answer back so no future session asks again. Ask only for what the request in hand needs; a setup-only session asks for nothing. Never write a credit number into it.
 4. After material changes, add a dated entry to **MASTER_CONTEXT.md** Changelog.
 5. Before changing any stated API limit — or whenever a preflight prints `WARN(image-caps)` — run `./scripts/verify-image-caps.sh`: the standing audit that checks the repo's per-model reference caps against the live spec, exercises the scripts' refusal gates (no key, no spend), and greps for resurrected universal-cap claims.
 
