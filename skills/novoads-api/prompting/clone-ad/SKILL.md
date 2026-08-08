@@ -32,9 +32,10 @@ from step 9 on is the real spend.
 
 Then `novoads-api` was installed on its own from skills.sh and the rest of the pack stayed behind.
 Everything under `skills/novoads-api/` still travels with you; what is gone is
-`shared/references/craft.md` (the doctrine step 3's transcript diff cites) and
-`shared/skills/caption-video/prompting/guide.md` (the out-of-band caption burn). Fetch either from
-`https://raw.githubusercontent.com/novoads/claude-code-ads/main/<path>`. The b-roll overlay step is
+`shared/references/craft.md` (the doctrine step 3's transcript diff cites) and the
+`caption-video` skill, which is the out-of-band caption burn and lives across
+`shared/skills/caption-video/SKILL.md` plus `shared/skills/caption-video/prompting/guide.md`. Fetch any of
+those from `https://raw.githubusercontent.com/novoads/claude-code-ads/main/<path>`. The b-roll overlay step is
 a folder of scripts rather than one file and only exists in the full pack, so reach it with
 `git clone https://github.com/novoads/claude-code-ads.git`. `scripts/check-novoads-env.sh` and
 `MASTER_CONTEXT.md` are absent too: set `NOVOADS_API_KEY` in the environment yourself, and ask the
@@ -714,7 +715,7 @@ Then:
 
 Next steps worth offering: iterate the one beat that missed rather than re-firing the whole
 set, hand the file to the `meta-ad-builder` skill to publish it as a Meta creative, or burn
-captions on out of band with `shared/skills/caption-video/prompting/guide.md` — that one
+captions on out of band with the `caption-video` skill — that one
 makes no Novoads call and costs no credits.
 
 ## Seedance 2.0 constraints that bite during a clone

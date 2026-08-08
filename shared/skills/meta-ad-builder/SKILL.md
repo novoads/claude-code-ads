@@ -3,7 +3,8 @@ name: meta-ad-builder
 description: >-
   Publish finished creatives as live Meta (Facebook/Instagram) ads via the Meta
   Marketing API, plus research and ad-copy support. Uploads an image or video,
-  builds a multi-variant TEXT_LIQUIDITY creative, and creates a PAUSED ad in an
+  builds a multi-variant creative (5 bodies / 5 titles / 3 descriptions in an
+  asset feed), and creates a PAUSED ad in an
   existing ad set. Also pulls top-performing ads (ranked by ROAS) and competitor
   ads from the Ad Library to inform copy. Use when the user asks to deploy /
   publish / launch a creative as a Meta or Facebook ad, build a Meta ad, push a
@@ -46,12 +47,40 @@ it to write AdTable/Airtable rows — that's `adtable-light`. This skill is the
 
 ## Prerequisites
 
+### The Meta app must be published (Live) — check this first
+
+**A development-mode app cannot create ad creatives.** `POST /act_*/ads` fails
+with **code 100 / subcode 1885183** ("Ads creative post was created by an app
+that is in development mode"). Every other prerequisite can be perfect and the
+deploy still cannot succeed.
+
+Allowlisting the ad account under **App settings → Advanced → Authorized ad
+account IDs** does **not** work around it — tested live on 2026-08-03 and it
+does not help. Publishing the app is the only fix: App Dashboard → toggle the
+app from *Development* to *Live*.
+
+No Graph endpoint reports app mode for a user token, so `check-meta-env.sh`
+cannot test this for you. Ask the user to confirm the app is Live before the
+first deploy against a given app.
+
+### Everything else
+
 - **Env** (in `.env` — see your repo's `.env.example`):
   - `META_ACCESS_TOKEN` (required) — long-lived token with `ads_management` scope
   - `META_AD_ACCOUNT_ID` (required) — with or without the `act_` prefix
   - `META_PAGE_ID`, `META_IG_USER_ID`, `META_PIXEL_ID` (optional defaults for deploy)
   - `META_API_VERSION` (optional, default `v23.0`)
-- **Python deps:** `python3 -m pip install -r scripts/requirements.txt`
+- **Python deps — install into a virtualenv:**
+
+  ```bash
+  python3 -m venv .venv-meta
+  .venv-meta/bin/python -m pip install -r scripts/requirements.txt
+  # then run the scripts with .venv-meta/bin/python, not bare python3
+  ```
+
+  Bare `python3 -m pip install` **fails on a Homebrew python** with
+  `error: externally-managed-environment` (PEP 668), and macOS is this repo's
+  first target. Do not suggest `--break-system-packages`; use the venv.
 - **A target ad set** that already exists. The skill deploys ads into an existing
   ad set — it does not create campaigns or ad sets. If the user needs a new ad
   set, create it in Ads Manager or via the cheatsheet §3–§4 first.
@@ -59,6 +88,9 @@ it to write AdTable/Airtable rows — that's `adtable-light`. This skill is the
   files are not accessible; ask the user for a real path.
 
 Run `bash scripts/check-meta-env.sh` to verify credentials before anything else.
+It checks the token, the `ads_management` scope, ad-account reachability and the
+Page — a token that passes `/me` but carries no ads scopes is a real failure mode
+it now catches.
 
 ## Workflow
 
@@ -84,10 +116,12 @@ Save `copy.json` somewhere under `outputs/` so it isn't committed.
 
 ### Phase 3 — Deploy
 
-**Always dry-run first** — it prints the full creative payload, makes no API calls:
+**Always dry-run first** — it prints the creative payload **in full**
+(no truncation) plus a dedicated Advantage+ enhancement section, and makes no
+API calls:
 
 ```bash
-python scripts/deploy-ad.py --dry-run \
+.venv-meta/bin/python scripts/deploy-ad.py --dry-run \
   --adset-id <AD_SET_ID> --copy-file copy.json --link <DESTINATION_URL> \
   --image path/to/creative.png
 ```
@@ -95,7 +129,7 @@ python scripts/deploy-ad.py --dry-run \
 Review the payload with the user, then deploy for real:
 
 ```bash
-python scripts/deploy-ad.py \
+.venv-meta/bin/python scripts/deploy-ad.py \
   --adset-id <AD_SET_ID> --copy-file copy.json --link <DESTINATION_URL> \
   --video clip-a.mp4 --video clip-b.mp4 --cta SIGN_UP --pixel-id <PIXEL_ID>
 ```
@@ -103,7 +137,35 @@ python scripts/deploy-ad.py \
 - `--image` / `--video` are repeatable — each becomes its own ad in the ad set.
 - Every ad is created **PAUSED**. Tell the user to review and un-pause in Meta
   Ads Manager. The skill never launches a spending ad automatically.
-- Results (ad IDs) are written to `deployment_results.json` under `OUTPUT_BASE`.
+- Results are written to `deployment_results.json` under `OUTPUT_BASE`:
+  `ads` (created), `failures` (each with the verbatim Meta error), `orphans`,
+  and a `summary` count.
+
+#### Read the exit code
+
+`deploy-ad.py` **exits 1 if any requested ad failed**, and prints each failure
+with Meta's own code / subcode / message / `fbtrace_id`. It no longer prints a
+`DONE.` line on a run that created nothing. If you are wrapping this script,
+branch on the exit code — do not parse stdout for success.
+
+#### Advantage+ enhancements and burned-in captions
+
+The dry run lists every `degrees_of_freedom_spec` enrollment Meta will apply,
+with a one-line note on what each one does to a shipped creative. Read that
+section aloud to the user before a first deploy — several enrollments **modify
+the creative**, and the defaults are opt-in.
+
+By default the script sets `--burned-in-captions`, which forces to `OPT_OUT`
+the enrollments that would deface a creative with text baked into the pixels
+(`video_uncrop`, `video_auto_crop`, `video_filtering`, `creative_stickers`,
+`reveal_details_over_time`, `show_summary`, `show_destination_blurbs`, and the
+`text_extraction` customizations) plus `text_translation`, which rewrites copy
+the user approved verbatim. Everything this workspace produces carries burned-in
+text — captions on video from `caption-video`, typography on images from the
+image-ad skills — so this is the right default here.
+
+Pass `--no-burned-in-captions` to send Meta's full enrollment instead. Say so
+explicitly when you do; it is the user's creative that gets modified.
 
 ## Decision tree
 
@@ -128,11 +190,41 @@ python scripts/deploy-ad.py \
 
 ## Quirks and pitfalls
 
+- **App in development mode → code 100 / subcode 1885183.** See Prerequisites.
+  This is the single most likely reason a first deploy fails.
 - **Video processing is async.** `deploy-ad.py` polls the uploaded video until
   Meta finishes processing before creating the ad — a video deploy can take a
   few minutes. See [deploy-patterns.md](reference/deploy-patterns.md).
 - **Transient `OAuthException` (code 2).** Retried automatically with backoff.
 - **`act_` prefix** is added automatically if missing from `META_AD_ACCOUNT_ID`.
+- **A failed run can leave uploaded assets behind.** The video/image upload
+  succeeds before ad creation is attempted, so a rejected ad orphans the asset.
+  `deploy-ad.py` prints every orphan with a ready-to-run `curl` cleanup line and
+  records them under `orphans` in `deployment_results.json`. It does **not**
+  delete anything automatically — deleting objects in a live ad account is the
+  user's call. Offer the cleanup commands; don't run them unprompted.
+- **`link_urls` is sent for image ads only — this is deliberate, not a bug.**
+  `build_image_creative` puts `link_urls` in `asset_feed_spec`;
+  `build_video_creative` does not. A live video deploy (2026-08-03) confirmed the
+  ad resolves its destination correctly without it, carrying the link through
+  `object_story_spec.video_data.call_to_action` instead. Leave the asymmetry
+  alone; it is verified working.
+- **`TEXT_LIQUIDITY` does not read back on the live creative.** The skill sends
+  `text_transformation_types: ["TEXT_LIQUIDITY"]` and
+  `degrees_of_freedom_type: "USER_ENROLLED"`, but reading the created creative
+  back does not show either field (verified 2026-08-03). The functional part
+  *does* persist — the 5/5/3 asset feed was present on the live ad. **Verify by
+  asset feed, not by flag:**
+
+  ```bash
+  curl -s -G "https://graph.facebook.com/v23.0/<AD_ID>" \
+    --data-urlencode "fields=creative{asset_feed_spec,degrees_of_freedom_spec}" \
+    --data-urlencode "access_token=$META_ACCESS_TOKEN" | python3 -m json.tool
+  ```
+
+  Confirm `asset_feed_spec.bodies/titles/descriptions` carry the counts you sent.
+  Do not claim multi-variant text rotation is enabled on the basis of the flag
+  you sent — say what read back.
 - **Account-specific data stays out of git.** All output routes through
   `outputs/` (gitignored): ad IDs, pulled spend/revenue, competitor data.
 - **Special Ad Categories** (credit, employment, housing, social issues) change

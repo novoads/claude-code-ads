@@ -82,7 +82,7 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | A different look on a still, or a second opinion on one | `reve-2.1` |
 | A Pixar-style 3D animated ad | read `shared/skills/pixar-style-ad/prompting/guide.md`: storyboard on `gpt-image-2`, animate each beat on `seedance-2.0` + `startImageAssetId`, stitch with ffmpeg. Runnable scripts in `shared/skills/pixar-style-ad/scripts/`. Nothing on the API rejects, checks or comments on a stylized prompt — the guide is the only thing that will tell you whether the beat works |
 | A claymation / stop-motion clay ad | read `skills/novoads-claymation-storyboard-ad/SKILL.md`, same shape over 8 beats |
-| Captions burned onto a finished MP4 | **Two real paths — offer both.** `POST /v1/captions`: one call, 30 preset styles, no local dependencies, **costs credits** and returns only a new MP4 (never an SRT or the caption text). Or `shared/skills/caption-video/prompting/guide.md`: **free**, any style you can write, and it gives you a Whisper transcript you can hand-correct — but needs Whisper, HyperFrames and an ffmpeg chroma-key composite locally. See *Burned-in captions* below. A clip rendered with `audioEnabled: false` can only go the local route |
+| Captions burned onto a finished MP4 | **Two real paths — offer both.** `POST /v1/captions`: one call, 30 preset styles, no local dependencies, **costs credits** and returns only a new MP4 (never an SRT or the caption text). Or the `caption-video` skill (`shared/skills/caption-video/SKILL.md`): **free**, any style you can write, and it gives you a Whisper transcript you can hand-correct — but needs Whisper, HyperFrames and an ffmpeg alpha composite locally. See *Burned-in captions* below. A clip rendered with `audioEnabled: false` can only go the local route |
 | Meta image-ad creatives from a brief or a template | read `shared/skills/image-ad-prompting/OVERVIEW.md` first, then `chatgpt-image-ad` or `nano-banana-image-ad` |
 | To reverse-engineer an existing image ad into a reusable template | the `image-ad-clone` skill |
 | A YouTube thumbnail | the `generate-youtube-thumbnail` skill |
@@ -630,10 +630,10 @@ curl -sS -X POST https://api.novoads.ai/v1/estimates \
 
 Both exist. Present both and let the user pick; do not silently default.
 
-| | `POST /v1/captions` | `shared/skills/caption-video` |
+| | `POST /v1/captions` | the `caption-video` skill |
 |---|---|---|
 | Cost | **Costs credits** (gate 2 applies) | **Free** |
-| Setup | None — one API call | **Heavy**: Whisper, HyperFrames, a working Node/npm project, and an ffmpeg chroma-key composite. Homebrew ffmpeg ships without `libass`, which is the trap the local guide exists to route around |
+| Setup | None — one API call | **Heavy**: Whisper, HyperFrames, a working Node/npm project, and an ffmpeg alpha composite. Homebrew ffmpeg ships without `libass`, which is the trap the local guide exists to route around |
 | Styles | **30 presets**, fixed | Anything you can write in HTML/CSS/GSAP |
 | Output | A new MP4, subtitles burned in | A new MP4, subtitles burned in |
 | Transcript / SRT | **Not from this endpoint** — but `POST /v1/transcripts` returns text, word timings and an SRT for 0.1 credits/minute, no install | **Yes** — Whisper gives word-level timings you keep and can re-use |
