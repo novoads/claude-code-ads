@@ -142,14 +142,24 @@ Structure the prompt with these sections (omit any that don't apply):
 - Composition / spacing rules
 - **Explicit chrome exclusion** — name what NOT to render (the validator's no-chrome suffix is a safety net; the prompt should also explicitly exclude)
 
-**Draft v1 to ~2,425 characters — the suffixes take the rest.** The prompt ceiling is 4,000
-characters, and the three always-on safety suffixes consume 1,575 of it before your first word,
-so 2,425 is the real budget on default flags. Phase 2 asks you to be exhaustive and a faithful
-six-panel clone genuinely wants ~3,000, which is why a v1 that ignores this number overflows
-on the first attempt — that is the default outcome, not user error. The validator checks the
-assembled prompt locally, fails before spending anything, and prints the exact budget for the
-flags you passed (`--allow-chrome` and `--no-safe-zone` each buy some of it back). Aim under
-2,425 anyway: a v1 that only just fits leaves no room for Phase 5's refinements.
+**Your budget depends on the model you chose in Phase 1.** The prompt ceiling is per model, and
+the three always-on safety suffixes consume 1,575 characters of it before your first word:
+
+| `--model` | prompt ceiling | your v1 budget on default flags |
+|---|---|---|
+| `gpt-image-2` | 32,000 | 30,425 |
+| `nano-banana-pro` | 50,000 | 48,425 |
+| `reve-2.1` | 4,000 | **2,425** |
+
+Deployed spec 2.16.0, verified 2026-08-08. On the first two, be as exhaustive as Phase 2 asks
+and do not budget at all: a faithful six-panel clone wants roughly 3,000 characters, which is a
+tenth of the room. On `reve-2.1` that same clone overflows on the first attempt, and that is the
+expected outcome rather than user error. The validator checks the assembled prompt locally,
+fails before spending anything, prints the exact budget for the flags you passed
+(`--allow-chrome` and `--no-safe-zone` each buy some of it back), and names the roomier models.
+On `reve-2.1`, aim under 2,425 anyway: a v1 that only just fits leaves no room for Phase 5's
+refinements. Switching models is the other repair, and usually the better one, since trimming
+costs the clone fidelity the run exists to measure.
 
 Show the v1 prompt to the user, then price the run (see **Cost** above) and get the go-ahead.
 

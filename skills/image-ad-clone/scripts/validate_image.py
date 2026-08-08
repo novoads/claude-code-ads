@@ -46,17 +46,23 @@ from pathlib import Path
 BASE_URL_DEFAULT = "https://api.novoads.ai"  # host only; this script appends /v1/...
 # Each model carries its own typed grid in the API schema, and the schemas are strict —
 # an aspect ratio from the wrong grid is a 400 before anything is charged. The same
-# goes for max_refs: referenceAssetIds maxItems is PER MODEL, not one number.
-# Verified against spec 2.7.0 on 2026-08-04 — re-check: ./scripts/verify-image-caps.sh
+# goes for max_refs (referenceAssetIds maxItems) and max_prompt_chars (prompt
+# maxLength): both are PER MODEL, neither is one number across the set. The prompt
+# ceilings stopped being uniform in spec 2.16.0, which raised gpt-image-2 to 32,000
+# and nano-banana-pro to 50,000 while reve-2.1 kept 4,000.
+#
+# This table is the whole file's source for every cap below. Read off the live
+# per-model request schemas at /v1/openapi.json and verified against deployed spec
+# 2.16.0 on 2026-08-08 — re-check: ./scripts/verify-image-caps.sh
 _WIDE_RATIOS = {"1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"}
 MODELS = {
-    "gpt-image-2":     {"ratios": {"1:1", "4:5", "2:3", "9:16", "16:9", "21:9"}, "max_refs": 4},
-    "nano-banana-pro": {"ratios": _WIDE_RATIOS, "max_refs": 14},
-    "reve-2.1":        {"ratios": _WIDE_RATIOS, "max_refs": 8},
+    "gpt-image-2":     {"ratios": {"1:1", "4:5", "2:3", "9:16", "16:9", "21:9"},
+                        "max_refs": 4,  "max_prompt_chars": 32000},
+    "nano-banana-pro": {"ratios": _WIDE_RATIOS, "max_refs": 14, "max_prompt_chars": 50000},
+    "reve-2.1":        {"ratios": _WIDE_RATIOS, "max_refs": 8,  "max_prompt_chars": 4000},
 }
 ALL_RATIOS = set().union(*(m["ratios"] for m in MODELS.values()))
 MAX_IMAGES = 4  # numImages enum: 1, 2, 3, 4
-MAX_PROMPT_CHARS = 4000  # every image model's prompt ceiling; the API 400s above it
 MIN_DIMENSION = 1024
 # The render happens inside the POST, typically 60-90s. Leave generous headroom.
 GENERATE_TIMEOUT_S = 300
@@ -552,23 +558,37 @@ def main() -> int:
     final_prompt = build_prompt(
         args.prompt, args.allow_chrome, args.no_safe_zone, args.pin_block
     )
-    if len(final_prompt) > MAX_PROMPT_CHARS:
+    max_prompt_chars = MODELS[args.model]["max_prompt_chars"]
+    if len(final_prompt) > max_prompt_chars:
         # Pre-network on purpose: the API would answer 400 and charge nothing, but
         # a refusal here also names what to cut, and it names the pin block's share
         # rather than leaving a run to trim the guard that stops invented copy.
-        overflow = len(final_prompt) - MAX_PROMPT_CHARS
+        overflow = len(final_prompt) - max_prompt_chars
         pin_chars = len(build_pin_block(args.pin_block)) if args.pin_block else 0
         suffix_chars = len(final_prompt) - len(args.prompt) - pin_chars
         pin_note = (
             f" and the pin block {pin_chars}" if pin_chars else ""
         )
+        roomier = sorted(
+            (n for n, m in MODELS.items() if m["max_prompt_chars"] > max_prompt_chars),
+            key=lambda n: MODELS[n]["max_prompt_chars"],
+        )
         log(
             f"error: prompt is {len(final_prompt)} characters after the always-on safety "
-            f"suffixes; {args.model} caps at {MAX_PROMPT_CHARS}. Trim about {overflow} "
+            f"suffixes; {args.model} caps at {max_prompt_chars}. Trim about {overflow} "
             f"characters from --prompt (the suffixes add ~{suffix_chars}{pin_note}). "
             f"Your --prompt must be <= "
-            f"{MAX_PROMPT_CHARS - suffix_chars - pin_chars} characters with the current flags."
+            f"{max_prompt_chars - suffix_chars - pin_chars} characters with the current flags."
         )
+        if roomier:
+            # The ceilings are per model, so an overflow here is not an overflow
+            # everywhere. Naming the roomier models beats trimming a prompt that
+            # the model the run actually wants would have taken whole.
+            log(
+                "note: this ceiling is this model's, not the API's. Room elsewhere: "
+                + ", ".join(f"{n} {MODELS[n]['max_prompt_chars']}" for n in roomier)
+                + ". Switch --model rather than trim, when the clone allows it."
+            )
         if pin_chars:
             log(
                 "note: trim your own copy or the pin block's product description — never the "

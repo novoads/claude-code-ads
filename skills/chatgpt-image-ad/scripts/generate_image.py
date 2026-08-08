@@ -37,11 +37,21 @@ BASE_URL_DEFAULT = "https://api.novoads.ai"  # host only; this script appends /v
 # (3:2, 3:4, 4:3, 5:4) — this model does not, and the request schema is strict.
 ALLOWED_RATIOS = {"1:1", "4:5", "2:3", "9:16", "16:9", "21:9"}
 LOCKED_MODEL = "gpt-image-2"
-# referenceAssetIds maxItems for gpt-image-2 — the caps are PER MODEL (nano-banana-pro: 14,
-# reve-2.1: 8). Verified against spec 2.7.0 on 2026-08-04 — re-check: ./scripts/verify-image-caps.sh
+# This model's two caps, both PER MODEL and neither uniform across the set. Read off
+# the live per-model request schemas at /v1/openapi.json and verified against deployed
+# spec 2.16.0 on 2026-08-08. The whole table, which ./scripts/verify-image-caps.sh
+# re-checks against the live spec for all three scripts at once:
+#
+#   model             referenceAssetIds   prompt chars
+#   gpt-image-2                       4         32,000
+#   nano-banana-pro                  14         50,000
+#   reve-2.1                          8          4,000
+#
+# 2.16.0 is what ended the single 4,000 budget: only reve-2.1 still carries it, and
+# reve-2.1 is reachable only from the image-ad-clone validator.
 MAX_REFS = 4
 MAX_IMAGES = 4  # numImages enum: 1, 2, 3, 4
-MAX_PROMPT_CHARS = 4000  # gpt-image-2 prompt ceiling; the API 400s above it
+MAX_PROMPT_CHARS = 32000  # gpt-image-2 prompt ceiling; the API 400s above it
 MIN_DIMENSION = 1024
 # The render happens inside the POST, typically 60-90s. Leave generous headroom.
 GENERATE_TIMEOUT_S = 300

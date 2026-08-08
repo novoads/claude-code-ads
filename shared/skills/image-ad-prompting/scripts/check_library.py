@@ -4,7 +4,8 @@
 Runs the mechanical half of EVALS-image-ad-prompting.md against
 `prompting/prompt-library.md` and the skills that consume it:
 
-  L1  every template + the always-on suffixes fits the 4,000-char prompt cap
+  L1  every template + the always-on suffixes fits the prompt cap of the model it
+      is sent under, which since spec 2.16.0 is a different number per model
   L1b the library publishes how many templates still have room for the pin block
   L2  no template states two different counts for the same countable element
   L3  a template whose art must be numerically true carries the approximation note
@@ -16,9 +17,10 @@ The three always-on safety suffixes are IMPORTED from the generator script rathe
 than restated here, so this file cannot drift from the script it is checking. If
 someone edits a suffix, L1's arithmetic moves with it.
 
-L1 carries a dated BASELINE of templates that already exceed the cap. They are
-grandfathered, not forgiven: the list may only shrink. A template that is not on
-it must fit, and a template on it that starts fitting fails until it is removed —
+L1 carries a dated BASELINE of templates that exceed the TIGHTEST cap on the API,
+which is reve-2.1's. They are grandfathered, not forgiven: the list may only
+shrink, and it is exact in both directions. A template that is not on it must fit
+reve-2.1, and a template on it that starts fitting fails until it is removed,
 which is how a ratchet stays a ratchet instead of becoming a suppression list.
 Nothing here edits a prompt to buy a green check; every body in this library is a
 validated artifact, and trimming one costs a re-validation render to prove the
@@ -41,9 +43,29 @@ HERE = Path(__file__).resolve().parent
 LIBRARY = HERE.parent / "prompting" / "prompt-library.md"
 REPO = HERE.parents[3]  # shared/skills/image-ad-prompting/scripts -> repo root
 
-# The model cap every image model on this API enforces. The API 400s above it,
-# before anything is charged, so an overflow costs a round trip and not credits.
-MAX_PROMPT_CHARS = 4000
+# The prompt cap PER MODEL. It stopped being one number in spec 2.16.0, which
+# raised gpt-image-2 to 32,000 and nano-banana-pro to 50,000 and left reve-2.1 on
+# the old 4,000. The API 400s above a model's own number, before anything is
+# charged, so an overflow costs a round trip and not credits.
+#
+# Verified against deployed spec 2.16.0 on 2026-08-08. The repo's one reconciler
+# for this table, which also proves the three scripts enforce it, is
+# ./scripts/verify-image-caps.sh.
+MAX_PROMPT_CHARS = {
+    "gpt-image-2": 32000,
+    "nano-banana-pro": 50000,
+    "reve-2.1": 4000,
+}
+# Templates are authored and validated against gpt-image-2 (their Model notes say
+# so), and the two generator skills that consume this file are locked to
+# gpt-image-2 and nano-banana-pro. So a body over gpt-image-2's room is a template
+# nobody can send on the default path, and that is L1's hard failure.
+DEFAULT_MODEL = "gpt-image-2"
+# reve-2.1 keeps the tight 4,000 and is reachable only from the image-ad-clone
+# validator. A body that fits gpt-image-2 but not this one is not broken, it is
+# narrower than the library implies, so L1 tracks it against an exact baseline
+# instead of failing on it.
+TIGHTEST_MODEL = "reve-2.1"
 
 # The standard pin block's invariant half — the guard clause from the library
 # header. The variable half (the product description) is budgeted separately,
@@ -52,10 +74,12 @@ PIN_GUARD_CHARS = 346
 PIN_DESCRIPTION_BUDGET = 54  # a terse product description; 400 all-in
 PIN_BLOCK_CHARS = PIN_GUARD_CHARS + PIN_DESCRIPTION_BUDGET
 
-# The library header publishes how many templates still have room for that block.
+# The library header publishes how many templates still have room for that block
+# ON THE TIGHTEST MODEL, which is the only place the answer is not "all of them".
 # It is one number in prose, and this is what stops it going stale.
 PIN_ROOM_SENTENCE = re.compile(
-    r"\*\*(\d+) of the (\d+) templates\*\* have room for the standard pin block"
+    r"\*\*(\d+) of the (\d+) templates\*\* have room for the standard pin block "
+    r"on `reve-2\.1`"
 )
 
 # Aspect ratios that exist on at least one model. A template asking for anything
@@ -65,13 +89,18 @@ KNOWN_RATIOS = {"1:1", "4:5", "2:3", "3:2", "3:4", "4:3", "5:4", "9:16", "16:9",
 REQUIRED_FIELDS = ("When to use", "Aspect ratio", "Reference image", "Variables", "Model notes")
 
 # ── L1 baseline ───────────────────────────────────────────────────────────────
-# Measured 2026-08-06 against the shipped library: three templates that the
-# generator REFUSES as written, before any brand fill and before any pin block.
-# Each value is the template's prompt-body length; the entry is grandfathered
-# only while the body is unchanged. Fixing one means trimming the body AND
-# re-rendering it to prove the trim was cosmetic — then delete the row. See
-# EVALS-image-ad-prompting.md L1.
-BASELINE_OVER_CAP = {
+# Re-measured 2026-08-08 against the shipped library: three templates that a run
+# targeting reve-2.1 is REFUSED on, before any brand fill and before any pin
+# block. Each value is the template's prompt-body length; the entry is
+# grandfathered only while the body is unchanged. Fixing one means trimming the
+# body AND re-rendering it to prove the trim was cosmetic, then deleting the row.
+# See EVALS-image-ad-prompting.md L1.
+#
+# The set did not change when spec 2.16.0 landed, but its meaning did. These were
+# three templates nobody could send anywhere; they are now three templates that
+# route to two of the three models. They fit gpt-image-2 and nano-banana-pro with
+# more than 27,000 characters to spare.
+BASELINE_OVER_TIGHTEST = {
     "T8": 2595,
     "T11": 2802,
     "T14": 2909,
@@ -227,21 +256,47 @@ def selftest() -> int:
             ok = False
     cases.append(("L2 is silent on the library as shipped", ok))
 
-    # L1 — a body one character over the cap is caught; the baseline is exact.
+    # L1 — the arithmetic matches each generator's own gate, per model. The three
+    # numbers are the point: a single figure here is the bug 2.16.0 introduced.
     suffix_chars = sum(len(s) for s in load_suffixes().values())
-    room = MAX_PROMPT_CHARS - suffix_chars
-    cases.append(("L1 arithmetic matches the generator's own gate", room == 2425))
+    room = {m: cap - suffix_chars for m, cap in MAX_PROMPT_CHARS.items()}
+    cases.append(("L1 arithmetic matches each generator's own gate",
+                  room == {"gpt-image-2": 30425,
+                           "nano-banana-pro": 48425,
+                           "reve-2.1": 2425}))
+    cases.append(("L1 caps are three distinct numbers, not one",
+                  len(set(MAX_PROMPT_CHARS.values())) == 3))
     bodies = {t["tag"]: len(t["prompt"]) for t in parse_templates(text) if t["prompt"]}
     cases.append(("L1 baseline lengths are the measured lengths",
-                  all(bodies.get(k) == v for k, v in BASELINE_OVER_CAP.items())))
-    cases.append(("L1 baseline is exactly the set over the cap",
-                  {k for k, v in bodies.items() if v > room} == set(BASELINE_OVER_CAP)))
+                  all(bodies.get(k) == v for k, v in BASELINE_OVER_TIGHTEST.items())))
+    cases.append(("L1 baseline is exactly the set over the tightest cap",
+                  {k for k, v in bodies.items() if v > room[TIGHTEST_MODEL]}
+                  == set(BASELINE_OVER_TIGHTEST)))
+    # L1 — the hard branch still fires. Nothing in the shipped library is within
+    # 27,000 characters of the default model's room any more, so proving it can
+    # fail means growing a real template past it: pad T1's body and re-parse.
+    victim = next(t for t in parse_templates(text) if t["prompt"])
+    padding = room[DEFAULT_MODEL] - len(victim["prompt"]) + 1
+    bloated = text.replace(
+        victim["prompt"], victim["prompt"] + ("\nx" * padding), 1
+    )
+    grown = {t["tag"]: len(t["prompt"]) for t in parse_templates(bloated) if t["prompt"]}
+    cases.append(("L1 catches a body over the default model's room",
+                  grown[victim["tag"]] > room[DEFAULT_MODEL]
+                  and all(v <= room[DEFAULT_MODEL] for v in bodies.values())))
 
-    # L1b — the published number moves when the library does.
+    # L1b — the published number moves when the library does, and it is the
+    # tightest model's number, which is the only one that is not "all of them".
     stated_pin = PIN_ROOM_SENTENCE.search(text)
-    measured = sum(1 for v in bodies.values() if v <= room - PIN_BLOCK_CHARS)
+    measured = sum(1 for v in bodies.values()
+                   if v <= room[TIGHTEST_MODEL] - PIN_BLOCK_CHARS)
     cases.append(("L1b header number is present and correct",
                   bool(stated_pin) and int(stated_pin.group(1)) == measured))
+    cases.append(("L1b names the model its number is about",
+                  bool(stated_pin) and TIGHTEST_MODEL in stated_pin.group(0)))
+    cases.append(("L1b would be all-of-them on the default model",
+                  sum(1 for v in bodies.values()
+                      if v <= room[DEFAULT_MODEL] - PIN_BLOCK_CHARS) == len(bodies)))
 
     # L3 — losing the limit from T38's Model notes fails. The whole paragraph has
     # to go, which is what a well-meaning "tighten the docs" edit would actually do.
@@ -298,71 +353,102 @@ def main() -> int:
     failures: list[str] = []
     notes: list[str] = []
 
-    # ── L1 — the template is usable at all ───────────────────────────────────
-    # The generator appends the suffixes and refuses above the cap, so a body
-    # over this line cannot be sent verbatim by anyone, for any brand.
-    room_bare = MAX_PROMPT_CHARS - suffix_chars
-    room_pinned = room_bare - PIN_BLOCK_CHARS
+    # ── L1 — the template is usable on the model it is sent under ────────────
+    # The generator appends the suffixes and refuses above the named model's cap.
+    # Since 2.16.0 that cap is three numbers, so "does it fit" is three answers:
+    # a body over the DEFAULT model's room is unsendable on the path the library
+    # actually routes to and fails; a body over the TIGHTEST model's room is only
+    # unsendable there, and is held to an exact baseline instead.
+    room = {m: cap - suffix_chars for m, cap in MAX_PROMPT_CHARS.items()}
+    room_default = room[DEFAULT_MODEL]
+    room_tightest = room[TIGHTEST_MODEL]
+    room_pinned = room_tightest - PIN_BLOCK_CHARS
     if args.verbose:
-        print(f"cap {MAX_PROMPT_CHARS} − suffixes {suffix_chars} = {room_bare} for a body")
-        print(f"  …minus the standard pin block ({PIN_BLOCK_CHARS}) = {room_pinned} pinned\n")
-    over_bare, over_pinned = set(), set()
+        for m in sorted(MAX_PROMPT_CHARS, key=lambda k: -MAX_PROMPT_CHARS[k]):
+            tag = (" (default)" if m == DEFAULT_MODEL
+                   else " (tightest)" if m == TIGHTEST_MODEL else "")
+            print(f"{m:<16} cap {MAX_PROMPT_CHARS[m]:>6} − suffixes {suffix_chars} "
+                  f"= {room[m]:>6} for a body{tag}")
+        print(f"  …{TIGHTEST_MODEL} minus the standard pin block ({PIN_BLOCK_CHARS}) "
+              f"= {room_pinned} pinned\n")
+    over_default, over_tightest, over_pinned = set(), set(), set()
     for t in templates:
         if t["prompt"] is None:
             failures.append(f"L1 {t['tag']} — no template prompt block to measure")
             continue
         n = len(t["prompt"])
         if args.verbose:
-            state = "OVER CAP" if n > room_bare else (
-                "no pin room" if n > room_pinned else f"{room_pinned - n} spare pinned")
+            state = "OVER EVERY CAP" if n > room_default else (
+                f"{TIGHTEST_MODEL} only: over" if n > room_tightest else (
+                    f"{TIGHTEST_MODEL} only: no pin room" if n > room_pinned
+                    else f"fits pinned everywhere ({room_pinned - n} spare on "
+                         f"{TIGHTEST_MODEL})"))
             print(f"  {t['tag']:<4} body {n:>5}  {state}")
         if n > room_pinned:
             over_pinned.add(t["tag"])
-        if n <= room_bare:
-            if t["tag"] in BASELINE_OVER_CAP:
+        if n > room_default:
+            over_default.add(t["tag"])
+            failures.append(
+                f"L1 {t['tag']} — body is {n} chars; with the always-on suffixes "
+                f"({suffix_chars}) that is {n + suffix_chars}, over {DEFAULT_MODEL}'s "
+                f"{MAX_PROMPT_CHARS[DEFAULT_MODEL]} cap by "
+                f"{n + suffix_chars - MAX_PROMPT_CHARS[DEFAULT_MODEL]}. Every generator "
+                f"refuses this template as written, for every brand. Trim it."
+            )
+            continue
+        if n <= room_tightest:
+            if t["tag"] in BASELINE_OVER_TIGHTEST:
                 failures.append(
-                    f"L1 {t['tag']} — now fits ({n} chars) but is still in BASELINE_OVER_CAP. "
-                    f"Delete the row; the baseline may only shrink."
+                    f"L1 {t['tag']} — now fits {TIGHTEST_MODEL} ({n} chars) but is still in "
+                    f"BASELINE_OVER_TIGHTEST. Delete the row; the baseline may only shrink."
                 )
             continue
-        over_bare.add(t["tag"])
-        if t["tag"] not in BASELINE_OVER_CAP:
+        over_tightest.add(t["tag"])
+        if t["tag"] not in BASELINE_OVER_TIGHTEST:
             failures.append(
-                f"L1 {t['tag']} — body is {n} chars; with the always-on suffixes ({suffix_chars}) "
-                f"that is {n + suffix_chars}, over the {MAX_PROMPT_CHARS} cap by "
-                f"{n + suffix_chars - MAX_PROMPT_CHARS}. The generator refuses this template as "
-                f"written, for every brand. Trim it, or baseline it with the reason."
+                f"L1 {t['tag']} — body is {n} chars, which fits {DEFAULT_MODEL} but is "
+                f"{n + suffix_chars - MAX_PROMPT_CHARS[TIGHTEST_MODEL]} over "
+                f"{TIGHTEST_MODEL}'s {MAX_PROMPT_CHARS[TIGHTEST_MODEL]} cap with the "
+                f"suffixes. That is a template the clone validator cannot cross-check on "
+                f"the third model. Trim it, or baseline it with the reason."
             )
-        elif BASELINE_OVER_CAP[t["tag"]] != n:
+        elif BASELINE_OVER_TIGHTEST[t["tag"]] != n:
             failures.append(
-                f"L1 {t['tag']} — body changed from the baselined {BASELINE_OVER_CAP[t['tag']]} "
-                f"to {n} chars while still over the cap. Re-measure and update the baseline."
+                f"L1 {t['tag']} — body changed from the baselined "
+                f"{BASELINE_OVER_TIGHTEST[t['tag']]} to {n} chars while still over "
+                f"{TIGHTEST_MODEL}'s cap. Re-measure and update the baseline."
             )
-    for tag in BASELINE_OVER_CAP:
+    for tag in BASELINE_OVER_TIGHTEST:
         if tag not in {t["tag"] for t in templates}:
             failures.append(f"L1 {tag} — baselined but no longer in the library; delete the row")
-    if over_bare:
+    if over_tightest and not over_default:
         notes.append(
-            f"L1: {len(over_bare)} template(s) exceed the cap as written "
-            f"({', '.join(sorted(over_bare, key=lambda s: int(s[1:])))}) — grandfathered, see EVALS L1"
+            f"L1: every template fits {DEFAULT_MODEL} and nano-banana-pro. "
+            f"{len(over_tightest)} exceed {TIGHTEST_MODEL}'s tighter cap as written "
+            f"({', '.join(sorted(over_tightest, key=lambda s: int(s[1:])))}) — "
+            f"grandfathered, see EVALS L1"
         )
 
     # ── L1b — the published pin-block headroom is the measured one ───────────
-    # Half the library is too long to carry the pin block the library itself
-    # makes mandatory. That is a fact a run needs BEFORE it writes a fill, so it
-    # is published in the header — and this is what stops the number going stale.
+    # On the tightest model, half the library is too long to carry the pin block
+    # the library itself makes mandatory. That is a fact a run needs BEFORE it
+    # writes a fill, so it is published in the header, and this is what stops the
+    # number going stale. On the other two models the answer is all of them, which
+    # is why the sentence names the model it is about.
     with_room = len(templates) - len(over_pinned)
     stated = PIN_ROOM_SENTENCE.search(LIBRARY.read_text())
     if not stated:
         failures.append(
-            f"L1b — the library header no longer states the pin-block headroom. Restore the "
-            f"sentence '**{with_room} of the {len(templates)} templates** have room for the "
-            f"standard pin block'."
+            f"L1b — the library header no longer states the pin-block headroom for "
+            f"{TIGHTEST_MODEL}. Restore the sentence '**{with_room} of the "
+            f"{len(templates)} templates** have room for the standard pin block on "
+            f"`{TIGHTEST_MODEL}`'."
         )
     elif (int(stated.group(1)), int(stated.group(2))) != (with_room, len(templates)):
         failures.append(
             f"L1b — the header says {stated.group(1)} of {stated.group(2)} templates have room "
-            f"for the standard pin block; measured {with_room} of {len(templates)}."
+            f"for the standard pin block on {TIGHTEST_MODEL}; measured {with_room} of "
+            f"{len(templates)}."
         )
 
     # ── L2 — one count per countable element ─────────────────────────────────

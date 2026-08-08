@@ -22,7 +22,10 @@ asserts the corresponding check goes red.
 
 The three always-on suffixes are **imported** from
 `skills/chatgpt-image-ad/scripts/generate_image.py` rather than restated, so the
-budget arithmetic cannot drift from the script that enforces it.
+budget arithmetic cannot drift from the script that enforces it. The per-model
+caps the arithmetic subtracts from are a table in `check_library.py`, and
+`./scripts/verify-image-caps.sh` is what reconciles every copy of that table in
+the pack against the live spec.
 
 The rest are human checks against a real run. Do them before publishing a
 template.
@@ -39,17 +42,39 @@ first. A template that reads as 2,900 characters is a 4,484-character request.
 The API answers `400` and the script refuses before the network, so this costs a
 round trip rather than credits, but a template nobody can send is not a template.
 
-**Check:** every body ≤ **2,425** characters (4,000 − 1,575). Automated.
+**The cap it will be sent under is per model.** Deployed spec 2.16.0 (verified
+2026-08-08) split what had been a single 4,000 into three, so a body's room is
+its model's cap minus 1,575:
 
-**Three templates fail this today and are grandfathered in `BASELINE_OVER_CAP`:
-T8 (+170), T11 (+377), T14 (+484).** They are refused as written, for every
-brand. They have not simply been shortened because **every body in this library
-is a validated artifact** — the text is worth what it is worth because someone
-round-tripped it through a model and looked at the output. Trimming one to buy a
-green check, without the credits to re-render and confirm the trim was cosmetic,
-degrades the library to satisfy its own test. So the baseline records the debt
-instead, and it may only shrink: a template that starts fitting fails until its
-row is deleted, and a new template that overflows fails immediately.
+| model | cap | body room | reachable from |
+|---|---|---|---|
+| `gpt-image-2` | 32,000 | 30,425 | `chatgpt-image-ad`, `image-ad-clone` |
+| `nano-banana-pro` | 50,000 | 48,425 | `nano-banana-image-ad`, `image-ad-clone` |
+| `reve-2.1` | 4,000 | **2,425** | `image-ad-clone` only |
+
+**Check, two tiers. Automated.** A body over **30,425** fails: templates are
+authored and validated on `gpt-image-2`, so a body no generator can send is a
+broken template. Nothing in the library is within 27,000 characters of that line
+today. A body over **2,425** is tracked instead, because it is refused only on
+`reve-2.1`, which no production run reaches.
+
+**Three templates are over the `reve-2.1` line and grandfathered in
+`BASELINE_OVER_TIGHTEST`: T8 (+170), T11 (+377), T14 (+484).** The set did not
+change when 2.16.0 landed, but its meaning did: these were three templates nobody
+could send anywhere, and they are now three templates that route to two of the
+three models and cannot be cross-checked on the third. They have not simply been
+shortened because **every body in this library is a validated artifact** — the
+text is worth what it is worth because someone round-tripped it through a model
+and looked at the output. Trimming one to buy a green check, without the credits
+to re-render and confirm the trim was cosmetic, degrades the library to satisfy
+its own test. So the baseline records the debt instead, and it may only shrink: a
+template that starts fitting fails until its row is deleted, and a new template
+that overflows fails immediately.
+
+**What 2.16.0 does not fix:** the tail of this eval is now about a cross-model
+cross-check, not about production. If the pack ever routes a production run to
+`reve-2.1`, the 2,425 line is a hard failure again and the baseline is real debt
+rather than a note.
 
 The trim itself is not hard when someone funds it. T11 and T14 both repeat
 constraints their own `**Note:**` says the suffixes already enforce — T11 states
@@ -65,8 +90,11 @@ block — removes the guard that stops the model inventing label copy. Whichever
 way it resolves, the run has already been shaped by a number nobody published.
 
 **Check:** the library header states how many templates have room for the
-standard pin block, and the checker recomputes it. **23 of 40** as of 2026-08-06.
-Editing any template body moves the number and reddens the check. Automated.
+standard pin block **on `reve-2.1`**, and the checker recomputes it. **23 of 40**
+as of 2026-08-08. The model has to be named because it is the only one where the
+answer is not "all of them": `gpt-image-2` and `nano-banana-pro` leave over 30,000
+characters pinned, so every template clears them. Editing any template body moves
+the number and reddens the check. Automated.
 
 ### L2 — one count per countable element
 

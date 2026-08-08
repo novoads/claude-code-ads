@@ -173,8 +173,8 @@ A longer clip wants **more beats**, not slower delivery. If the script only fill
 
 > "Give me a fast 8-second vertical clip of the product on a kitchen counter, no dialogue"
 
-`omni-flash` is the only model here with a **20,000-character** prompt ceiling, which is what makes
-long structured briefs possible. Its grids are narrower than Seedance's — durations `4/6/8/10`,
+`omni-flash` carries a **20,000-character** prompt ceiling, the roomiest of any video model here
+against 4,000 everywhere else, which is what makes long structured briefs possible. Its grids are narrower than Seedance's — durations `4/6/8/10`,
 aspect ratios `9:16` or `16:9` only — and it takes **no** reference images. Prompt craft in
 [shared/skills/gemini-omni-flash/prompting/guide.md](shared/skills/gemini-omni-flash/prompting/guide.md),
 which is Google DeepMind's own guide with the parts this API cannot reach marked as such.
@@ -299,12 +299,16 @@ is the current answer, this table is a map.
 | **`omni-flash`** | Video | `4` `6` `8` `10` | `9:16` `16:9` | **20,000 chars** | No reference images. Defaults to `9:16` and 8s. Best for long structured briefs and silent b-roll. |
 | **`veo-3.1`** | Video | `4` `6` `8` | `9:16` `16:9` | 4,000 chars | Start frame only, no reference images. Defaults to 8s — the one model that defaults to its own ceiling. Shot-evolution prompting. Unmeasured here: no render time on record. |
 | **`sora-2`** | Video | `4` `8` `12` | `9:16` `16:9` | 4,000 chars | Start frame only, no reference images. Measured with **no leading silence** where Seedance front-loads 3–5s, and ~123s to render. Coarse grid: no 6s, no 10s. |
-| **`gpt-image-2`** | Image | — | `1:1` `4:5` `2:3` `9:16` `16:9` `21:9` | 4,000 chars | Typography and UI mimicry. Synchronous. |
-| **`nano-banana-pro`** | Image | — | 10 ratios incl. `3:2` `4:3` `5:4` | 4,000 chars | Photoreal people and products; strongest identity lock across references. |
-| **`reve-2.1`** | Image | — | same 10 ratios | 4,000 chars | Third look / second opinion on a still. |
+| **`gpt-image-2`** | Image | — | `1:1` `4:5` `2:3` `9:16` `16:9` `21:9` | **32,000 chars** | Typography and UI mimicry. Synchronous. |
+| **`nano-banana-pro`** | Image | — | 10 ratios incl. `3:2` `4:3` `5:4` | **50,000 chars** | Photoreal people and products; strongest identity lock across references. The most prompt room on the API. |
+| **`reve-2.1`** | Image | — | same 10 ratios | **4,000 chars** | Third look / second opinion on a still. The one image model still on the old tight budget. |
 
-Image calls take `numImages` 1–4. The `referenceAssetIds` cap is **per model** — 14 on
-`nano-banana-pro`, 8 on `reve-2.1`, 4 on `gpt-image-2` — and images have no start-frame concept. Videos are
+Image calls take `numImages` 1–4. Two of their limits are **per model** and neither is one
+number across the set. The `referenceAssetIds` cap is 14 on `nano-banana-pro`, 8 on
+`reve-2.1`, 4 on `gpt-image-2`. The prompt ceiling is 50,000, 4,000 and 32,000 in that same
+order, split apart by deployed spec 2.16.0 from what used to be 4,000 everywhere. So a prompt
+written for one image model may be too long for another, and switching to `reve-2.1` for a
+second opinion is the case that hits it. Images have no start-frame concept. Videos are
 asynchronous (`202` + `jobId`, poll to a terminal status); images come back in the response body.
 
 `audioEnabled` is a Seedance-only boolean (default `true`) — all three variants take it; send

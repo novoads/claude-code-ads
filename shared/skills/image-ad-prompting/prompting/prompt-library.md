@@ -91,25 +91,30 @@ character it gains comes off the template body.
 
 ### What actually fits
 
-The cap is **4,000 characters on every model**, and it is measured on the *final* prompt —
-your body plus the three always-on suffixes, which are **1,575** characters together. So a
-template body has **2,425** characters to work in, and **2,025** once the pin block is in.
+**The prompt cap is per model.** It used to be a single 4,000 shared by every image model,
+and deployed spec 2.16.0 (verified 2026-08-08) split it in three. It is measured on the *final*
+prompt, meaning your body plus the three always-on suffixes, which are **1,575** characters
+together, so each model's room for a template body is its own cap minus that.
 
-| | chars |
-|---|---|
-| Model prompt cap (`gpt-image-2`, `nano-banana-pro`, `reve-2.1`) | 4,000 |
-| − always-on safety suffixes (all three) | 1,575 |
-| = room for a template body, unpinned | **2,425** |
-| − the standard pin block | 400 |
-| = room for a template body, pinned | **2,025** |
+| model | prompt cap | − suffixes = body room | − pin block = pinned room |
+|---|---|---|---|
+| `gpt-image-2` | 32,000 | **30,425** | 30,025 |
+| `nano-banana-pro` | 50,000 | **48,425** | 48,025 |
+| `reve-2.1` | 4,000 | **2,425** | 2,025 |
 
-**23 of the 40 templates** have room for the standard pin block as written; the rest need a
-trim first. Three of them — T8, T11 and T14 — are over 2,425 and so are refused as written,
-before any brand fill. The refusal is free: `generate_image.py` measures the final prompt
-and dies pre-network, naming the exact overage. Run
-`python3 ../scripts/check_library.py --verbose` for every template's current headroom, and
-read [EVALS-image-ad-prompting.md](../EVALS-image-ad-prompting.md) L1 for why the long ones
-have not simply been shortened.
+On `gpt-image-2` and `nano-banana-pro` the budget is no longer a real constraint on this
+library: the longest template here is 2,909 characters, which leaves over 27,000 spare on the
+tighter of the two. Write the fill the concept needs.
+
+`reve-2.1` keeps the old 4,000 and is the only place the old arithmetic still bites.
+**23 of the 40 templates** have room for the standard pin block on `reve-2.1`; the rest need a
+trim first, and T8, T11 and T14 are over 2,425 and so are refused there before any brand fill.
+That model is reachable only from the `image-ad-clone` validator, so this is a cross-check
+constraint rather than a production one. The refusal is free either way: the scripts measure
+the final prompt against the model you named and die pre-network, naming the exact overage.
+Run `python3 ../scripts/check_library.py --verbose` for every template's current headroom per
+model, and read [EVALS-image-ad-prompting.md](../EVALS-image-ad-prompting.md) L1 for why the
+long ones have not simply been shortened.
 
 Every generation is charged and there are no free re-rolls, so price the run with a live
 `POST /v1/estimates` and get the user's OK first. That call is free and it is the only
