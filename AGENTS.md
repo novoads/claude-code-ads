@@ -6,13 +6,29 @@ This repository is set up for AI coding agents (Cursor, Claude Code, Copilot-sty
 
 If `.env` or `MASTER_CONTEXT.md` do not exist, tell the user to run `./scripts/setup.sh`.
 
-When the session IS the setup ("help me set this up"), setup is the whole job. After
-`setup.sh` runs, close with plain text saying what the user can now ask for — a UGC video
-ad, a static image ad, cloning an ad they like, Pixar/claymation story ads, YouTube
-thumbnails — with an example ask or two. Plain text, not a question or an options menu.
-Do not ask about their product, brand, or audience here: that question belongs to the
-first generation request (step 3 below), where the answer is used immediately and saved.
-The only setup input a human owes is the API key.
+When the session IS the setup ("help me set this up"), setup is the whole job and the
+final report is SHORT — the few sentences a non-developer wants, not an engineering log.
+One or two status lines, then this close, verbatim:
+
+> Setup's done — your key works.
+> *(or, when the key is missing:)* One step left, the only one I can't do: create an API
+> key at <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`, then
+> I'll verify it.
+>
+> **What you can ask for now:**
+> - "Make a UGC video ad for my product" — Seedance 2.0/2.5, Veo 3.1, Sora 2
+> - "Make a static image ad from this photo" — 40-template library
+> - "Clone this ad" plus an image of one you like
+> - Pixar or claymation story ads, YouTube thumbnails, burned-in captions, generated music
+>
+> Drop product photos into `references/products/` and describe the ad you want. Every
+> generation is priced by a live estimate and shown to you before anything is spent.
+
+Everything else the run surfaced — git mechanics, pulls, sync counts, files that already
+existed, MCP/connector notes, untracked directories — is stated ONLY if it blocks one of
+those asks. Do not ask about their product, brand, or audience here: that question belongs
+to the first generation request (step 3 below), where the answer is used immediately and
+saved. The only setup input a human owes is the API key.
 
 ## Every session
 

@@ -14,10 +14,13 @@ If `.env` does not exist, tell the user to run `./scripts/setup.sh` or walk them
 
 If `MASTER_CONTEXT.md` does not exist, copy `MASTER_CONTEXT.template.md` to `MASTER_CONTEXT.md`.
 
-When the session IS the setup, setup is the whole job: after the script runs, close with
-plain text saying what the user can now ask for (the installed skills are the list), with
-an example ask or two. Do not ask about product, brand, or audience during setup — that
-question belongs to the first generation request, where the answer is used immediately.
+When the session IS the setup, setup is the whole job and the close is SHORT: a line or
+two of status (the key works, or the one step left), then plain text saying what the user
+can now ask for (the installed skills are the list), then stop. Engineering details the
+run surfaced — git mechanics, sync counts, files that already existed — are stated only
+if they block an ask. If the repo's root `AGENTS.md` carries a setup-close template, use
+it verbatim. Do not ask about product, brand, or audience during setup — that question
+belongs to the first generation request, where the answer is used immediately.
 
 ## Every session
 
