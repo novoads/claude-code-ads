@@ -83,6 +83,16 @@ creates is **PAUSED** — review and un-pause in Meta Ads Manager.
 - **Default product ID:** _(auto-populated after first `GET /v1/products` call)_
 - **Default product name:** _(auto-populated)_
 
+### Products
+
+One block per brand, written the first time a product image arrives, so a later session
+reuses what the first one uploaded instead of asking for it again.
+
+- **Product slug:** _(auto-populated)_
+  - **Local reference:** _(auto-populated: the file under `references/products/`)_
+  - **Upload `assetId`:** _(auto-populated after the first `POST /v1/uploads`)_
+  - **`productId`:** _(auto-populated after `POST /v1/products`)_
+
 ## Credit costs
 
 **This file holds no prices, deliberately.** Every credit number comes from a live

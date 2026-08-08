@@ -187,3 +187,72 @@ looks least load-bearing.
 **Check:** human. When a fill overflows, cut from the *description* half of the
 pin block or trim your own copy — never the guard clause, and never the
 structural instructions the template's Model notes call out as fragile.
+
+---
+
+## Conversation
+
+`L*` checks read the library. `L-H*` checks read a render. These read the
+**transcript**: what the user was asked, and in what order. They are human checks,
+and they are the only ones here whose failure produces no artifact at all, because a
+run that stalls on a question never generates anything to inspect.
+
+E1 is the observed failure. E2 and E3 fence the two paths that lead out of it, so
+the fix cannot be undone one branch at a time.
+
+The doctrine they test lives in
+[OVERVIEW.md § Presenting choices to the user](OVERVIEW.md#presenting-choices-to-the-user).
+
+### E1: a bare request gets one question, not a syllabus
+
+**Why:** observed 2026-08-07. A first-time user typed "I want to create image ads"
+and the reply was a two-engine capability matrix plus a four-item brief (seed
+prompt, reference paths, variant count, aspect ratio). Both are real content, and
+both were aimed at the wrong reader: the matrix is this file's sibling routing
+table, and the four items are what Phase 2 of each generator skill collects.
+Someone who has not named a product cannot pick an engine, and cannot pick an
+aspect ratio for an ad that does not exist yet. The menu reads as homework and the
+run ends before the first image.
+
+**Check:** human. The reply asks the single question from rule A, with its two
+numbered options, and stops there.
+
+**Fails if:** the reply names an image model, reproduces a model comparison table,
+asks for aspect ratio, variant count or reference paths before a product exists, or
+states a credit figure.
+
+### E2: a custom concept arrives with the engine already picked
+
+**Why:** the template path never surfaces the engine, because the entry's `Model
+notes:` block decides it. The custom path is the one place no template decides, so
+it is the one place the fork is real, and handing it back to the user rebuilds the
+matrix of E1 in miniature. The decision is cheap to make and expensive to explain:
+the concept itself carries the signal.
+
+**Check:** human. The user supplies a photo and a concept in one message. The reply
+names one engine as the recommendation with a one-line reason **drawn from that
+concept**, offers the other as option 2 in the shape rule C gives, and quotes a
+live `POST /v1/estimates` total before anything renders.
+
+**Fails if:** the reply asks which engine to use, lists engine capabilities side by
+side, gives a reason that would fit any concept, or generates before the estimate
+is shown.
+
+### E3: accepting the default runs the set, and does not come back to ask
+
+**Why:** the plan is where a menu regrows. A template set has one obvious total and
+one obvious order, and its real risk is a *systematic* miss (the product rendered
+from the wrong angle, a wordmark drifting across every output) that shows up in the
+first few and repeats through the rest. That risk is answered by looking, which the
+agent can do at any point, not by a pilot-or-everything question, which the user
+cannot answer before seeing anything.
+
+**Check:** human. The user accepts option 1. One total from a live
+`POST /v1/estimates`, shown against `balance`, before the first render. The engine
+is never named in the user-facing plan. The first three to five outputs are read
+back against product identity, brand voice and text legibility. The remaining
+templates continue in the same run, with no further decision asked of the user.
+
+**Fails if:** the agent asks pilot-or-everything, shows a model comparison table,
+quotes a price from a markdown file rather than from an estimate response, or stops
+for approval when its own self-check found nothing wrong.

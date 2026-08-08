@@ -119,6 +119,9 @@ rather than retrying.
 
 Collect: seed prompt, reference paths, variant count, aspect ratio.
 
+Present choices per `shared/skills/image-ad-prompting/OVERVIEW.md` § Presenting choices to
+the user, which is one decision at a time and never this four-item brief up front.
+
 ### Phase 3: Prompt rewrite
 
 Read `shared/skills/image-ad-prompting/prompting/prompt-library.md`. If the user's brief maps
@@ -254,14 +257,16 @@ three times the quoted number. If you drive this from a script, have it read pri
 back off its own ledger, so a second process inherits the budget instead of restarting at
 zero.
 
-**3. Pilot five, then stop.** Run `T12` (fake ChatGPT), `T14` (fake Slack), `T33`
+**3. Pilot five, then check them yourself.** Run `T12` (fake ChatGPT), `T14` (fake Slack), `T33`
 (typography hero), `T34` (iMessage), `T38` (stat hero + chart) — five templates that
 exercise dense UI text, conversation layout, pure type, and chart rendering, which is where
 this model fails if it is going to. **At most 4 requests in flight** (the org concurrency
 cap is 5, it is org-wide, and anything else the account is running shares it). Then Phase 6
-QA on all five. **Gate: show the user the five images and get approval before the
-remainder.** A pilot that surfaces a systematic problem — brand wordmark drifting, product
-rendered from the wrong angle — is worth more than 30 more images with the same flaw.
+QA on all five. **This is the agent's checkpoint, not the user's**
+(`shared/skills/image-ad-prompting/OVERVIEW.md` § Presenting choices to the user): when the
+five read right, continue into the remainder in the same run. Stop and show the images only
+when the problem is systematic (a brand wordmark drifting, the product rendered from the
+wrong angle), because that flaw is worth catching before 30 more images carry it.
 
 **4. The remainder.** Every other template whose `Model notes` block marks `gpt-image-2`
 clean or preferred. **Count them from `prompt-library.md` at run time; do not carry a number

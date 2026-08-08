@@ -106,6 +106,9 @@ approximating it here with a reference-led regeneration.
 
 Collect: seed prompt, reference paths (up to 4), variant count, aspect ratio.
 
+Present choices per `shared/skills/image-ad-prompting/OVERVIEW.md` § Presenting choices to
+the user, which is one decision at a time and never this four-item brief up front.
+
 ### Phase 3: Prompt rewrite
 
 Read `shared/skills/image-ad-prompting/prompting/prompt-library.md`. If the user's brief
