@@ -31,20 +31,38 @@ Novoads for Claude Code; it is not affiliated with or endorsed by Anthropic.*
 
 ## Prerequisites
 
-The core workflow — upload a photo, price it, generate a video or an image, poll, download — is
-plain HTTP. **`curl` and `jq` are enough**, and both are already on most machines. Everything else
-is per-workflow:
+**None, if you use the MCP connector.** Add the Novoads connector to Claude
+(see [novoads.ai/mcp](https://novoads.ai/mcp)) and skip this whole section:
+nothing to clone, nothing to install, and it works on Windows. The repo path
+below is for people who want the full skill pack in their editor.
+
+For the repo path, the core workflow (upload a photo, price it, generate a
+video or an image, poll, download) is plain HTTP driven by your agent.
+**`curl` and `jq` are enough**, and both are already on most machines. Your
+first ad needs nothing from the optional table.
 
 | Tool | Needed for | Install (macOS) |
 |---|---|---|
 | **`curl` + `jq`** | Everything on the API: uploads, estimates, generation, polling, download | preinstalled / `brew install jq` |
-| **Python 3.10+** | The image-ad callers (`chatgpt-image-ad`, `nano-banana-image-ad`, `image-ad-clone`) — **stdlib only, nothing to `pip install`** | preinstalled or `brew install python@3.12` |
-| **`ffmpeg`** | Pixar and claymation stitching, caption overlay, frame extraction in `analyze-video` | `brew install ffmpeg` |
-| **`whisper`** *(optional — offline only)* | Local transcription for `caption-video` and `analyze-video`, and the offline fallback for `broll-overlay`. **Not required for the API path**: `POST /v1/transcripts` returns text, word timings and an SRT with nothing installed. Install it only to work without a key or a network | `pip install openai-whisper` **plus a model download** — the binary alone is not enough, and `whisper-cli` with no model returns an EMPTY transcript rather than an error, which reads exactly like a bad render |
-| **Node.js** | Caption burn-in (`npx hyperframes`, run on demand) | `brew install node` |
-| **`meta-ad-builder` deps** | Publishing to the Meta Marketing API | `pip install -r shared/skills/meta-ad-builder/scripts/requirements.txt` |
+| **Python 3.10+** | The image-ad callers (`chatgpt-image-ad`, `nano-banana-image-ad`, `image-ad-clone`). Stdlib only, nothing to `pip install` | preinstalled or `brew install python@3.12` |
+| **`ffmpeg`** | Only the steps that assemble or edit video on your machine: the multi-beat storyboard ads (`novoads-pixar-storyboard-ad`, `novoads-claymation-storyboard-ad`), the local post steps (`music-mix`, `broll-overlay`), and frame extraction in `analyze-video`. The single-call `novoads-pixar-ad` and every core workflow need nothing | `brew install ffmpeg` |
 
-Linux: `apt install curl jq ffmpeg nodejs python3`. Windows: WSL2 — the shell scripts assume bash.
+Captions, transcripts and music are generated server-side and need **no local
+tools**: `POST /v1/captions` burns captions in (30 presets), `POST /v1/transcripts`
+returns text, word timings and an SRT, and `POST /v1/music` generates the
+soundtrack. Only laying that soundtrack under a finished cut is local, and that
+is the `music-mix` step in the `ffmpeg` row above.
+
+**Optional, per workflow.** Each skill tells you when it needs one; nothing
+here blocks your first ad:
+
+| Tool | Only if you | Install |
+|---|---|---|
+| **Meta publishing deps** | publish finished creatives to the Meta Marketing API (`meta-ad-builder`) | `pip install -r shared/skills/meta-ad-builder/scripts/requirements.txt` |
+| **Node.js + `whisper`** | use the manual caption path instead of `POST /v1/captions`: a style outside the 30 presets, or hand-editing the wording before burn-in | `brew install node`; `pip install openai-whisper` plus a model download (the binary alone returns an EMPTY transcript, not an error) |
+
+Linux: `apt install curl jq ffmpeg python3`. Windows: use the MCP connector,
+or WSL2 for the shell scripts.
 
 ## Get started (5 minutes)
 
@@ -306,7 +324,7 @@ than routing you somewhere else. There is likewise no b-roll or scene endpoint �
 | [`shared/skills/gemini-omni-flash/`](shared/skills/gemini-omni-flash/) | Prompting guide for `omni-flash`, scoped to what this API actually exposes. |
 | [`shared/skills/caption-video/`](shared/skills/caption-video/) | Out-of-band caption burn-in for any finished MP4. |
 | [`shared/skills/broll-overlay/`](shared/skills/broll-overlay/) | Overlay b-roll cutaways on a finished MP4 — local ffmpeg, no credits. Validates the EDL, renders atomically, and verifies duration, audio and every window. |
-| [`shared/skills/music-mix/`](shared/skills/music-mix/) | The last step of the video pack: a ducked music bed under a finished cut. Mixing is local ffmpeg and costs nothing; the track itself comes from `POST /v1/music` on your Novoads key, from your own file, or (fallback) from a KIE key of your own. [`EVALS.md`](shared/skills/music-mix/EVALS.md) holds the six scenarios, [`scripts/test_music_mix.py`](shared/skills/music-mix/scripts/test_music_mix.py) implements the five mixing ones in 15 executable cases. |
+| [`shared/skills/music-mix/`](shared/skills/music-mix/) | The last step of the video pack: a ducked music bed under a finished cut. Mixing is local ffmpeg and costs nothing; the track itself comes from `POST /v1/music` on your Novoads key, or from your own file. [`EVALS.md`](shared/skills/music-mix/EVALS.md) holds the six scenarios, [`scripts/test_music_mix.py`](shared/skills/music-mix/scripts/test_music_mix.py) implements the five mixing ones in 15 executable cases. |
 | [`shared/skills/meta-ad-builder/`](shared/skills/meta-ad-builder/) | Publish finished creatives as paused Meta ads. |
 | [`scripts/setup.sh`](scripts/setup.sh) | One-time setup. Validates the key before writing it. |
 | [`scripts/check-novoads-env.sh`](scripts/check-novoads-env.sh) | Connectivity check that names the failure. |

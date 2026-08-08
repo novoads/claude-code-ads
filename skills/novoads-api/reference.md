@@ -470,7 +470,7 @@ The body is strict: an unknown key is a `400`, not a shrug.
 
 **One request returns TWO tracks, for one charge.** The model renders two takes of the same prompt. Both arrive in `audio[]` on the polled job and both are yours; they differ in length and arrangement, not in price. That is why the mixing step can offer named variants without a second render — see the `music-mix` skill.
 
-Response `202`: `jobId`, `status`, `creditsCharged`, `model`. `model` is always **`music-suno`** — fixed, and deliberately absent from `GET /models`, which answers what this API renders *video* with.
+Response `202`: `jobId`, `status`, `creditsCharged`, `model`. `model` is a **fixed internal identifier** for the music renderer, identical on every music job, and deliberately absent from `GET /models`, which answers what this API renders *video* with. Do not branch on its value.
 
 **`POST /estimates` has a fourth arm for this, and it takes nothing but the kind:**
 
