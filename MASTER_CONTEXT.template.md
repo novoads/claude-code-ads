@@ -6,7 +6,7 @@
 
 - **At the start of substantive work:** Read this file for project-specific context that is not in the skill.
 - **After meaningful changes:** Append a new **dated entry** under [Changelog](#changelog) (Decision / What changed / Why).
-- **If fields are empty:** Offer to populate them — ask the user once and write the values back.
+- **If fields are empty:** Fill them lazily. The first time the user asks to generate something that needs a field (default product, brand voice), ask for it then — once — and write the value back so no future session asks again. A setup session asks for nothing beyond the API key.
 
 ## Brand (optional)
 
