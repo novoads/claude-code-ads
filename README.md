@@ -66,6 +66,17 @@ or WSL2 for the shell scripts.
 
 ## Get started (5 minutes)
 
+### Copy one prompt
+
+In **Claude Code** or **Cursor**, open a new empty folder and paste:
+
+```text
+https://github.com/novoads/claude-code-ads help me set this up
+```
+
+The agent clones this repo, runs `./scripts/setup.sh`, and stops at the one step only you
+can do: pasting your Novoads API key. Prefer the terminal? The same thing by hand:
+
 ### 1. Clone
 
 ```bash

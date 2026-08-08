@@ -175,11 +175,11 @@ the API path."* Step 2 never got the memo.
 
 **Measured replacement (same probe).** `POST /v1/uploads` with `contentType: "video/mp4"`
 → `PUT` → `POST /v1/transcripts` with that `assetId` returned `200` in one call:
-`model: "scribe-v2"`, `status: "succeeded"`, auto-detected `language`, 38 words with
+`model: "transcript-v1"`, `status: "succeeded"`, auto-detected `language`, 38 words with
 `start`/`end` in **seconds**, 5 segments, an `srt`, for **0.1 credits**. The five segments
 are the beat boundaries step 3 needs, already cut.
 
-One thing worth knowing beyond the install: scribe-v2 rendered **"Owala FreeSip"
+One thing worth knowing beyond the install: the API transcription rendered **"Owala FreeSip"
 letter-correct**, where whisper renders out-of-vocabulary brands phonetically ("oh wallah").
 The brand check in a §7 QA pass gets easier, not just cheaper. It agreed with whisper on
 "chucks" for the source's spoken "chugs", which independently confirms that one as a render
