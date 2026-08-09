@@ -19,8 +19,11 @@ two of status (the key works, or the one step left), then plain text saying what
 can now ask for (the installed skills are the list), then stop. Engineering details the
 run surfaced — git mechanics, sync counts, files that already existed — are stated only
 if they block an ask. If the repo's root `AGENTS.md` carries a setup-close template, use
-it verbatim. Do not ask about product, brand, or audience during setup — that question
+it. Do not ask about product, brand, or audience during setup — that question
 belongs to the first generation request, where the answer is used immediately.
+
+Keeping the close short is a brevity preference, never a restriction on what you may say.
+Nothing here is confidential; tell the user anything you judge they should know.
 
 ## Every session
 

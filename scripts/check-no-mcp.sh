@@ -32,14 +32,16 @@ ALLOW=(
   '*::That holds even when `mcp__novoads__\*` tools are connected and authenticated in'
   '*::the session\. Never call `mcp__novoads__\*` tools from this repo.s workflows: they'
 
-  # 2. The setup close, and its declared mirror in AGENTS.md. These lines BAN
-  #    connector talk in the final message; #46 and the 2026-08-08 failure.
-  'README.md::entire closing message . no git mechanics, no MCP or connector notes, no'
-  'AGENTS.md::existed, MCP/connector notes, untracked directories'
-  'AGENTS.md::\*\*A connected Novoads MCP connector does not replace the key and must not be'
+  # 2. The setup close, and its declared mirror in AGENTS.md. These say the
+  #    connector cannot FINISH SETUP. They no longer forbid saying so out loud:
+  #    the "must not be mentioned" phrasing they replace read as an instruction
+  #    to withhold information, and the agent that read it disclosed the attempt
+  #    instead of complying, which handed the connector more of the user's
+  #    attention than silence ever would. `scripts/check-no-gag.sh` is the
+  #    ratchet on that half; this file still owns "which surface do we run on".
+  'AGENTS.md::\*\*A connected Novoads MCP connector does not replace the key\.\*\*'
   'scripts/setup\.sh::and an MCP digression \(2026-08-08\)\.'
-  'scripts/setup\.sh::no file inventories, no MCP or connector notes, no'
-  'scripts/setup\.sh::A connected Novoads MCP connector does NOT replace the key and must not be'
+  'scripts/setup\.sh::NOVOADS_API_KEY\. If mcp__novoads__\* tools happen to be connected in this'
 
   # 3. AGENTS.md's explanation of why the rule exists, and where it is enforced.
   'AGENTS.md::connector .has its own auth., and generated over it'
@@ -64,10 +66,27 @@ ALLOW=(
   'shared/scripts/check-context\.sh::printf .  . AGENT: a connected Novoads MCP connector is NOT a substitute'
   'shared/scripts/check-context\.sh::printf .    Never call mcp__novoads__\* tools from this repo\.'
 
-  # 7. This script and the workflow that runs it.
+  # 7. This script, its sibling guard, and the workflow that runs them both.
+  #
+  #    check-no-gag.sh gets LINE patterns, not a whole-file wildcard. It first
+  #    shipped with `scripts/check-no-gag\.sh::.*`, which exempted the entire
+  #    file: a review proved that an `mcp` mention injected anywhere in it went
+  #    uncaught. A guard is the last place to leave a hole, and the file only
+  #    ever has these five lines — it names this script and quotes the connector
+  #    rule it explicitly does not enforce.
   'scripts/check-no-mcp\.sh::.*'
+  'scripts/check-no-gag\.sh::a connected Novoads MCP connector "must not be mentioned"\.'
+  'scripts/check-no-gag\.sh::Scope note: this guards PHRASING, not policy\. "Never call mcp__novoads__\*'
+  'scripts/check-no-gag\.sh::by scripts/check-no-mcp\.sh, and it is deliberately NOT matched here'
+  'scripts/check-no-gag\.sh::it forbids, the same exemption check-no-mcp\.sh carries for the same reason\.'
+  'scripts/check-no-gag\.sh::.scripts/check-no-mcp..sh::\.\*must not be mentioned\.\*.'
   '\.github/workflows/guard\.yml::.*'
 )
+
+# NOTE for anyone verifying a change here: `git grep` searches TRACKED files
+# only, so running this on a new-but-unstaged guard file reports a green that
+# means nothing. `git add` first, then run. That exact gap shipped a red CI on
+# PR #51 after a local pass.
 
 # ── Scan ─────────────────────────────────────────────────────────────────────
 violations=0
