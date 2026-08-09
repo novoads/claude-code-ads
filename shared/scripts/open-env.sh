@@ -47,6 +47,16 @@ if [[ $# -ne 1 ]]; then
 fi
 target="$1"
 
+# A path beginning with a dash is read as an OPTION by either opener. macOS
+# `open` honours `--`, but xdg-open has no end-of-options terminator and rejects
+# an unrecognised -* outright — so passing `--` there would make every Linux call
+# fail, and because a failed open is a silent skip, the feature would be quietly
+# dead on Linux with no CI able to see it (the guards are greps, and this script
+# skips whenever $CI is set). Normalising the path is the fix that works on both.
+case "$target" in
+  -*) target="./$target" ;;
+esac
+
 # The documented opt-out. Someone who does not want a window stealing focus in
 # the middle of a run sets this once and every caller honours it; the name is
 # part of the contract, so keep it exactly as spelled.
@@ -103,7 +113,7 @@ case "$os" in
     #
     # stdin is closed for the same reason the whole script exists: an opener
     # that inherits the caller's stdin is an opener that can block it.
-    if ! open -t "$target" </dev/null >/dev/null 2>&1; then
+    if ! open -t -- "$target" </dev/null >/dev/null 2>&1; then
       skip_quietly
     fi
     ;;

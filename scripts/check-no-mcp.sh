@@ -67,11 +67,19 @@ ALLOW=(
   'shared/scripts/check-context\.sh::printf .    Never call mcp__novoads__\* tools from this repo\.'
 
   # 7. This script, its sibling guard, and the workflow that runs them both.
-  #    check-no-gag.sh names this file and quotes the connector rule it does NOT
-  #    match, so it trips this grep for the same reason this file exempts itself:
-  #    a rule has to be able to name the thing it is drawing a boundary against.
+  #
+  #    check-no-gag.sh gets LINE patterns, not a whole-file wildcard. It first
+  #    shipped with `scripts/check-no-gag\.sh::.*`, which exempted the entire
+  #    file: a review proved that an `mcp` mention injected anywhere in it went
+  #    uncaught. A guard is the last place to leave a hole, and the file only
+  #    ever has these five lines — it names this script and quotes the connector
+  #    rule it explicitly does not enforce.
   'scripts/check-no-mcp\.sh::.*'
-  'scripts/check-no-gag\.sh::.*'
+  'scripts/check-no-gag\.sh::a connected Novoads MCP connector "must not be mentioned"\.'
+  'scripts/check-no-gag\.sh::Scope note: this guards PHRASING, not policy\. "Never call mcp__novoads__\*'
+  'scripts/check-no-gag\.sh::by scripts/check-no-mcp\.sh, and it is deliberately NOT matched here'
+  'scripts/check-no-gag\.sh::it forbids, the same exemption check-no-mcp\.sh carries for the same reason\.'
+  'scripts/check-no-gag\.sh::.scripts/check-no-mcp..sh::\.\*must not be mentioned\.\*.'
   '\.github/workflows/guard\.yml::.*'
 )
 

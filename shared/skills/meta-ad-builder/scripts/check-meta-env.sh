@@ -83,6 +83,38 @@ fi
 META_TOKEN_PLACEHOLDER="your_long_lived_token_here"
 META_ACCOUNT_PLACEHOLDER="act_1234567890"
 
+# Declared up front so `set -u` is safe on every path, including the ones that
+# never reach the rewrite.
+UNCOMMENTED_KEYS=()
+_META_ENV_TMP=""
+_META_ENV_MARKER=""
+
+# Both scratch files hold or describe the contents of a credential file, so they
+# are removed on every exit path including a signal. Named rather than inlined
+# so the EXIT arm and the terminating signal arms cannot drift apart.
+_meta_env_cleanup() {
+  rm -f "${_META_ENV_TMP:-}" "${_META_ENV_MARKER:-}" 2>/dev/null || true
+  _META_ENV_TMP=""
+  _META_ENV_MARKER=""
+}
+
+# Prefer the placeholders the shipped .env.example ACTUALLY carries, when it is
+# next to the .env we found. The constants above are a copy of another file's
+# contents, and nothing in CI compares them: edit .env.example alone and the
+# rewrite silently stops matching, while the detector below reads the shipped
+# placeholder as a user secret and tells someone "do not retype the value" — who
+# then keeps `your_long_lived_token_here` as their token and gets an invalid-token
+# error from Graph. Reading the real file closes that whole class.
+if [[ -n "${ENV_FILE:-}" ]]; then
+  _meta_example="$(dirname "$ENV_FILE")/.env.example"
+  if [[ -f "$_meta_example" ]]; then
+    _meta_v="$(sed -n 's/^[[:space:]]*#[[:space:]]*META_ACCESS_TOKEN[[:space:]]*=[[:space:]]*\([^[:space:]].*[^[:space:]]\)[[:space:]]*$/\1/p' "$_meta_example" 2>/dev/null | head -1 || true)"
+    if [[ -n "$_meta_v" ]]; then META_TOKEN_PLACEHOLDER="$_meta_v"; fi
+    _meta_v="$(sed -n 's/^[[:space:]]*#[[:space:]]*META_AD_ACCOUNT_ID[[:space:]]*=[[:space:]]*\([^[:space:]].*[^[:space:]]\)[[:space:]]*$/\1/p' "$_meta_example" 2>/dev/null | head -1 || true)"
+    if [[ -n "$_meta_v" ]]; then META_ACCOUNT_PLACEHOLDER="$_meta_v"; fi
+  fi
+fi
+
 placeholder_for() {
   case "$1" in
     META_ACCESS_TOKEN)  printf '%s\n' "$META_TOKEN_PLACEHOLDER" ;;
@@ -92,9 +124,24 @@ placeholder_for() {
 }
 
 # Permission bits in octal. BSD stat first (macOS is this repo's first target),
-# then GNU stat. Empty if neither answers.
+# then GNU stat, and the ANSWER is validated rather than the exit status.
+#
+# Exit status alone is not usable here: GNU `stat -f` means --file-system, so on
+# Linux it EXITS 0 while printing "?Lp" for the unrecognised %O. A plain
+# `bsd || gnu` chain therefore never reaches the GNU arm on Linux, hands "?Lp"
+# to chmod, and — because errexit is suppressed in this function's caller —
+# fails silently, leaving the mode guard below comparing "?Lp" to "?Lp" and
+# unable to ever fire. Shape-checking the output is what makes it portable.
 env_file_mode() {
-  stat -f '%OLp' "$1" 2>/dev/null || stat -c '%a' "$1" 2>/dev/null || printf ''
+  local m
+  for m in \
+    "$(stat -f '%OLp' "$1" 2>/dev/null || true)" \
+    "$(stat -c '%a'  "$1" 2>/dev/null || true)"; do
+    case "$m" in
+      [0-7][0-7][0-7]|[0-7][0-7][0-7][0-7]) printf '%s\n' "$m"; return 0 ;;
+    esac
+  done
+  printf ''
 }
 
 # Follow symlinks to the real file: `mv` onto a symlink replaces the link with a
@@ -122,14 +169,48 @@ resolve_path() {
 # not match, and neither does a line that is already uncommented, so this can
 # only ever move a pristine template line.
 #
-# Returns 0 rewrote, 1 could not write, 2 nothing matched.
+# Returns 0 rewrote, 1 could not write, 2 nothing matched. On 0 it sets
+# UNCOMMENTED_KEYS to the keys it ACTUALLY made live, which is not always every
+# key it was asked about: a .env can hold one pristine template line and one the
+# user has already typed onto, and reporting the whole request there announced a
+# rewrite that did not happen, one line above the HEADS UP contradicting it.
 uncomment_required_keys() {
   local file="$1"; shift
-  local tmp mode after
+  local tmp marker mode after key
+  UNCOMMENTED_KEYS=()
+
+  # The temp file is a COMPLETE PLAINTEXT COPY of a file holding live secrets
+  # (the Novoads key today, the Meta token tomorrow). mktemp creates it 0600, so
+  # it is never world-readable — but without a trap, a Ctrl-C or a SIGTERM
+  # between here and the mv strands it next to the original, forever, under a
+  # name nobody will ever think to look for. EXIT alone does not cover signals.
   tmp="$(mktemp "${file}.meta-env.XXXXXX")" || return 1
+  _META_ENV_TMP="$tmp"
+  marker="$(mktemp "${file}.meta-keys.XXXXXX")" || { rm -f "$tmp"; _META_ENV_TMP=""; return 1; }
+  _META_ENV_MARKER="$marker"
+
+  # Cleanup on EXIT; the SIGNAL arms must also TERMINATE. A handler that only
+  # cleans up and returns swallows the signal, and because a bash trap is global
+  # and outlives the function, that left Ctrl-C dead for the whole rest of the
+  # run — the user could not abort a script that was mid-way through rewriting
+  # their credential file. Torn down again after the mv lands.
+  trap '_meta_env_cleanup' EXIT
+  trap '_meta_env_cleanup; exit 130' INT TERM HUP
+
+  # The placeholder is DATA, not a pattern. It is read out of .env.example at
+  # runtime, so treating it as a regex means one `.` or `*` in that file turns
+  # the "is this still the pristine template" test into a wildcard that matches
+  # a line the user has typed a real token onto — and the rewrite then blanks
+  # it, deleting the credential, with the has-a-value warning suppressed because
+  # the line looked pristine. Reproduced. So the VALUE is compared literally
+  # with ==; only `key`, a fixed identifier we control, is ever built into a
+  # pattern. awk also reports the keys it actually changed, because that is the
+  # only place the truth exists: grepping the result afterwards cannot tell a
+  # line this run made live from one that was already live.
   if ! awk -v keys="$*" \
           -v ph_token="$META_TOKEN_PLACEHOLDER" \
-          -v ph_acct="$META_ACCOUNT_PLACEHOLDER" '
+          -v ph_acct="$META_ACCOUNT_PLACEHOLDER" \
+          -v marker="$marker" '
     BEGIN {
       n = split(keys, kk, " ")
       for (i = 1; i <= n; i++) want[kk[i]] = 1
@@ -138,34 +219,75 @@ uncomment_required_keys() {
     }
     {
       line = $0
+      # Tolerate a trailing CR so the anchors below cannot be defeated by line
+      # endings. NOTE this does NOT make the script work on a CRLF .env end to
+      # end: `source "$ENV_FILE"` near the top of this file fails on one first
+      # ("line 3: : command not found"), which is pre-existing and out of scope
+      # here. Measured, not assumed — do not advertise CRLF support on the back
+      # of this line.
+      sub(/\r$/, "", line)
       for (key in want) {
-        bare = "^[ \t]*#[ \t]*" key "[ \t]*=[ \t]*$"
-        tmpl = "^[ \t]*#[ \t]*" key "[ \t]*=[ \t]*" ph[key] "[ \t]*$"
-        if (line ~ bare || line ~ tmpl) { line = key "="; break }
+        pfx = "^[ \t]*#[ \t]*" key "[ \t]*=[ \t]*"
+        if (line ~ pfx) {
+          val = line
+          sub(pfx, "", val)
+          sub(/[ \t]+$/, "", val)
+          if (val == "" || val == ph[key]) {
+            line = key "="
+            changed[key] = 1
+            break
+          }
+        }
       }
       print line
     }
+    END { for (k in changed) print k > marker }
   ' "$file" > "$tmp"; then
-    rm -f "$tmp"
+    _meta_env_cleanup
     return 1
   fi
 
   if cmp -s "$file" "$tmp"; then
-    rm -f "$tmp"
+    _meta_env_cleanup
     return 2
   fi
 
+  # Every write is CHECKED, because errexit does not protect this function: the
+  # caller runs it as `|| rc=$?`, which switches errexit off for the whole body.
+  # An unchecked failing mv therefore fell through to `return 0`, and the script
+  # then reported "Uncommented in <path>" about a file it had not touched.
   mode="$(env_file_mode "$file")"
   if [[ -n "$mode" ]]; then
-    chmod "$mode" "$tmp"
+    if ! chmod "$mode" "$tmp"; then
+      _meta_env_cleanup
+      return 1
+    fi
   fi
-  mv "$tmp" "$file"
+  if ! mv "$tmp" "$file"; then
+    _meta_env_cleanup
+    return 1
+  fi
+  _META_ENV_TMP=""
 
-  # Verify rather than assume: this file holds secrets and must stay 600.
+  # Read the keys awk actually rewrote. Requested is NOT the answer (one line can
+  # be pristine while the other is hand-edited) and neither is grepping the
+  # result (a key that was already live looks identical to one just uncommented).
+  if [[ -s "$marker" ]]; then
+    while IFS= read -r key; do
+      if [[ -n "$key" ]]; then UNCOMMENTED_KEYS+=( "$key" ); fi
+    done < "$marker"
+  fi
+  rm -f "$marker"; _META_ENV_MARKER=""
+  trap - EXIT INT TERM HUP
+
+  # Assert the VALUE, not just that it did not change. A .env that arrived 0644
+  # came back 0644 silently, one line before this script tells someone to paste
+  # a live access token into it — the guard held the mode steady and never asked
+  # whether the mode was safe.
   after="$(env_file_mode "$file")"
-  if [[ -n "$mode" && "$after" != "$mode" ]]; then
-    echo "  WARNING: $file is now mode ${after}, was ${mode}."
-    echo "  Fix it before pasting a token in:  chmod ${mode} \"$file\""
+  if [[ -n "$after" && "$after" != "600" ]]; then
+    echo "  WARNING: $file is mode ${after}. It holds credentials and should be 600."
+    echo "  Fix it before pasting a token in:  chmod 600 \"$file\""
   fi
   return 0
 }
@@ -234,16 +356,34 @@ if [[ "$fail" -ne 0 ]]; then
       echo "  left commented. Uncomment them yourself before filling them in."
     else
       rc=0
-      uncomment_required_keys "$env_path" "${missing[@]}" || rc=$?
+      # Guarded expansion: on macOS's bash 3.2, "${arr[@]}" on an EMPTY array is
+      # a fatal unbound-variable error under `set -u` (Linux bash 5 tolerates
+      # it). This block is only reached with missing non-empty, but that is an
+      # ordering accident, and an ordering accident that hard-fails every macOS
+      # user while passing every Linux test is not one to leave standing.
+      if [[ "${#missing[@]}" -gt 0 ]]; then
+        uncomment_required_keys "$env_path" "${missing[@]}" || rc=$?
+      fi
       case "$rc" in
-        0) echo "  Uncommented in $env_path: ${missing[*]}" ;;
-        2) : ;;  # already live, hand-edited, or this .env has no Meta block
+        0) if [[ "${#UNCOMMENTED_KEYS[@]}" -gt 0 ]]; then
+             echo "  Uncommented in $env_path: ${UNCOMMENTED_KEYS[*]}"
+           fi ;;
+        2) # Nothing matched. Silence here sent a user to a file with no line to
+           # paste onto, which is the exact trap this path exists to close, so
+           # say which case it is.
+           if ! grep -q "META_ACCESS_TOKEN" "$env_path" 2>/dev/null; then
+             echo "  NOTE: $env_path has no Meta block. Add these two lines to it:"
+             echo "      META_ACCESS_TOKEN="
+             echo "      META_AD_ACCOUNT_ID="
+           fi ;;
         *) echo "  NOTE: could not rewrite $env_path. Uncomment the two required"
            echo "  lines yourself — a value typed onto a commented line does"
            echo "  nothing, and the next run fails exactly like this one." ;;
       esac
     fi
-    warn_commented_with_value "$env_path" "${missing[@]}"
+    if [[ "${#missing[@]}" -gt 0 ]]; then
+      warn_commented_with_value "$env_path" "${missing[@]}"
+    fi
   fi
 
   # (b) Put the file in front of the user.

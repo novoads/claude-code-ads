@@ -49,6 +49,10 @@ INTERACTIVE=1
 # branches on it, so a failed or skipped open must never claim the file is open.
 ENV_OPENED=0
 
+# Holds the in-flight temp copy of .env so a signal cannot strand a plaintext
+# copy of the key on disk. Declared here so `set -u` is safe before any write.
+_SETUP_ENV_TMP=""
+
 while (( $# > 0 )); do
   case "$1" in
     -n|--non-interactive) INTERACTIVE=0 ;;
@@ -146,8 +150,41 @@ mask_secret() {
 write_key_to_env() {
   # Rewrite the single line rather than appending, so re-running setup on a
   # placeholder .env does not leave two NOVOADS_API_KEY rows.
-  sed "s|^NOVOADS_API_KEY=.*|NOVOADS_API_KEY=$1|" "$ROOT/.env" > "$ROOT/.env.tmp" \
-    && mv "$ROOT/.env.tmp" "$ROOT/.env"
+  #
+  # mktemp, not a shell redirect into a fixed `.env.tmp`. A redirect creates the
+  # file at the caller's umask — 0644 on a default macOS shell — so the live key
+  # sat world-readable in a predictably-named file, and .env itself was 0644 for
+  # the window between the mv and the chmod, permanently if the process died
+  # there or the chmod failed (it was swallowed by `|| true`). mkstemp opens at
+  # 0600, and chmod-before-mv means the key is never on disk group-readable.
+  local tmp
+  tmp="$(mktemp "$ROOT/.env.XXXXXX")" || return 1
+  _SETUP_ENV_TMP="$tmp"
+  # Cleanup on EXIT, and the SIGNAL arms TERMINATE. A handler that only cleans up
+  # and falls through swallows the signal, and a bash trap is global and outlives
+  # the function — so a cleanup-only INT arm left Ctrl-C dead for the whole rest
+  # of setup. Torn down again once the file is safely in place.
+  trap 'rm -f "${_SETUP_ENV_TMP:-}"' EXIT
+  trap 'rm -f "${_SETUP_ENV_TMP:-}"; exit 130' INT TERM HUP
+  # awk + ENVIRON, not sed "s|...|$1|": the key would be an argv element, visible
+  # in `ps` to every local user for the life of the process. ENVIRON also sidesteps
+  # replacement-metacharacter mangling (`&`, `|`) on the same line.
+  if ! NOVOADS_NEW_KEY="$1" awk '
+    /^NOVOADS_API_KEY=/ { print "NOVOADS_API_KEY=" ENVIRON["NOVOADS_NEW_KEY"]; next }
+    { print }
+  ' "$ROOT/.env" > "$tmp"; then
+    rm -f "$tmp"; _SETUP_ENV_TMP=""
+    trap - EXIT INT TERM HUP
+    return 1
+  fi
+  chmod 600 "$tmp" 2>/dev/null || true
+  if ! mv "$tmp" "$ROOT/.env"; then
+    rm -f "$tmp"; _SETUP_ENV_TMP=""
+    trap - EXIT INT TERM HUP
+    return 1
+  fi
+  _SETUP_ENV_TMP=""
+  trap - EXIT INT TERM HUP
   chmod 600 "$ROOT/.env" 2>/dev/null || true
 }
 
@@ -186,9 +223,11 @@ print_orientation() {
 # platform rules — GUI editors only, because $EDITOR on this path is vim with no
 # terminal attached, which hangs or dies and either way the run stops being
 # about the key; skipped over SSH, in CI, with no display server, and under
-# NOVOADS_SETUP_NO_OPEN=1. Its contract is two exit codes and no output: 0 means
-# the file is genuinely on screen, anything else means deliberately skipped, and
-# the caller prints its own sentence. So this function decides one thing, which
+# NOVOADS_SETUP_NO_OPEN=1. Its contract is three exit codes: 0 the file is
+# genuinely on screen, 3 deliberately skipped, 2 called wrong (the only one that
+# prints anything, to stderr). This caller always passes exactly one argument, so
+# only 0 and 3 are reachable from here, and the helper is silent on both — the
+# caller prints its own sentence. So this function decides one thing, which
 # sentence the closing message uses, and it can never fail the run.
 #
 # The helper may be ABSENT. Skills here install standalone, and someone may run
@@ -216,7 +255,11 @@ open_env_file() {
   if [[ "$rc" != "0" ]]; then return 0; fi
 
   ENV_OPENED=1
-  echo "Opened .env in your editor. Paste the key on the NOVOADS_API_KEY line."
+  # Status only, no instruction. The FINAL MESSAGE block below already tells the
+  # user where to paste the key, and saying it twice is precisely what
+  # print_agent_close's own header warns produces a menu: an agent shown two
+  # phrasings of the same remaining step relays both.
+  echo "Opened .env for you."
   return 0
 }
 
@@ -351,8 +394,16 @@ if [[ "$needs_key" == "1" && "$INTERACTIVE" == "1" ]]; then
     probe_key "$input"
 
     if [[ "$PROBE_CODE" == "200" ]]; then
-      write_key_to_env "$input"
-      echo "✓ Valid. Saved to .env as $(mask_secret "$input")"
+      # Checked, because write_key_to_env can now `return 1` and this script runs
+      # under `set -e`: an unguarded call would abort the whole run right here,
+      # AFTER the key validated 200, with no message, no MASTER_CONTEXT.md, no
+      # skill sync and no closing message. Say what happened and carry on.
+      if write_key_to_env "$input"; then
+        echo "✓ Valid. Saved to .env as $(mask_secret "$input")"
+      else
+        echo "✓ Valid — but $ROOT/.env could not be written."
+        echo "  Add this line to it by hand: NOVOADS_API_KEY=<the key you just pasted>"
+      fi
       unset input
       break
     fi
@@ -362,9 +413,14 @@ if [[ "$needs_key" == "1" && "$INTERACTIVE" == "1" ]]; then
     # and the fix is on the billing page, not in this file. A 401 is never
     # saved — that key is wrong and .env would just memorialize the typo.
     if [[ "$PROBE_CODE" == "403" ]]; then
-      write_key_to_env "$input"
-      explain_probe_failure "$PROBE_CODE" "$PROBE_BODY"
-      echo "  Saved to .env anyway as $(mask_secret "$input") — the key is real, the plan is the blocker."
+      if write_key_to_env "$input"; then
+        explain_probe_failure "$PROBE_CODE" "$PROBE_BODY"
+        echo "  Saved to .env anyway as $(mask_secret "$input") — the key is real, the plan is the blocker."
+      else
+        explain_probe_failure "$PROBE_CODE" "$PROBE_BODY"
+        echo "  The key is real, but $ROOT/.env could not be written."
+        echo "  Add this line to it by hand: NOVOADS_API_KEY=<the key you just pasted>"
+      fi
       echo "  Re-run ./scripts/check-novoads-env.sh once the plan is active."
       unset input
       break

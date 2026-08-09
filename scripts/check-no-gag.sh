@@ -70,7 +70,16 @@ ALLOW=(
   'scripts/check-no-mcp\.sh::.*must not be mentioned.*'
 
   # This script, and the workflow that runs it.
-  'scripts/check-no-gag\.sh::.*'
+  #
+  # LINE patterns, not a whole-file wildcard. A wildcard here exempted the guard
+  # from itself, and this is the one file an author editing guards is most likely
+  # to be sitting in — the same hole the sibling guard had for this file, closed
+  # in the same review. The three shapes below are the only ones that legitimately
+  # carry a banned phrase: the BANNED array literals, the ALLOW array literals,
+  # and the header prose that quotes the 2026-08-08 wording it replaced.
+  'scripts/check-no-gag\.sh::^  .(must not be mentioned|must never be mentioned|should not be mentioned|do not mention|don.t mention|never mention it|do not tell the user|don.t tell the user|without telling the user|do not reveal|do not disclose|entire closing message|verbatim as your entire|as your entire response).$'
+  'scripts/check-no-gag\.sh::^  .[A-Za-z][A-Za-z0-9_/-]*(\\\.[a-z]+)?(\\\.[a-z]+)?::'
+  'scripts/check-no-gag\.sh::^# (opened by telling the agent|verbatim", and that a connected)'
   '\.github/workflows/guard\.yml::.*'
 )
 
