@@ -360,7 +360,9 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
 """
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page)
-    print(f"{out}")
+    # Absolute, because the caller may open it from anywhere and because a
+    # relative path in a delivery is a path the reader cannot use.
+    print(out.resolve())
     if resolved == 0:
         # Loud on stdout too: the agent reads this before it writes the delivery,
         # and "12 candidates" over an empty grid is a claim that does not hold.
@@ -371,7 +373,13 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
     elif resolved < len(picks):
         print(f"note: {resolved} of {len(picks)} creatives on disk; the rest did not "
               f"download.", file=sys.stderr)
-    print(f"{len(picks)} candidates. Open it, click one, or say 'clone 3'.")
+    print(f"{len(picks)} candidates. Click cards, or say 'clone 3' / 'clone 1, 4, 7'.")
+    # Nothing here opens the page or claims it opened. A remote sandbox, an SSH
+    # session and a CI box all have no browser the user can see, and "it is open
+    # in your browser" is a claim the caller cannot verify and will sometimes be
+    # telling a user who is staring at a chat window instead.
+    print("Show the top few creatives in the conversation as well — the page is "
+          "the richer view, not the only one.", file=sys.stderr)
     return 0
 
 

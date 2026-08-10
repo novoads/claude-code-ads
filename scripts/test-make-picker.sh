@@ -145,6 +145,20 @@ hasnt P15b "credits"                 "$WORK/p.html" "no credit figure on the pag
 has   P16  'class="mark"'  "$WORK/p.html" "the novoads mark is present"
 hasnt P16b "<img src=\"http" "$WORK/p.html" "nothing is loaded over the network"
 
+# P17 -- the path printed is ABSOLUTE. A relative path in a delivery is a path
+# the reader cannot use, and the reader may be in a different directory or on a
+# different machine entirely.
+$M "$WORK/sweep.json" --media-dir "$WORK/media" --out "$WORK/abs.html" > "$WORK/abs.out" 2>/dev/null
+case "$(head -1 "$WORK/abs.out")" in /*) ok P17 "the printed path is absolute" ;;
+  *) bad P17 "the printed path is relative" ;; esac
+
+# P18 -- the script never claims the page opened, and never opens it. A remote
+# sandbox, an SSH session and a CI box all have no browser the user can see; the
+# founder hit exactly this and asked why nothing appeared.
+hasnt P18  "open in your browser" "$WORK/abs.out" "stdout does not claim a browser opened"
+$M "$WORK/sweep.json" --media-dir "$WORK/media" --out "$WORK/abs.html" 2>"$WORK/abs.err" >/dev/null
+has   P18b "in the conversation"  "$WORK/abs.err" "it tells the caller to show them inline instead"
+
 # P13 -- unreadable input fails with guidance, not a traceback.
 $M "$WORK/nope.json" > "$WORK/miss.out" 2>&1
 want P13 "$?" "1" "a missing sweep exits 1"
