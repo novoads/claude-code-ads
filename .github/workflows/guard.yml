@@ -56,6 +56,12 @@ jobs:
         run: ./scripts/test-brand-context.sh
       - name: rank-ads.py unit tests
         run: ./scripts/test-rank-ads.sh
+      # make-picker builds HTML from SCRAPED third-party text — competitor page
+      # names and ad copy. Its P4 cases are the XSS ones, and they earned their
+      # place: the first suite passed while `javascript:alert(1)` survived into
+      # an href, because escaping a URL does not neuter its scheme.
+      - name: make-picker.py unit tests
+        run: ./scripts/test-make-picker.sh
 
   #   links     — a skill that tells the agent to read a file which is not there
   #             fails SILENTLY: the agent shrugs and proceeds without the rules

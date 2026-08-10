@@ -38,7 +38,9 @@ import json
 import sys
 from pathlib import Path
 
-DEFAULT_TOP = 3
+# 12 fills a 4x3 contact sheet in make-picker.py, which is how these are meant
+# to be compared. A text list of 12 is long; a grid of 12 is one glance.
+DEFAULT_TOP = 12
 
 # collationCount is "how many audiences Meta collated under this creative". A
 # value of 1 carries no more information than null: one audience is the floor,

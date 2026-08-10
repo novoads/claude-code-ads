@@ -315,18 +315,32 @@ see is a filter they cannot correct, and the correction is usually one sharper q
 ### Rank it with the script, not by eye
 
 ```bash
-./scripts/rank-ads.py "$DIR/sweep.json"
+./scripts/rank-ads.py "$DIR/sweep.json"                  # the words
+./scripts/make-picker.py "$DIR/sweep.json"               # the page
+open "$DIR/picker.html"                                  # xdg-open on Linux
 ```
 
-It prints the delivery's opening: what the sample is, the top three with their basis,
-who is running them, and the metadata-not-craft line. Read it out; do not recompute it.
+The first prints the delivery's opening: what the sample is, the twelve picks with their
+basis, who is running them, the metadata-not-craft line. Read it out; do not recompute it.
+
+The second writes a **contact sheet** beside the sweep: twelve creatives at real size, videos
+playable in place, each card numbered and carrying its page, dates and Ad Library link.
+Comparing twelve ads as filenames is not comparing them. Open it and say:
+
+> 12 candidates, and `picker.html` is open. Click one, or say **"clone 3"**.
+
+Clicking copies that line; the ordinal is the contract and the click is the convenience, so a
+blocked clipboard costs nothing. Both scripts share one sort and one default — never renumber
+by hand. A page rather than an option prompt on purpose: a prompt blocks, and this flow
+proposes and proceeds.
 
 The sort is `collationCount` descending then longest-running, which is arithmetic, and the
 script also decides the thing prose kept getting subtly wrong: **whether the audience-count
 signal is alive at all.** Measured on a real sweep of this category, every row came back `1`
 or `null`, so the field the ordering nominally leads on contributed nothing and run length
 decided everything — while the delivery still recited both bases. The script detects that and
-says "run length only" instead. `--top N` changes how many it names; `--json` gives you
+says "run length only" instead. `--top N` changes how many BOTH produce (12 by default — a
+grid of twelve is one glance where a list of twelve is a scroll); `--json` gives you
 `signalAlive` and the counts if you are formatting your own.
 
 Three claims it carries that are easy to get wrong by hand:
@@ -457,24 +471,10 @@ browser-driven version went. Neither is needed to run a sweep.
 
 ## Legal note
 
-The Meta Ad Library is public. **This skill does not scrape it.** It calls the Novoads API, and
-Novoads queries the Ad Library through a commercial scraping vendor and returns the results under
-its own API — the same shape as Foreplay, Motion or AdSpy.
-
-The browser-driven version of this skill left that stance as an open decision, flagged in the
-file itself: fine for internal research, not automatically fine behind a product surface. **That
-decision was taken on 2026-08-08** — Apify approved as the vendor, Novoads named as the party
-querying, results returned under the Novoads API. It is recorded internally in
-`.agents/plans/competitor-ads-api/plan.md` §0, and this file inherits it rather than re-litigates
-it.
-
-Two things that decision did not change:
-
-- Meta's **official** Ad Library API still only covers political and issue ads. It is not a
-  substitute for this, which is the reason a vendor is in the picture at all.
-- The creatives you download are **somebody else's copyrighted work**. Studying a swipe file and
-  rebuilding an idea for your own product is not the same act as re-running a competitor's ad,
-  and this skill only does the first.
+`references/legal.md` — the Meta Ad Library is public, this skill does **not** scrape it (the
+Novoads API does, through a commercial vendor, the same shape as Foreplay or AdSpy), and the
+creatives you download are somebody else's copyrighted work. Studying a swipe file and
+rebuilding an idea is not re-running a competitor's ad.
 
 ## Hard rules
 
