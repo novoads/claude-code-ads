@@ -312,9 +312,27 @@ So read `pageName` and `bodyText` on every ad and sort them into three groups:
 **Name the groups in the delivery and say what you dropped and why.** A filter the user cannot
 see is a filter they cannot correct, and the correction is usually one sharper query away.
 
-### Name the top three, and name why
+### The sample is already the strongest thing you can say
 
-A list of twenty is a list the user has to read. Close with a recommendation:
+**Every ad in a sweep is one of Meta's own top ads by impressions for that query.** The Ad
+Library is asked for `total_impressions` descending — the same "Impressions: high to low" sort
+a human gets in the Ad Library UI — and the response is the head of that list, capped at
+`count`. So a 20-ad sweep is not a sample of what the brand runs. It is the twenty Meta ranks
+highest, and every one of them cleared that bar before you saw it.
+
+Say that first, because it is stronger than anything you can compute afterwards:
+
+> 20 ads, and all 20 are among Meta's highest-impression ads for this query.
+
+**What you never get is the impression NUMBER.** Meta publishes per-ad impressions only for
+political and issue ads, and in the EU under its transparency rules — never as a field on a
+commercial ad. So the count is a thing you can sort by and never a thing you can quote. Never
+write "50k impressions", never infer one from the position, and never imply the order encodes a
+size you can see.
+
+### Then name a top three, and name the basis honestly
+
+A list of twenty is still a list the user has to read. Close with a pick:
 
 > Top 3 by how long they have run and how many audiences they run against:
 > 1. Creatify, live since March, 14 audiences
@@ -324,6 +342,20 @@ A list of twenty is a list the user has to read. Close with a recommendation:
 Order them by `collationCount` descending, then longest-running first. **State the basis in the
 same breath as the pick** — a ranking whose reason is invisible is an opinion, and this one does
 not have to be.
+
+**When `collationCount` is null or 1 across the whole response, say so and rank on run length
+alone.** That is common, not exceptional: on a real sweep of this category every row came back
+`1` or `null`, so the field the ordering nominally leads on contributed nothing and longevity
+decided everything. A ranking presented as two signals when one of them was silent is a
+ranking that claims more than it has. One clause covers it:
+
+> No audience-count data on any of these, so this is run length only.
+
+Two more honesties about what the ordering is worth. The response arrives sorted by
+`collationCount` then recency — **that re-sort is ours, not Meta's**, so position 1 in the list
+is not Meta's #1 by impressions. And the cap means the head of the impressions list is all you
+ever see: a brand's decade-old evergreen is out of the sample if Meta ranks twenty others above
+it. Both are reasons to lead with the sample and treat the top three as a reading of it.
 
 Two things that ranking is not allowed to become:
 
