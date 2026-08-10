@@ -143,9 +143,25 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
     basis = ("audience count, then run length" if signal_alive
              else "run length only — no audience-count data on any of these")
 
-    cards = "\n".join(
-        card(i, ad, find_media(media_dir, str(ad.get("adArchiveId", ""))), out.parent)
-        for i, ad in enumerate(picks, 1))
+    found = [find_media(media_dir, str(ad.get("adArchiveId", ""))) for ad in picks]
+    resolved = sum(1 for f in found if f is not None)
+    cards = "\n".join(card(i, ad, f, out.parent)
+                      for i, (ad, f) in enumerate(zip(picks, found), 1))
+
+    # A grid of placeholders reads as a broken tool rather than an empty folder.
+    # Say which it is, on the page, at the top: the page shows what was
+    # DOWNLOADED, and the usual cause of an empty one is that step 4 has not run.
+    if resolved == 0:
+        notice = (f'<div class="notice"><strong>None of the {len(picks)} creatives are on '
+                  f'disk.</strong> This page shows what was downloaded, not what was found — '
+                  f'run the download loop (step 4) against <code>{html.escape(str(media_dir))}'
+                  f'</code>, then rebuild. The Ad Library links below still work.</div>')
+    elif resolved < len(picks):
+        notice = (f'<div class="notice">{resolved} of {len(picks)} creatives are on disk. '
+                  f'The rest did not download — their CDN links expire within the hour, so '
+                  f're-fetch from <code>sweep.json</code> rather than re-sweeping.</div>')
+    else:
+        notice = ""
 
     page = f"""<!doctype html>
 <meta charset="utf-8">
@@ -205,6 +221,12 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }}
   figcaption a {{ color: var(--muted-fg); font-size: 12.5px; margin-top: 2px; }}
   footer {{ max-width: 1400px; margin: 32px auto 0; color: var(--muted-fg); font-size: 13px; }}
+  .notice {{
+    max-width: 1400px; margin: 0 auto 20px; padding: 12px 16px;
+    border: 1px solid var(--primary); border-radius: var(--radius);
+    background: var(--muted); color: var(--fg); font-size: 13.5px; line-height: 1.5;
+  }}
+  .notice code {{ font-size: 12.5px; }}
 </style>
 
 <header>
@@ -215,6 +237,7 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
   <p class="sub">Ordered by {basis}. That is metadata, not craft — nobody has watched these.</p>
 </header>
 
+{notice}
 <div class="grid">
 {cards}
 </div>
@@ -246,6 +269,16 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page)
     print(f"{out}")
+    if resolved == 0:
+        # Loud on stdout too: the agent reads this before it writes the delivery,
+        # and "12 candidates" over an empty grid is a claim that does not hold.
+        print(f"WARNING: none of the {len(picks)} creatives were found in {media_dir}.",
+              file=sys.stderr)
+        print("The download loop (step 4) has probably not run. Say so rather than "
+              "presenting an empty grid as the shortlist.", file=sys.stderr)
+    elif resolved < len(picks):
+        print(f"note: {resolved} of {len(picks)} creatives on disk; the rest did not "
+              f"download.", file=sys.stderr)
     print(f"{len(picks)} candidates. Open it, click one, or say 'clone 3'.")
     return 0
 

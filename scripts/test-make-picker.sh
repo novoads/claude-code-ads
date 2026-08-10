@@ -80,6 +80,23 @@ hasnt P4d "javascript:"               "$WORK/x.html" "a javascript: url is dropp
 # in a grid of twelve reads as "this ad is bad", not "this file is missing".
 has P5 "no file downloaded" "$WORK/p.html" "a missing file becomes a placeholder"
 
+# P5b -- a grid of placeholders DIAGNOSES itself. Twelve empty cards read as a
+# broken tool rather than an empty folder; the founder hit exactly that on a demo
+# built before any download, and asked why the ads were missing.
+$M "$WORK/sweep.json" --media-dir "$WORK/nothing" --out "$WORK/none-md.html" >"$WORK/nm.out" 2>&1
+has P5b "None of the 12 creatives are on disk" "$WORK/none-md.html" "an empty grid says why on the page"
+has P5c "WARNING: none of the 12" "$WORK/nm.out" "and warns on stderr, where the agent reads it"
+
+# P5d -- a PARTIAL download is named too, with the reason (links expire).
+mkdir -p "$WORK/partial" && : > "$WORK/partial/slug-id1.jpg"
+$M "$WORK/sweep.json" --media-dir "$WORK/partial" --out "$WORK/part.html" >/dev/null 2>&1
+has P5d "1 of 12 creatives are on disk" "$WORK/part.html" "a partial download is counted on the page"
+
+# P5e -- and a COMPLETE set says nothing. A banner that always shows is noise.
+mkdir -p "$WORK/full" && for i in $(seq 1 14); do : > "$WORK/full/slug-id$i.jpg"; done
+$M "$WORK/sweep.json" --media-dir "$WORK/full" --out "$WORK/full.html" >/dev/null 2>&1
+hasnt P5e "class=\"notice\"" "$WORK/full.html" "a complete set shows no banner"
+
 # P6 -- a video is playable in the picker rather than shown as a filename.
 has P6 "<video" "$WORK/p.html" "an mp4 renders as a video element"
 
