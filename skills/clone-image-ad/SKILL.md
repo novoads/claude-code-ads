@@ -100,9 +100,12 @@ say what you are about to do in one line with a price and a way out:
 > "stop", say "video" for their video ads instead, or drop your own image.
 
 - **Statics are the default, and the line says so.** A bare "clone my competitors' ads"
-  lands here rather than on `clone-video-ad` because a static sweep returns more usable creatives
-  and a static render costs a fraction of a video one. Naming the video escape in the same
-  breath is what keeps that default honest — the user picks in one word instead of being
+  lands here rather than on `clone-video-ad` for two reasons that point the same way. The
+  render is the expensive half and a static costs a fraction of a video. And the sweep's
+  `count` maxes at **20 whatever mode you ask for**, so a mixed sweep spends those 20 on a
+  split the user did not choose — measured 2026-08-10, `"all"` came back **20 video, 0 static**
+  for one brand. Asking for one kind gets you 20 of that kind. Naming the video escape in the
+  same breath is what keeps the default honest — the user picks in one word instead of being
   asked a question.
 - **"video" means a SECOND sweep, and say so before firing it.** There is nothing to hand
   over: the first sweep ran in image mode, so it holds stills `clone-video-ad` cannot open.

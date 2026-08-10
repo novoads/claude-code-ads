@@ -95,7 +95,8 @@ you have been working on → use it, and say which one you took. Otherwise ask o
 brand am I spying for?"* Do not guess the brand — every downstream judgement about what counts
 as pollution depends on it.
 
-**Media mode.** This is the one field with no default, on purpose. Look for an explicit trigger:
+**Media mode.** The API requires it and `sweep.py` requires it, so SOMETHING has to choose —
+look for an explicit trigger first:
 
 | They said | `mediaType` |
 |---|---|
@@ -103,10 +104,22 @@ as pollution depends on it.
 | "static ads", "image ads", "posters", "creatives to print" | `"image"` |
 | "both", "everything", "the full swipe file" | `"all"` |
 
-Silent → **ask, do not default.** The API mirrors this: `mediaType` is required and has no
-server-side default, precisely so a silent request cannot become a guess that spends. If they
-hand the choice back to you ("you pick"), take `"all"`, say you took it, and say why it is
-cheap: `"all"` is still **one** sweep at the same flat fee, not two.
+Silent → **take `"image"`, say you took it, and name the escape in the same line.** Do not ask;
+a question the run can answer for itself is work handed back to the user.
+
+> Sweeping their **static** ads — 20 slots each, all statics. Say "video" or "both" instead.
+
+**Why statics rather than `"all"`, when `"all"` costs the same:** the FEE is flat, the SLOTS are
+not. `count` maxes at 20 per sweep whatever mode you ask for, so `"all"` spends those 20 on a
+mix the user did not choose. Measured on a real three-competitor run, 2026-08-10: `"all"`
+returned **20 video and 0 static** for one brand and 13/6 for another. Someone who wanted a
+static from the first brand got nothing, at the same price that would have bought twenty. And
+the clone that follows is the expensive half — a static render costs a fraction of a video one,
+so the cheaper next step is the better default.
+
+Say the slot cost out loud when they ask for `"all"`, because it is the part the flat fee hides:
+**one kind gets you 20 of that kind; "both" splits the 20.** That is the whole trade, and it is
+not a reason to refuse them — just a reason they should hear it once.
 
 **Competitors.** Named → use them exactly as given, including the ones you would not have
 picked. Not named → find 3 to 5 with `WebSearch` (brands selling something similar to a similar
@@ -464,7 +477,8 @@ rebuilding an idea is not re-running a competitor's ad.
 - Download the media before writing the delivery. `adLibraryUrl` is what you quote.
 - One sweep per competitor, fanned out to the API's ceiling by `sweep.py`, against a list the
   user has seen and priced.
-- Never ask twice about the same thing, and never with a menu.
+- Never ask twice about the same thing, and never with a menu. A question the run can answer
+  for itself is not a question — media mode defaults to `image` and says so.
 - An empty sweep is reported in one line and never retried.
 - Never turn `collationCount` into a spend figure.
 - Never invent an ad, pad a thin result, or deliver a group you filtered without saying so.
