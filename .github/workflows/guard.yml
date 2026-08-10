@@ -2,12 +2,14 @@ name: guard
 
 # The pack's first CI, and deliberately the smallest thing that could be one.
 #
-# Only the grep ratchet runs here. Every other script in scripts/ hits the
-# network and needs a real NOVOADS_API_KEY, which a public repo's PR runners
+# Only checks that need no credentials run here. Most scripts in scripts/ hit
+# the network and need a real NOVOADS_API_KEY, which a public repo's PR runners
 # must not have: a fork PR would either see the secret or fail confusingly, and
-# a red check nobody can fix is worse than no check.
+# a red check nobody can fix is worse than no check. brand-context is the
+# exception — it only ever touches a local markdown file, so its unit tests run
+# here like any other test.
 #
-# What these catch, and why they are two jobs rather than one:
+# What these catch, and why they are separate jobs rather than one:
 #
 #   no-mcp  — an MCP mention drifting back into the docs. This repo runs one
 #             executable path (REST + NOVOADS_API_KEY), and the claims that
@@ -39,3 +41,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: No instructions to hide things from the user
         run: ./scripts/check-no-gag.sh
+
+  #   brand-context — the field store every skill reads. Two of its cases are
+  #             already regressions caught in review: a regex that swallowed a
+  #             newline and made an empty template read as fully populated, and
+  #             a label/field mapping that would silently read as unset forever
+  #             if either side were renamed alone. Both are invisible at a
+  #             glance and neither costs a credit to check.
+  brand-context:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: brand-context.py unit tests
+        run: ./scripts/test-brand-context.sh
