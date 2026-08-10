@@ -419,13 +419,43 @@ PLACEHOLDER_PATTERNS = [
     (r"\blorem ipsum\b", "lorem ipsum"),
     (r"\{[a-z_][a-z0-9_.]*\}", "an unfilled {template slot}"),
     (r"\[[A-Z_]{3,}\]", "an unfilled [TOKEN]"),
-    (r"\byour name here\b", "'your name here'"),
+    (r"\byour \w+ here\b", "'your ... here'"),
     (r"\bexample\.(com|org|net)\b", "example.com"),
     (r"\bTBD\b", "TBD"),
     (r"\bxxx+\b", "xxx filler"),
     (r"\bskeleton (bar|placeholder)", "a skeleton bar"),
+    # Redundant with the first pattern (anything matching this contains
+    # "placeholder"), kept only because it names the defect more precisely in the
+    # refusal message. No test pins it on purpose — deleting it changes wording,
+    # never coverage.
     (r"\bgrey placeholder bar", "a grey placeholder bar"),
+    # --- slot-shaped VALUES ---------------------------------------------------
+    # The word "placeholder" is the easy tell. These are the ones that shipped
+    # anyway: a value that IS a slot without ever saying so. Both of the first
+    # two were in the render that motivated this lint, and neither matched
+    # anything above it.
+    (
+        r"\b(?:your|my|our)?(?:brand|company|business|agency|client|store|shop|site|domain)"
+        r"\.(?:com|co|io|net|org)\b",
+        "a slot-shaped domain (agency.com, yourbrand.com)",
+    ),
+    (r"@(?:your|creator|user|brand|my)?(?:handle|username|name)\b", "a slot-shaped @handle"),
+    (r"\b(?:john|jane) doe\b", "John/Jane Doe"),
+    (r"\b(?:name|text|copy|headline|logo|title|image|photo) goes here\b", "'... goes here'"),
+    (
+        r"\b(?:sample|dummy|filler|mock) (?:text|name|copy|content|data|logo|headline)\b",
+        "sample/dummy filler",
+    ),
+    (r"\binsert (?:name|text|headline|logo|copy|title|brand)\b", "'insert ...'"),
 ]
+
+# Deliberately NOT patterns, and this is load-bearing rather than an oversight:
+# "brand name" and "company name" on their own. A well-written prompt says "the
+# company name is set in bold condensed caps" or "the brand name appears once,
+# lowercase" — describing a zone, not filling it with a slot. Matching those
+# would refuse the careful prompts and let the careless ones through, which is
+# the guard backwards. The test file pins both readings: `S` cases must be
+# refused, `C` cases must pass. Extend one and re-run BOTH.
 
 
 def lint_placeholders(prompt: str) -> list[str]:
@@ -722,6 +752,24 @@ def main() -> int:
         print(json.dumps(r), flush=True)
 
     log(f"all {len(results)} image(s) succeeded — {credits} credits charged for this call")
+
+    # The lint above runs BEFORE the charge and reads the PROMPT. Nothing here
+    # reads the PICTURE. That gap is why the first shipped clone said
+    # "Placeholder Name": the prompt was linted, the render never was, and the
+    # word was only ever visible in the image. A prompt that simply forgets to
+    # name a zone leaves the model free to fill it, and no pattern can see that.
+    #
+    # Reading an image back is judgement, not a regex, so it belongs with the
+    # agent rather than in here — but it must not be optional, and a step nobody
+    # is told to take is a step nobody takes. So the script ends by naming it.
+    log("")
+    log("NOT DONE YET — open each PNG above and read it before calling this finished:")
+    log("  1. every zone carries real content — no 'Placeholder', no slot-shaped")
+    log("     name, domain or @handle, no empty card, no grey bar, no lorem")
+    log("  2. the wordmark is spelled right, letter by letter, against the prompt")
+    log("  3. no text from the SOURCE brand survived into the render")
+    log("If a zone came back blank or slot-shaped, the prompt under-specified it.")
+    log("Name that zone's content in the prompt and re-run — do not ship it.")
     return 0
 
 
