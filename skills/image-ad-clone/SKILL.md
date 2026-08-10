@@ -1,18 +1,18 @@
 ---
 name: image-ad-clone
 description: >-
-  Clones a STATIC IMAGE ad into a reusable prompt TEMPLATE. The deliverable is a
-  parameterized library entry — placeholders, variables and per-model notes, appended to
-  the shared image-ad library — not a finished ad. Reads the frame structurally,
-  round-trips the draft prompt through gpt-image-2, nano-banana-pro or reve-2.1 until it
-  reproduces, then replaces every brand-specific with a {placeholder} and proves the
-  generalized version still renders on a different brand. Use when asked to "clone this ad
-  as a template", "reverse engineer this ad", "turn this ad into a prompt", "extract a
-  template", "make this ad reusable", "add this to my prompt library", or "study this ad
-  and make a template". Two neighbours it is NOT: generating a finished image ad from a
-  brief or an existing template is chatgpt-image-ad or nano-banana-image-ad, and cloning a
-  VIDEO ad is clone-ad. If the source is a still and the user wants one finished picture
-  rather than something reusable, they do not want this skill.
+  Clones a STATIC IMAGE ad, either into finished ads for your own product or into a
+  reusable prompt TEMPLATE — and produces both, because the template is what makes the
+  ads and the ads are what prove the template. Reads the frame structurally, round-trips
+  the draft prompt through gpt-image-2, nano-banana-pro or reve-2.1 until it reproduces,
+  replaces every brand-specific with a {placeholder}, then fills it with your product
+  pinned to a real photo. Use for "clone this ad for my product", "rebuild this
+  competitor's ad for us", "make me ads like this", "reverse engineer this ad", "turn
+  this ad into a prompt", "make this ad reusable", "add this to my prompt library", or
+  "clone my competitors' ads" with NO file attached — it sources one via
+  spy-competitor-ads rather than asking which. NOT for generating an ad from a brief or
+  an existing template (chatgpt-image-ad, nano-banana-image-ad), and NOT for a VIDEO ad
+  (clone-ad). Refuses to render your product without a real photo of it.
 ---
 
 # image-ad-clone
@@ -56,6 +56,94 @@ publishable, never silently overwrite, document model notes, price the whole run
 9. **Never write a `Model notes` claim for a model you didn't actually run.** Mark it `untested`. An invented note is worse than a missing one.
 
 10. **A v1 faithful clone never leaves this workflow.** Phase 4 reproduces the source *including* its wordmark, registered marks and any real customer testimonial — that is what makes it a structural check, and it makes it unpublishable. It is evidence, never creative: not into an ad account, a deck, a post or a case study. **Phase 6 is where brand-specifics and real testimonials die.** Invent the test fill; never inherit a real person's quoted review.
+
+## Phase 0 — the deliverable, the reference, and the product
+
+Three questions, answered before anything else. Two of them you answer yourself.
+
+### 0a. Ads or a template?
+
+The same ten phases produce both. What changes is which one is the point.
+
+| They said | Mode | Phase 7 fills with | You hand back |
+|---|---|---|---|
+| "clone this ad **for my product**", "make me ads like this", "rebuild this for us" | **ads** | **their own product**, three variants | 3 ready-to-run ads **and** the library entry |
+| "turn this into a **template**", "make this reusable", "add it to my library" | **template** | a different brand, one render | the library entry (the test render is evidence) |
+
+**Ads is the default when the ask names their product or says nothing about reuse.**
+Someone who asks to clone an ad wants an ad; the template is what we keep.
+
+The extra ads cost two more renders than the template run needs — quote them in the
+Phase 4 estimate, not after. Everything else is shared, which is the point: the
+faithful v1 is the structural check either way, and **the three filled variants are
+themselves the proof the template generalises**, so ads mode does not pay for Phase 7
+separately.
+
+**In both modes the library entry gets written.** It is not an optional extra in ads
+mode: Phase 4 reproduces the source *including* its wordmark, registered marks and any
+real customer testimonial, and Phase 6 is where those die. Skipping the write-out does
+not skip a nice-to-have, it leaves the competitor's marks alive in the only artifact
+anyone keeps.
+
+### 0b. Is there a reference?
+
+**Handed one** — a path, an attached image, a still already in `outputs/` — clone it.
+Do not sweep. Someone who handed over an image has already answered the question a
+sweep would ask.
+
+**Not handed one — do NOT stop and ask "which ad?".** That puts the work back on the
+user at the moment they asked us to do it. Run `spy-competitor-ads` in image mode, and
+say what you are about to do in one line with a price and a way out:
+
+> No ad attached. I'll sweep Arcads, Creatify and Icon and clone the strongest static.
+> N credits total. Say "stop", or drop your own image instead.
+
+- **Name the competitors**, so a wrong guess is corrected before it is paid for.
+- **The total comes from a live `POST /v1/estimates` in this session** — never a number
+  from memory or from this file. N competitors is N charges and that multiplication is
+  the whole quote.
+- **One word stops it**, and the escape hatch is naming their own image instead.
+- Default to **three** competitors when you picked them yourself; honor any list they name.
+
+Then act. It is a proposal with a veto, **not a question and not a menu** — a menu makes
+the user classify their own situation, which is the friction this branch exists to remove.
+`spy-competitor-ads` hands back file paths and a ranked top three; take the top one unless
+the user picked otherwise.
+
+### 0c. Do we have the brand?
+
+```bash
+./scripts/brand-context.py check image-ad-clone
+```
+
+Exit 2 means blocked, and the output names exactly what is missing. **Ask for those and
+nothing else**, then write each answer back so no later run asks again:
+
+```bash
+./scripts/brand-context.py set product.photo references/products/hero.png
+./scripts/brand-context.py set product.description 'A 500ml insulated water bottle'
+```
+
+Two fields block, and only in **ads** mode: `product.photo` and `product.description`.
+A competitor's ad says nothing about what your product looks like, and a fabricated one
+is the failure a viewer catches instantly. Everything else — brand name, logo file,
+colors, fonts, tone — is used when stored and never demanded.
+
+**On a first run with nothing stored, offer the shortcut before the interview:**
+
+> Drop your website and I'll draft the brand block from it — no credits, and you correct
+> anything I get wrong. Or just give me a product photo and one line about it.
+
+```bash
+./scripts/brand-context.py from-url https://theirbrand.com
+```
+
+It writes nothing. Confirm each drafted line with the user, then `set` them. Its image
+candidates are **candidates**: a site hero is usually a lifestyle shot with text burned
+in, and this skill still needs a clean packshot.
+
+Template mode does not need any of it — a template is filled with a stand-in brand by
+design. Do not ask.
 
 ## Picking the model in Phase 1
 
@@ -211,16 +299,27 @@ rendering at a mapped ratio, not the original.
 
 ## Workflow phases (see the shared guide for full detail)
 
+Phase 0 above runs first in both modes. Phases 7 and 10 are where the two diverge.
+
+0. **Phase 0: Deliverable, reference, brand.** Ads or template; clone what was handed
+   over or sweep for one; `brand-context.py check` and ask only for what blocks.
 1. **Phase 1: Preflight + model choice.** Reference image resolves; `.env` has `NOVOADS_API_KEY`; validator located. **Ask which model to validate against** (or auto-detect).
 2. **Phase 2: Visual analysis.** Describe the reference structurally — aspect ratio, format type, layout, typography, color palette, photography style, every text string verbatim, decorative elements, chrome to strip, and `[BRAND]` vs `[STRUCTURE]` for each.
 3. **Phase 3: Draft v1 prompt** (brand-specifics intact). The three always-on safety suffixes take 1,575 characters off whatever the chosen model's cap is, leaving **30,425 on `gpt-image-2`, 48,425 on `nano-banana-pro`, 2,425 on `reve-2.1`**. On the first two, write the prompt the clone needs and stop thinking about length. On `reve-2.1`, 2,425 is the whole budget on default flags, and a faithful six-panel clone wants more than that. The validator prints the exact number when you overflow.
 4. **Phase 4: Generate with reference.** Price the run and get a yes first. Pass `--image-ref <reference>` and the matched ratio. Synchronous; blocks 60–90s.
 5. **Phase 5: Compare and iterate.** Refine on the deltas. Cap 4 iterations. Track running credits.
 6. **Phase 6: Generalize into placeholders** (`{brand.name}`, `{brand.color_primary}`, etc.).
-7. **Phase 7: Test the generalized template** against a DIFFERENT brand. If structure breaks, refine the placeholder set. Optionally cross-check the structure by *editing* the original with `--source-image` and a brand-swap prompt — see the validator section.
+7. **Phase 7: Fill the template and render.** **Ads mode:** fill with the user's own
+   brand from `MASTER_CONTEXT.md`, pin the product to `product.photo` as a reference
+   image, and render **three** variants at the source's ratio — image failure modes are
+   independent enough that a roll nailing the product often misses the text. Those three
+   are the deliverable *and* the proof the template generalises. **Template mode:** one
+   render against a DIFFERENT, invented brand. Either way, if structure breaks, refine
+   the placeholder set. Optionally cross-check by *editing* the original with
+   `--source-image` and a brand-swap prompt — see the validator section.
 8. **Phase 8: Cross-model validation (recommended).** Run the same template on another model. Document real deltas only.
 9. **Phase 9: Document the template** per `template-format.md`.
-10. **Phase 10: Save and confirm.** Append to the library, print the path, move PNGs to a permanent iteration dir, report total credits charged.
+10. **Phase 10: Save and confirm.** Append to the library, print the path, move PNGs to a permanent iteration dir, report total credits charged. **Ads mode also hands back the three variants** — which one you would run, what was preserved, what was swapped, and any copy still standing in. Say the library entry number in the same breath: two artifacts, one run.
 
 ## Iteration directory layout
 

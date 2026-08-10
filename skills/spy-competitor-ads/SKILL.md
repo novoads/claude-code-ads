@@ -5,22 +5,24 @@ description: >-
   Library into a local swipe folder, through the Novoads API. One sweep per competitor,
   priced by a live estimate before anything is charged, media pulled the moment the response
   lands because the CDN links expire, and every ad carried with its permanent Ad Library
-  URL, the page running it, and how many audiences the creative is running against. Use when
-  asked to spy on competitors, find what ads a brand is running, pull a competitor's video or
-  static creatives, build or refresh a swipe file, check who is outspending you on Meta, or
-  source a reference ad to recreate. It finds and files ads; it does not rebuild them —
-  cloning a competitor VIDEO ad for your own product is clone-ad, and turning a static ad
-  into a reusable parameterized template is image-ad-clone. It writes no analysis and no
-  creative brief. A sweep that finds nothing is reported as a result, never apologised for.
+  URL, the page running it, and how many audiences the creative is running against, closing
+  with the three most established and why. Use when asked to spy on competitors, find what
+  ads a brand is running, pull a competitor's video or static creatives, build or refresh a
+  swipe file, check who is outspending you on Meta, or source a reference ad to recreate.
+  It finds, ranks and files ads; it does not rebuild them — a static becomes your own ads,
+  or a reusable template, via image-ad-clone. It writes no craft analysis and no creative
+  brief. A sweep that finds nothing is a result, never an apology.
 ---
 
 # Spy Competitor Ads
 
 Find what a competitor is actually running, and put the files on disk. That is the whole job.
 
-This skill does **not** analyse, rank by "why it's winning", or write a brief. It hands you
-creatives and the facts attached to them. What you do with them belongs to `clone-ad` (a video
-ad rebuilt for your product) or `image-ad-clone` (a static turned into a reusable template).
+It ranks what it finds, on evidence the Ad Library actually publishes — how long a creative has
+run and how many audiences it runs against. It does **not** judge craft, explain "why it's
+winning", or write a brief; it has not watched these ads and neither have you. What you do with
+them belongs to `image-ad-clone`, which turns a static into your own ads, a reusable template,
+or both.
 
 The mechanics are one HTTP call per competitor. Everything that makes a run good or bad is
 judgement: which competitors, which media mode, and which of the returned ads are actually the
@@ -310,6 +312,28 @@ So read `pageName` and `bodyText` on every ad and sort them into three groups:
 **Name the groups in the delivery and say what you dropped and why.** A filter the user cannot
 see is a filter they cannot correct, and the correction is usually one sharper query away.
 
+### Name the top three, and name why
+
+A list of twenty is a list the user has to read. Close with a recommendation:
+
+> Top 3 by how long they have run and how many audiences they run against:
+> 1. Creatify, live since March, 14 audiences
+> 2. Arcads, since May, 9 audiences
+> 3. Icon, since June, 6 audiences
+
+Order them by `collationCount` descending, then longest-running first. **State the basis in the
+same breath as the pick** — a ranking whose reason is invisible is an opinion, and this one does
+not have to be.
+
+Two things that ranking is not allowed to become:
+
+- **A craft judgement.** You have not watched these ads. "Strong hook", "better angle" and
+  "this one is working" are claims the metadata cannot carry. Reading an ad properly is
+  `analyze_ad`, it is charged **per ad**, and against a twenty-ad sweep that is an order of
+  magnitude more than the sweep itself cost. Offer it on the top one to three as its own
+  priced step; never quietly upgrade "rank these" into twenty reads.
+- **A spend figure.** See the next section — it survives being turned into a ranking.
+
 ### `collationCount` is recurrence, not spend
 
 It is the closest thing to a spend signal the Ad Library exposes: one creative shown against
@@ -363,16 +387,47 @@ downloaded", not "here is their swipe file". If files are missing, that goes in 
 with the `adLibraryUrl`s for the ones that did not land. A set delivered without its count reads as
 complete, and the user studies four ads believing they are the whole answer they paid for.
 
-Then offer the next step **once**, in one line:
+Then offer the next step **once**, in one line, naming a skill that exists in this checkout:
 
-- A **video** you want rebuilt for your own product → `clone-ad`.
-- A **static** you want turned into a reusable, parameterized template → `image-ad-clone`.
+- A **static** you want rebuilt as your own ads, or turned into a reusable template, or both
+  → `image-ad-clone`.
 
-Offer, do not start. Both of those spend, and neither of them is what was asked for here.
+Offer, do not start. It spends, and it is not what was asked for here. There is no video
+equivalent in this pack yet — for a video you found, hand over the file path and say so.
 
 **Skip the offer entirely when this skill was invoked as a sub-step of something else.** If
-another skill or workflow asked for a swipe file, hand back the paths and stop — the caller owns
-what happens next, and an offer injected into the middle of its flow hijacks it.
+another skill or workflow asked for a swipe file, hand back the file paths **and the ranked top
+three** and stop — the caller owns what happens next, and an offer injected into the middle of
+its flow hijacks it.
+
+## Step 7 — file the corpus so it is not re-bought
+
+The sweep is the charge; the files are the asset. Record beside the downloads, in
+`$DIR/sweep.json`'s own directory, what was swept and **when**:
+
+```bash
+jq -n --arg q "$QUERY" --arg m "$MEDIA" --arg c "$COUNTRY" --arg at "$(date -u +%FT%TZ)" \
+  '{query:$q, mediaType:$m, country:$c, sweptAt:$at}' > "$DIR/swept.json"
+```
+
+`sweep.json` already echoes the query, media mode and country back, which is why a saved sweep
+is self-describing. The scan **date** is the part it does not carry, and it is the part that
+decides everything below.
+
+**Before sweeping anything, look for an existing corpus for that brand and media mode.**
+
+- **Under 7 days old** — reuse it. Do not sweep, do not charge. Say which stored sweep you are
+  using and when it was taken.
+- **7 days or older** — say the date and the age unprompted, offer a refresh **with its price**,
+  and wait. Never refresh silently, and never present stored ads as what the brand is running
+  now. The freshness number is not arbitrary: the other competitor corpus in this repo sat at
+  eight days with no threshold at any age and presented itself as healthy while three filters
+  hid a post the founder found by hand.
+- **Absent** — sweep, after the estimate and the announced total. Reuse is an optimisation on
+  top of the price gate, never a way around it.
+
+A stored corpus is re-minable: "clone the second one too" costs nothing. The media URLs are dead
+within the hour, but the downloaded files are not, and `adLibraryUrl` never expires.
 
 ## Errors: branch on `error.code`, never on the message
 
@@ -401,38 +456,10 @@ how you recognise it). Note that the generation record is a receipt, not a mirro
 `outputUrl` at all, there is nothing to watch or download, and the media lives only in the
 response you already have. That is the whole reason step 4 downloads first.
 
-## Install it on its own
+## Background
 
-This skill ships in the Novoads ad skill pack. To install just this one:
-
-```bash
-npx skills add novoads/claude-code-ads@spy-competitor-ads
-```
-
-Installed solo, it expects four things the pack normally provides. None of them are large:
-
-| Shared file | What it is | Solo |
-|---|---|---|
-| `.env` at the repo root | `NOVOADS_API_KEY=novo_…` | Create it yourself, `chmod 600` |
-| `scripts/check-novoads-env.sh` | Connectivity check that tells a `401` from a `403` | Skip it, or read the failure codes above |
-| `logs/novoads-api.jsonl` | Append-only local spend log, gitignored | `mkdir -p logs && touch logs/novoads-api.jsonl` |
-| `outputs/` | Where sweeps land, gitignored | Created by the `mkdir -p` in step 3 |
-
-The step-6 hand-off targets `clone-ad` and `image-ad-clone`, which are separate skills in the
-same pack. Installed solo they are not there — say so instead of offering a route that goes
-nowhere, and hand over the file paths.
-
-## Where the browser version went
-
-This skill used to drive browser automation: open the Ad Library in a tab, run an in-page extractor,
-and download through the tab's own credentials. That version is retired. Its `extract.js` and
-`collect.sh` remain in the Novoads repo's git history if anyone ever needs them, and the whole
-class of failures they carried — DOM drift, Chrome silently swallowing repeated downloads, a
-masked CDN URL — is gone with them. Nothing in the flow above needs a browser.
-
-**Internal teardown workflows keep working**: pass the target directory explicitly and this skill
-writes there (for example `.agents/competitor-teardowns/<slug>-ads-<date>/`) instead of the
-default `outputs/competitor-ads/<slug>/`. The directory is the only thing that changed.
+`references/background.md` — installing this skill outside the pack, and where the retired
+browser-driven version went. Neither is needed to run a sweep.
 
 ## Legal note
 
@@ -465,3 +492,8 @@ Two things that decision did not change:
 - An empty sweep is reported in one line and never retried.
 - Never turn `collationCount` into a spend figure.
 - Never invent an ad, pad a thin result, or deliver a group you filtered without saying so.
+- Close with a ranked top three and the basis for it. Never rank on craft you have not paid
+  to read.
+- Check for a stored corpus before sweeping. Under 7 days, reuse it and charge nothing; older,
+  say its age and price the refresh; absent, sweep after the estimate. Reuse never skips the
+  price gate.

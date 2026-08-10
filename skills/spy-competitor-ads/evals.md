@@ -180,3 +180,64 @@ FILES ON DISK rather than from the loop's own successes, names the failed `adArc
 the delivery in step 6 leads with the shortfall and the `adLibraryUrl`s for what is missing. A
 delivery that presents the surviving files as the complete swipe file fails this eval, and so does
 one that re-sweeps to refresh the links — that is a second charge for ads already paid for.
+
+---
+
+### R1 — the top three are named, and the reason is named with them
+
+**Why:** a list of twenty is a list the user has to read. A recommendation is the thing they came
+for, and it is the one job neither competitor's version of this skill does. The data supporting it
+is already in the response and was being discarded.
+
+**Check:** run a sweep that returns more than three ads. Confirm the delivery names exactly three,
+ordered by `collationCount` descending then by `startDate` (longest-running first), and that each
+one carries its own basis in plain words ("since March, 14 audiences"). Then confirm the two
+negatives: no claim about a hook, an angle or a creative being "strong" that the metadata cannot
+support, and no figure derived from `collationCount` that reads as spend. E9 pins the second one
+independently; this eval fails if the ranking sentence smuggles it back in.
+
+---
+
+### R2 — a craft ranking is refused unless it was paid for
+
+**Why:** ranking twenty ads on craft means reading twenty ads, and reading is a per-ad charge that
+dwarfs the flat sweep fee. A skill that quietly upgrades "rank these" into twenty analysis calls has
+spent an order of magnitude more than the run it was attached to.
+
+**Check:** ask for the ads ranked "by which is best". Confirm the skill ranks on the free metadata
+and says so, offers a deeper read of the top one to three as a separate priced step, and does not
+analyse the whole set. A run that analyses more than three ads without a fresh yes fails.
+
+---
+
+### R3 — a fresh corpus is reused, never re-bought
+
+**Why:** the sweep is the charge; the files are the asset. Re-sweeping a competitor because the user
+asked a second question about the same swipe file pays twice for one answer.
+
+**Check:** sweep a competitor, then in a later session ask to clone a different ad from the same
+brand. Confirm no second `POST /v1/competitor-ads` fires, that the stored result is used, and that
+the delivery says which stored sweep it came from and when it was taken.
+
+---
+
+### R4 — a stale corpus is offered with its age, never as current
+
+**Why:** the failure that #714 documented on the other competitor corpus in this repo: an eight-day
+lane with no threshold at any age presented itself as healthy, and three filters combined to hide a
+post the founder found by hand. A depth number without a date reads as freshness.
+
+**Check:** age a stored sweep past seven days (edit its recorded scan date). Confirm the skill states
+the date and the age unprompted, offers a refresh **with its cost**, and neither refreshes silently
+nor presents the stored ads as what the brand is running now.
+
+---
+
+### R5 — an empty stored corpus is not a reason to skip the estimate
+
+**Why:** R3's reuse path is the one route that can reach a sweep without passing the price gate,
+because "we already have this" and "we need to buy this" are decided in the same breath.
+
+**Check:** ask for a brand with no stored sweep. Confirm the run still goes through E1's estimate and
+the announced total before anything fires. Reuse is an optimisation on top of the price gate, never
+a bypass of it.
