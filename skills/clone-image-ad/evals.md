@@ -291,3 +291,23 @@ is wrong twice, confirm the run composites a clean PNG rather than paying for a 
 
 Automated as L1-L4 in `scripts/test-brand-context.sh` for the flags and their order; the
 spelling and the composite decision are judgement and stay here.
+
+
+---
+
+### D5 — the render is finished, always
+
+**Why:** a clone shipped reading "Placeholder Name" over "agency.com · partner", beside an empty
+white card and two grey skeleton bars. Both defects were deliberate — one was a blank-zone rule
+written the same day, the other was placeholder copy typed straight into the prompt. Neither is
+acceptable output: a reviewer cannot judge a layout past the word "placeholder", and a blank
+card is an unfinished ad rather than a careful one.
+
+**Check:** every rendered zone carries plausible finished content — a real-looking name, a
+real-looking company, a real-looking quote, a real-looking domain. No empty containers, no grey
+bars, no `{slots}`, no lorem. Then confirm the opposite for the library entry: the TEMPLATE
+written in Phase 9 **does** carry `{brand.name}` and friends. Slots belong in the file, never in
+the picture.
+
+Automated in `scripts/test-placeholder-lint.sh`: six scaffolding shapes are refused **before any
+paid call**, and a clean prompt passes.

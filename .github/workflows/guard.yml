@@ -68,6 +68,11 @@ jobs:
       # request: every case stops before the first one or tests a pure function.
       - name: sweep.py unit tests
         run: ./scripts/test-sweep.sh
+      # A render must ship finished. This refuses a prompt carrying scaffolding
+      # BEFORE it charges — added after an ad went out reading "Placeholder
+      # Name" over "agency.com", beside an empty card and two grey bars.
+      - name: placeholder lint
+        run: ./scripts/test-placeholder-lint.sh
 
   #   links     — a skill that tells the agent to read a file which is not there
   #             fails SILENTLY: the agent shrugs and proceeds without the rules
