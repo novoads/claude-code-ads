@@ -39,32 +39,40 @@ bad()  { echo "FAIL  $1"; fail=$((fail + 1)); }
 # /v1. `nbGenerations` and a 1080p ask are both live-verified 400s (2026-08-10);
 # the other three name a vendor tool or a vendor behaviour we do not have.
 #
-# Checked against the whole skill directory, not just SKILL.md, so a reference
-# file added later inherits the guard instead of escaping it.
-while IFS='|' read -r pattern why; do
+# SCOPE is the table's first column. Tool NAMES are banned in every file of the
+# skill (`all`) -- nothing in this pack can call one, wherever it is written, and a
+# reference file added later inherits the ban instead of escaping it. Retired
+# CLAIMS about API behaviour are scoped to SKILL.md (`skill`), because that is the
+# file an agent follows at runtime while evals.md has to quote the old wording
+# plainly to say what it tests.
+#
+# That split replaced a whole-file exemption for evals.md, which a review proved
+# was a hole: the retired names could be appended there and the guard stayed green
+# at 23/23. Same self-exemption failure that shipped in check-no-gag.sh once
+# already. But removing it outright left evals.md green only because it happened to
+# punctuate around the literals, which makes the real coverage "strings nobody
+# repunctuated". Hence scope-with-a-reason rather than exemption-by-convenience.
+while IFS='|' read -r scope pattern why; do
   [ -z "$pattern" ] && continue
+  case "$scope" in
+    all)   target="skills/novoads-image-to-motion/" ;;
+    skill) target="$SKILL" ;;
+    *)     bad "unknown scope '$scope' in the PATTERNS table"; continue ;;
+  esac
   # -F: these are literal names, never regexes. A pattern that is accidentally a
   # regex is how a guard silently stops matching what it claims to match.
-  # No file is exempt, not even evals.md. The first version of this loop skipped
-  # every hit in evals.md so the P-cases could name what they test, and a review
-  # proved that exemption was a hole: `arcads_generate_video_seedance_25` and
-  # `nbGenerations: 4` could be appended to evals.md and the guard stayed green at
-  # 23/23. This is the same self-exemption failure that shipped in check-no-gag.sh
-  # once already. The fix is not a narrower exemption, it is no exemption: THIS
-  # SCRIPT is the single list of retired names, and evals.md points here instead of
-  # repeating them. One list cannot disagree with itself.
-  if hits=$(grep -rniF -e "$pattern" skills/novoads-image-to-motion/ 2>/dev/null); then
+  if hits=$(grep -rniF -e "$pattern" "$target" 2>/dev/null); then
     bad "retired '$pattern' survives ($why)"
     printf '%s\n' "$hits" | sed 's/^/        /'
   else
     ok
   fi
 done <<'PATTERNS'
-arcads_|vendor tool name; nothing here can call it
-register_image|no analogue on /v1; the warning is meaningless
-nbGenerations|not a field; live-verified 400 Unrecognized key
-720p or higher|720p is this model's ceiling; 1080p is a live-verified 400
-expire quickly|inverted: the assetId is durable, the upload URL expires
+all|arcads_|vendor tool name; nothing here can call it
+all|register_image|no analogue on /v1; the warning is meaningless
+all|nbGenerations|not a field; live-verified 400 Unrecognized key
+skill|720p or higher|720p is this model's ceiling; 1080p is a live-verified 400
+skill|expire quickly|inverted: the assetId is durable, the upload URL expires
 PATTERNS
 
 # ── 2. Drift: the craft that the port exists to carry ─────────────────────────
@@ -117,7 +125,11 @@ if python3 - "$SKILL" <<'PY'
 import json, re, sys
 text = open(sys.argv[1], encoding="utf-8").read()
 bodies = []
-for block in re.findall(r"```(?:json)?\n(.*?)```", text, re.S):
+# ANY fence tag, and `~~~` as well as backticks. The first version matched only
+# untagged and `json` fences, so a `kind:video` body with no prompt hid inside a
+# ```jsonc or ~~~json fence and passed. A guard that only inspects the fences it
+# expects is a guard whose coverage is a typo away from zero.
+for block in re.findall(r"(?:```|~~~)[a-zA-Z0-9_-]*\n(.*?)(?:```|~~~)", text, re.S):
     block = block.strip()
     if '"kind"' not in block:
         continue
@@ -128,6 +140,14 @@ for block in re.findall(r"```(?:json)?\n(.*?)```", text, re.S):
         raise SystemExit(1)
     if obj.get("kind") == "video":
         bodies.append(obj)
+
+# A block may be marked as a deliberate counter-example -- showing the body that
+# 400s is a legitimate way to teach the rule, and the guard must not forbid it.
+# Explicit and greppable so it can never be earned by accident.
+if "<!-- parity: counter-example -->" in text:
+    marked = len(re.findall(r"<!-- parity: counter-example -->", text))
+    print(f"        note: {marked} block(s) marked as counter-examples are still checked;")
+    print("        move a counter-example OUT of a fenced kind:video block to exempt it")
 
 if not bodies:
     print("        no {\"kind\": \"video\"} estimate example in a fenced block; the cost gate is unshowable")
@@ -154,11 +174,15 @@ fi
 # A price written into a skill file rots silently, and this repo's rule is that
 # every credit number comes from a live estimate. Digits followed by a credit
 # word are the shape that keeps coming back.
-# `grep -v 'credits?Charged'` was the first version, and BRE treats `?` as a
-# literal, so the exemption it documented never existed: it could only ever have
-# matched the text "credits?Charged". Harmless while no digit sits next to the
-# field name, and exactly the kind of dead clause someone later relies on. -E.
-if grep -nEi '[0-9]+(\.[0-9]+)?[[:space:]]*(cc|credits?)\b' "$SKILL" | grep -Ev 'creditsCharged'; then
+# NO exemption. The first version filtered out lines matching `credits?Charged`
+# as a BRE, where `?` is literal, so the exemption never fired and nothing was
+# lost. "Fixing" it to `-E` made it real, and it immediately became a hole: a
+# review demonstrated that `creditsCharged, which for an 8s 720p take is 130
+# credits` passed 23/23 with the actual price in it. The exemption bought nothing
+# either way -- the unfiltered pattern matches zero lines in a clean file, because
+# no digit ever sits beside the field name. So it is gone. A guard on the one rule
+# this pack treats as non-negotiable is the last place to carry a convenience.
+if grep -nEi '[0-9]+(\.[0-9]+)?[[:space:]]*(cc|credits?)\b' "$SKILL"; then
   bad "a credit figure is written into the skill; price it live instead"
 else
   ok

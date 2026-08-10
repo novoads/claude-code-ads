@@ -196,25 +196,6 @@ the runtime.
 **Check:** confirm the prompt carries an explicit hold clause for anything that must not
 move, and that the last beat pins the final state and says no fade out.
 
-### E8 — the cost gate actually runs
-
-**Why:** the first draft of this skill showed an estimate body with no `prompt`. That field
-is required and the body is strict, so live it is
-`400 prompt: Invalid input: expected string, received undefined` — the one call between the
-user and a charge, failing, with the agent left to improvise past it. It also silently
-disabled E7: an unsent prompt is an unlinted prompt. An independent parity review found it;
-nobody reading the file caught it, which is why the check is now mechanical.
-
-**Check:** `./scripts/test-parity-i2m.sh` parses every fenced `kind: "video"` body and
-fails unless `prompt` is a non-empty string, and unless no near-miss key (`promptText`) is
-standing in for it. It parses rather than greps because the first version asked only whether
-the token appeared on the line, which a trailing comment, a renamed key, an empty string and
-a pretty-printed body each defeated. Then run once for real: confirm the estimate returns
-`credits` and `balance` rather than a `400`, and that the prompt priced is the prompt
-rendered.
-
----
-
 ### E6 — text actually survives our render (**costs one render**)
 
 **Why:** the parity claim this port cannot make for free. The text-fidelity behaviour was
@@ -235,19 +216,41 @@ verified here, which would be a claim.
 
 ### E7 — the estimate's actor warning is overridden, never satisfied
 
-**Why:** measured live 2026-08-10 with a control. A prompt built from the skill's own
-template returns **exactly one** warning, `missing_actor_descriptor`; strip the template's
-silence sentence and its closing ratio and the same prompt returns three. So the template is
-load-bearing, and any warning other than the actor one means a template line went missing.
-The actor rule is **structurally unsatisfiable** — there is no actor in a motion graphic and
-no wording clears it. An agent that takes it at face value inserts "a woman in her 20s in a
-grey zip hoodie" into a dashboard animation and destroys the render to satisfy a linter.
+**Why:** the failure is an agent that inserts "a woman in her 20s in a grey zip hoodie" into
+a dashboard animation because a linter asked, destroying the render to clear a warning. The
+rule is `styleFamilies: ["ugc"]` and every motion graphic trips it, so it will be seen.
 
-An earlier draft of this skill claimed four warnings, because it was measured on a
-throwaway prompt rather than on what the skill emits. Re-measure against the template, never
-against a sketch.
+**This case does NOT assert a warning count, and neither may the skill.** Three drafts each
+claimed one and each was wrong. The reason is worth keeping: `missing_actor_descriptor`'s
+check is a bag of actor words that also contains `\d{2}s`, put there to catch "in her 20s" —
+so a beat list timed `0.15s apart`, or one naming a `10s` mark, clears it by accident and the
+whole warning disappears. Measured both ways 2026-08-10: `0.2s` timings warn, `0.15s`
+timings return nothing at all. Other rules fire on words this skill's own craft recommends
+(`cinematic` in the key-art class, `then` in a beat sequence, a dash-prefixed beat list). A
+count is therefore not a property of the genre, it is a property of the digits somebody
+picked.
 
-**Check:** price a prompt built from the template. Confirm exactly one warning comes back,
-that the skill **says out loud it is overriding the actor rule and why** rather than
-silently ignoring it or complying, and that no actor, person, hand or model appears anywhere
-in the final prompt unless the source image contains one.
+**Check:** price a prompt built from the template. Whatever comes back, confirm the skill
+reads each warning, judges it against the prompt, **says out loud which ones it is
+overriding and why**, and that no actor, person, hand or model appears anywhere in the final
+prompt unless the source image contains one. A run that silently complied fails. A run that
+silently ignored them fails too.
+
+### E8 — the cost gate actually runs
+
+**Why:** the first draft of this skill showed an estimate body with no `prompt`. That field
+is required and the body is strict, so live it is
+`400 prompt: Invalid input: expected string, received undefined` — the one call between the
+user and a charge, failing, with the agent left to improvise past it. It also silently
+disabled E7: an unsent prompt is an unlinted prompt. An independent parity review found it;
+nobody reading the file caught it, which is why the check is now mechanical.
+
+**Check:** `./scripts/test-parity-i2m.sh` parses every fenced `kind: "video"` body and
+fails unless `prompt` is a non-empty string, and unless no near-miss key (`promptText`) is
+standing in for it. It parses rather than greps because the first version asked only whether
+the token appeared on the line, which a trailing comment, a renamed key, an empty string and
+a pretty-printed body each defeated. Then run once for real: confirm the estimate returns
+`credits` and `balance` rather than a `400`, and that the prompt priced is the prompt
+rendered.
+
+---

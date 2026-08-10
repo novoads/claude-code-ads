@@ -67,29 +67,34 @@ It does not see everything the render sees. `aspectRatio`, `startImageAssetId` a
 generation body is valid: the two-modes `400` below is invisible here and moderation runs
 only at generation. A clean estimate prices the call, it does not bless it.
 
-There is no spoken-line gate here, because nothing speaks. That is one gate fewer, not
-permission to skip the cost gate.
+The pack's other spending gate, the one where a spoken line is approved on its own, does not
+apply here: nothing speaks. That is one gate fewer, not permission to skip the cost gate.
 
-### One estimate warning is permanent on this genre. Never satisfy it.
+### The estimate's warnings are UGC rules. One response, and it is not "comply".
 
 `POST /v1/estimates` returns an advisory `warnings` array. It never refuses a call and never
-changes a price, and its rules were written for UGC video with an actor in frame.
+changes a price. Its rules were written for talking-head UGC with an actor in frame, and they
+match on substrings, so on a motion graphic they fire and fall silent for reasons that have
+nothing to do with whether the shot is any good.
 
-**A prompt built from the template below comes back with exactly one warning**,
-`missing_actor_descriptor`. Measured on `seedance-2.5` 2026-08-10, with the control run: strip
-the template's silence sentence and its closing ratio and the same prompt returns three
-(`missing_actor_descriptor`, `no_spoken_line`, `no_aspect_ratio`). That is what those two
-lines are doing there. A fourth rule, `label_without_hold`, never fires on this template at
-all, because the TEXT clause already contains `identical to the reference image`, which is
-the phrase it looks for.
+**`missing_actor_descriptor` is the one to understand.** Read literally it asks you to put a
+person in the frame. **Never do that.** An agent that "fixes" it by inserting "a woman in her
+20s in a grey zip hoodie" into a dashboard animation has destroyed the render to satisfy a
+linter. Say you are overriding it and why.
 
-So if any warning other than the actor one appears, **a template line is missing** — find
-it and put it back rather than arguing with the linter.
+**Do not read anything into whether it appears.** Its check is a bag of actor words that also
+contains a two-digits-then-`s` pattern, put there to catch "a woman in her 20s" — so a beat
+list timed `0.15s apart`, or one that mentions a `10s` mark, satisfies it by accident and the
+warning vanishes. Measured both ways, 2026-08-10. Its absence is not a verdict on your prompt
+and its presence is not a defect to fix.
 
-The actor warning is different: it is **structurally unsatisfiable and must be overridden
-out loud.** There is no actor in a motion graphic, so no wording clears it. An agent that
-"fixes" it by inserting "a woman in her 20s in a grey zip hoodie" into a dashboard animation
-has destroyed the render to satisfy a linter.
+**This file states no warning count, deliberately.** Three earlier drafts each asserted one
+and each was wrong, because the count moves with incidental digits in the beat timings and
+with words the craft itself recommends (`cinematic` in the key-art class trips a polish rule;
+`then` in a beat sequence trips a chained-motion rule; a dash-prefixed beat list trips a
+formatting rule). Read what comes back, judge each one against the prompt in front of you,
+and say which ones you are overriding. That instruction stays true as the rules change; a
+number does not.
 
 ## Step 1: Read the image
 
@@ -134,7 +139,8 @@ Across all of them: **stagger paired elements.** Two things entering simultaneou
 Structure the shot as timed beats. Include every clause below — each one removes a decision the model would otherwise make for you.
 
 ```
-[Shot type] of [subject]. A silent motion graphic with no spoken dialogue.
+[Shot type] of [subject]. [If nothing should speak, which is the norm here:
+"A silent motion graphic with no spoken dialogue."]
 
 CAMERA: [either "The camera is locked off and never moves: no pan, no tilt, no
 zoom, no push-in, no orbit, no drift." — or the specific move you want, with its
@@ -160,15 +166,18 @@ TIMED BEATS:
 [Negatives:] No film grain, no vignette, no lens flare, no added elements,
 no watermark, no extra text.
 
-[Close on the ratio in words:] Vertical 9:16. / Square 1:1. / Horizontal 16:9.
+[Close on the ratio, in words, matching the aspectRatio you send:]
+Vertical 9:16. — or Square 1:1. — or Horizontal 16:9. — or Classic 4:3. etc.
 ```
 
-**Two of those lines are additions to the source template, and both are house rules rather
-than taste.** The silence sentence stops the model *staging* a talking shot — an actor
-mouthing nothing, billed in full — which the `audioEnabled` flag cannot prevent because it
-only mutes the result. The closing ratio is stated in words even though you also send
-`aspectRatio`, because the model picks one from the prompt when the prompt implies a
-different shape. Each also clears an estimate warning; see below.
+**Two of those lines are additions rather than craft, and both come from the pack's own
+Seedance doctrine** (`novoads-api/SKILL.md`, the `audioEnabled` section): keep the silence
+sentence *as well as* the flag, because the prose is what stops the model staging a talking
+shot in the first place while the flag governs the audio track. And state the ratio in words
+even though you also send `aspectRatio`, because the model will infer a shape from the prompt
+when the prompt implies one. Neither is a reliable way to quiet the linter — a correctly
+stated `4:3` still draws `no_aspect_ratio`, measured — so add them for the render, not for
+the warnings array.
 
 The prompt ceiling on this model is **4,000 characters**, which a full beat list fits
 comfortably. Compose long prompts in a file under `prompts/` rather than passing them as a
@@ -188,8 +197,11 @@ Five clauses that carry most of the weight:
 
 ## Step 4: Run it
 
-`POST /v1/videos` with `"model": "seedance-2.5"` is the default for image-to-motion. The
-still goes in as `startImageAssetId`, which animates it as the literal first frame.
+`POST /v1/videos` with `"model": "seedance-2.5"`, and the still in `startImageAssetId`, which
+animates it as the literal first frame. **Always send `model` explicitly.** This skill's whole
+grid below is 2.5's; the API's own default when the field is omitted is `seedance-2.0`, which
+has a different duration grid and a different schedule, so an omitted field renders a model the
+cost gate did not price.
 
 - `durationSeconds` — an integer from the grid, which on this model runs **4 to 30**. Match
   it to the beat list; leave a beat of hold at the end. Out-of-grid values are rejected,
@@ -207,8 +219,9 @@ still goes in as `startImageAssetId`, which animates it as the literal first fra
   per organization; a sixth comes back `429` with `details.reason: concurrency_limit`, which
   means wait for a slot rather than lengthen the backoff.
 
-Submit returns `202` with `jobId` and `creditsCharged` — that `202` is the **only** place
-the charge appears, so log it now. Poll `GET /v1/generations/{jobId}` every 15 seconds until
+Submit returns `202` with `jobId` and `creditsCharged`. **The poll payload does not carry the
+charge**, so log it from the `202` while you have it — a line written without it cannot be
+completed later. Poll `GET /v1/generations/{jobId}` every 15 seconds until
 a **terminal** status, then `GET /v1/generations/{jobId}/watch` for the file into
 `outputs/<descriptive-name>/`. Nothing here has measured a `seedance-2.5` wait: say it is
 unknown rather than lending it `seedance-2.0`'s range. Full sequence in
@@ -285,7 +298,8 @@ When something is off, add specificity rather than emphasis. Naming the object, 
 8. **Text fidelity on our render path is unverified.** Write the clause because it is what
    the model responds to. Do not tell a user it has been verified here until eval E6 has
    been run. See [evals.md](evals.md).
-9. **Never add an actor to satisfy `missing_actor_descriptor`.** It is a permanent false
-   positive on this genre. Override it out loud.
+9. **Never add an actor to satisfy `missing_actor_descriptor`.** Override it out loud, and
+   read nothing into whether it appeared — its check is keyed on substrings a beat list
+   trips by accident.
 10. Working files go in `outputs/<name>/` and long prompts in `prompts/`. Never invent a new
     top-level directory.
