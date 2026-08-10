@@ -277,13 +277,17 @@ on disk is invisible in a remote sandbox, over SSH, and to anyone looking at a c
 rather than a desktop. **Never say "it is open in your browser"** — you cannot verify that, and
 when it is wrong the user is staring at a screen where nothing happened.
 
-**If this session can publish an artifact, that is the best answer** — it renders in the
-conversation, works locally and remotely, and the cards stay clickable. Build it with `--embed`,
-which inlines every creative as a `data:` URI:
+**If your harness can render an HTML file inline in the conversation** — Claude Code publishes
+one as an artifact — **that is the best answer.** It works locally and remotely, and the cards
+stay clickable. Build it with `--embed`, then publish that file:
 
 ```bash
 ./scripts/make-picker.py "$DIR/sweep.json" --embed --out "$DIR/artifact.html"
 ```
+
+Publish it with a title naming the brand and the count, and tell the user plainly that the
+creatives are uploaded to render: they are a competitor's copyrighted work, the page is private
+to them, and the on-disk copy stays local either way. Say it once, not every run.
 
 `--embed` is not optional there: an artifact's CSP blocks every external host, so a page that
 references the files beside it renders as twelve broken frames. Videos embed as their **poster
