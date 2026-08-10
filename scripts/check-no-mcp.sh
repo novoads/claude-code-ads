@@ -81,6 +81,20 @@ ALLOW=(
   'scripts/check-no-gag\.sh::it forbids, the same exemption check-no-mcp\.sh carries for the same reason\.'
   'scripts/check-no-gag\.sh::.scripts/check-no-mcp..sh::\.\*must not be mentioned\.\*.'
   '\.github/workflows/guard\.yml::.*'
+
+  # 8. The image-to-motion parity guard NAMES this script, for the same reason
+  #    check-no-gag.sh does: a guard that cannot say which sibling covers the other
+  #    half of its contract is a guard nobody can follow. LINE patterns, never
+  #    `path::.*` — the whole-file exemption that shipped for check-no-gag.sh was
+  #    proved to be a hole, and a guard is the last place to leave one.
+  #
+  #    That skill's evals.md had an entry here too and no longer needs one: it now
+  #    points at the parity guard as the single list of retired names instead of
+  #    repeating them, which closed a hole of its own. The entry was deleted rather
+  #    than left in place — a dead exemption is a live hole waiting for the next
+  #    person who trusts it.
+  'scripts/test-parity-i2m\.sh::# still refuses to run without a key\. check-no-mcp\.sh allowlists exactly this'
+  'scripts/test-parity-i2m\.sh::# actual remedy instead of an MCP violation\.'
 )
 
 # NOTE for anyone verifying a change here: `git grep` searches TRACKED files
