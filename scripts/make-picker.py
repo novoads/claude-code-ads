@@ -69,9 +69,34 @@ LOGO_PATH = "M 30.054688 93.664062 C 29.1875 93.664062 28.605469 93.175781 28.31
 
 VIDEO_EXT = {".mp4", ".mov", ".webm"}
 
+# Artifacts cap the rendered page at 16MB and data: URIs count toward it. Stop
+# well short: base64 is 4/3 of the bytes, and a page that renders is worth more
+# than a page that carries every last creative.
+EMBED_BUDGET_BYTES = 11 * 1024 * 1024
+
+MIME = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+        ".webp": "image/webp", ".gif": "image/gif"}
+
 
 def tokens(d: dict) -> str:
     return "\n".join(f"      --{k}: {v};" for k, v in d.items())
+
+
+def poster_for(media: Path) -> Path | None:
+    """A video's poster, downloaded beside it by sweep.py."""
+    p = media.with_name(media.stem + "-poster.jpg")
+    return p if p.is_file() else None
+
+
+def data_uri(f: Path) -> str | None:
+    import base64
+    mime = MIME.get(f.suffix.lower())
+    if not mime:
+        return None
+    try:
+        return f"data:{mime};base64," + base64.b64encode(f.read_bytes()).decode()
+    except OSError:
+        return None
 
 
 def find_media(media_dir: Path, ad_id: str) -> Path | None:
@@ -80,12 +105,13 @@ def find_media(media_dir: Path, ad_id: str) -> Path | None:
     if not media_dir.is_dir():
         return None
     for f in sorted(media_dir.iterdir()):
-        if f.is_file() and ad_id in f.name:
+        if f.is_file() and ad_id in f.name and not f.stem.endswith("-poster"):
             return f
     return None
 
 
-def card(i: int, ad: dict, media: Path | None, out_dir: Path) -> str:
+def card(i: int, ad: dict, media: Path | None, out_dir: Path,
+         embed: bool = False, budget: dict | None = None) -> str:
     # Every field below is third-party text scraped from an ad. It is DATA:
     # escaped on the way in, never interpolated raw. A page name containing
     # markup would otherwise execute in the browser that opens this file.
@@ -109,14 +135,34 @@ def card(i: int, ad: dict, media: Path | None, out_dir: Path) -> str:
         facts.append("no longer running")
     meta = html.escape(" · ".join(facts) or "no dates reported")
 
+    is_video = media is not None and media.suffix.lower() in VIDEO_EXT
+
     if media is None:
         # Degrade to a labelled placeholder. A broken <img> in a grid of twelve
         # reads as "this ad is bad" rather than "this file did not download".
         frame = ('<div class="ph">no file downloaded<br>'
                  '<span>open the Ad Library link</span></div>')
+    elif embed:
+        # Everything inline: an artifact's CSP blocks every external host, so a
+        # relative src loads nothing at all. A video embeds as its POSTER frame —
+        # twelve mp4s as data URIs is ~47MB against a 16MB ceiling.
+        src = poster_for(media) if is_video else media
+        uri = data_uri(src) if src else None
+        if uri and budget is not None and budget["used"] + len(uri) > EMBED_BUDGET_BYTES:
+            budget["dropped"] += 1
+            uri = None
+        elif uri and budget is not None:
+            budget["used"] += len(uri)
+        if uri:
+            tag = f'<img src="{uri}" alt="" loading="lazy">'
+            frame = tag + ('<div class="vbadge">video · poster frame</div>' if is_video else "")
+        else:
+            why = "video, no poster frame" if is_video else "could not be embedded"
+            frame = (f'<div class="ph">{html.escape(why)}<br>'
+                     f'<span>open the Ad Library link</span></div>')
     else:
         rel = html.escape(str(Path(media.name)), quote=True)
-        if media.suffix.lower() in VIDEO_EXT:
+        if is_video:
             frame = f'<video src="{rel}" controls preload="metadata"></video>'
         else:
             frame = f'<img src="{rel}" alt="" loading="lazy">'
@@ -135,7 +181,7 @@ def card(i: int, ad: dict, media: Path | None, out_dir: Path) -> str:
       </figure>"""
 
 
-def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
+def build(data: dict, media_dir: Path, out: Path, top: int, embed: bool = False) -> int:
     ads = data.get("ads") or []
     if not ads:
         print("Nothing to pick from: the sweep returned no ads. No page written.",
@@ -152,7 +198,8 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
 
     found = [find_media(media_dir, str(ad.get("adArchiveId", ""))) for ad in picks]
     resolved = sum(1 for f in found if f is not None)
-    cards = "\n".join(card(i, ad, f, out.parent)
+    budget = {"used": 0, "dropped": 0}
+    cards = "\n".join(card(i, ad, f, out.parent, embed, budget)
                       for i, (ad, f) in enumerate(zip(picks, found), 1))
 
     # A grid of placeholders reads as a broken tool rather than an empty folder.
@@ -167,6 +214,10 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
         notice = (f'<div class="notice">{resolved} of {len(picks)} creatives are on disk. '
                   f'The rest did not download — their CDN links expire within the hour, so '
                   f're-fetch from <code>sweep.json</code> rather than re-sweeping.</div>')
+    elif embed and budget["dropped"]:
+        notice = (f'<div class="notice">{budget["dropped"]} creative(s) were left out to keep '
+                  f'this page under the size limit. They are still on disk and their Ad Library '
+                  f'links are below.</div>')
     else:
         notice = ""
 
@@ -178,10 +229,17 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
   :root {{
 {tokens(LIGHT)}
   }}
+  /* Three states, not two. "System" stamps nothing, so prefers-color-scheme is
+     the only signal there; an explicit choice stamps data-theme and must win in
+     both directions. Components read tokens only — a color defined solely inside
+     one of these blocks never applies in the un-stamped state. */
   @media (prefers-color-scheme: dark) {{
-    :root {{
+    :root:not([data-theme="light"]) {{
 {tokens(DARK)}
     }}
+  }}
+  :root[data-theme="dark"] {{
+{tokens(DARK)}
   }}
   * {{ box-sizing: border-box; }}
   body {{
@@ -227,6 +285,16 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
   .frame {{ background: var(--muted); display: grid; place-items: center; min-height: 300px; }}
   .frame img, .frame video {{ width: 100%; height: auto; display: block; }}
   .ph {{ padding: 40px 16px; text-align: center; color: var(--muted-fg); font-size: 13px; }}
+  .vbadge {{
+    position: absolute; inset: auto 10px 10px auto;
+    padding: 3px 8px; border-radius: 999px;
+    background: var(--primary); color: var(--on-primary);
+    font-size: 11px; letter-spacing: .02em;
+  }}
+  .frame {{ position: relative; }}
+  @media (prefers-reduced-motion: reduce) {{
+    * {{ transition: none !important; }}
+  }}
   .ph span {{ font-size: 12px; opacity: .8; }}
   figcaption {{ padding: 12px 14px 16px; display: grid; gap: 4px; }}
   figcaption strong {{ font-size: 14px; font-weight: 600; }}
@@ -373,6 +441,12 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
     elif resolved < len(picks):
         print(f"note: {resolved} of {len(picks)} creatives on disk; the rest did not "
               f"download.", file=sys.stderr)
+    if embed:
+        size = out.stat().st_size
+        print(f"self-contained, {size / 1024 / 1024:.1f} MB — publishable as an artifact")
+        if budget["dropped"]:
+            print(f"note: {budget['dropped']} creative(s) left out to stay under the limit.",
+                  file=sys.stderr)
     print(f"{len(picks)} candidates. Click cards, or say 'clone 3' / 'clone 1, 4, 7'.")
     # Nothing here opens the page or claims it opened. A remote sandbox, an SSH
     # session and a CI box all have no browser the user can see, and "it is open
@@ -391,6 +465,9 @@ def main() -> int:
     p.add_argument("--out", type=Path, default=None,
                    help="default: picker.html beside the sweep")
     p.add_argument("--top", type=int, default=DEFAULT_TOP)
+    p.add_argument("--embed", action="store_true",
+                   help="inline every creative as a data: URI, for publishing as "
+                        "an artifact where a CSP blocks all external hosts")
     args = p.parse_args()
 
     try:
@@ -409,7 +486,7 @@ def main() -> int:
 
     media = args.media_dir or args.sweep.parent
     out = args.out or args.sweep.parent / "picker.html"
-    return build(data, media, out, args.top)
+    return build(data, media, out, args.top, args.embed)
 
 
 if __name__ == "__main__":
