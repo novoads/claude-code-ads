@@ -98,6 +98,22 @@ CRAFT
 grep -qF 'REST key required. A Novoads MCP connector is not a substitute.' "$SKILL" \
   && ok || bad "the canonical key-gate block is missing or reworded"
 
+# The cost gate has to actually run. The first version of this skill showed an
+# estimate body with no `prompt`, which is REQUIRED on a strict schema: live, that
+# is `400 prompt: Invalid input: expected string, received undefined`. An agent
+# following it would have had to improvise past the one guard rail between the
+# user and a charge, and the warnings section below it would have had nothing to
+# lint. Found by an independent parity review, not by a human reading the file.
+if grep -q '"kind":"video"' "$SKILL"; then
+  if grep -n '"kind":"video"' "$SKILL" | grep -qv 'prompt'; then
+    bad "the estimate example omits the required 'prompt' — that body is a live 400"
+  else
+    ok
+  fi
+else
+  bad "no {\"kind\":\"video\"} estimate example; the cost gate is unshowable"
+fi
+
 # A price written into a skill file rots silently, and this repo's rule is that
 # every credit number comes from a live estimate. Digits followed by a credit
 # word are the shape that keeps coming back.

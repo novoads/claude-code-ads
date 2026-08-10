@@ -49,33 +49,44 @@ status codes, the poll loop, concurrency and error envelopes are written out onc
 [`reference.md`](../novoads-api/reference.md). This file carries the craft and the two or
 three fields this genre needs.
 
-**The cost gate.** Before the first render, price the exact configuration with
-`POST /v1/estimates` (`{"kind":"video","model":"seedance-2.5","durationSeconds":…,"resolution":…}`),
-show what came back with the balance, and wait for a yes. The estimate is free and runs the
-same structural validation the paid call runs. There are no rates in this file on purpose:
-a written price rots silently and a quote that disagrees with the invoice is worse than no
-quote. **N takes is N charges** — say the multiplication out loud before it happens.
+**The cost gate.** Before the first render, price the exact configuration and wait for a
+yes. **`prompt` is required on the estimate** — the body is strict and omitting it is a
+`400`, which would leave you improvising past the one guard rail between the user and a
+charge. Send the prompt you are about to render:
+
+```json
+{"kind":"video","model":"seedance-2.5","durationSeconds":8,"resolution":"720p","prompt":"<the full prompt>"}
+```
+
+The estimate is free. There are no rates in this file on purpose: a written price rots
+silently and a quote that disagrees with the invoice is worse than no quote. **N takes is N
+charges** — say the multiplication out loud before it happens.
+
+It does not see everything the render sees. `aspectRatio`, `startImageAssetId` and
+`referenceAssetIds` are not on the estimate body, so a clean quote is not proof the
+generation body is valid: the two-modes `400` below is invisible here and moderation runs
+only at generation. A clean estimate prices the call, it does not bless it.
 
 There is no spoken-line gate here, because nothing speaks. That is one gate fewer, not
 permission to skip the cost gate.
 
-### The estimate's warnings are written for talking-head ads. Most do not apply here.
+### One estimate warning is permanent on this genre. Never satisfy it.
 
-`POST /v1/estimates` returns an advisory `warnings` array. It never refuses a call or
-changes a price, and its rules were written for UGC video with an actor in frame. On a
-motion graphic they mostly misfire. Measured on this exact genre, 2026-08-10:
+`POST /v1/estimates` returns an advisory `warnings` array. It never refuses a call and never
+changes a price, and its rules were written for UGC video with an actor in frame.
 
-| Rule | What to do |
-|---|---|
-| `missing_actor_descriptor` | **Override it, every time.** There is no actor in a motion graphic and there is no wording that satisfies this rule. Say you are overriding it and why |
-| `no_spoken_line` | Satisfied by saying the shot is silent, which you want anyway: `a silent motion graphic with no spoken dialogue` |
-| `label_without_hold` | Substring-matched on words like "dashboard". The TEXT clause already does more than the rule asks; adding the vendor's label-hold sentence silences it |
-| `no_aspect_ratio` | Genuinely worth fixing. End the prompt with the ratio in words, e.g. `Vertical 9:16.`, even though you also send `aspectRatio` |
+**A prompt built from the template below comes back with exactly one warning**,
+`missing_actor_descriptor` (measured 2026-08-10, this genre, `seedance-2.5`). That one is
+**structurally unsatisfiable and must be overridden out loud**: there is no actor in a
+motion graphic, so no wording clears it. An agent that "fixes" it by inserting "a woman in
+her 20s in a grey zip hoodie" into a dashboard animation has destroyed the render to
+satisfy a linter.
 
-Those three clauses take one warning-free run from four warnings down to one. **The one that
-remains is permanent.** An agent that "fixes" `missing_actor_descriptor` by inserting
-"a woman in her 20s in a grey zip hoodie" into a dashboard animation has destroyed the
-render to satisfy a linter.
+Three others fire only when a prompt **departs** from the template, and in each case the
+remedy is the template itself: `no_spoken_line` is cleared by the silent clause,
+`label_without_hold` by the TEXT clause's `identical to the reference image`, and
+`no_aspect_ratio` by ending the prompt with the ratio in words. If one of those three shows
+up, a clause is missing — go back and add it rather than arguing with the linter.
 
 ## Step 1: Read the image
 
@@ -147,9 +158,9 @@ TIMED BEATS:
 no watermark, no extra text.
 ```
 
-The prompt ceiling on this model is **4,000 characters**. A full beat list fits
-comfortably; if you are near it, cut negatives before cutting beats. Compose long prompts
-in a file under `prompts/` rather than passing them as a shell argument.
+The prompt ceiling on this model is **4,000 characters**, which a full beat list fits
+comfortably. Compose long prompts in a file under `prompts/` rather than passing them as a
+shell argument.
 
 Five clauses that carry most of the weight:
 
@@ -168,18 +179,20 @@ Five clauses that carry most of the weight:
 `POST /v1/videos` with `"model": "seedance-2.5"` is the default for image-to-motion. The
 still goes in as `startImageAssetId`, which animates it as the literal first frame.
 
-- `durationSeconds` — **4 to 30** on this model, an integer from the grid. Match it to the
-  beat list and leave a beat of hold at the end. Out-of-grid values are rejected, never
-  rounded.
+- `durationSeconds` — an integer from the grid, which on this model runs **4 to 30**. Match
+  it to the beat list; leave a beat of hold at the end. Out-of-grid values are rejected,
+  never rounded. Most motion graphics live at the short end, and longer costs more on a
+  per-second schedule: a 30s call is the most expensive single render on this API, so price
+  the duration you actually need rather than the one the grid allows.
 - `aspectRatio` — `16:9` (default), `9:16`, `1:1`, `4:3`, `3:4`, `21:9`.
 - `resolution` — `480p` or `720p`. **720p is this model's ceiling**, not a floor: 1080p and
   4k belong to `seedance-2.0` and are a `400` here.
 - `audioEnabled` — `false` unless sound is wanted.
-- **For several takes, fire the identical payload N times.** There is no
-  variations-per-call field. At most **five** generations may be in flight per
-  organization; a sixth comes back `429` with `details.reason: concurrency_limit`, which
-  means wait for a slot rather than lengthen the backoff. N takes is N charges and belongs
-  in the cost gate.
+- **Four takes gives useful choice.** There is no variations-per-call field, so that is four
+  submissions of the identical payload, and **four charges** — which is why it belongs
+  inside the cost gate rather than after it. At most **five** generations may be in flight
+  per organization; a sixth comes back `429` with `details.reason: concurrency_limit`, which
+  means wait for a slot rather than lengthen the backoff.
 
 Submit returns `202` with `jobId` and `creditsCharged` — that `202` is the **only** place
 the charge appears, so log it now. Poll `GET /v1/generations/{jobId}` every 15 seconds until
@@ -188,11 +201,15 @@ a **terminal** status, then `GET /v1/generations/{jobId}/watch` for the file int
 unknown rather than lending it `seedance-2.0`'s range. Full sequence in
 [`novoads-api/SKILL.md`](../novoads-api/SKILL.md).
 
-If the still needs building or rebuilding first, generate it before animating. A crisp, correctly-composed, correctly-lettered source frame is the foundation of the whole shot — the video stage carries forward what it is handed. Use [`chatgpt-image-ad`](../chatgpt-image-ad/SKILL.md) for typography and UI mimicry and [`nano-banana-image-ad`](../nano-banana-image-ad/SKILL.md) for photoreal and lifestyle; the decision tree between them is in [OVERVIEW.md](../../shared/skills/image-ad-prompting/OVERVIEW.md). When it matters, run the same prompt through both and compare rather than assuming. `POST /v1/images` is synchronous, and the `assetId` it returns goes straight into `startImageAssetId` with no download-and-re-upload hop.
+If the still needs building or rebuilding first, generate it before animating. A crisp, correctly-composed, correctly-lettered source frame is the foundation of the whole shot — the video stage carries forward what it is handed. Both [`chatgpt-image-ad`](../chatgpt-image-ad/SKILL.md) (`gpt-image-2`) and [`nano-banana-image-ad`](../nano-banana-image-ad/SKILL.md) (`nano-banana-pro`) are available, and the decision tree between them is in [OVERVIEW.md](../../shared/skills/image-ad-prompting/OVERVIEW.md); when it matters, run the same prompt through both and compare rather than assuming. `POST /v1/images` is synchronous, and the `assetId` it returns goes straight into `startImageAssetId` with no download-and-re-upload hop.
 
 **This API takes no video input.** There is no restyle of existing footage and no
 multi-turn edit: `omni-flash` here is one stateless call, not the conversational editor its
-vendor documentation describes. If the ask is to restyle a clip, say so and stop.
+vendor documentation describes. If the ask is to restyle a clip, say so and stop. A **timed
+multi-scene switch** is different and is still reachable — it needs no video input, only a
+prompt that describes each scene and when it changes. `omni-flash` is the model for it
+(20,000-character prompt ceiling, `durationSeconds` 4/6/8/10 only, no `referenceAssetIds`),
+and its guide is [gemini-omni-flash](../../shared/skills/gemini-omni-flash/prompting/guide.md).
 
 ### Uploading the still
 
@@ -215,7 +232,13 @@ Two things worth knowing before they cost a call:
 
 `startImageAssetId` and `referenceAssetIds` are **separate modes and cannot be combined** —
 a body with both is a `400` naming exactly that, before any charge. Start frame animates one
-image; references composite several into a new scene. This skill is the start-frame mode.
+image; references composite several into a new scene. This skill is the start-frame mode, so
+it sends exactly one image.
+
+If a job genuinely needs the other mode, **reference images cap at 9** on `seedance-2.5`.
+Higher figures quoted in vendor tutorials belong to other platforms and to the raw providers
+underneath, not to this API. Verify a stated cap with `./scripts/verify-image-caps.sh`
+before changing it.
 
 ## Step 5: Review and iterate
 

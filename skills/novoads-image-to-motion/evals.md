@@ -191,6 +191,21 @@ the runtime.
 **Check:** confirm the prompt carries an explicit hold clause for anything that must not
 move, and that the last beat pins the final state and says no fade out.
 
+### E8 — the cost gate actually runs
+
+**Why:** the first draft of this skill showed an estimate body with no `prompt`. That field
+is required and the body is strict, so live it is
+`400 prompt: Invalid input: expected string, received undefined` — the one call between the
+user and a charge, failing, with the agent left to improvise past it. It also silently
+disabled E7: an unsent prompt is an unlinted prompt. An independent parity review found it;
+nobody reading the file caught it, which is why the check is now mechanical.
+
+**Check:** `./scripts/test-parity-i2m.sh` asserts the estimate example carries `prompt`.
+Then run once for real and confirm the estimate returns `credits` and `balance` rather than
+a `400`, and that the prompt sent to the estimate is the same one that gets rendered.
+
+---
+
 ### E7 — the estimate's actor warning is overridden, never satisfied
 
 **Why:** verified live 2026-08-10. A motion-graphic estimate comes back with four
