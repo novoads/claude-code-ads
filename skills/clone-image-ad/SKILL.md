@@ -182,6 +182,14 @@ filled in with plausible content.
 reach a paid call. It was added after a render shipped reading "Placeholder Name" over
 "agency.com · partner", beside a blank card and two grey bars.
 
+**Then read the render back — the lint cannot do this part.** It matches the PROMPT, and the
+two failures it cannot see are the ones that shipped: a slot-shaped *value* the pattern list has
+not met yet, and a zone the prompt never named at all, which the model then fills however it
+likes. Open every PNG and check three things: each zone carries real content, the wordmark is
+spelled right letter by letter, and no text from the source brand survived. A blank or
+slot-shaped zone means the **prompt** under-specified it — name that zone's content and re-run.
+Never hand over an image you have not looked at.
+
 **A product in the frame makes a real photo mandatory** — an image model will otherwise render
 a plausible bottle with invented label text, which is the failure a viewer catches instantly.
 **No product in the frame and it is never asked for**, because there is nothing to pin and
@@ -214,8 +222,12 @@ the user for a promise it does not keep.
 
 **2. Spell the wordmark letter by letter in the prompt.** Image models mangle brand text more
 reliably than anything else in a frame. Write it out: *the wordmark reads N-O-V-O-A-D-S,
-"novoads", eight letters, lowercase*. Then check the render against the spelling, not against
+"novoads", seven letters, lowercase*. Then check the render against the spelling, not against
 your memory of it.
+
+**Count the letters before you write the number.** This sentence shipped saying "eight" for a
+seven-letter word — a miscount inside the one instruction whose whole job is to stop the model
+miscounting. Spell the word out, count the spelled letters, then write the total.
 
 **3. When it still comes back wrong, composite — do not re-roll.** Two bad wordmarks in a row
 means the third will probably be bad too, and each one costs. Burn a clean logo PNG onto the

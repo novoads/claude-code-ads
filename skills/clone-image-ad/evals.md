@@ -309,5 +309,26 @@ bars, no `{slots}`, no lorem. Then confirm the opposite for the library entry: t
 written in Phase 9 **does** carry `{brand.name}` and friends. Slots belong in the file, never in
 the picture.
 
-Automated in `scripts/test-placeholder-lint.sh`: six scaffolding shapes are refused **before any
-paid call**, and a clean prompt passes.
+Automated in `scripts/test-placeholder-lint.sh`: 21 scaffolding shapes are refused **before any
+paid call**, and 7 strings of real shipped copy still pass. Both halves are the test — a guard
+that only proves refusals will eventually refuse the finished work it exists to require, so
+extend the `S` cases and the `C` cases together and re-run both.
+
+### D5b — the render is read back, not just the prompt
+
+**Why:** D5's lint reads the PROMPT. The word "Placeholder" was only ever visible in the
+PICTURE, and the pair that shipped it also carried `agency.com`, which no pattern matched at the
+time. Two failures follow from that and neither is reachable by regex: a slot-shaped *value* the
+list has not met yet, and a zone the prompt never named, which the model then fills as it
+pleases. A prompt-only guard reports green on both.
+
+**Check:** after any render, confirm the agent actually opened the image before calling it done
+— every zone carrying real content, the wordmark spelled letter by letter against the prompt,
+and no source-brand text surviving. Then check the diagnosis, which is the part that decays
+first: a blank or slot-shaped zone must send it back to the PROMPT to name that zone, not to a
+re-roll of the same prompt hoping for a better draw. Re-rolling spends credits to retry a
+question that was never asked.
+
+Not automatable here — reading a picture is judgement. `validate_image.py` ends by printing the
+three checks so the step cannot be quietly skipped, and this scenario is what verifies it was
+not.
