@@ -62,6 +62,12 @@ jobs:
       # an href, because escaping a URL does not neuter its scheme.
       - name: make-picker.py unit tests
         run: ./scripts/test-make-picker.sh
+      # sweep.py is the only script here that SPENDS. Its S1 case asserts it
+      # refuses without --yes, with a real key present, so the refusal is about
+      # consent rather than a missing credential. Nothing in this suite makes a
+      # request: every case stops before the first one or tests a pure function.
+      - name: sweep.py unit tests
+        run: ./scripts/test-sweep.sh
 
   #   links     — a skill that tells the agent to read a file which is not there
   #             fails SILENTLY: the agent shrugs and proceeds without the rules
