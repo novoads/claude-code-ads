@@ -149,9 +149,19 @@ def sweep_one(query: str, media: str, country: str, count: int,
         url = media_url(ad)
         if not url:
             continue
-        ext = ".mp4" if (ad.get("media") or {}).get("kind") == "video" else ".jpg"
-        if not download(url, d / f"{slug}-{ad.get('adArchiveId')}{ext}"):
-            failed.append(str(ad.get("adArchiveId")))
+        aid = ad.get("adArchiveId")
+        is_video = (ad.get("media") or {}).get("kind") == "video"
+        ext = ".mp4" if is_video else ".jpg"
+        if not download(url, d / f"{slug}-{aid}{ext}"):
+            failed.append(str(aid))
+        # A video's poster frame, fetched alongside it. It is a few KB and it is
+        # the ONLY way a video candidate can appear in an embedded page: twelve
+        # mp4s as data URIs come to ~47MB against a 16MB ceiling, twelve posters
+        # to a couple of MB. Its absence is why a video would otherwise show up
+        # as a placeholder in the very view meant for comparing creatives.
+        poster = (ad.get("media") or {}).get("previewImageUrl")
+        if is_video and poster:
+            download(poster, d / f"{slug}-{aid}-poster.jpg")
 
     # Count what is ON DISK. Every other number here is a claim: the loop's own
     # successes, the response's length, a memory of what went by.

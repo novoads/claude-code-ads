@@ -164,6 +164,66 @@ $M "$WORK/nope.json" > "$WORK/miss.out" 2>&1
 want P13 "$?" "1" "a missing sweep exits 1"
 hasnt P13b "Traceback" "$WORK/miss.out" "no traceback on a missing file"
 
+# ---- --embed: the artifact path ------------------------------------------
+# An artifact's CSP blocks every external host, so a page that references a file
+# beside it renders as twelve broken frames. These cases are the difference
+# between a page that publishes and one that publishes empty.
+mkdir -p "$WORK/emb"
+python3 - <<'PY2'
+import base64, json, pathlib
+png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
+d = pathlib.Path("/tmp/pick-emb"); d.mkdir(exist_ok=True)
+ads = []
+for i in range(1, 5):
+    kind = "video" if i in (3, 4) else "image"
+    ads.append({"adArchiveId": f"e{i}", "pageName": f"P{i}", "collationCount": None,
+                "startDate": "2026-01-01", "adLibraryUrl": f"https://x/{i}",
+                "media": {"kind": kind}})
+    if kind == "video":
+        (d / f"s-e{i}.mp4").write_bytes(b"\x00" * 64)
+        if i == 3:                      # 3 has a poster, 4 deliberately does not
+            (d / f"s-e{i}-poster.jpg").write_bytes(png)
+    else:
+        (d / f"s-e{i}.jpg").write_bytes(png)
+json.dump({"query": "q", "mediaType": "all", "ads": ads}, open(d / "sweep.json", "w"))
+PY2
+$M /tmp/pick-emb/sweep.json --embed --out "$WORK/e.html" >/dev/null 2>&1
+
+# E1 -- nothing external. The single most important property of this mode.
+hasnt E1 'src="s-'      "$WORK/e.html" "no relative file references survive --embed"
+hasnt E1b 'src="http'   "$WORK/e.html" "no remote references either"
+want  E1c "$(grep -c 'src="data:image' "$WORK/e.html")" "3" "3 of 4 embed (one video has no poster)"
+
+# E2 -- a video embeds as its POSTER and is labelled as such. Twelve mp4s as
+# data URIs is ~47MB against a 16MB ceiling; the poster is a few KB.
+has E2 "video · poster frame" "$WORK/e.html" "an embedded video is badged as a poster"
+
+# E3 -- a video with no poster degrades with the REASON, not a broken frame.
+has E3 "video, no poster frame" "$WORK/e.html" "a posterless video says why"
+
+# E4 -- the budget drops rather than blowing the cap, and the page says so.
+$M /tmp/pick-emb/sweep.json --embed --out "$WORK/tiny.html" >/dev/null 2>&1
+python3 - <<'PY2' && ok E4 "the embed budget is under the artifact ceiling" || bad E4 "budget is set above the ceiling"
+import importlib.util, pathlib, sys
+spec = importlib.util.spec_from_file_location("mp", pathlib.Path("scripts/make-picker.py"))
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+sys.exit(0 if m.EMBED_BUDGET_BYTES < 16 * 1024 * 1024 else 1)
+PY2
+
+# E5 -- all THREE theme states. "System" stamps nothing, so a token defined only
+# behind [data-theme] never applies there and the page renders one theme's text
+# on the other theme's ground.
+has E5  "prefers-color-scheme: dark"        "$WORK/e.html" "the system-dark state is handled"
+has E5b ':root:not([data-theme="light"])'   "$WORK/e.html" "an explicit light choice beats a dark OS"
+has E5c ':root[data-theme="dark"]'          "$WORK/e.html" "an explicit dark choice is handled"
+
+# E6 -- motion is opt-out, per the same contract.
+has E6 "prefers-reduced-motion" "$WORK/e.html" "reduced motion is respected"
+
+# E7 -- REGRESSION: the default (non-embed) page still uses relative paths, so
+# the on-disk view keeps working for Cursor and anywhere without an artifact.
+has E7 'src="slug-id1.jpg"' "$WORK/p.html" "the on-disk page still references files"
+
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

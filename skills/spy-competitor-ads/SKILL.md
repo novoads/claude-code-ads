@@ -272,17 +272,30 @@ see is a filter they cannot correct, and the correction is usually one sharper q
 The first prints the delivery's opening: what the sample is, the twelve picks with their
 basis, who is running them, the metadata-not-craft line. Read it out; do not recompute it.
 
-**Then put the top few creatives in the conversation itself**, by reading the image files the
-sweep downloaded. This is the part that works everywhere. A page on disk is invisible in a
-remote sandbox, over SSH, and in any session whose user is looking at a chat window rather than
-a desktop — and `open` in those places either fails quietly or opens a browser nobody is
-watching. **Never say "it is open in your browser."** You cannot verify that, and when it is
-wrong the user is staring at a screen where nothing happened.
+**Then get it in front of them, and pick the way by what the session can actually do.** A page
+on disk is invisible in a remote sandbox, over SSH, and to anyone looking at a chat window
+rather than a desktop. **Never say "it is open in your browser"** — you cannot verify that, and
+when it is wrong the user is staring at a screen where nothing happened.
 
-Say where the file is, in absolute terms, and offer to open it:
+**If this session can publish an artifact, that is the best answer** — it renders in the
+conversation, works locally and remotely, and the cards stay clickable. Build it with `--embed`,
+which inlines every creative as a `data:` URI:
 
-> Top 3 of 12 below. Full contact sheet: `/abs/path/picker.html` — say the word and I'll open
-> it, or click the cards there if you have it.
+```bash
+./scripts/make-picker.py "$DIR/sweep.json" --embed --out "$DIR/artifact.html"
+```
+
+`--embed` is not optional there: an artifact's CSP blocks every external host, so a page that
+references the files beside it renders as twelve broken frames. Videos embed as their **poster
+frame** and say so — twelve mp4s as data URIs is roughly 47 MB against a 16 MB ceiling — and the
+script drops the tail rather than exceeding it, saying which on the page.
+
+**Otherwise fall back to the file on disk**, name its absolute path, and offer to open it. Either
+way, **also put the top few creatives in the conversation** by reading the downloaded images.
+That is the one thing that works in every environment, and it is what makes the page a richer
+view rather than the only one:
+
+> Top 3 of 12 below. Full sheet: `/abs/path/picker.html` — say the word and I'll open it.
 
 The second writes a **contact sheet** beside the sweep: twelve creatives at real size, videos
 playable in place, each card numbered and carrying its page, dates and Ad Library link.
