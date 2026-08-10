@@ -267,11 +267,22 @@ see is a filter they cannot correct, and the correction is usually one sharper q
 ```bash
 ./scripts/rank-ads.py "$DIR/sweep.json"                  # the words
 ./scripts/make-picker.py "$DIR/sweep.json"               # the page
-open "$DIR/picker.html"                                  # xdg-open on Linux
 ```
 
 The first prints the delivery's opening: what the sample is, the twelve picks with their
 basis, who is running them, the metadata-not-craft line. Read it out; do not recompute it.
+
+**Then put the top few creatives in the conversation itself**, by reading the image files the
+sweep downloaded. This is the part that works everywhere. A page on disk is invisible in a
+remote sandbox, over SSH, and in any session whose user is looking at a chat window rather than
+a desktop — and `open` in those places either fails quietly or opens a browser nobody is
+watching. **Never say "it is open in your browser."** You cannot verify that, and when it is
+wrong the user is staring at a screen where nothing happened.
+
+Say where the file is, in absolute terms, and offer to open it:
+
+> Top 3 of 12 below. Full contact sheet: `/abs/path/picker.html` — say the word and I'll open
+> it, or click the cards there if you have it.
 
 The second writes a **contact sheet** beside the sweep: twelve creatives at real size, videos
 playable in place, each card numbered and carrying its page, dates and Ad Library link.

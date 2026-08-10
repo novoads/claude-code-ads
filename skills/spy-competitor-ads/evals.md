@@ -307,3 +307,28 @@ Measured in the browser era: a run reporting five successes produced one file.
 **Check:** cause a download to fail. Confirm the delivery leads with `landed/expected`, names
 the competitor that was short, and offers the `adLibraryUrl`s — and that nothing re-sweeps to
 refresh a link, which is a second charge for ads already paid for.
+
+
+---
+
+### R9 — the creatives are visible without a desktop
+
+**Why:** the delivery used to say "both contact sheets are open in your browser" after running
+`open`. In a remote sandbox, over SSH, or in any session whose user is watching a chat window,
+that claim is false and nothing appears. The founder hit it and asked why the page never showed
+up — which is the correct question to ask of a run that told them it had.
+
+**Check:** run a sweep somewhere with no desktop browser. Confirm the delivery puts the top few
+creatives **in the conversation** by reading the downloaded image files, gives the picker's
+**absolute** path, and offers to open it rather than asserting it opened. A run that says "it is
+open" fails this eval even when it happens to be true, because it cannot know.
+
+---
+
+### R10 — the picker is the richer view, never the only one
+
+**Why:** a page on disk is a dead end for anyone who cannot reach that disk. Everything the page
+carries — the sample claim, the basis, the numbers to type — has to survive in the chat too.
+
+**Check:** with the page unopened, confirm a user can still pick from what was said: the ordinals
+are in the message, the basis is stated, and "clone 3" works without ever seeing the HTML.
