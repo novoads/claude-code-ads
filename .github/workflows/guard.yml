@@ -54,6 +54,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: brand-context.py unit tests
         run: ./scripts/test-brand-context.sh
+      - name: rank-ads.py unit tests
+        run: ./scripts/test-rank-ads.sh
 
   #   links     — a skill that tells the agent to read a file which is not there
   #             fails SILENTLY: the agent shrugs and proceeds without the rules

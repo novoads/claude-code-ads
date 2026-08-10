@@ -16,13 +16,26 @@
 #                    description naming exactly the right triggers, and none of
 #                    them ever reached the router.
 #
-# The 500-line body is a guideline, not a cap, so it warns rather than fails:
-# past that, move what is not needed mid-run into references/.
+# The 500-line body used to WARN. It now fails, against a baseline, because a
+# warning is something you walk past: spy-competitor-ads was split to 489 lines
+# and pushed back to 531 four hours later by the same author who wrote the
+# warning, and CI stayed green throughout.
+#
+# The baseline in scripts/skill-size-baseline.txt lists the files already over
+# the line, with the count they were at. A listed file may shrink freely and may
+# never grow; an unlisted file may never cross. Forward-only, so today's debt is
+# recorded rather than blocking, and tomorrow's is refused.
+#
+# When you legitimately shrink one, re-run with --update-baseline to lock the
+# smaller number in. There is no flag to raise one.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
 MAX_DESC=1024
-WARN_LINES=500
+MAX_LINES=500
+BASELINE=scripts/skill-size-baseline.txt
+UPDATE=0
+[ "${1:-}" = "--update-baseline" ] && UPDATE=1
 
 fail=0
 warn=0
@@ -30,7 +43,7 @@ warn=0
 for dir in skills/*/ shared/skills/*/; do
   [ -d "$dir" ] || continue
   name="$(basename "$dir")"
-  file="$dir/SKILL.md"
+  file="${dir%/}/SKILL.md"
 
   # shared/skills/ holds guide-only packs with no SKILL.md by design.
   if [ ! -f "$file" ]; then
@@ -63,9 +76,20 @@ PY
   fi
 
   lines=$(wc -l < "$file" | tr -d ' ')
-  if [ "$lines" -gt "$WARN_LINES" ]; then
-    echo "warn  $name: SKILL.md is $lines lines, over the ~$WARN_LINES guideline"
-    warn=$((warn + 1))
+  if [ "$lines" -gt "$MAX_LINES" ]; then
+    allowed=$(awk -v f="$file" '$2 == f {print $1}' "$BASELINE" 2>/dev/null)
+    if [ -z "$allowed" ]; then
+      echo "FAIL  $name: SKILL.md is $lines lines, over $MAX_LINES, and not in the baseline"
+      echo "      split it — move what is not needed mid-run into references/"
+      fail=$((fail + 1))
+    elif [ "$lines" -gt "$allowed" ]; then
+      echo "FAIL  $name: SKILL.md grew from $allowed to $lines lines"
+      echo "      it is already over $MAX_LINES; the baseline may shrink, never grow"
+      fail=$((fail + 1))
+    elif [ "$lines" -lt "$allowed" ]; then
+      echo "warn  $name: shrank $allowed -> $lines. Run --update-baseline to lock it in"
+      warn=$((warn + 1))
+    fi
   fi
 done
 
@@ -76,6 +100,35 @@ while IFS= read -r nested; do
   echo "      move it to skills/<name>/SKILL.md or it cannot be invoked"
   fail=$((fail + 1))
 done < <(find skills shared/skills -mindepth 3 -name SKILL.md 2>/dev/null)
+
+if [ "$UPDATE" -eq 1 ]; then
+  # RATCHET, not a rewrite. The first version of this rewrote the baseline from
+  # disk, which silently RAISED clone-video-ad from 836 to 858 the first time it
+  # was used — by the author, in the same session that wrote "there is no flag to
+  # raise one". A guard with a flag that disarms it is not a guard.
+  refused=0
+  for dir in skills/*/ shared/skills/*/; do
+    f="${dir%/}/SKILL.md"
+    [ -f "$f" ] || continue
+    n=$(wc -l < "$f" | tr -d ' ')
+    [ "$n" -gt "$MAX_LINES" ] || continue
+    old=$(awk -v x="$f" '$2 == x {print $1}' "$BASELINE" 2>/dev/null)
+    if [ -n "$old" ] && [ "$n" -gt "$old" ]; then
+      echo "REFUSED  $f is $n lines, baseline says $old. The baseline only goes down."
+      echo "         Cut $((n - old)) lines, or split the file. Not recording this."
+      refused=$((refused + 1))
+      echo "$old $f"
+    else
+      echo "$n $f"
+    fi
+  done | sort -rn > "$BASELINE.tmp"
+  grep -v '^REFUSED\|^ ' "$BASELINE.tmp" > "$BASELINE.clean" 2>/dev/null || true
+  mv "$BASELINE.clean" "$BASELINE"; rm -f "$BASELINE.tmp"
+  echo
+  echo "baseline (lowered where the file shrank, unchanged where it grew):"
+  sed 's/^/  /' "$BASELINE"
+  exit 0
+fi
 
 echo
 [ "$warn" -gt 0 ] && echo "$warn warning(s)"

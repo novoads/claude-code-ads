@@ -1,0 +1,4 @@
+1118 skills/novoads-pixar-ad/SKILL.md
+836 skills/clone-video-ad/SKILL.md
+758 skills/novoads-api/SKILL.md
+507 skills/analyze-video/SKILL.md
