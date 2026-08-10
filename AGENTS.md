@@ -23,7 +23,8 @@ template below are mirrors — change them together. One or two status lines, th
 > **What you can ask for now:**
 > - "Make a UGC video ad for my product" — a presenter speaks your script
 > - "Make static image ads from this photo" — the 40-template library, run in batches
-> - "Clone this ad" plus a competitor's image — rebuilt as a template you can refill
+> - "Clone this ad for my product" — three ready-to-run ads, and the layout saved
+>   as a reusable template. No image? It finds one and says the price first
 > - "Clone this video ad" plus a competitor's clip — beat map, adapted script, your product
 > - "Make a Pixar-style ad" or "a claymation ad" — storyboard, voice-over, music, captions
 > - "Find my competitor's live ads" — pulls their real creatives from the Meta Ad Library
