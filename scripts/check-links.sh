@@ -34,8 +34,15 @@ while IFS= read -r file; do
     clean="${clean%% *}"
     [ -z "$clean" ] && continue
     checked=$((checked + 1))
-    if [ ! -e "$dir/$clean" ]; then
-      printf 'BROKEN  %s\n        -> %s\n' "$file" "$target"
+    # Existence is not enough: the target must be COMMITTED. A gitignored file
+    # a local setup happened to create (MASTER_CONTEXT.md, .env) exists on the
+    # author's disk and not in a fresh clone, so a link to it passes locally and
+    # breaks for every reader. That exact case shipped to CI from a green local
+    # run, which is why this checks git rather than the filesystem.
+    if [ ! -e "$dir/$clean" ] || ! git ls-files --error-unmatch "$dir/$clean" >/dev/null 2>&1; then
+      reason="missing"
+      [ -e "$dir/$clean" ] && reason="exists locally but is NOT COMMITTED"
+      printf 'BROKEN  %s\n        -> %s  (%s)\n' "$file" "$target" "$reason"
       fail=$((fail + 1))
     fi
     # Fenced code blocks are stripped first: a regex like ?:["\'\ inside a

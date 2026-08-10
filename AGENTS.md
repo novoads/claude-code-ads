@@ -84,7 +84,7 @@ keeps it the only phrasing in the repo.
 
 ## Every session
 
-1. Read **[MASTER_CONTEXT.md](MASTER_CONTEXT.md)** for brand voice, default product, and accumulated learnings. It carries **no prices** — that is deliberate, see "Cost policy" below.
+1. Read **`MASTER_CONTEXT.md`** at the repo root for brand voice, default product, and accumulated learnings. It is gitignored and created by `scripts/setup.sh` from [MASTER_CONTEXT.template.md](MASTER_CONTEXT.template.md); read and write its fields with `scripts/brand-context.py`. It carries **no prices** — that is deliberate, see "Cost policy" below.
 2. Follow the skill at `.cursor/skills/` or `.claude/skills/` (synced from `skills/` via `scripts/sync-skill.sh`).
 3. The first time the user asks to generate something and `MASTER_CONTEXT.md` is missing a field that request needs (default product, brand voice), ask for it then — once — and write the answer back so no future session asks again. Ask only for what the request in hand needs; a setup-only session asks for nothing. Never write a credit number into it.
 4. After material changes, add a dated entry to **MASTER_CONTEXT.md** Changelog.
