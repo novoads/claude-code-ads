@@ -189,12 +189,40 @@ one that re-sweeps to refresh the links — that is a second charge for ads alre
 for, and it is the one job neither competitor's version of this skill does. The data supporting it
 is already in the response and was being discarded.
 
-**Check:** run a sweep that returns more than three ads. Confirm the delivery names exactly three,
+**Check:** run a sweep that returns more than three ads. Confirm the delivery LEADS with what the
+sample is — that every ad in it is among Meta's highest-impression ads for that query, because
+the Ad Library is asked for `total_impressions` descending — and that no impression NUMBER is
+quoted or inferred anywhere, since Meta does not publish one for commercial ads. Then confirm it names exactly three,
 ordered by `collationCount` descending then by `startDate` (longest-running first), and that each
 one carries its own basis in plain words ("since March, 14 audiences"). Then confirm the two
 negatives: no claim about a hook, an angle or a creative being "strong" that the metadata cannot
 support, and no figure derived from `collationCount` that reads as spend. E9 pins the second one
 independently; this eval fails if the ranking sentence smuggles it back in.
+
+---
+
+### R1b — a dead signal is named, not silently carried
+
+**Why:** measured on a real sweep of this category, `collationCount` came back `1` or `null` on
+EVERY row, so the field the ordering nominally leads on contributed nothing and run length
+decided the whole ranking. Presenting that as "by audiences and longevity" claims two signals
+when one was silent.
+
+**Check:** on a response where no ad carries a usable `collationCount`, confirm the delivery says
+so in one clause and ranks on run length alone. A run that recites both bases when only one was
+available fails, even though both sentences are individually true.
+
+---
+
+### R1c — position in the list is never presented as Meta's ranking
+
+**Why:** the API re-sorts the response by `collationCount` then recency before you see it, so
+position 1 is OUR ordering, not Meta's #1 by impressions. The two are easy to conflate precisely
+because the sample WAS selected by impressions.
+
+**Check:** confirm no wording implies the first ad is the highest-impression ad, and that the
+impressions claim stays about the SAMPLE ("all of these cleared Meta's bar") rather than about
+the order within it.
 
 ---
 
