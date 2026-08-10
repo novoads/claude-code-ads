@@ -312,59 +312,40 @@ So read `pageName` and `bodyText` on every ad and sort them into three groups:
 **Name the groups in the delivery and say what you dropped and why.** A filter the user cannot
 see is a filter they cannot correct, and the correction is usually one sharper query away.
 
-### The sample is already the strongest thing you can say
+### Rank it with the script, not by eye
 
-**Every ad in a sweep is one of Meta's own top ads by impressions for that query.** The Ad
-Library is asked for `total_impressions` descending — the same "Impressions: high to low" sort
-a human gets in the Ad Library UI — and the response is the head of that list, capped at
-`count`. So a 20-ad sweep is not a sample of what the brand runs. It is the twenty Meta ranks
-highest, and every one of them cleared that bar before you saw it.
+```bash
+./scripts/rank-ads.py "$DIR/sweep.json"
+```
 
-Say that first, because it is stronger than anything you can compute afterwards:
+It prints the delivery's opening: what the sample is, the top three with their basis,
+who is running them, and the metadata-not-craft line. Read it out; do not recompute it.
 
-> 20 ads, and all 20 are among Meta's highest-impression ads for this query.
+The sort is `collationCount` descending then longest-running, which is arithmetic, and the
+script also decides the thing prose kept getting subtly wrong: **whether the audience-count
+signal is alive at all.** Measured on a real sweep of this category, every row came back `1`
+or `null`, so the field the ordering nominally leads on contributed nothing and run length
+decided everything — while the delivery still recited both bases. The script detects that and
+says "run length only" instead. `--top N` changes how many it names; `--json` gives you
+`signalAlive` and the counts if you are formatting your own.
 
-**What you never get is the impression NUMBER.** Meta publishes per-ad impressions only for
-political and issue ads, and in the EU under its transparency rules — never as a field on a
-commercial ad. So the count is a thing you can sort by and never a thing you can quote. Never
-write "50k impressions", never infer one from the position, and never imply the order encodes a
-size you can see.
+Three claims it carries that are easy to get wrong by hand:
 
-### Then name a top three, and name the basis honestly
+- **The SAMPLE is the strongest thing you can say.** The Ad Library is queried with
+  `sort_data[mode]=total_impressions` descending — the same "Impressions: high to low" a human
+  gets in the UI — so every ad in a sweep is among Meta's highest-impression ads for that
+  query. Lead with it.
+- **There is no impressions NUMBER.** Meta publishes per-ad impressions only for political and
+  issue ads, and in the EU. Never quote one, never infer one from position.
+- **The ORDER is ours, not Meta's.** The API re-sorts by `collationCount` then recency before
+  you see it, so position 1 is not Meta's #1. The impressions claim belongs to the sample, not
+  to the order within it.
 
-A list of twenty is still a list the user has to read. Close with a pick:
-
-> Top 3 by how long they have run and how many audiences they run against:
-> 1. Creatify, live since March, 14 audiences
-> 2. Arcads, since May, 9 audiences
-> 3. Icon, since June, 6 audiences
-
-Order them by `collationCount` descending, then longest-running first. **State the basis in the
-same breath as the pick** — a ranking whose reason is invisible is an opinion, and this one does
-not have to be.
-
-**When `collationCount` is null or 1 across the whole response, say so and rank on run length
-alone.** That is common, not exceptional: on a real sweep of this category every row came back
-`1` or `null`, so the field the ordering nominally leads on contributed nothing and longevity
-decided everything. A ranking presented as two signals when one of them was silent is a
-ranking that claims more than it has. One clause covers it:
-
-> No audience-count data on any of these, so this is run length only.
-
-Two more honesties about what the ordering is worth. The response arrives sorted by
-`collationCount` then recency — **that re-sort is ours, not Meta's**, so position 1 in the list
-is not Meta's #1 by impressions. And the cap means the head of the impressions list is all you
-ever see: a brand's decade-old evergreen is out of the sample if Meta ranks twenty others above
-it. Both are reasons to lead with the sample and treat the top three as a reading of it.
-
-Two things that ranking is not allowed to become:
-
-- **A craft judgement.** You have not watched these ads. "Strong hook", "better angle" and
-  "this one is working" are claims the metadata cannot carry. Reading an ad properly is
-  `analyze_ad`, it is charged **per ad**, and against a twenty-ad sweep that is an order of
-  magnitude more than the sweep itself cost. Offer it on the top one to three as its own
-  priced step; never quietly upgrade "rank these" into twenty reads.
-- **A spend figure.** See the next section — it survives being turned into a ranking.
+What stays yours is the only part no sort can decide: **which of the three is worth cloning**,
+read against the product you are cloning for. And it never becomes a craft judgement — you
+have not watched these ads. Reading one properly is `analyze_ad`, charged **per ad**, which
+against a twenty-ad sweep is an order of magnitude more than the sweep cost. Offer it on the
+top one to three as its own priced step; never quietly upgrade "rank these" into twenty reads.
 
 ### `collationCount` is recurrence, not spend
 
@@ -461,32 +442,13 @@ decides everything below.
 A stored corpus is re-minable: "clone the second one too" costs nothing. The media URLs are dead
 within the hour, but the downloaded files are not, and `adLibraryUrl` never expires.
 
-## Errors: branch on `error.code`, never on the message
+## Errors
 
-These are the codes this surface actually emits. `error.code` is the string in the JSON envelope;
-the HTTP status is shown beside it because both are worth logging.
-
-| `error.code` | Status | What it means | What to do |
-|---|---|---|---|
-| `invalid_input` | 400 | Either this deployment does not offer sweeps (the message names what it does offer), or a field is wrong: `mediaType` missing, `country` not alpha-2 or `ALL`, `count` outside 1..20, `query` outside 2..200 | Read the message; it says which. Fix the field, or stop |
-| `insufficient_credits` | 402 | Carries `required` and `available`, in credits | Report both and the top-up path. Do not retry |
-| `provider_failed` | 502 | The Ad Library query failed, timed out, or came back in a shape the server would not trust. **The credits were refunded** — the message says so, and says "queued" instead if the refund has not landed yet | This is NOT an empty result. Say the scrape failed and the charge was returned. Retry once; if it fails again, stop and say the source is down |
-| `rate_limited`, `error.details.reason` = `competitor_ads_concurrency_limit` | 429 | The SWEEP ceiling: you already have the maximum number of sweeps in flight for this organization. Its own queue, counted separately from renders | Wait about ten seconds — `error.details.retryAfterSeconds` and the `Retry-After` header carry the number — then retry. Do not lengthen the backoff; a slot frees when a sweep returns |
-| `rate_limited`, `error.details.reason` = `concurrency_limit` | 429 | The RENDER budget, not this endpoint's: the organization has too many video generations in flight. A sweep does not consume one and cannot cause this | Not your queue. Say what is actually blocked, and wait on the renders — sweeping again will not clear it |
-| `rate_limited`, any other reason | 429 | Per-key or per-org REQUEST rate, or another endpoint's ceiling | Back off by `Retry-After` and retry. Different problem, different fix |
-| `forbidden`, `error.details.reason` = `plan_required` / `subscription_inactive` | 403 | Good key, no live subscription | Say which. It is not a key problem |
-| `unauthorized` | 401 | The key is wrong, revoked, or from another account | Stop. Do not retry with the same key |
-
-There is **no `vendor_error` code** on this API. A refunded vendor failure arrives as
-`provider_failed`; `vendor_error` is internal vocabulary and branching on it matches nothing, which
-sends the whole case into unknown-error handling and re-fires a sweep that pays the fee twice.
-
-**A call that times out on your side is not a call that failed.** There is no idempotency on
-sweeps, so re-firing can pay twice. The sweep is recorded as a generation: list your recent
-generations and look for it before you retry anything (its `prompt` is the query you sent, which is
-how you recognise it). Note that the generation record is a receipt, not a mirror — it carries no
-`outputUrl` at all, there is nothing to watch or download, and the media lives only in the
-response you already have. That is the whole reason step 4 downloads first.
+`references/errors.md` — every `error.code` this surface emits, what each means, and what to do.
+**Branch on the code, never on the message.** Two that matter before you read anything:
+`provider_failed` (502) is NOT an empty result — the scrape failed and the credits were
+refunded — and a call that times out on your side was probably charged, so reconcile it before
+retrying rather than paying twice.
 
 ## Background
 

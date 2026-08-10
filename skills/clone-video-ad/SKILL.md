@@ -29,18 +29,28 @@ Steps 1 to 3 are the same analysis in both. The only charge in that half is the 
 in step 2 — a fraction of a credit, and free on a re-read of the same source. Everything
 from step 9 on is the real spend.
 
-## If the `shared/` files are not on disk
+## If `shared/` is missing from disk
 
-Then `novoads-api` was installed on its own from skills.sh and the rest of the pack stayed behind.
-Everything under `skills/novoads-api/` still travels with you; what is gone is
-`shared/references/craft.md` (the doctrine step 3's transcript diff cites) and the
-`caption-video` skill, which is the out-of-band caption burn and lives across
-`shared/skills/caption-video/SKILL.md` plus `shared/skills/caption-video/prompting/guide.md`. Fetch any of
-those from `https://raw.githubusercontent.com/novoads/claude-code-ads/main/<path>`. The b-roll overlay step is
-a folder of scripts rather than one file and only exists in the full pack, so reach it with
-`git clone https://github.com/novoads/claude-code-ads.git`. `scripts/check-novoads-env.sh` and
-`MASTER_CONTEXT.md` are absent too: set `NOVOADS_API_KEY` in the environment yourself, and ask the
-user for brand voice and product instead of reading it.
+`references/solo-install.md` — what a solo install lacks (`craft.md`, `caption-video`, the
+b-roll scripts, `check-novoads-env.sh`, `MASTER_CONTEXT.md`) and how to fetch each. Skip it
+inside the full pack.
+
+## Read order
+
+This skill links outward more than any other here, and its two biggest targets fan out again
+(22 and 10 further links). **A file reached through another file gets skimmed, not read**, so
+open these four directly, in order. Everything else is lookup.
+
+1. **This file** — workflow, gates, the constraints that bite.
+2. `../novoads-api/prompting/prompt-library/seedance-2.md` — fields, grid, prompt craft, what
+   the estimate flags. Before composing a prompt, not when one fails.
+3. **One** formula matched to the source, not all: `seedance-2-ugc.md` talking-head,
+   `-feature-walkthrough` demo, `-premium-reveal` / `-product-hero` product-only,
+   `-studio-lookbook` polished. Same directory as (2).
+4. `../../shared/references/craft.md` § 1 — the transcribe-verify doctrine step 12 rests on.
+
+`../novoads-api/SKILL.md` is the contract, not a step: open it when a response shape or an
+error code needs settling.
 
 ## What this API changes about cloning
 
@@ -815,22 +825,12 @@ quote when reporting a problem.
 
 ## Related files
 
+The formula library and the API contract are listed once, in **Read order** at the top — this
+section does not repeat them. What is only here:
+
 - [analyze-video/SKILL.md](../analyze-video/SKILL.md) — the template-making cousin: same
   analysis, output is a reusable formula instead of a video.
 - [analyze-video/scripts/extract-frames.sh](../analyze-video/scripts/extract-frames.sh) —
   frame and audio extraction, shared by both.
-- [seedance-2.md](../novoads-api/prompting/prompt-library/seedance-2.md) — platform guide: fields, grid, craft,
-  what the estimate flags. Read before composing any prompt.
-- [seedance-2-ugc.md](../novoads-api/prompting/prompt-library/seedance-2-ugc.md) — 9-layer UGC formula, for
-  talking-head sources.
-- [seedance-2-premium-reveal.md](../novoads-api/prompting/prompt-library/seedance-2-premium-reveal.md) — for
-  dark-void, product-only sources.
-- [seedance-2-product-hero.md](../novoads-api/prompting/prompt-library/seedance-2-product-hero.md) — for
-  elemental / effects-driven product-only sources.
-- [seedance-2-studio-lookbook.md](../novoads-api/prompting/prompt-library/seedance-2-studio-lookbook.md) — for
-  polished voiceover sources.
-- [seedance-2-feature-walkthrough.md](../novoads-api/prompting/prompt-library/seedance-2-feature-walkthrough.md) —
-  for fast-paced demo sources, and the reference for holding one person across a series.
-- [../../SKILL.md](../novoads-api/SKILL.md) — the router: decision tree, both gates, the full call
-  sequence, polling and download.
-- [../../reference.md](../novoads-api/reference.md) — every endpoint, field, limit and error code.
+- [novoads-api/reference.md](../novoads-api/reference.md) — every endpoint, field, limit and
+  error code. A lookup, not a read-through.
