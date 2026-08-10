@@ -1,6 +1,6 @@
 # Library entry format
 
-Markdown skeleton for an entry in `prompt-library.md`. Lazy-loaded by `image-ad-clone-*` Phase 8 before composing the entry. The library already contains T1–T42 in this format — match its style when appending new entries so the file stays consistent across both `chatgpt-image-ad` and `nano-banana-image-ad` consumers.
+Markdown skeleton for an entry in `prompt-library.md`. Lazy-loaded by `clone-image-ad-*` Phase 8 before composing the entry. The library already contains T1–T42 in this format — match its style when appending new entries so the file stays consistent across both `chatgpt-image-ad` and `nano-banana-image-ad` consumers.
 
 ## Skeleton
 

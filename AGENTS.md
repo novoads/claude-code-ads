@@ -120,7 +120,7 @@ This repo ships a 3-skill ecosystem for generating standalone Meta image-ad crea
 
 Quick map:
 - **Generate from a brief** → `chatgpt-image-ad` (typography / UI mimicry) or `nano-banana-image-ad` (photoreal / lifestyle / multi-ref).
-- **Clone an existing ad into a reusable template** → `image-ad-clone` (single backend-agnostic skill; asks you which generator to validate against at Phase 1, optionally cross-validates against the other backend at Phase 8).
+- **Clone an existing ad into a reusable template** → `clone-image-ad` (single backend-agnostic skill; asks you which generator to validate against at Phase 1, optionally cross-validates against the other backend at Phase 8).
 - **Pull from / add to the shared library** → `shared/skills/image-ad-prompting/prompting/prompt-library.md` (40 ready-to-use validated prompts).
 - **Hand off finished images to Meta** → separate `meta-ad-builder` skill; the image-ad skills produce images only.
 
@@ -136,6 +136,6 @@ Quick map:
   - **Image-ad ecosystem** (3 skills + shared 40-template library) — see [shared/skills/image-ad-prompting/OVERVIEW.md](shared/skills/image-ad-prompting/OVERVIEW.md):
     - `chatgpt-image-ad` — generate via `gpt-image-2` (typography / UI-mimicry creatives)
     - `nano-banana-image-ad` — generate via `nano-banana-pro` (photoreal / lifestyle creatives)
-    - `image-ad-clone` — single backend-agnostic skill that reverse-engineers existing ads into reusable templates (asks which backend to validate against at Phase 1; optionally cross-validates at Phase 8)
+    - `clone-image-ad` — single backend-agnostic skill that reverse-engineers existing ads into reusable templates (asks which backend to validate against at Phase 1; optionally cross-validates at Phase 8)
 - **Setup check:** `./scripts/check-novoads-env.sh`.
 - **Logging:** every generation call is appended to `logs/novoads-api.jsonl`. Observability only — never a pricing input. Schema in [logs/README.md](logs/README.md).

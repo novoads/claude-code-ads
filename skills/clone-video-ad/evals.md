@@ -1,4 +1,4 @@
-# Evals — clone-ad (video)
+# Evals — clone-video-ad (video)
 
 Written **before** the `SKILL.md` edits in this PR, following the evals-first work order
 from #13. That ordering lives in this sentence rather than in the commit history, because
@@ -80,7 +80,7 @@ this skill exists to preserve.
 - If it cites the #13 A/B, it states the mechanism caveat in the same breath.
 - If it consults [seedance-2-ugc-v2.md](../novoads-api/prompting/prompt-library/seedance-2-ugc-v2.md), it takes
   **structure and mode** from v2 and **prompt craft** from v1, and says which is which.
-- clone-ad's **source beat map wins** over v2's beat doctrine. v2's "no silent beats in the
+- clone-video-ad's **source beat map wins** over v2's beat doctrine. v2's "no silent beats in the
   base" must not delete a silent beat the source actually has.
 
 **Fails if:** the agent splits silently (today's text); or compresses silently (v2's

@@ -207,7 +207,7 @@ write them to `./generated/run-<ts>.jsonl` for downstream consumption.
 - **Editing an existing image** — no model on this API has an edit or inpainting path. Offer a fresh generation with the original as a reference.
 - **Video, carousel, DCO ads** — image only. Video lives in the `novoads-api` skill.
 - **Ad copy writing** — different skill.
-- **Editing the shared prompt library** — use `image-ad-clone`.
+- **Editing the shared prompt library** — use `clone-image-ad`.
 
 ## Common errors
 
@@ -233,6 +233,6 @@ write them to `./generated/run-<ts>.jsonl` for downstream consumption.
 - `shared/skills/image-ad-prompting/OVERVIEW.md` — ecosystem hub, read first
 - `shared/skills/nano-banana-image-ad/prompting/guide.md` — model-specific prompting, retry playbook
 - `shared/skills/image-ad-prompting/prompting/prompt-library.md` — 40 validated templates
-- the **`image-ad-clone`** skill — reverse-engineers an existing ad into a reusable library entry
+- the **`clone-image-ad`** skill — reverse-engineers an existing ad into a reusable library entry
 - the **`chatgpt-image-ad`** skill — sibling for typography-heavy / UI-mimicry templates
 - the **`novoads-api`** skill — the API contract underneath all of this

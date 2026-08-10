@@ -1,4 +1,4 @@
-# image-ad-clone evals
+# clone-image-ad evals
 
 Every scenario below is a real failure mode: one this skill or its house sibling actually
 produced, or one the flow was reshaped to prevent.
@@ -115,7 +115,7 @@ for eight fields up front is a skill nobody finishes.
 **Check:** on a checkout with no `MASTER_CONTEXT.md`, ask for a clone in ads mode. Confirm it
 asks for the photo and the description, does NOT ask for tone, colours or fonts, and does not
 render before it has the photo. Automated half: `./scripts/brand-context.py check
-image-ad-clone` exits 2 naming exactly those two.
+clone-image-ad` exits 2 naming exactly those two.
 
 ---
 
@@ -178,7 +178,7 @@ rather than passed to the render because it was the only thing available.
 ## Routing — ten sentences, one skill each
 
 **Why this table exists:** four skills now answer some form of "clone this ad", and the
-collision is what let `clone-ad` sit undiscovered while `image-ad-clone`'s description
+collision is what let `clone-video-ad` sit undiscovered while `clone-image-ad`'s description
 claimed the phrase outright. Descriptions edited one at a time is how that happened. Edit
 this table and all four descriptions in the same pass, or not at all.
 
@@ -192,16 +192,16 @@ one. A sentence that fires two skills, or fires none, is a failing row.
 
 | # | The user says | Must resolve to |
 |---|---|---|
-| 1 | "clone this ad" **+ a .jpg/.png attached** | `image-ad-clone` |
-| 2 | "clone this ad" **+ an .mp4 attached** | `clone-ad` |
-| 3 | "clone my competitors' ads" **with nothing attached** | `image-ad-clone`, which sweeps statics and names the video escape |
-| 4 | "clone my competitors' video ads" | `clone-ad` |
-| 5 | "clone this ad for my product" + a still | `image-ad-clone`, ads mode |
-| 6 | "turn this ad into a reusable template" + a still | `image-ad-clone`, template mode |
-| 7 | "recreate this video for my brand" + a clip | `clone-ad` |
+| 1 | "clone this ad" **+ a .jpg/.png attached** | `clone-image-ad` |
+| 2 | "clone this ad" **+ an .mp4 attached** | `clone-video-ad` |
+| 3 | "clone my competitors' ads" **with nothing attached** | `clone-image-ad`, which sweeps statics and names the video escape |
+| 4 | "clone my competitors' video ads" | `clone-video-ad` |
+| 5 | "clone this ad for my product" + a still | `clone-image-ad`, ads mode |
+| 6 | "turn this ad into a reusable template" + a still | `clone-image-ad`, template mode |
+| 7 | "recreate this video for my brand" + a clip | `clone-video-ad` |
 | 8 | "I want to make videos like this" + a clip | `analyze-video` |
 | 9 | "what are Arcads running right now" | `spy-competitor-ads` |
-| 10 | "clone the hook of this ad" | none in this pack — say so and offer `clone-ad` for the whole ad |
+| 10 | "clone the hook of this ad" | none in this pack — say so and offer `clone-video-ad` for the whole ad |
 
 Row 10 is a deliberate hole, not an oversight: hook-only cloning is unpublished here. Saying
 "we do not have that, here is the nearest thing" beats silently cloning the whole ad when the

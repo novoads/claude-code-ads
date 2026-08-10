@@ -7,7 +7,7 @@
 # not there fails silently. The agent shrugs and proceeds without the rules that
 # file was carrying.
 #
-# Found the hard way: promoting clone-ad and analyze-video from depth four to
+# Found the hard way: promoting the video cloner and analyze-video from depth four to
 # depth two invalidated ~30 links across two files, including every entry in the
 # Seedance prompt library, the transcript-diff doctrine, and both gates.
 #

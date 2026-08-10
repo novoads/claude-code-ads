@@ -1,5 +1,5 @@
 ---
-name: clone-ad
+name: clone-video-ad
 description: >-
   Clones a VIDEO ad end to end for a different product or offer, on the Novoads API. The
   deliverable is a finished rendered MP4 — the WHOLE ad, not its opening, and not a
@@ -9,8 +9,8 @@ description: >-
   "recreate this video for my brand", "make this ad but for my product" when the source is
   a video, "clone my competitors' VIDEO ads", or a video ad handed over with a product
   photo. **The source's medium decides, not the wording**: "clone this ad" plus a video
-  lands here; "clone this ad" plus a still, or with nothing attached, is image-ad-clone.
-  Two neighbours it is NOT: a STATIC IMAGE ad is image-ad-clone, and rebuilding only the
+  lands here; "clone this ad" plus a still, or with nothing attached, is clone-image-ad.
+  Two neighbours it is NOT: a STATIC IMAGE ad is clone-image-ad, and rebuilding only the
   first few seconds is a hook skill. If the source does not move, this is the wrong skill.
 ---
 
@@ -23,7 +23,7 @@ transcribe the dialogue, extract the visual style and beat structure, then gener
 **How this differs from analyze-video:**
 
 - **analyze-video** → the output is a reusable markdown formula saved to `prompt-library/`.
-- **clone-ad** → the output is a rendered video delivered to the user.
+- **clone-video-ad** → the output is a rendered video delivered to the user.
 
 Steps 1 to 3 are the same analysis in both. The only charge in that half is the transcript
 in step 2 — a fraction of a credit, and free on a re-read of the same source. Everything
@@ -133,7 +133,7 @@ Reuse the analyze-video script. Do not duplicate it.
 
 ```bash
 bash "skills/analyze-video/scripts/extract-frames.sh" \
-  "<source_video_path>" "/tmp/clone-ad-analysis" <num_frames>
+  "<source_video_path>" "/tmp/clone-video-ad-analysis" <num_frames>
 ```
 
 | Source duration | Frames |
@@ -190,7 +190,7 @@ Two things worth knowing:
 
 ```python
 import whisper
-result = whisper.load_model("base").transcribe("/tmp/clone-ad-analysis/audio.wav")
+result = whisper.load_model("base").transcribe("/tmp/clone-video-ad-analysis/audio.wav")
 ```
 
 Two traps this pack has already paid for, the same ones
@@ -209,7 +209,7 @@ and exits `0`, so the missing file is the only signal you get. On the API path t
 thing surfaces as a transcript with no words.
 
 ```bash
-test -f /tmp/clone-ad-analysis/audio.wav || echo "silent source — skip to step 3"
+test -f /tmp/clone-video-ad-analysis/audio.wav || echo "silent source — skip to step 3"
 ```
 
 If no speech is detected — or there was no audio stream to begin with — note it and skip

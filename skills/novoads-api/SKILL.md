@@ -86,7 +86,7 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | A video built from several photos: the actor **and** the product, a wardrobe, a setting | `seedance-2.0` or mini plus `referenceAssetIds` — up to **9** images, composited rather than animated, addressed in the prompt text as `@Image1`…`@ImageN` in the order you send them. **Seedance only** — `omni-flash`, `sora-2` and `veo-3.1` have no such field — and **never alongside `startImageAssetId`**: they are separate modes and a body carrying both is a `400` |
 | The same person to hold across several clips of a series | pass that person's photo in every clip's `referenceAssetIds` and repeat the actor tag verbatim. Seedance re-casts on every cut, so a repeated description alone does not hold a face; see [seedance-2-feature-walkthrough.md](prompting/prompt-library/seedance-2-feature-walkthrough.md) |
 | A reference video turned into a reusable template: "make videos like this", "deconstruct this" | read [prompting/analyze-video/SKILL.md](../analyze-video/SKILL.md). Frames and transcript are extracted locally with ffmpeg and Whisper, and the output is a new formula file in `prompting/prompt-library/`. Nothing is charged until the optional test render at the end |
-| One specific ad cloned for their own product: "make this ad but for my product" | read [prompting/clone-ad/SKILL.md](../clone-ad/SKILL.md). The same local analysis, but the output is a rendered clip and both gates apply. A source longer than the chosen model's ceiling becomes a series, held together by passing the same `referenceAssetIds` to every clip — there is no video-to-video on this API. `seedance-2.5` reaches 30s in one call, so a source that used to need two clips may now need one; price both shapes before you pick |
+| One specific ad cloned for their own product: "make this ad but for my product" | read [prompting/clone-video-ad/SKILL.md](../clone-video-ad/SKILL.md). The same local analysis, but the output is a rendered clip and both gates apply. A source longer than the chosen model's ceiling becomes a series, held together by passing the same `referenceAssetIds` to every clip — there is no video-to-video on this API. `seedance-2.5` reaches 30s in one call, so a source that used to need two clips may now need one; price both shapes before you pick |
 | A static ad with heavy text or a mimicked UI | `gpt-image-2` |
 | A photoreal still: a person, a product in a scene | `nano-banana-pro` |
 | A different look on a still, or a second opinion on one | `reve-2.1` |
@@ -94,7 +94,7 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | A claymation / stop-motion clay ad | read `skills/novoads-claymation-ad/SKILL.md`, same shape over 8 beats |
 | Captions burned onto a finished MP4 | **Two real paths — offer both.** `POST /v1/captions`: one call, 30 preset styles, no local dependencies, **costs credits** and returns only a new MP4 (never an SRT or the caption text). Or the `caption-video` skill (`shared/skills/caption-video/SKILL.md`): **free**, any style you can write, and it gives you a Whisper transcript you can hand-correct — but needs Whisper, HyperFrames and an ffmpeg alpha composite locally. See *Burned-in captions* below. A clip rendered with `audioEnabled: false` can only go the local route |
 | Meta image-ad creatives from a brief or a template | read `shared/skills/image-ad-prompting/OVERVIEW.md` first, then `chatgpt-image-ad` or `nano-banana-image-ad` |
-| To reverse-engineer an existing image ad into a reusable template | the `image-ad-clone` skill |
+| To reverse-engineer an existing image ad into a reusable template | the `clone-image-ad` skill |
 | A YouTube thumbnail | the `generate-youtube-thumbnail` skill |
 | B-roll, an ambient product clip, a scene | There is no b-roll endpoint. Generate a silent clip: `omni-flash`, or `seedance-2.0` with the word `silent` or `b-roll` in the prompt |
 | Kling | Not on this API. Say so plainly; [kling-3.md](prompting/prompt-library/kling-3.md) sits in the repo as prompt craft for when it lands. **Sora 2 and Veo 3.1 are live** — they have their own rows above |
@@ -553,7 +553,7 @@ Check `mean_volume` is not near-silent (the renders measured here came back −1
 ffmpeg -y -v error -i ad.mp4 -ar 16000 -ac 1 -c:a pcm_s16le /tmp/ad-qa.wav
 ```
 
-Then transcribe `/tmp/ad-qa.wav` with whichever Whisper the machine has — the same one `analyze-video` and `clone-ad` use:
+Then transcribe `/tmp/ad-qa.wav` with whichever Whisper the machine has — the same one `analyze-video` and `clone-video-ad` use:
 
 ```bash
 whisper /tmp/ad-qa.wav --model base --output_format txt --output_dir /tmp   # openai-whisper

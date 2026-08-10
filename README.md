@@ -53,7 +53,7 @@ first ad needs nothing from the optional table.
 | Tool | Needed for | Install (macOS) |
 |---|---|---|
 | **`curl` + `jq`** | Everything on the API: uploads, estimates, generation, polling, download | preinstalled / `brew install jq` |
-| **Python 3.10+** | The image-ad callers (`chatgpt-image-ad`, `nano-banana-image-ad`, `image-ad-clone`). Stdlib only, nothing to `pip install` | preinstalled or `brew install python@3.12` |
+| **Python 3.10+** | The image-ad callers (`chatgpt-image-ad`, `nano-banana-image-ad`, `clone-image-ad`). Stdlib only, nothing to `pip install` | preinstalled or `brew install python@3.12` |
 | **`ffmpeg`** | Only the steps that assemble or edit video on your machine: the storyboard ads (`novoads-pixar-ad`, `novoads-claymation-ad`, both of which assemble locally at every length), the local post steps (`music-mix`, `broll-overlay`), and frame extraction in `analyze-video`. Every core API workflow needs nothing | `brew install ffmpeg` |
 
 Captions, transcripts and music are generated server-side and need **no local
@@ -225,7 +225,7 @@ weather UI, scratch-off tickets, founder letters, dating-app cards, and more.
 
 - **[`chatgpt-image-ad`](skills/chatgpt-image-ad/SKILL.md)** — typography / UI mimicry, on `gpt-image-2`
 - **[`nano-banana-image-ad`](skills/nano-banana-image-ad/SKILL.md)** — photoreal / lifestyle / multi-reference, on `nano-banana-pro`
-- **[`image-ad-clone`](skills/image-ad-clone/SKILL.md)** — reverse-engineer an existing ad into a new library entry; asks which backend to validate against at Phase 1 (`gpt-image-2`, `nano-banana-pro` or `reve-2.1`) and can cross-validate against another at Phase 8
+- **[`clone-image-ad`](skills/clone-image-ad/SKILL.md)** — reverse-engineer an existing ad into a new library entry; asks which backend to validate against at Phase 1 (`gpt-image-2`, `nano-banana-pro` or `reve-2.1`) and can cross-validate against another at Phase 8
 
 **Read [shared/skills/image-ad-prompting/OVERVIEW.md](shared/skills/image-ad-prompting/OVERVIEW.md)
 first** — it holds the decision tree, the per-backend aspect-ratio matrix, and the standard
@@ -251,7 +251,7 @@ skill.
 - **[analyze-video](skills/analyze-video/SKILL.md)** — pulls frames with
   ffmpeg and the transcript with Whisper *locally*, reads out the beat structure, and writes a new
   parameterized formula into the prompt library. Nothing is charged until an optional test render.
-- **[clone-ad](skills/clone-ad/SKILL.md)** — the same local analysis, but the
+- **[clone-video-ad](skills/clone-video-ad/SKILL.md)** — the same local analysis, but the
   output is a rendered clip, so both gates apply. There is no video-to-video on this API: a source
   longer than the chosen model's ceiling becomes a series of clips held together by passing the same
   reference images to each one — though `seedance-2.5` reaches 30s in one call, so some sources that
@@ -337,10 +337,10 @@ than routing you somewhere else. There is likewise no b-roll or scene endpoint �
 
 | Path | What it does |
 |---|---|
-| [`skills/novoads-api/`](skills/novoads-api/) | **The spine.** [`SKILL.md`](skills/novoads-api/SKILL.md) is the router: decision tree, the two gates, the full call sequence, error branching. [`reference.md`](skills/novoads-api/reference.md) is every endpoint, field, limit and status code, plus the dated discrepancy list. Carries the Seedance formulas, the image/character libraries, and the `analyze-video` + `clone-ad` sub-workflows. |
+| [`skills/novoads-api/`](skills/novoads-api/) | **The spine.** [`SKILL.md`](skills/novoads-api/SKILL.md) is the router: decision tree, the two gates, the full call sequence, error branching. [`reference.md`](skills/novoads-api/reference.md) is every endpoint, field, limit and status code, plus the dated discrepancy list. Carries the Seedance formulas, the image/character libraries, and the `analyze-video` + `clone-video-ad` sub-workflows. |
 | [`skills/chatgpt-image-ad/`](skills/chatgpt-image-ad/) | Static Meta image-ad creatives on `gpt-image-2` (typography / UI mimicry). |
 | [`skills/nano-banana-image-ad/`](skills/nano-banana-image-ad/) | Static Meta image-ad creatives on `nano-banana-pro` (photoreal / lifestyle). |
-| [`skills/image-ad-clone/`](skills/image-ad-clone/) | Turn an existing ad image into a reusable library entry. Backend chosen at Phase 1. |
+| [`skills/clone-image-ad/`](skills/clone-image-ad/) | Turn an existing ad image into a reusable library entry. Backend chosen at Phase 1. |
 | [`skills/generate-youtube-thumbnail/`](skills/generate-youtube-thumbnail/) | 5 CTR-tested thumbnail formulas with bounded batch generation. |
 | [`skills/novoads-pixar-ad/`](skills/novoads-pixar-ad/) | A product URL or photo → a finished stylized 3D animated ad, built as a reviewed storyboard: one clip per beat, narrator voice-over layered into the gaps, then local assembly. Stills chain by `assetId`, so holding one character across separately-rendered beats needs no re-upload. **Every Pixar-style ask lands here, at any length.** [`references/formulas.md`](skills/novoads-pixar-ad/references/formulas.md) holds the four genre roles with a variable table and a worked still and clip prompt for each; [`evals.md`](skills/novoads-pixar-ad/evals.md) the scored cases; [`references/NOTICE.md`](skills/novoads-pixar-ad/references/NOTICE.md) the upstream MIT notice for the craft it adapts. |
 | [`skills/novoads-claymation-ad/`](skills/novoads-claymation-ad/) | The clay sibling. Same pipeline as the Pixar skill; what it owns is the hand-sculpted clay look and a longer, quieter arc built on a named protagonist. [`references/formulas.md`](skills/novoads-claymation-ad/references/formulas.md) holds the eight beats, the subject-lock fragments and the clay QA checklists; [`evals.md`](skills/novoads-claymation-ad/evals.md) the clay-specific cases on top of the Pixar skill's; [`references/NOTICE.md`](skills/novoads-claymation-ad/references/NOTICE.md) the upstream MIT notice. |

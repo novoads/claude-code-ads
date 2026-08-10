@@ -46,6 +46,6 @@ This repo ships a 3-skill ecosystem for generating standalone Meta image-ad crea
 
 Quick map:
 - **Generate from a brief** → `chatgpt-image-ad` (typography / UI mimicry) or `nano-banana-image-ad` (photoreal / lifestyle / multi-ref).
-- **Clone an existing ad into a reusable template** → `image-ad-clone` (single backend-agnostic skill; asks you which generator to validate against at Phase 1, optionally cross-validates against the other backend at Phase 8).
+- **Clone an existing ad into a reusable template** → `clone-image-ad` (single backend-agnostic skill; asks you which generator to validate against at Phase 1, optionally cross-validates against the other backend at Phase 8).
 - **Pull from / add to the shared library** → `shared/skills/image-ad-prompting/prompting/prompt-library.md` (40 ready-to-use validated prompts).
 - **Hand off finished images to Meta** → separate `meta-ad-builder` skill; the image-ad skills produce images only.

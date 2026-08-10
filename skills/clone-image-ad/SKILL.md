@@ -1,5 +1,5 @@
 ---
-name: image-ad-clone
+name: clone-image-ad
 description: >-
   Clones a STATIC IMAGE ad into finished ads for your own product, into a reusable prompt
   TEMPLATE, or both — the template is what makes the ads and the ads are what prove the
@@ -10,12 +10,12 @@ description: >-
   "make this ad reusable", "add this to my prompt library", or "clone my competitors'
   ads" with NO file attached — it sources one via spy-competitor-ads rather than asking
   which. **The source's medium decides**: a still, or nothing attached, lands here;
-  "clone this ad" plus a VIDEO is clone-ad. NOT for generating an ad from a brief or a
+  "clone this ad" plus a VIDEO is clone-video-ad. NOT for generating an ad from a brief or a
   template (chatgpt-image-ad, nano-banana-image-ad). Refuses to render your product
   without a real photo of it.
 ---
 
-# image-ad-clone
+# clone-image-ad
 
 Take an existing image ad and turn it into a reusable, parameterizable prompt template that
 gets appended to the shared **40-template image-ad library**. The template is validated by
@@ -26,7 +26,7 @@ round-tripping it through a Novoads image model and comparing against the origin
 Then this skill was installed on its own from skills.sh, and the library it is supposed to append
 to came with nothing. Fetch each missing file from
 `https://raw.githubusercontent.com/novoads/claude-code-ads/main/<path>`, where `<path>` is one of
-`shared/skills/image-ad-clone/prompting/guide.md`,
+`shared/skills/clone-image-ad/prompting/guide.md`,
 `shared/skills/image-ad-prompting/prompting/template-format.md`,
 `shared/skills/image-ad-prompting/prompting/prompt-library.md` and
 `shared/skills/image-ad-prompting/OVERVIEW.md`. Cloning the whole pack with
@@ -41,7 +41,7 @@ Paths below are **from the repo root**. This skill is copied into `.claude/skill
 `.cursor/skills/` by `sync-skill.sh`, so a relative link out of it would break in those copies.
 
 1. **This file** — model choice, the validator, what's fixed at the repo layer.
-2. `shared/skills/image-ad-clone/prompting/guide.md` — the full 10-phase workflow (visual analysis → draft prompt → generate-with-reference → iterate → generalize → test → cross-model validate → document → save).
+2. `shared/skills/clone-image-ad/prompting/guide.md` — the full 10-phase workflow (visual analysis → draft prompt → generate-with-reference → iterate → generalize → test → cross-model validate → document → save).
 3. `shared/skills/image-ad-prompting/prompting/template-format.md` — entry skeleton.
 4. `shared/skills/image-ad-prompting/prompting/prompt-library.md` — destination for the new entry. 40 validated templates already there; new entries go at T40+.
 5. `shared/skills/image-ad-prompting/OVERVIEW.md` — ecosystem context.
@@ -100,10 +100,10 @@ say what you are about to do in one line with a price and a way out:
 > drop your own image.
 
 - **Statics are the default, and the line says so.** A bare "clone my competitors' ads"
-  lands here rather than on `clone-ad` because a static sweep returns more usable creatives
+  lands here rather than on `clone-video-ad` because a static sweep returns more usable creatives
   and a static render costs a fraction of a video one. Naming the video escape in the same
   breath is what keeps that default honest — the user picks in one word instead of being
-  asked a question. If they say video, hand the sweep to `clone-ad` and stop.
+  asked a question. If they say video, hand the sweep to `clone-video-ad` and stop.
 - **Name the competitors**, so a wrong guess is corrected before it is paid for.
 - **The total comes from a live `POST /v1/estimates` in this session** — never a number
   from memory or from this file. N competitors is N charges and that multiplication is
@@ -119,7 +119,7 @@ the user picked otherwise.
 ### 0c. Do we have the brand?
 
 ```bash
-./scripts/brand-context.py check image-ad-clone
+./scripts/brand-context.py check clone-image-ad
 ```
 
 Exit 2 means blocked, and the output names exactly what is missing. **Ask for those and
@@ -182,10 +182,10 @@ If the user explicitly names a model, honor that.
 
 ## The validator
 
-This skill has its own caller: `skills/image-ad-clone/scripts/validate_image.py`.
+This skill has its own caller: `skills/clone-image-ad/scripts/validate_image.py`.
 
 ```bash
-./skills/image-ad-clone/scripts/validate_image.py \
+./skills/clone-image-ad/scripts/validate_image.py \
   --model <gpt-image-2|nano-banana-pro|reve-2.1> \
   --prompt "$(cat prompts/<tag>-v1.txt)" \
   --aspect-ratio <ratio> \
@@ -221,7 +221,7 @@ same upload flow, each model's own reference cap (`gpt-image-2` 4, `nano-banana-
 prompt names and leaves the rest of the frame alone:
 
 ```bash
-./skills/image-ad-clone/scripts/validate_image.py \
+./skills/clone-image-ad/scripts/validate_image.py \
   --model gpt-image-2 \
   --prompt "$(cat prompts/<tag>-swap.txt)" \
   --source-image original-ad.jpg \
@@ -362,12 +362,12 @@ Don't skip it, and don't fill it in with guesses.
 
 ## Files this skill owns
 
-- `skills/image-ad-clone/SKILL.md` — this file
-- `skills/image-ad-clone/scripts/validate_image.py` — the model-aware clone validator
+- `skills/clone-image-ad/SKILL.md` — this file
+- `skills/clone-image-ad/scripts/validate_image.py` — the model-aware clone validator
 
 ## See also
 
-- `shared/skills/image-ad-clone/prompting/guide.md` — full 10-phase workflow
+- `shared/skills/clone-image-ad/prompting/guide.md` — full 10-phase workflow
 - `shared/skills/image-ad-prompting/OVERVIEW.md` — ecosystem context
 - the **`chatgpt-image-ad`** skill — where a gpt-image-2 template gets used in production
 - the **`nano-banana-image-ad`** skill — where a nano-banana-pro template gets used in production

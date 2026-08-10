@@ -64,7 +64,7 @@ generated/
 prompts/
 
 # Clone rounds: `iterations/clone-<date>/<tag>/prompt.txt`, `v1.png`, … This is the
-# image-ad-clone skill's DOCUMENTED output dir, so following that skill exactly
+# clone-image-ad skill's DOCUMENTED output dir, so following that skill exactly
 # dirtied the tree the same way — the renders are the user's evidence of a template,
 # not repo content. `git add -f iterations/<path>` still commits the rare one worth
 # keeping.

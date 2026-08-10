@@ -48,9 +48,9 @@ its model's cap minus 1,575:
 
 | model | cap | body room | reachable from |
 |---|---|---|---|
-| `gpt-image-2` | 32,000 | 30,425 | `chatgpt-image-ad`, `image-ad-clone` |
-| `nano-banana-pro` | 50,000 | 48,425 | `nano-banana-image-ad`, `image-ad-clone` |
-| `reve-2.1` | 4,000 | **2,425** | `image-ad-clone` only |
+| `gpt-image-2` | 32,000 | 30,425 | `chatgpt-image-ad`, `clone-image-ad` |
+| `nano-banana-pro` | 50,000 | 48,425 | `nano-banana-image-ad`, `clone-image-ad` |
+| `reve-2.1` | 4,000 | **2,425** | `clone-image-ad` only |
 
 **Check, two tiers. Automated.** A body over **30,425** fails: templates are
 authored and validated on `gpt-image-2`, so a body no generator can send is a
@@ -149,7 +149,7 @@ skill's voice track, and a session that has just watched this library pin a
 wordmark faithfully is exactly the session likely to assume otherwise.
 
 **Check:** every skill in `SPOKEN_AUDIO_SKILLS` carries a transcribe-verify step.
-Automated. Landed for `clone-ad` in public #28.
+Automated. Landed for `clone-video-ad` in public #28.
 
 ### L5 — the entry format holds
 

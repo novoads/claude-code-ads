@@ -17,7 +17,7 @@ Together: ~1,575 chars of always-on guard, leaving headroom under each model's p
 
 - **`gpt-image-2`** (ChatGPT Image 2) — strong text fidelity, dense small-text rendering, faithful UI mimicry (iOS, Slack, Google search, comparison tables). Best for typography-heavy templates. The API default, and the cheapest of the three.
 - **`nano-banana-pro`** (Nano Banana Pro) — strong photorealism, multi-image reference blending, character continuity across runs. Weaker on dense small text.
-- **`reve-2.1`** — the third opinion, reachable through the `image-ad-clone` validator. Most entries list it as `untested`; that is honest, and better than a guess.
+- **`reve-2.1`** — the third opinion, reachable through the `clone-image-ad` validator. Most entries list it as `untested`; that is honest, and better than a guess.
 
 **The reference cap is per model, not one number** — `gpt-image-2` takes 4, `reve-2.1` 8,
 `nano-banana-pro` 14 (spec 2.7.0; `./scripts/verify-image-caps.sh` is the standing check).
@@ -109,7 +109,7 @@ tighter of the two. Write the fill the concept needs.
 `reve-2.1` keeps the old 4,000 and is the only place the old arithmetic still bites.
 **23 of the 40 templates** have room for the standard pin block on `reve-2.1`; the rest need a
 trim first, and T8, T11 and T14 are over 2,425 and so are refused there before any brand fill.
-That model is reachable only from the `image-ad-clone` validator, so this is a cross-check
+That model is reachable only from the `clone-image-ad` validator, so this is a cross-check
 constraint rather than a production one. The refusal is free either way: the scripts measure
 the final prompt against the model you named and die pre-network, naming the exact overage.
 Run `python3 ../scripts/check_library.py --verbose` for every template's current headroom per
@@ -2015,7 +2015,7 @@ badge "northwind." on ink navy `#16233A` · `{canvas.color}` = warm off-white `#
 
 ## Adding new templates
 
-When a new ad reference is worth turning into a template, use the `image-ad-clone-*` skill (one per model — chatgpt or nano-banana) to:
+When a new ad reference is worth turning into a template, use the `clone-image-ad-*` skill (one per model — chatgpt or nano-banana) to:
 
 1. Generate a faithful reproduction with `--image-ref` set to the original reference (round 1).
 2. Strip the chrome from the prompt and re-run (round 2) — verify the standalone creative still reads correctly.

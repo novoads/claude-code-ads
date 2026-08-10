@@ -10,7 +10,7 @@ description: >-
   ads a brand is running, pull a competitor's video or static creatives, build or refresh a
   swipe file, check who is outspending you on Meta, or source a reference ad to recreate.
   It finds, ranks and files ads; it does not rebuild them — a static becomes your own ads,
-  or a reusable template, via image-ad-clone. It writes no craft analysis and no creative
+  or a reusable template, via clone-image-ad. It writes no craft analysis and no creative
   brief. A sweep that finds nothing is a result, never an apology.
 ---
 
@@ -21,7 +21,7 @@ Find what a competitor is actually running, and put the files on disk. That is t
 It ranks what it finds, on evidence the Ad Library actually publishes — how long a creative has
 run and how many audiences it runs against. It does **not** judge craft, explain "why it's
 winning", or write a brief; it has not watched these ads and neither have you. What you do with
-them belongs to `image-ad-clone`, which turns a static into your own ads, a reusable template,
+them belongs to `clone-image-ad`, which turns a static into your own ads, a reusable template,
 or both.
 
 The mechanics are one HTTP call per competitor. Everything that makes a run good or bad is
@@ -390,7 +390,7 @@ complete, and the user studies four ads believing they are the whole answer they
 Then offer the next step **once**, in one line, naming a skill that exists in this checkout:
 
 - A **static** you want rebuilt as your own ads, or turned into a reusable template, or both
-  → `image-ad-clone`.
+  → `clone-image-ad`.
 
 Offer, do not start. It spends, and it is not what was asked for here. There is no video
 equivalent in this pack yet — for a video you found, hand over the file path and say so.

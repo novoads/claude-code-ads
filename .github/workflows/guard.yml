@@ -64,7 +64,7 @@ jobs:
   #   frontmatter — the description is the router. Over 1024 chars it truncates,
   #             and the tail is where the "NOT for X" disambiguation lives, so a
   #             long one makes a skill steal its neighbour's sentences. A nested
-  #             SKILL.md is never registered at all — clone-ad sat fully written
+  #             SKILL.md is never registered at all — the video cloner sat fully written
   #             with correct triggers that nothing could ever match.
   docs:
     runs-on: ubuntu-latest

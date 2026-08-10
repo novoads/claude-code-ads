@@ -12,7 +12,7 @@
 #                    repo at 1140 and 1152 chars, both already shipped.
 #
 #   nested SKILL.md  a skill at skills/<name>/prompting/<other>/SKILL.md is never
-#                    registered. clone-ad sat there fully written, with a correct
+#                    registered. The video cloner sat there fully written, with a correct
 #                    description naming exactly the right triggers, and none of
 #                    them ever reached the router.
 #

@@ -463,7 +463,7 @@ organization may be in flight at once.
 
 ## Related files
 
-- [clone-ad/SKILL.md](../clone-ad/SKILL.md) — the sibling: same analysis, but the output is
+- [clone-video-ad/SKILL.md](../clone-video-ad/SKILL.md) — the sibling: same analysis, but the output is
   a generated video for the user's product instead of a template file.
 - [scripts/extract-frames.sh](scripts/extract-frames.sh) — frame and audio extraction,
   shared by both skills.
@@ -484,7 +484,7 @@ skills/novoads-api/
     ├── analyze-video/
     │   ├── SKILL.md                          ← THIS FILE — video → reusable template
     │   └── scripts/extract-frames.sh         ← ffmpeg frame + audio extraction
-    ├── clone-ad/
+    ├── clone-video-ad/
     │   └── SKILL.md                          ← video → adapted video for the user's product
     └── prompt-library/
         ├── seedance-2.md                     ← Seedance 2.0 platform guide (read first)

@@ -48,7 +48,7 @@ LOCKED_MODEL = "gpt-image-2"
 #   reve-2.1                          8          4,000
 #
 # 2.16.0 is what ended the single 4,000 budget: only reve-2.1 still carries it, and
-# reve-2.1 is reachable only from the image-ad-clone validator.
+# reve-2.1 is reachable only from the clone-image-ad validator.
 MAX_REFS = 4
 MAX_IMAGES = 4  # numImages enum: 1, 2, 3, 4
 MAX_PROMPT_CHARS = 32000  # gpt-image-2 prompt ceiling; the API 400s above it

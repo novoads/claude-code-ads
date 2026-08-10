@@ -136,7 +136,7 @@ rather than zero, and states no budget, spend or impression figure anywhere.
 another skill's workflow it hijacks that workflow, and both of its destinations spend.
 
 **Check:** invoke the skill from another workflow that needs creatives. Confirm it returns paths
-and stops — no `clone-ad` or `image-ad-clone` offer. Then invoke it directly and confirm the offer
+and stops — no `clone-video-ad` or `clone-image-ad` offer. Then invoke it directly and confirm the offer
 appears exactly once, as an offer, with nothing started.
 
 ---
