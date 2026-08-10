@@ -269,3 +269,41 @@ because "we already have this" and "we need to buy this" are decided in the same
 **Check:** ask for a brand with no stored sweep. Confirm the run still goes through E1's estimate and
 the announced total before anything fires. Reuse is an optimisation on top of the price gate, never
 a bypass of it.
+
+
+---
+
+### R6 — competitors are swept in PARALLEL, and the price gate still comes first
+
+**Why:** the rule this replaced said "one competitor per call, sequentially", justified by a
+single probe's "about ten seconds". A real three-competitor run took minutes with two of them
+still queued, and the sequential habit was inherited from the retired browser version, which
+serialised to avoid bot detection while driving Chrome at Meta. The API's own ceiling is ten
+concurrent sweeps, counted apart from renders — nine slots were idle.
+
+**Check:** three competitors, nothing attached. Confirm one `sweep.py` invocation rather than
+three curls in sequence, and that the wall-clock is nearer one sweep than three. Then confirm
+the ordering that matters: the estimate and the user's **yes** came BEFORE it, and the script
+was passed `--yes` rather than deciding for itself.
+
+---
+
+### R7 — a script that spends refuses to spend on its own
+
+**Why:** `sweep.py` is called by an agent and charges once per competitor. Every other gate in
+this skill is prose; this one is code, and it must be the strictest.
+
+**Check:** run `./scripts/sweep.py --queries a.com --media video` with a valid key and no
+`--yes`. It exits 1, names `--yes`, and points at `POST /v1/estimates`. **No request is made.**
+Automated in `scripts/test-sweep.sh` (S1).
+
+---
+
+### R8 — a shortfall is the first sentence, not a footnote
+
+**Why:** a partial set delivered as complete looks exactly like a competitor who runs four ads.
+Measured in the browser era: a run reporting five successes produced one file.
+
+**Check:** cause a download to fail. Confirm the delivery leads with `landed/expected`, names
+the competitor that was short, and offers the `adLibraryUrl`s — and that nothing re-sweeps to
+refresh a link, which is a second charge for ads already paid for.

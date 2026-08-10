@@ -150,30 +150,33 @@ Two cases change it. `sufficient: false` is a blocker, not a warning: stop, say 
 short, and give `topUpUrl`. And if the balance covers this run but not a second one, say so in
 one clause before firing — a user who knows that picks their competitors more carefully.
 
-## Step 3 — sweep, one competitor at a time
+## Step 3 — sweep them all at once, and download as they land
 
 ```bash
-SLUG=arcads
-DIR="outputs/competitor-ads/$SLUG"
-mkdir -p "$DIR"
-
-curl -sS -X POST https://api.novoads.ai/v1/competitor-ads \
-  -H "Authorization: Bearer $NOVOADS_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"query":"arcads.ai","mediaType":"video","country":"ALL","count":20}' \
-  > "$DIR/sweep.json"
+./scripts/sweep.py --queries "arcads.ai,creatify.ai,icon.com" --media video --yes
 ```
 
-The response lands on disk before anything else can go wrong. `mkdir -p` is not boilerplate:
-`outputs/` is gitignored and absent on a fresh clone, and curl's failure when the directory is
-missing is `curl: (56) Failure writing output to destination`, which reads like a broken call on
-a sweep that actually succeeded and was already billed.
+One call, all competitors, **in parallel up to the API's ceiling of ten concurrent sweeps** —
+a budget kept separate from renders precisely so sweeps cannot starve a caller's next clip.
+Each competitor's creatives are downloaded inside its own unit of work, the moment that
+response lands, so the CDN clock starts and stops per competitor instead of after the slowest
+one. It writes `outputs/competitor-ads/<slug>/{sweep.json,swept.json}` plus the media, retries
+a 429 once using **the server's own `Retry-After`**, and reconciles what landed against what
+was promised by counting FILES ON DISK.
 
-**One competitor per call, sequentially.** Sweeps have their own concurrency ceiling on the API,
-deliberately separate from the render budget, and there is nothing to win by fanning out: the
-call is synchronous and returns in seconds. Measured on the probe behind this endpoint,
-2026-08-08: a ten-ad sweep came back in about ten seconds. Quote that as an observation, not a
-promise.
+**`--yes` is required and the script refuses without it**, naming the estimate. It spends one
+charge per competitor and it is called by an agent; a script that can spend when nobody said
+yes is the one failure worth being rude about. Price it and get the yes first — that half is
+judgement and stays with you.
+
+Read its summary out. On a shortfall it says which competitor was short and where the failed
+ids are; do not present a short set as the full one.
+
+**This used to say "one competitor per call, sequentially."** That was wrong twice over: the
+justification was a single probe's "about ten seconds" that a real three-competitor run
+contradicted in minutes, and the habit itself came from the RETIRED browser version, which
+serialised to avoid bot detection while driving Chrome at Meta. Apify does the scraping now.
+Nine of the ten slots were idle.
 
 **`query` is a keyword search, not a page lookup.** A domain (`arcads.ai`) or an `@handle` is a
 sharper query than a bare word, for the same reason it was in the browser era: bare words collide
@@ -217,76 +220,23 @@ creative are often published without a video or image on the ad itself, and an e
 download is not a creative to study. So `ads` can be shorter than what the Ad Library shows in a
 browser, and a brand whose whole live set is that shape comes back as `ads: []`.
 
-## Step 4 — download immediately
+## Step 4 — check what actually landed
 
-Before you write a sentence of delivery, before you sweep the next competitor:
+`sweep.py` already downloaded everything and printed `landed/expected` per competitor, counted
+from FILES ON DISK rather than from its own successes. Read that line before you write a word
+of delivery.
 
-```bash
-EXPECTED=$(jq '.ads | length' "$DIR/sweep.json")
-FAILED=""
+**A shortfall is said out loud, in the first sentence, or not at all.** A partial set delivered
+as complete looks exactly like a competitor who runs four ads — that is the failure this whole
+step exists to prevent, and it was measured: a browser-era run reporting five successes produced
+exactly one file.
 
-jq -r '.ads[] | [.adArchiveId, .media.kind,
-        (.media.videoHdUrl // .media.videoSdUrl // .media.imageUrl // .media.previewImageUrl)]
-       | @tsv' "$DIR/sweep.json" |
-while IFS=$'\t' read -r id kind url; do
-  [ "$kind" = video ] && ext=mp4 || ext=jpg
-  curl -sSL --fail -o "$DIR/$SLUG-$id.$ext" "$url" || echo "$id" >> "$DIR/.failed"
-done
+On a shortfall you have two moves, and delivering quietly is neither: re-fetch the named ids
+from the sweep.json you already have, or deliver with the count named and the `adLibraryUrl`s
+for what is missing. `references/recovery.md` has the loop. **Never re-sweep to refresh a
+link** — that is a second charge for ads already paid for.
 
-# THE RECONCILIATION. Count what is ON DISK, not what the loop thought it did.
-LANDED=$(find "$DIR" -name "$SLUG-*.mp4" -o -name "$SLUG-*.jpg" | wc -l | tr -d ' ')
-echo "downloaded $LANDED / $EXPECTED"
-[ -s "$DIR/.failed" ] && { echo "DEAD LINKS:"; cat "$DIR/.failed"; }
-[ "$LANDED" -lt "$EXPECTED" ] && echo "SHORTFALL — do NOT deliver these $LANDED as the full set"
-```
-
-Prefer `videoHdUrl`, fall back to `videoSdUrl`; images are `imageUrl`, with `previewImageUrl` as
-the poster frame when you want a thumbnail of a video.
-
-**Read the reconciliation line before you write anything.** `LANDED` versus `EXPECTED` is the only
-honest count in this pipeline, and it is counted from the filesystem because every other number is
-a claim: the loop's own successes, the response's `ads` length, your memory of how many you saw go
-by. The browser era proved how far apart those drift — a run reporting 5 successes produced exactly
-1 file (2026-07-28), and nothing said so.
-
-On a shortfall you have exactly two moves, and delivering quietly is not one of them:
-
-- **Re-fetch the named ids once**, from the SAME `sweep.json` — the URLs are still whatever the
-  response carried, and a transient failure often works on the second try. Never re-sweep to
-  refresh a link: that is a second charge for ads you already paid for.
-- **Or deliver with the shortfall named** in the first line of the delivery: how many landed, how
-  many did not, and which `adLibraryUrl`s to open for the rest.
-
-A partial set delivered as complete is the failure mode this step exists to prevent. It looks
-exactly like a competitor who runs four ads.
-
-Naming files `<slug>-<adArchiveId>.<ext>` keeps every file traceable to a permanent record. It is
-worth more than a sequence number, because the CDN URL in `sweep.json` is dead within the hour
-and `adArchiveId` is not.
-
-**A plain `curl` is enough — no cookies, no browser.** Verified 2026-08-08: both a
-`videoHdUrl` MP4 and an `imageUrl` JPEG downloaded with an unauthenticated `curl`. This
-contradicts what the browser-era version of this skill said, and the contradiction is real: in
-the extension the CDN URL was masked and could never be seen, so there was nothing to curl. The
-API returns the URL itself.
-
-If a link is already dead, do not re-sweep to refresh it — that is a second charge for the same
-ads. Open its `adLibraryUrl`, which never expires.
-
-Then log the sweep. One line, appended to `logs/novoads-api.jsonl` the moment the response
-lands — the sweep is synchronous, so the line is written once, complete, the way image lines are:
-
-```json
-{ "timestamp": "…", "endpoint": "POST /v1/competitor-ads",
-  "request": { "query": "arcads.ai", "mediaType": "video", "country": "ALL", "count": 20 },
-  "response": { "status": "succeeded", "creditsCharged": 0, "adsReturned": 10, "error": null } }
-```
-
-`creditsCharged` comes off the response and is never computed locally (the `0` above is a
-placeholder shape, not a price). **Never log a media URL** — it is a credential while it lives —
-and never log the key or the `Authorization` header. The log is observability: latency, spend
-history, failure patterns. It is never a pricing source. Prices come from `/v1/estimates`,
-always.
+**Never log a media URL.** It is a credential while it lives.
 
 ## Step 5 — read the result with judgement
 
@@ -484,7 +434,8 @@ rebuilding an idea is not re-running a competitor's ad.
 - Every credit number comes from a live estimate in this session. No rate tables, ever.
 - Never quote a per-ad price. The fee is flat per sweep.
 - Download the media before writing the delivery. `adLibraryUrl` is what you quote.
-- One sweep per competitor, sequentially, against a list the user has seen.
+- One sweep per competitor, fanned out to the API's ceiling by `sweep.py`, against a list the
+  user has seen and priced.
 - Never ask twice about the same thing, and never with a menu.
 - An empty sweep is reported in one line and never retried.
 - Never turn `collationCount` into a spend figure.
