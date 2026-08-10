@@ -81,6 +81,16 @@ ALLOW=(
   'scripts/check-no-gag\.sh::it forbids, the same exemption check-no-mcp\.sh carries for the same reason\.'
   'scripts/check-no-gag\.sh::.scripts/check-no-mcp..sh::\.\*must not be mentioned\.\*.'
   '\.github/workflows/guard\.yml::.*'
+
+  # 8. The image-to-motion parity guard, and that skill's P1 eval. Both NAME this
+  #    script, for the same reason check-no-gag.sh does: a guard that cannot say
+  #    which sibling covers the other half of its contract is a guard nobody can
+  #    follow. LINE patterns, never `path::.*` — the whole-file exemption that
+  #    shipped for check-no-gag.sh was proved to be a hole, and a guard is the
+  #    last place to leave one.
+  'scripts/test-parity-i2m\.sh::# still refuses to run without a key\. check-no-mcp\.sh allowlists exactly this'
+  'scripts/test-parity-i2m\.sh::# actual remedy instead of an MCP violation\.'
+  'skills/novoads-image-to-motion/evals\.md::mention of the connector\. `\./scripts/check-no-mcp\.sh` is the second half of the same'
 )
 
 # NOTE for anyone verifying a change here: `git grep` searches TRACKED files

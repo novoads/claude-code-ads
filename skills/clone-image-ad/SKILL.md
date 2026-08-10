@@ -9,10 +9,10 @@ description: >-
   this competitor's ad for us", "make me ads like this", "reverse engineer this ad",
   "make this ad reusable", "add this to my prompt library", or "clone my competitors'
   ads" with NO file attached — it sources one via spy-competitor-ads rather than asking
-  which. **The source's medium decides**: a still, or nothing attached, lands here;
-  "clone this ad" plus a VIDEO is clone-video-ad. NOT for generating an ad from a brief or a
-  template (chatgpt-image-ad, nano-banana-image-ad). Refuses to render your product
-  without a real photo of it.
+  which. **Among cloners the source's medium decides**: a still, or nothing attached, lands
+  here; "clone this ad" plus a VIDEO is clone-video-ad. NOT for generating an ad from a brief
+  (chatgpt-image-ad, nano-banana-image-ad), nor animating a still as-is
+  (novoads-image-to-motion). Refuses to render your product without a real photo of it.
 ---
 
 # clone-image-ad

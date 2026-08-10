@@ -1,16 +1,15 @@
 ---
 name: novoads-api
 description: >-
-  Generate AI video ads and image ads through the Novoads REST API
-  (api.novoads.ai). Use when the user wants a UGC video, a product video, a
-  talking-head ad, an AI actor holding a product, a TikTok or Reels or Shorts
-  ad, a static image ad, or asks to "make me an ad", "generate a video",
-  "animate this photo", or names a model (Seedance, Seedance 2.5, Seedance
-  Mini, Omni Flash, Veo 3.1, Sora 2, GPT Image 2, Nano Banana Pro, Reve).
-  Handles upload,
-  dialogue approval, cost confirmation, generation, polling, QA, and download.
-  Not for editing an existing video file and not for publishing to an ad
-  platform.
+  Generate AI video ads and image ads through the Novoads REST API (api.novoads.ai). Use
+  when the user wants a UGC video, a product video, a talking-head ad, an AI actor holding
+  a product, a TikTok or Reels or Shorts ad, a static image ad, or asks to "make me an ad",
+  "generate a video", or names a model (Seedance, Seedance 2.5, Seedance Mini, Omni Flash,
+  Veo 3.1, Sora 2, GPT Image 2, Nano Banana Pro, Reve). Handles upload, dialogue approval,
+  cost confirmation, generation, polling, QA, and download. A product photo lands here when
+  it SEEDS a new scene; when the picture itself should move, unchanged, that is
+  novoads-image-to-motion. Not for editing an existing video file and not for publishing to
+  an ad platform.
 ---
 
 # Novoads REST API
@@ -83,6 +82,7 @@ Offer, do not choose. A first render fired on a guess is a charge the user did n
 | A talking clip whose first word must land immediately | `sora-2`, and read [sora-2.md](prompting/prompt-library/sora-2.md) first. Measured here at **no leading silence at all**, where Seedance front-loads 3–5s of it. Grid is `durationSeconds` 4/8/12 only, `aspectRatio` `9:16` (default) or `16:9`, `startImageAssetId` yes, **`referenceAssetIds` no** |
 | Veo 3.1 by name, or a shot that has to evolve over its own runtime | `veo-3.1`, and read [veo-3-1.md](prompting/prompt-library/veo-3-1.md) first. Grid is `durationSeconds` 4/6/8 only, `aspectRatio` `9:16` (default) or `16:9`, `startImageAssetId` yes, **`referenceAssetIds` no**. Nothing in this repo has measured a Veo render — quote its wait as unknown rather than borrowing Seedance's |
 | A video that starts from a specific photo | any video model plus `startImageAssetId` — it animates that image as the first frame |
+| The picture the user handed over is itself the shot: a UI screenshot, a hero layout, a flat-lay, key art, and they want it to MOVE ("animate this", "make the cards pop in") | **[novoads-image-to-motion](../novoads-image-to-motion/SKILL.md)**, which is `seedance-2.5` plus `startImageAssetId` and carries the motion vocabulary, the beat template and the text-fidelity clauses. The split is whether the image is preserved and set in motion (there) or seeds a scene that did not exist (here) |
 | A video built from several photos: the actor **and** the product, a wardrobe, a setting | `seedance-2.0` or mini plus `referenceAssetIds` — up to **9** images, composited rather than animated, addressed in the prompt text as `@Image1`…`@ImageN` in the order you send them. **Seedance only** — `omni-flash`, `sora-2` and `veo-3.1` have no such field — and **never alongside `startImageAssetId`**: they are separate modes and a body carrying both is a `400` |
 | The same person to hold across several clips of a series | pass that person's photo in every clip's `referenceAssetIds` and repeat the actor tag verbatim. Seedance re-casts on every cut, so a repeated description alone does not hold a face; see [seedance-2-feature-walkthrough.md](prompting/prompt-library/seedance-2-feature-walkthrough.md) |
 | A reference video turned into a reusable template: "make videos like this", "deconstruct this" | read [prompting/analyze-video/SKILL.md](../analyze-video/SKILL.md). Frames and transcript are extracted locally with ffmpeg and Whisper, and the output is a new formula file in `prompting/prompt-library/`. Nothing is charged until the optional test render at the end |

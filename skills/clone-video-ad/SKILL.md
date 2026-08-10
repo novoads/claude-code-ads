@@ -8,10 +8,10 @@ description: >-
   diffs each clip's transcript against the approved script. Use for "clone this video ad",
   "recreate this video for my brand", "make this ad but for my product" when the source is
   a video, "clone my competitors' VIDEO ads", or a video ad handed over with a product
-  photo. **The source's medium decides, not the wording**: "clone this ad" plus a video
-  lands here; "clone this ad" plus a still, or with nothing attached, is clone-image-ad.
-  Two neighbours it is NOT: a STATIC IMAGE ad is clone-image-ad, and rebuilding only the
-  first few seconds is a hook skill. If the source does not move, this is the wrong skill.
+  photo. **Among cloners the source's medium decides, not the wording**: "clone this ad" plus a
+  video lands here; a still, or nothing attached, is clone-image-ad. Three neighbours it is NOT:
+  a STATIC IMAGE ad is clone-image-ad, rebuilding only the first few seconds is a hook skill,
+  and animating a still as-is is novoads-image-to-motion. If it does not move, wrong skill.
 ---
 
 # Clone ad — Seedance 2.0
