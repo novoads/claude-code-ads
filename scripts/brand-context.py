@@ -121,17 +121,20 @@ def clone_image_requirements(mode: str, product_in_ad: str | None,
         # currency: the source asserts that a specific named human said a
         # specific thing. Two of the four real Arcads statics are exactly this.
         return {"blocking": ["__testimonial__"], "optional": CLONE_IMAGE_OPTIONAL}
-    if claims_in_ad == "yes":
-        # Measured on four real Arcads statics: every one carried a number or a
-        # named human. "300 Natural AI Actors", "6,000+ teams", "99% reduction in
-        # cost". Rewriting those for our brand while keeping the layout invents
-        # a figure nobody verified — the ad looks right and asserts something
-        # untrue. Having a verified set on file is what makes a substitution
-        # honest rather than a rhythm-preserving guess.
-        blocking += ["brand.claims"]
-    return {"blocking": blocking,
-            "optional": CLONE_IMAGE_OPTIONAL +
-            ([] if product_in_ad == "yes" else ["product.photo", "product.description"])}
+    # A claim does NOT block. Founder's call, 2026-08-10, and the reasoning is
+    # sound: a number on a rendered ad is something a human catches at a glance,
+    # and a gate that stops the work also stops the person who would have caught
+    # it from ever seeing the ad. `brand.claims` stays OPTIONAL — used when
+    # present to make the substitution real, never demanded.
+    #
+    # What replaces the gate is a label. A figure that crosses silently is the
+    # one nobody checks; a listed one is a decision. See the note printed on the
+    # way through in cmd_check.
+    optional = CLONE_IMAGE_OPTIONAL + ["brand.claims"]
+    if product_in_ad != "yes":
+        optional += ["product.photo", "product.description"]
+    return {"blocking": blocking, "optional": optional,
+            "claims_carried": claims_in_ad == "yes"}
 
 
 PLACEHOLDER = re.compile(r"^_\(.*\)_$")
@@ -281,6 +284,14 @@ def cmd_check(args) -> int:
         print(f"\nBLOCKED: ask for {', '.join(missing)} and write it back with "
               f"`{Path(__file__).name} set`. Ask for nothing else.", file=sys.stderr)
         return 2
+    if req.get("claims_carried"):
+        # Printed on the SUCCESS path, because that is the path that renders.
+        print()
+        print("CLAIMS: this ad carries numbers. They will cross into the clone.")
+        print("        Use brand.claims where it has a true equivalent, then list "
+              "every claim you carried, source and result, in the hand-off — a "
+              "figure that crossed silently is the one nobody checks.")
+
     if absent_optional:
         print(f"\nok: nothing blocking. {len(absent_optional)} optional field(s) "
               f"absent -- use what is there, do not interrogate for the rest.")

@@ -262,8 +262,13 @@ wrong.
 | Prop in frame, figures in copy | proceeds — figures come from `brand.claims` |
 | Their product in frame | blocks on `product.photo`, whatever else is true |
 | A named person's quote | **blocks, and stored figures do not unblock it** |
+| Numbers in the copy | **proceeds, and the hand-off lists every one** |
 
-The last row is the one that matters. A verified-figures list is the wrong currency for a
+Numbers do not block: a figure on a rendered ad is something a person catches at a glance, and a
+gate that stops the work stops the person who would have caught it from seeing the ad at all.
+What replaces the gate is a list — source claim, clone claim, every one of them.
+
+The testimonial row is the one that stays hard. A verified-figures list is the wrong currency for a
 testimonial: the source asserts a specific human said a specific thing. The only honest inputs
 are a real customer who really said it, with permission, or dropping that zone.
 

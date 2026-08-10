@@ -210,21 +210,25 @@ $B set brand.logo refs/logo.png >/dev/null
 # C1 -- with no verified claims on file, an ad carrying claims cannot be cloned
 # whole. Not a refusal of the ad: a refusal to invent the numbers in it.
 $B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad yes >/dev/null 2>&1
-check C1 "$?" "2" "claims in the source block when we have none of our own"
+check C1 "$?" "0" "claims in the source do NOT block — a human judges the render"
 
 # C2 -- and the refusal names the field, so the fix is obvious.
 # Capture first, THEN grep. Piping straight from `check` makes pipefail return
 # that command's exit 2, so the match is drowned by the very refusal it is
 # testing for — the harness failing where the thing under test did not.
+# C2 -- it proceeds, and it tells the run to LIST what it carried. A number that
+# crossed silently is the one nobody checks; a listed one is a decision.
 out=$($B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad yes 2>&1)
-case "$out" in *brand.claims*) ok C2 "the refusal names brand.claims" ;;
-                *) bad C2 "the refusal does not name brand.claims" ;; esac
+case "$out" in *"list every claim"*) ok C2 "it instructs the run to list the claims it carried" ;;
+                *) bad C2 "proceeding says nothing about listing the claims" ;; esac
 
 # C3 -- once real ones are on file, it proceeds. The gate is about having a
 # source, not about avoiding claims.
-$B set brand.claims "1000+ AI actors; 5 languages; renders in minutes" >/dev/null
+# C3 -- stored figures are USED when present, never demanded. They make the
+# substitution better; their absence does not stop the ad.
+$B set brand.claims "5 languages; renders in minutes" >/dev/null
 $B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad yes >/dev/null 2>&1
-check C3 "$?" "0" "stored verified claims unblock it"
+check C3 "$?" "0" "stored figures are used, not required"
 
 # C4 -- an ad with NO claims never asks. Most layout clones carry none.
 fresh

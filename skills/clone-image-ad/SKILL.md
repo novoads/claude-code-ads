@@ -143,15 +143,25 @@ the user picked otherwise.
 ./scripts/brand-context.py check clone-image-ad --mode template          # asks for nothing
 ```
 
-**A claim in the source is the gate with teeth.** Rewriting "300 Natural AI Actors" into a
-Novoads figure while keeping the layout invents a number nobody verified — the ad looks right
-and asserts something untrue, which is worse than an ad that looks wrong. So a claim-carrying
-source needs `brand.claims` on file: figures we can point at. Without them the honest moves are
-to drop the claim zone or get real numbers, never to rewrite for rhythm.
+**A claim does not stop the clone — it gets labelled.** A number on a rendered ad is something
+a person catches at a glance, and a gate that stops the work also stops the person who would
+have caught it from ever seeing the ad. So the claims cross, and the hand-off **lists every one:
+what the source said, what the clone says.** A figure that crossed silently is the one nobody
+checks; a listed one is a decision.
 
-**A named person's quote is not a claim you can substitute at all.** It needs a real customer who
-really said it. Hard rule 10 already kills inherited testimonials at Phase 6; this is the other
-half — do not invent a replacement either.
+Use `brand.claims` where we have a true equivalent — it makes the substitution real rather than
+a rhythm-preserving guess. Its absence never blocks.
+
+> Three claims carried into this clone — check them before it runs anywhere:
+> • "300 Natural AI Actors" → "1,000+ AI actors"
+> • "35 languages" → "5 languages"
+> • "30% off first month" → "$1 trial"
+
+**A named person's quote is the one exception, and it is not about taste.** "Ashvin Melwani, CMO
+at Obvi" appearing in a Novoads ad puts words in an identifiable person's mouth about a company
+he never mentioned, and a well-made fake quote passes review precisely because it reads
+correctly. **Render the layout with that zone blank** and say why. Never invent a replacement,
+and never carry his.
 
 **A product in the frame makes a real photo mandatory** — an image model will otherwise render
 a plausible bottle with invented label text, which is the failure a viewer catches instantly.
