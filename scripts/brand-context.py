@@ -57,10 +57,23 @@ FIELDS = {
     "market.winning_ads": "Winning ads",
 }
 
-# What each skill cannot proceed without, and what merely improves its output.
-# Blocking means "refuse and ask"; optional means "use it if it is there".
-# Keep this in step with each skill's own gate -- a skill that renders without
-# a field nobody stored is a skill that invented it.
+# What each skill cannot proceed without.
+#
+# The clone entries are a FUNCTION of the ad, not a fixed list, and that is the
+# whole point. Arcads demands a product photo for every clone; Kruse demands one
+# for none, because its template only parameterises what the ad actually
+# contains. Kruse is right, and for a reason worth stating: the requirement is
+# DERIVED from the thing being cloned rather than DECLARED before anyone looked
+# at it. A static list cannot know whether there is a product in the frame.
+#
+# So the split is: the agent judges (does this ad show a product?), the script
+# enforces (then a real photo is mandatory, Arcads-strength). Neither half can
+# do the other's job.
+#
+# The logo is the universal one. Every ad carries a mark, and that mark must
+# never be the competitor's — which is a stronger claim than any made about the
+# product, and it used to be optional while the product blocked.
+
 REQUIREMENTS = {
     "clone-static": {
         "blocking": ["product.photo", "product.description"],
@@ -72,11 +85,6 @@ REQUIREMENTS = {
         "optional": ["brand.name", "brand.tone", "brand.vocab_dont",
                      "brand.sample_phrasings"],
     },
-    "clone-image-ad": {
-        "blocking": ["product.photo", "product.description"],
-        "optional": ["brand.name", "brand.logo", "brand.colors", "brand.fonts",
-                     "brand.tone"],
-    },
     "spy": {
         # A sweep needs something to search for and nothing else. Refusing on a
         # product photo here would block research that needs no product at all.
@@ -84,6 +92,30 @@ REQUIREMENTS = {
         "optional": ["market.competitors", "market.swept_at"],
     },
 }
+
+CLONE_IMAGE_OPTIONAL = ["brand.name", "brand.colors", "brand.fonts", "brand.tone",
+                        "brand.sample_phrasings"]
+
+
+def clone_image_requirements(mode: str, product_in_ad: str | None) -> dict | None:
+    """None means "you have not told me enough to answer" — see cmd_check.
+
+    template mode asks for nothing: a template is filled with a stand-in brand
+    by design, so demanding the user's assets blocks a workflow that never
+    needed them. That is what the skill has always said and what its own eval
+    B4 asserts; the static table used to contradict both.
+    """
+    if mode == "template":
+        return {"blocking": [], "optional": CLONE_IMAGE_OPTIONAL + ["brand.logo"]}
+    if product_in_ad is None:
+        return None
+    blocking = ["brand.logo"]
+    if product_in_ad == "yes":
+        blocking += ["product.photo", "product.description"]
+    return {"blocking": blocking,
+            "optional": CLONE_IMAGE_OPTIONAL +
+            ([] if product_in_ad == "yes" else ["product.photo", "product.description"])}
+
 
 PLACEHOLDER = re.compile(r"^_\(.*\)_$")
 SECTION_HEADING = "## Brand context"
@@ -194,7 +226,20 @@ def cmd_set(args) -> int:
 
 
 def cmd_check(args) -> int:
-    req = REQUIREMENTS[args.skill]
+    if args.skill == "clone-image-ad":
+        req = clone_image_requirements(args.mode, args.product_in_ad)
+        if req is None:
+            # Refuse rather than assume. Guessing here is guessing whether an
+            # image model is about to invent a product, which is the failure a
+            # viewer catches instantly.
+            print("BLOCKED: nobody has said whether this ad shows a product.",
+                  file=sys.stderr)
+            print("Look at the ad, then pass --product-in-ad yes|no. A product in "
+                  "the frame means a real photo is mandatory; none means there is "
+                  "nothing to pin and nothing to fabricate.", file=sys.stderr)
+            return 2
+    else:
+        req = REQUIREMENTS[args.skill]
     have = read_all()
     missing = [f for f in req["blocking"] if f not in have]
     absent_optional = [f for f in req["optional"] if f not in have]
@@ -378,7 +423,12 @@ def main() -> int:
     s.set_defaults(func=cmd_set)
 
     c = sub.add_parser("check", help="what a skill is missing; exit 2 if blocked")
-    c.add_argument("skill", choices=sorted(REQUIREMENTS))
+    c.add_argument("skill", choices=sorted(list(REQUIREMENTS) + ["clone-image-ad"]))
+    c.add_argument("--mode", choices=["ads", "template"], default="ads",
+                   help="clone-image-ad only: what the run is producing")
+    c.add_argument("--product-in-ad", choices=["yes", "no"], default=None,
+                   help="clone-image-ad, ads mode: does the SOURCE ad show a "
+                        "product? Judged by looking at it, not by the business")
     c.set_defaults(func=cmd_check)
 
     listing = sub.add_parser("list", help="every field and its value")

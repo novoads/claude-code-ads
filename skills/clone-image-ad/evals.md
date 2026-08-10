@@ -141,12 +141,32 @@ photo alone and leaves the rest untouched.
 
 ---
 
-### B4 — template mode does not ask for a product at all
+### B4 — the gate follows the AD, not the business
 
-**Why:** a template is filled with a stand-in brand by design. Demanding a real product photo
-to build one blocks a workflow that never needed it.
+**Why:** the requirement used to be a static list written before anyone looked at the ad, so it
+demanded a product photo for a price-comparison static that contains no product. Arcads' skill
+does the same and refuses those ads outright; Kruse's asks for nothing because its template only
+parameterises what the ad actually contains. Kruse is right, and the reason generalises: derive
+the requirement from the thing being cloned.
 
-**Check:** run D3 on a checkout with no stored product. It completes without asking.
+**Check:** three runs on a checkout with a logo and no product.
+- a source ad **with** a product → blocks on `product.photo`, hard, unchanged
+- a source ad **without** one (a claim or comparison in type) → renders, never asks
+- **template** mode → asks for nothing at all
+
+Automated as G1-G3 in `scripts/test-brand-context.sh`. G2 and G3 failed before this change: the
+skill text and this eval both said one thing and the script did another, and the script is what
+runs.
+
+---
+
+### B4b — the judgement is asked for, never assumed
+
+**Why:** guessing whether an ad has a product is guessing whether an image model is about to
+invent one.
+
+**Check:** ads mode with no judgement supplied refuses and names `--product-in-ad`, rather than
+defaulting either way. Automated as G5/G6.
 
 ---
 
