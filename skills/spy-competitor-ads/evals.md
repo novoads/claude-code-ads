@@ -332,3 +332,29 @@ carries — the sample claim, the basis, the numbers to type — has to survive 
 
 **Check:** with the page unopened, confirm a user can still pick from what was said: the ordinals
 are in the message, the basis is stated, and "clone 3" works without ever seeing the HTML.
+
+
+---
+
+### R11 — silence takes statics, says so, and names the escape
+
+**Why:** three skills used to answer this three ways — spy asked, `clone-image-ad` defaulted to
+statics, `clone-video-ad` fixed video — so the answer depended on which file the run happened to
+read first. A founder who typed "I want to clone my competitors ads" got `"all"` and a pile of
+video, from a run that never asked.
+
+**Check:** say "clone my competitors' ads" with no media word. Confirm the run does NOT ask,
+takes `image`, says it took it, and names "video" and "both" as one-word escapes in the same
+line. Asking fails this eval; so does taking `all` silently.
+
+---
+
+### R12 — the slot cost is stated when someone asks for "both"
+
+**Why:** the fee is flat and the SLOTS are not, and the flat fee hides it. `count` maxes at 20
+per sweep whatever mode is asked for, so `"all"` spends those 20 on a split nobody chose.
+Measured 2026-08-10: `"all"` returned **20 video and 0 static** for one brand. Someone wanting a
+static from it got nothing, at the price that would have bought twenty.
+
+**Check:** ask for "both". Confirm it complies AND says the trade once — one kind gets you 20 of
+that kind, "both" splits the 20. A run that just does it fails; so does one that argues.
