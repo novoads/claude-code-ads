@@ -76,17 +76,20 @@ permission to skip the cost gate.
 changes a price, and its rules were written for UGC video with an actor in frame.
 
 **A prompt built from the template below comes back with exactly one warning**,
-`missing_actor_descriptor` (measured 2026-08-10, this genre, `seedance-2.5`). That one is
-**structurally unsatisfiable and must be overridden out loud**: there is no actor in a
-motion graphic, so no wording clears it. An agent that "fixes" it by inserting "a woman in
-her 20s in a grey zip hoodie" into a dashboard animation has destroyed the render to
-satisfy a linter.
+`missing_actor_descriptor`. Measured on `seedance-2.5` 2026-08-10, with the control run: strip
+the template's silence sentence and its closing ratio and the same prompt returns three
+(`missing_actor_descriptor`, `no_spoken_line`, `no_aspect_ratio`). That is what those two
+lines are doing there. A fourth rule, `label_without_hold`, never fires on this template at
+all, because the TEXT clause already contains `identical to the reference image`, which is
+the phrase it looks for.
 
-Three others fire only when a prompt **departs** from the template, and in each case the
-remedy is the template itself: `no_spoken_line` is cleared by the silent clause,
-`label_without_hold` by the TEXT clause's `identical to the reference image`, and
-`no_aspect_ratio` by ending the prompt with the ratio in words. If one of those three shows
-up, a clause is missing — go back and add it rather than arguing with the linter.
+So if any warning other than the actor one appears, **a template line is missing** — find
+it and put it back rather than arguing with the linter.
+
+The actor warning is different: it is **structurally unsatisfiable and must be overridden
+out loud.** There is no actor in a motion graphic, so no wording clears it. An agent that
+"fixes" it by inserting "a woman in her 20s in a grey zip hoodie" into a dashboard animation
+has destroyed the render to satisfy a linter.
 
 ## Step 1: Read the image
 
@@ -131,7 +134,7 @@ Across all of them: **stagger paired elements.** Two things entering simultaneou
 Structure the shot as timed beats. Include every clause below — each one removes a decision the model would otherwise make for you.
 
 ```
-[Shot type] of [subject].
+[Shot type] of [subject]. A silent motion graphic with no spoken dialogue.
 
 CAMERA: [either "The camera is locked off and never moves: no pan, no tilt, no
 zoom, no push-in, no orbit, no drift." — or the specific move you want, with its
@@ -156,7 +159,16 @@ TIMED BEATS:
 
 [Negatives:] No film grain, no vignette, no lens flare, no added elements,
 no watermark, no extra text.
+
+[Close on the ratio in words:] Vertical 9:16. / Square 1:1. / Horizontal 16:9.
 ```
+
+**Two of those lines are additions to the source template, and both are house rules rather
+than taste.** The silence sentence stops the model *staging* a talking shot — an actor
+mouthing nothing, billed in full — which the `audioEnabled` flag cannot prevent because it
+only mutes the result. The closing ratio is stated in words even though you also send
+`aspectRatio`, because the model picks one from the prompt when the prompt implies a
+different shape. Each also clears an estimate warning; see below.
 
 The prompt ceiling on this model is **4,000 characters**, which a full beat list fits
 comfortably. Compose long prompts in a file under `prompts/` rather than passing them as a
@@ -181,9 +193,10 @@ still goes in as `startImageAssetId`, which animates it as the literal first fra
 
 - `durationSeconds` — an integer from the grid, which on this model runs **4 to 30**. Match
   it to the beat list; leave a beat of hold at the end. Out-of-grid values are rejected,
-  never rounded. Most motion graphics live at the short end, and longer costs more on a
-  per-second schedule: a 30s call is the most expensive single render on this API, so price
-  the duration you actually need rather than the one the grid allows.
+  never rounded. Most motion graphics live at the short end, and the schedule is per-second,
+  so price the duration you actually need rather than the one the grid allows. Never rank it
+  against other models from memory: which cell is dearest depends on the provider this
+  deployment routes to, and the estimate is the only thing that knows.
 - `aspectRatio` — `16:9` (default), `9:16`, `1:1`, `4:3`, `3:4`, `21:9`.
 - `resolution` — `480p` or `720p`. **720p is this model's ceiling**, not a floor: 1080p and
   4k belong to `seedance-2.0` and are a `400` here.
@@ -207,9 +220,12 @@ If the still needs building or rebuilding first, generate it before animating. A
 multi-turn edit: `omni-flash` here is one stateless call, not the conversational editor its
 vendor documentation describes. If the ask is to restyle a clip, say so and stop. A **timed
 multi-scene switch** is different and is still reachable — it needs no video input, only a
-prompt that describes each scene and when it changes. `omni-flash` is the model for it
-(20,000-character prompt ceiling, `durationSeconds` 4/6/8/10 only, no `referenceAssetIds`),
-and its guide is [gemini-omni-flash](../../shared/skills/gemini-omni-flash/prompting/guide.md).
+prompt that describes each scene and when it changes. `omni-flash` is the model for it, and
+its guide is [gemini-omni-flash](../../shared/skills/gemini-omni-flash/prompting/guide.md).
+**Its grid is not the one above**: 20,000-character prompt ceiling, `durationSeconds` 4/6/8/10
+only, `aspectRatio` `9:16` (default) or `16:9` and nothing else, **no `referenceAssetIds` and
+no `audioEnabled`** — the variant omits both fields and the body is strict, so sending either
+is a `400`. Read its grid before you carry any field across.
 
 ### Uploading the still
 
@@ -235,10 +251,12 @@ a body with both is a `400` naming exactly that, before any charge. Start frame 
 image; references composite several into a new scene. This skill is the start-frame mode, so
 it sends exactly one image.
 
-If a job genuinely needs the other mode, **reference images cap at 9** on `seedance-2.5`.
-Higher figures quoted in vendor tutorials belong to other platforms and to the raw providers
-underneath, not to this API. Verify a stated cap with `./scripts/verify-image-caps.sh`
-before changing it.
+For the record, because vendor tutorials quote wildly different numbers: **reference images
+cap at 9** on `seedance-2.5` here, and the larger figures floating around belong to the raw
+providers underneath rather than to this API. Read it off `referenceAssetIds`'s `maxItems` in
+the live `openapi.json` rather than from any file, this one included. It is stated only so a
+tutorial's 30 or 50 does not look authoritative — **a job that wants that mode is not this
+skill**, and it routes to `novoads-api`.
 
 ## Step 5: Review and iterate
 
@@ -254,8 +272,9 @@ When something is off, add specificity rather than emphasis. Naming the object, 
 
 ## Hard rules
 
-1. **Price it live before every render**, from `POST /v1/estimates` in this session. No rate
-   lives in this file.
+1. **Price it live before every render**, from `POST /v1/estimates` in this session, and
+   **send `prompt`** — it is required, and a body without it is a `400`. No rate lives in
+   this file.
 2. **N takes is N charges**, said out loud before the first one fires.
 3. **720p is the ceiling** on this model. Do not offer or submit higher.
 4. **Never send `startImageAssetId` and `referenceAssetIds` together.** Separate modes.

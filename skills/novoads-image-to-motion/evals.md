@@ -8,9 +8,10 @@ same shape, and only the transport was rewritten. So the cases below split clean
 - **E-cases** guard the craft the port was worth doing for, plus the two gates every
   spending skill in this pack carries.
 
-The mechanical half of the P-cases is automated: `./scripts/test-parity-i2m.sh` greps for
-every retired tool name and asserts the craft sections survived. Run it first. What is
-left here is the half no grep can hold.
+The mechanical half of the P-cases is automated: `./scripts/test-parity-i2m.sh` scans for
+every retired tool name, asserts the craft sections survived, and parses the estimate body
+to check it is one the API would accept. Run it first. What is left here is the half no
+string match can hold.
 
 Only E6 costs credits. Everything else is free or is a read of the file.
 
@@ -71,19 +72,22 @@ one word.
 renamed. A leftover is not a cosmetic defect: an agent that reads one either calls nothing
 and stalls, or worse, reaches for a connector this repo has a standing rule against.
 
-**Check:** `./scripts/test-parity-i2m.sh`. It fails on any hit for the retired
-`arcads_*` names, for `register_image`, for `nbGenerations`, and on any un-allowlisted
-mention of the connector. `./scripts/check-no-mcp.sh` is the second half of the same
-check and runs in CI.
+**Check:** `./scripts/test-parity-i2m.sh`. **That script holds the list of retired names,
+and this file deliberately does not repeat it** — the first version of the guard exempted
+this file so the cases could name what they test, and that exemption was a hole: the retired
+names could be appended here and the guard stayed green. One list, no exemptions. The
+connector half of the same contract runs in CI beside it.
 
-### P2 — `nbGenerations` is four calls, not a field
+### P2 — four takes is four calls, not a field
 
-**Why:** the source skill said four takes on a single call. That field does not exist on
-`POST /v1/videos` and the request schema is strict, so sending it is a `400` on an
-otherwise valid body — verified against the deployed schema, not inferred:
-`Unrecognized key: "nbGenerations"`.
+**Why:** the source skill got four takes from one call with a per-call variations field.
+No such field exists on `POST /v1/videos`, and the body is strict, so sending it is a `400`
+on an otherwise valid request — verified live against the deployed API, not inferred. The
+craft half matters as much as the mechanism: **four is the number that gives useful choice**,
+and a port that translated the mechanism while dropping the recommendation quietly made one
+take the default.
 
-**Check:** ask for four takes. Confirm the skill fires the identical payload four times,
+**Check:** ask for several takes. Confirm the skill offers four, fires the identical payload four times,
 says out loud that four takes is four charges, and puts that multiplication inside the cost
 gate rather than after it. Confirm it fires at most five concurrently: a sixth returns
 `429` with `details.reason: concurrency_limit`, which is a refusal to wait out, not a
@@ -113,12 +117,13 @@ claim that the asset expires.
 
 ### P5 — the retired escape hatches are gone, not translated
 
-**Why:** the source offered two fallbacks that do not exist here. `omni-flash` was
-described as a multi-turn editor for restyles; on `/v1` it is one stateless call with no
-edit mode, no `referenceAssetIds`, and a 4/6/8/10 duration grid. There is also no
-`register_image` step to warn about. Translating either one sends an agent at a product we
-do not sell, and the omni-flash detour burns a paid render on a fresh video nobody asked
-for.
+**Why:** the source offered `omni-flash` for two jobs and **only one of them is
+unreachable here.** The restyle is gone: on `/v1` this is one stateless call with no
+multi-turn edit and no video input at all, so translating it burns a paid render on a fresh
+video nobody asked for. The timed multi-scene switch, though, needs no video input and IS
+reachable, so deleting both was over-correction — the port now names that route, and names
+that its grid differs (two aspect ratios, no audio toggle, no references). The source's
+persistence warning is also gone, because the step it warned about has no analogue here.
 
 **Check:** ask for a restyle of existing footage. Confirm the skill says this API takes no
 video input and stops, rather than routing to `omni-flash` or to a "restyle" mode.
@@ -200,25 +205,13 @@ user and a charge, failing, with the agent left to improvise past it. It also si
 disabled E7: an unsent prompt is an unlinted prompt. An independent parity review found it;
 nobody reading the file caught it, which is why the check is now mechanical.
 
-**Check:** `./scripts/test-parity-i2m.sh` asserts the estimate example carries `prompt`.
-Then run once for real and confirm the estimate returns `credits` and `balance` rather than
-a `400`, and that the prompt sent to the estimate is the same one that gets rendered.
-
----
-
-### E7 — the estimate's actor warning is overridden, never satisfied
-
-**Why:** verified live 2026-08-10. A motion-graphic estimate comes back with four
-`warnings`, and three are silenceable by clauses you want anyway (silent, label hold,
-ratio in words). The fourth, `missing_actor_descriptor`, is **structurally unsatisfiable**:
-there is no actor in a motion graphic and no wording exists that clears it. An agent that
-takes the rule at face value inserts "a woman in her 20s in a grey zip hoodie" into a
-dashboard animation and destroys the render to satisfy a linter. That is the whole failure.
-
-**Check:** price any motion-graphic prompt. Confirm the skill names the four warnings,
-adds the three clauses, and **says out loud that it is overriding the actor rule and why**
-rather than silently ignoring it or complying with it. Confirm no actor, person, hand or
-model appears anywhere in the final prompt unless the source image contains one.
+**Check:** `./scripts/test-parity-i2m.sh` parses every fenced `kind: "video"` body and
+fails unless `prompt` is a non-empty string, and unless no near-miss key (`promptText`) is
+standing in for it. It parses rather than greps because the first version asked only whether
+the token appeared on the line, which a trailing comment, a renamed key, an empty string and
+a pretty-printed body each defeated. Then run once for real: confirm the estimate returns
+`credits` and `balance` rather than a `400`, and that the prompt priced is the prompt
+rendered.
 
 ---
 
@@ -237,3 +230,24 @@ must carry, and the honest version of this skill states it.
 **Until this has been run, the skill must not assert that text holds on our path.** It may
 say the clause is what the model responds to, which is craft, and it may not say it was
 verified here, which would be a claim.
+
+---
+
+### E7 — the estimate's actor warning is overridden, never satisfied
+
+**Why:** measured live 2026-08-10 with a control. A prompt built from the skill's own
+template returns **exactly one** warning, `missing_actor_descriptor`; strip the template's
+silence sentence and its closing ratio and the same prompt returns three. So the template is
+load-bearing, and any warning other than the actor one means a template line went missing.
+The actor rule is **structurally unsatisfiable** — there is no actor in a motion graphic and
+no wording clears it. An agent that takes it at face value inserts "a woman in her 20s in a
+grey zip hoodie" into a dashboard animation and destroys the render to satisfy a linter.
+
+An earlier draft of this skill claimed four warnings, because it was measured on a
+throwaway prompt rather than on what the skill emits. Re-measure against the template, never
+against a sketch.
+
+**Check:** price a prompt built from the template. Confirm exactly one warning comes back,
+that the skill **says out loud it is overriding the actor rule and why** rather than
+silently ignoring it or complying, and that no actor, person, hand or model appears anywhere
+in the final prompt unless the source image contains one.

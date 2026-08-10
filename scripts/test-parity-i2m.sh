@@ -45,15 +45,17 @@ while IFS='|' read -r pattern why; do
   [ -z "$pattern" ] && continue
   # -F: these are literal names, never regexes. A pattern that is accidentally a
   # regex is how a guard silently stops matching what it claims to match.
-  if hits=$(grep -rnF -e "$pattern" skills/novoads-image-to-motion/ 2>/dev/null); then
-    # evals.md documents the retired names in order to test for them, exactly as
-    # the anti-connector evals do. Anything OUTSIDE evals.md is a real hit.
-    if real=$(printf '%s\n' "$hits" | grep -v "^$EVALS:"); then
-      bad "retired '$pattern' survives ($why)"
-      printf '%s\n' "$real" | sed 's/^/        /'
-    else
-      ok
-    fi
+  # No file is exempt, not even evals.md. The first version of this loop skipped
+  # every hit in evals.md so the P-cases could name what they test, and a review
+  # proved that exemption was a hole: `arcads_generate_video_seedance_25` and
+  # `nbGenerations: 4` could be appended to evals.md and the guard stayed green at
+  # 23/23. This is the same self-exemption failure that shipped in check-no-gag.sh
+  # once already. The fix is not a narrower exemption, it is no exemption: THIS
+  # SCRIPT is the single list of retired names, and evals.md points here instead of
+  # repeating them. One list cannot disagree with itself.
+  if hits=$(grep -rniF -e "$pattern" skills/novoads-image-to-motion/ 2>/dev/null); then
+    bad "retired '$pattern' survives ($why)"
+    printf '%s\n' "$hits" | sed 's/^/        /'
   else
     ok
   fi
@@ -104,20 +106,59 @@ grep -qF 'REST key required. A Novoads MCP connector is not a substitute.' "$SKI
 # following it would have had to improvise past the one guard rail between the
 # user and a charge, and the warnings section below it would have had nothing to
 # lint. Found by an independent parity review, not by a human reading the file.
-if grep -q '"kind":"video"' "$SKILL"; then
-  if grep -n '"kind":"video"' "$SKILL" | grep -qv 'prompt'; then
-    bad "the estimate example omits the required 'prompt' — that body is a live 400"
-  else
-    ok
-  fi
+# PARSED, not grepped. The first version of this check asked whether the token
+# "prompt" appeared on the same LINE as the kind, and an adversarial review broke
+# it four ways in a minute: a trailing `// send the prompt separately` comment
+# passed, `"promptText"` passed (a 400 Unrecognized key on a strict body), an
+# empty `"prompt":""` passed (the field is .min(1)), and the CORRECT body failed
+# whenever it was pretty-printed, which is this pack's own house format. A guard
+# that a comment defeats is worse than none, because it certifies the defect.
+if python3 - "$SKILL" <<'PY'
+import json, re, sys
+text = open(sys.argv[1], encoding="utf-8").read()
+bodies = []
+for block in re.findall(r"```(?:json)?\n(.*?)```", text, re.S):
+    block = block.strip()
+    if '"kind"' not in block:
+        continue
+    try:
+        obj = json.loads(block)
+    except json.JSONDecodeError as exc:
+        print(f"        estimate example is not valid JSON: {exc}")
+        raise SystemExit(1)
+    if obj.get("kind") == "video":
+        bodies.append(obj)
+
+if not bodies:
+    print("        no {\"kind\": \"video\"} estimate example in a fenced block; the cost gate is unshowable")
+    raise SystemExit(1)
+
+for obj in bodies:
+    p = obj.get("prompt")
+    if not isinstance(p, str) or not p.strip():
+        print(f'        estimate body has no usable "prompt" (got {p!r}); live that is')
+        print("        400 prompt: Invalid input: expected string, received undefined")
+        raise SystemExit(1)
+    # .strict() means a near-miss key is a 400 rather than a default.
+    for key in obj:
+        if key != "prompt" and "prompt" in key.lower():
+            print(f'        "{key}" is not "prompt"; a strict body answers 400 Unrecognized key')
+            raise SystemExit(1)
+PY
+then
+  ok
 else
-  bad "no {\"kind\":\"video\"} estimate example; the cost gate is unshowable"
+  bad "the estimate example is not a body this API would accept (detail above)"
 fi
 
 # A price written into a skill file rots silently, and this repo's rule is that
 # every credit number comes from a live estimate. Digits followed by a credit
 # word are the shape that keeps coming back.
-if grep -nEi '[0-9]+(\.[0-9]+)?[[:space:]]*(cc|credits?)\b' "$SKILL" | grep -v 'credits?Charged'; then
+# `grep -v 'credits?Charged'` was the first version, and BRE treats `?` as a
+# literal, so the exemption it documented never existed: it could only ever have
+# matched the text "credits?Charged". Harmless while no digit sits next to the
+# field name, and exactly the kind of dead clause someone later relies on. -E.
+if grep -nEi '[0-9]+(\.[0-9]+)?[[:space:]]*(cc|credits?)\b' "$SKILL" | grep -Ev 'creditsCharged'; then
   bad "a credit figure is written into the skill; price it live instead"
 else
   ok
