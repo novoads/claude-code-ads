@@ -130,14 +130,28 @@ the user picked otherwise.
 
 ### 0c. Do we have the brand?
 
-**First look at the source ad and answer one question: does it show a product?** Not "does this
-business have a product" — does *this frame* contain one. A skincare bottle does. A price
-comparison in type, a claim card, a fake-UI screenshot of somebody's dashboard: those do not.
+**First look at the source ad and answer two questions about the FRAME**, not about the business.
+
+1. **Does it show a product?** A skincare bottle does. A price comparison in type, a testimonial
+   card, a screenshot of somebody's dashboard: those do not.
+2. **Does it carry a claim?** A number, a statistic, a named person's quote. Measured on four
+   real Arcads statics, **every one did**: "300 Natural AI Actors", "6,000+ teams", "99%
+   reduction in cost", a CMO quoted by name.
 
 ```bash
-./scripts/brand-context.py check clone-image-ad --mode ads --product-in-ad yes|no
+./scripts/brand-context.py check clone-image-ad --mode ads --product-in-ad yes|no --claims-in-ad yes|no
 ./scripts/brand-context.py check clone-image-ad --mode template          # asks for nothing
 ```
+
+**A claim in the source is the gate with teeth.** Rewriting "300 Natural AI Actors" into a
+Novoads figure while keeping the layout invents a number nobody verified — the ad looks right
+and asserts something untrue, which is worse than an ad that looks wrong. So a claim-carrying
+source needs `brand.claims` on file: figures we can point at. Without them the honest moves are
+to drop the claim zone or get real numbers, never to rewrite for rhythm.
+
+**A named person's quote is not a claim you can substitute at all.** It needs a real customer who
+really said it. Hard rule 10 already kills inherited testimonials at Phase 6; this is the other
+half — do not invent a replacement either.
 
 **A product in the frame makes a real photo mandatory** — an image model will otherwise render
 a plausible bottle with invented label text, which is the failure a viewer catches instantly.

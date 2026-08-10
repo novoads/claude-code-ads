@@ -242,3 +242,29 @@ it a folder of stills it cannot open. Saying "video" means sweeping again with
 `mediaType: "video"`, which costs what a sweep costs, and the user has to hear that before it
 fires. A run that silently re-sweeps fails this row, and so does one that passes the static
 files along as if they were the answer.
+
+
+---
+
+### B4c — the claim gate, measured against four real ads
+
+**Why:** found by looking at four actual Arcads statics instead of fixtures. Every one carried a
+number or a named human — "300 Natural AI Actors", "6,000+ teams", "99% reduction in cost", a
+CMO quoted by name. The flow killed inherited testimonials at Phase 6 and said nothing at all
+about the figures, so a clone would rewrite "300 Natural AI Actors" into a Novoads number nobody
+verified. The ad looks right and asserts something untrue, which is worse than an ad that looks
+wrong.
+
+**Check:** the matrix, with a logo and verified figures on file.
+
+| Source ad | Expected |
+|---|---|
+| Prop in frame, figures in copy | proceeds — figures come from `brand.claims` |
+| Their product in frame | blocks on `product.photo`, whatever else is true |
+| A named person's quote | **blocks, and stored figures do not unblock it** |
+
+The last row is the one that matters. A verified-figures list is the wrong currency for a
+testimonial: the source asserts a specific human said a specific thing. The only honest inputs
+are a real customer who really said it, with permission, or dropping that zone.
+
+Automated as C1-C7b in `scripts/test-brand-context.sh`.

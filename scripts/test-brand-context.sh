@@ -165,7 +165,7 @@ check G1 "$?" "2" "a product ad still blocks without a real photo"
 # static: a price comparison in type. Nothing to pin, so nothing to fabricate,
 # so nothing to ask for. Arcads refuses this ad outright; Kruse handles it by
 # only parameterising what the ad contains.
-$B check clone-image-ad --mode ads --product-in-ad no >/dev/null 2>&1
+$B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad no >/dev/null 2>&1
 check G2 "$?" "0" "a productless ad does not demand a product photo"
 
 # G3 -- template mode never asks. FAILS BEFORE THE CHANGE.
@@ -176,7 +176,7 @@ check G3 "$?" "0" "template mode never demands a product"
 # must never be the competitor's. Today the product blocks and the logo is
 # optional, which is exactly inverted.
 fresh
-$B check clone-image-ad --mode ads --product-in-ad no >/dev/null 2>&1
+$B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad no >/dev/null 2>&1
 check G4 "$?" "2" "no stored logo blocks, whatever the ad contains"
 
 # G5 -- in ads mode the judgement is REQUIRED, not assumed. An unasked question
@@ -191,6 +191,73 @@ fresh
 $B set brand.logo refs/logo.png >/dev/null
 msg=$($B check clone-image-ad --mode ads 2>&1 | grep -c "product-in-ad")
 check G6 "$msg" "1" "the refusal names the missing judgement"
+
+# ---- C: claims -------------------------------------------------------------
+# Found by looking at four REAL Arcads statics rather than fixtures. Every one
+# carries a number or a named human: "300 AI Actors", "6,000+ teams", "99%
+# reduction in cost", a CMO quoted by name. The skill kills testimonials at
+# Phase 6 and says nothing at all about the numbers, so a clone would rewrite
+# "300 Natural AI Actors" into a Novoads figure nobody verified — a claim
+# invented to preserve a layout.
+#
+# The script cannot read an ad, so what it enforces is the SOURCE of a claim:
+# a run may only use figures it can point at. The agent lists the claims; this
+# decides whether there is anything true to put in their place.
+
+fresh
+$B set brand.logo refs/logo.png >/dev/null
+
+# C1 -- with no verified claims on file, an ad carrying claims cannot be cloned
+# whole. Not a refusal of the ad: a refusal to invent the numbers in it.
+$B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad yes >/dev/null 2>&1
+check C1 "$?" "2" "claims in the source block when we have none of our own"
+
+# C2 -- and the refusal names the field, so the fix is obvious.
+# Capture first, THEN grep. Piping straight from `check` makes pipefail return
+# that command's exit 2, so the match is drowned by the very refusal it is
+# testing for — the harness failing where the thing under test did not.
+out=$($B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad yes 2>&1)
+case "$out" in *brand.claims*) ok C2 "the refusal names brand.claims" ;;
+                *) bad C2 "the refusal does not name brand.claims" ;; esac
+
+# C3 -- once real ones are on file, it proceeds. The gate is about having a
+# source, not about avoiding claims.
+$B set brand.claims "1000+ AI actors; 5 languages; renders in minutes" >/dev/null
+$B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad yes >/dev/null 2>&1
+check C3 "$?" "0" "stored verified claims unblock it"
+
+# C4 -- an ad with NO claims never asks. Most layout clones carry none.
+fresh
+$B set brand.logo refs/logo.png >/dev/null
+$B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad no >/dev/null 2>&1
+check C4 "$?" "0" "a claimless ad does not ask for claims"
+
+# C5 -- template mode never asks. A placeholder is not a claim; {ad.headline}
+# asserts nothing, which is the whole point of the placeholder.
+fresh
+$B check clone-image-ad --mode template --claims-in-ad yes >/dev/null 2>&1
+check C5 "$?" "0" "template mode never asks for claims"
+
+# C6 -- the judgement is required in ads mode, like the product one. Assuming a
+# source has no claims is how an unverified number ships.
+fresh
+$B set brand.logo refs/logo.png >/dev/null
+$B check clone-image-ad --mode ads --product-in-ad no >/dev/null 2>&1
+check C6 "$?" "2" "ads mode refuses when nobody said whether the ad makes claims"
+
+# C7 -- a named person's quote is NOT substitutable, and stored claims must not
+# unblock it. Two of the four real Arcads statics are testimonials from named
+# executives; a verified-figures list is the wrong currency for those. The only
+# honest inputs are a real customer who really said it, or dropping the zone.
+fresh
+$B set brand.logo refs/logo.png >/dev/null
+$B set brand.claims "5 languages; renders in minutes" >/dev/null
+$B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad testimonial >/dev/null 2>&1
+check C7 "$?" "2" "a testimonial is not unblocked by verified figures"
+
+out=$($B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad testimonial 2>&1)
+case "$out" in *"really said it"*) ok C7b "and it says what the only honest input is" ;;
+                *) bad C7b "the testimonial refusal does not say what to do" ;; esac
 
 echo
 echo "$pass passed, $fail failed"
