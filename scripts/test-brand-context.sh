@@ -143,6 +143,55 @@ fresh
 msg=$($B from-url https://this-host-does-not-exist.invalid 2>&1 >/dev/null | grep -c "two-field minimum")
 check U14 "$msg" "1" "a failed fetch names the fallback"
 
+# ---- G: the gate follows the AD, not the business -------------------------
+# Written before the change, and G3 fails today: the skill says template mode
+# needs no product, its own eval B4 says the same, and the script blocks anyway.
+# Whichever of the three the run consults decides — which is the bug.
+#
+# The split is deliberate. The agent JUDGES whether the ad has a product in it
+# (prose, a look at the frame); the script ENFORCES the consequence (code). That
+# is what makes these runnable at all: a gate keyed on a zone map could not be
+# tested here, because this pack has no zone reader — Phase 2 is prose.
+
+fresh
+$B set brand.logo refs/logo.png >/dev/null
+
+# G1 -- ads mode, the ad HAS a product. Arcads' rule, unchanged and hard: an
+# image model invents a plausible bottle with invented label text if you let it.
+$B check clone-image-ad --mode ads --product-in-ad yes >/dev/null 2>&1
+check G1 "$?" "2" "a product ad still blocks without a real photo"
+
+# G2 -- ads mode, the ad has NO product. The founder's Creatify \$500-vs-\$1
+# static: a price comparison in type. Nothing to pin, so nothing to fabricate,
+# so nothing to ask for. Arcads refuses this ad outright; Kruse handles it by
+# only parameterising what the ad contains.
+$B check clone-image-ad --mode ads --product-in-ad no >/dev/null 2>&1
+check G2 "$?" "0" "a productless ad does not demand a product photo"
+
+# G3 -- template mode never asks. FAILS BEFORE THE CHANGE.
+$B check clone-image-ad --mode template >/dev/null 2>&1
+check G3 "$?" "0" "template mode never demands a product"
+
+# G4 -- the logo is the universal gate. Every ad carries a mark, and that mark
+# must never be the competitor's. Today the product blocks and the logo is
+# optional, which is exactly inverted.
+fresh
+$B check clone-image-ad --mode ads --product-in-ad no >/dev/null 2>&1
+check G4 "$?" "2" "no stored logo blocks, whatever the ad contains"
+
+# G5 -- in ads mode the judgement is REQUIRED, not assumed. An unasked question
+# that leads to a spend is the whole class being fixed here.
+fresh
+$B set brand.logo refs/logo.png >/dev/null
+$B check clone-image-ad --mode ads >/dev/null 2>&1
+check G5 "$?" "2" "ads mode refuses when nobody said whether the ad has a product"
+
+# G6 -- and it says WHICH judgement it is missing, rather than listing fields.
+fresh
+$B set brand.logo refs/logo.png >/dev/null
+msg=$($B check clone-image-ad --mode ads 2>&1 | grep -c "product-in-ad")
+check G6 "$msg" "1" "the refusal names the missing judgement"
+
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

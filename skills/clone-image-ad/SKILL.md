@@ -130,9 +130,23 @@ the user picked otherwise.
 
 ### 0c. Do we have the brand?
 
+**First look at the source ad and answer one question: does it show a product?** Not "does this
+business have a product" — does *this frame* contain one. A skincare bottle does. A price
+comparison in type, a claim card, a fake-UI screenshot of somebody's dashboard: those do not.
+
 ```bash
-./scripts/brand-context.py check clone-image-ad
+./scripts/brand-context.py check clone-image-ad --mode ads --product-in-ad yes|no
+./scripts/brand-context.py check clone-image-ad --mode template          # asks for nothing
 ```
+
+**A product in the frame makes a real photo mandatory** — an image model will otherwise render
+a plausible bottle with invented label text, which is the failure a viewer catches instantly.
+**No product in the frame and it is never asked for**, because there is nothing to pin and
+nothing to fabricate. The gate is derived from the ad, not declared from the business, which is
+the whole reason a SaaS or an agency can use this at all.
+
+The logo is the one thing required either way: every ad carries a mark, and that mark must
+never be the competitor's.
 
 Exit 2 means blocked, and the output names exactly what is missing. **Ask for those and
 nothing else**, then write each answer back so no later run asks again:
@@ -142,10 +156,10 @@ nothing else**, then write each answer back so no later run asks again:
 ./scripts/brand-context.py set product.description 'A 500ml insulated water bottle'
 ```
 
-Two fields block, and only in **ads** mode: `product.photo` and `product.description`.
-A competitor's ad says nothing about what your product looks like, and a fabricated one
-is the failure a viewer catches instantly. Everything else — brand name, logo file,
-colors, fonts, tone — is used when stored and never demanded.
+What blocks depends on the ad. In **ads** mode with a product in frame: `product.photo` and
+`product.description`, hard. With no product in frame: the logo alone. In **template** mode:
+nothing. Everything else — brand name, colors, fonts, tone — is used when stored and never
+demanded.
 
 **On a first run with nothing stored, offer the shortcut before the interview:**
 
