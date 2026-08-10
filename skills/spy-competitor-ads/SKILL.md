@@ -327,12 +327,15 @@ The second writes a **contact sheet** beside the sweep: twelve creatives at real
 playable in place, each card numbered and carrying its page, dates and Ad Library link.
 Comparing twelve ads as filenames is not comparing them. Open it and say:
 
-> 12 candidates, and `picker.html` is open. Click one, or say **"clone 3"**.
+> 12 candidates, and `picker.html` is open. Click the ones you want, or say **"clone 3"** —
+> or **"clone 1, 4, 7"** for several.
 
-Clicking copies that line; the ordinal is the contract and the click is the convenience, so a
-blocked clipboard costs nothing. Both scripts share one sort and one default — never renumber
-by hand. A page rather than an option prompt on purpose: a prompt blocks, and this flow
-proposes and proceeds.
+Cards toggle, nothing starts selected, and the bar copies `clone 1, 4, 7`. **Each number is a
+separate clone run**, so selecting six is six priced runs, not one — the bar says so and the
+estimate still gates every one of them. The ordinal is the contract and the click is the
+convenience, so a blocked clipboard costs nothing. Both scripts share one sort and one default
+— never renumber by hand. A page rather than an option prompt on purpose: a prompt blocks, and
+this flow proposes and proceeds.
 
 The sort is `collationCount` descending then longest-running, which is arithmetic, and the
 script also decides the thing prose kept getting subtly wrong: **whether the audience-count

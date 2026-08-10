@@ -45,12 +45,12 @@ want P1b "$(grep -c 'class="card"' "$WORK/p.html")" "12" "12 cards from 14 ads"
 
 # P2 -- ordinals run 1..12 and the copy string matches the badge. If these ever
 # disagree, "clone 3" clones a different ad than the one the user clicked.
-want P2 "$(grep -c 'data-pick="clone ' "$WORK/p.html")" "12" "every card carries a pick line"
-want P2b "$(grep -o 'data-pick="clone 12"' "$WORK/p.html" | head -1)" 'data-pick="clone 12"' "the last card is 12"
+want P2 "$(grep -c 'role="checkbox"' "$WORK/p.html")" "12" "every card is a toggle"
+want P2b "$(grep -c 'aria-checked="false"' "$WORK/p.html")" "12" "nothing is selected by default"
 python3 - "$WORK/p.html" <<'PY' && ok P2c "badge number matches its own pick line" || bad P2c "badge and pick line disagree"
 import re, sys
 h = open(sys.argv[1]).read()
-cards = re.findall(r'data-pick="clone (\d+)"[^>]*>\s*<div class="n">(\d+)</div>', h)
+cards = re.findall(r'data-i="(\d+)"[^>]*>\s*<div class="n">(\d+)</div>', h)
 sys.exit(0 if cards and all(a == b for a, b in cards) and len(cards) == 12 else 1)
 PY
 
@@ -123,7 +123,27 @@ want P11 "$?" "2" "an empty sweep exits 2"
 
 # P12 -- typing the number works without the clipboard, so the ordinal is always
 # visible. The click is the convenience; the number is the contract.
-has P12 "clone 3" "$WORK/p.html" "the typed fallback is documented on the page"
+has P12 "clone 3" "$WORK/p.html" "the single typed fallback is documented"
+has P12b "clone 1, 4, 7" "$WORK/p.html" "the multi typed fallback is documented"
+
+# P14 -- multi-select controls exist and start in the safe state. "Select all"
+# queues one clone run per card, so Clear and Copy must be dead until something
+# is actually chosen.
+has P14  'id="all"'   "$WORK/p.html" "select all exists"
+has P14b 'id="clear" disabled' "$WORK/p.html" "clear starts disabled"
+has P14c 'id="copy" class="primary" disabled' "$WORK/p.html" "copy starts disabled"
+has P14d "Nothing selected" "$WORK/p.html" "the bar opens saying nothing is selected"
+
+# P15 -- the bar states the SHAPE of the spend and never a figure. This page is
+# static; it cannot price a run, and the live estimate is the only thing allowed
+# to quote one.
+has   P15  "priced before it spends" "$WORK/p.html" "the spend line is present"
+hasnt P15b "credits"                 "$WORK/p.html" "no credit figure on the page"
+
+# P16 -- the brand mark is inlined, not linked. The page opens from file:// with
+# no network; a logo that 404s is worse than none.
+has   P16  'class="mark"'  "$WORK/p.html" "the novoads mark is present"
+hasnt P16b "<img src=\"http" "$WORK/p.html" "nothing is loaded over the network"
 
 # P13 -- unreadable input fails with guidance, not a traceback.
 $M "$WORK/nope.json" > "$WORK/miss.out" 2>&1
