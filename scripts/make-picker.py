@@ -61,6 +61,12 @@ DARK = {
     "border": "#302e38", "card": "#121212", "radius": "8px",
 }
 
+# The novoads mark, inlined from public/safari-pinned-tab.svg in the app repo.
+# Inline rather than linked: the page is opened from file:// with no network, and
+# a logo that 404s is worse than none. Fills are CSS vars so it follows the theme
+# instead of being a black disc on a dark background.
+LOGO_PATH = "M 30.054688 93.664062 C 29.1875 93.664062 28.605469 93.175781 28.3125 92.195312 C 28.027344 91.207031 28.257812 90.453125 29.011719 89.929688 C 29.417969 89.644531 30 89.296875 30.75 88.886719 C 32.308594 88.082031 33.089844 86.839844 33.089844 85.167969 L 33.089844 39.300781 C 33.089844 37.558594 32.308594 36.316406 30.75 35.5625 C 30 35.15625 29.417969 34.808594 29.011719 34.523438 C 28.316406 34.058594 28.085938 33.363281 28.3125 32.441406 C 28.546875 31.519531 29.042969 30.972656 29.796875 30.800781 L 52.621094 30.800781 C 54.351562 30.800781 55.710938 31.496094 56.699219 32.882812 L 86.101562 74.84375 L 86.101562 39.300781 C 86.101562 37.558594 85.320312 36.316406 83.761719 35.5625 C 83.011719 35.15625 82.429688 34.808594 82.023438 34.523438 C 81.269531 34.003906 81.039062 33.25 81.324219 32.269531 C 81.617188 31.292969 82.195312 30.800781 83.0625 30.800781 L 94.789062 30.800781 C 95.710938 30.800781 96.316406 31.292969 96.601562 32.269531 C 96.894531 33.25 96.664062 34.003906 95.917969 34.523438 C 95.675781 34.695312 95.445312 34.871094 95.21875 35.050781 C 94.988281 35.222656 94.726562 35.363281 94.433594 35.476562 C 92.929688 36.402344 92.179688 37.671875 92.179688 39.300781 L 92.179688 85.167969 C 92.179688 86.785156 92.929688 88.058594 94.433594 88.988281 C 94.726562 89.101562 94.988281 89.242188 95.21875 89.414062 C 95.445312 89.585938 95.675781 89.757812 95.917969 89.929688 C 96.664062 90.453125 96.992188 91.207031 96.902344 92.195312 C 96.816406 93.175781 96.109375 93.664062 94.789062 93.664062 L 76.042969 93.664062 C 74.304688 93.664062 72.941406 92.945312 71.964844 91.496094 L 39.167969 44.316406 L 39.167969 85.167969 C 39.167969 86.785156 39.917969 88.058594 41.421875 88.988281 C 41.652344 89.101562 41.894531 89.242188 42.148438 89.414062 C 42.414062 89.585938 42.664062 89.757812 42.890625 89.929688 C 43.652344 90.453125 43.882812 91.207031 43.589844 92.195312 C 43.304688 93.175781 42.695312 93.664062 41.765625 93.664062 Z"
+
 VIDEO_EXT = {".mp4", ".mov", ".webm"}
 
 
@@ -116,8 +122,9 @@ def card(i: int, ad: dict, media: Path | None, out_dir: Path) -> str:
             frame = f'<img src="{rel}" alt="" loading="lazy">'
 
     link = f'<a href="{url}" target="_blank" rel="noopener">Ad Library</a>' if url else ""
-    return f"""      <figure class="card" data-pick="clone {i}" tabindex="0">
+    return f"""      <figure class="card" data-i="{i}" tabindex="0" role="checkbox" aria-checked="false">
         <div class="n">{i}</div>
+        <div class="tick" aria-hidden="true">✓</div>
         <div class="frame">{frame}</div>
         <figcaption>
           <strong>{page}</strong>
@@ -184,7 +191,11 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
     -webkit-font-smoothing: antialiased;
   }}
   header {{ max-width: 1400px; margin: 0 auto 28px; }}
-  h1 {{ font-size: 22px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }}
+  .brand {{ display: flex; align-items: center; gap: 11px; margin-bottom: 8px; }}
+  .mark {{ width: 30px; height: 30px; flex: none; }}
+  .mark circle {{ fill: var(--primary); }}
+  .mark path {{ fill: var(--on-primary); }}
+  h1 {{ font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }}
   .sub {{ color: var(--muted-fg); font-size: 14px; margin: 0 0 4px; }}
   .grid {{
     max-width: 1400px; margin: 0 auto;
@@ -198,12 +209,15 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
     transition: border-color .12s ease, transform .12s ease;
   }}
   .card:hover, .card:focus-visible {{ border-color: var(--primary); transform: translateY(-2px); outline: none; }}
-  .card.copied {{ border-color: var(--primary); }}
-  .card.copied::after {{
-    content: "copied — paste it in the chat";
-    position: absolute; inset: auto 0 0 0; padding: 8px 12px;
-    background: var(--primary); color: var(--on-primary); font-size: 13px;
+  .card[aria-checked="true"] {{ border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }}
+  .tick {{
+    position: absolute; top: 10px; right: 10px; z-index: 2;
+    width: 26px; height: 26px; border-radius: 999px;
+    background: var(--primary); color: var(--on-primary);
+    font-size: 14px; display: grid; place-items: center;
+    opacity: 0; transform: scale(.8); transition: opacity .12s ease, transform .12s ease;
   }}
+  .card[aria-checked="true"] .tick {{ opacity: 1; transform: scale(1); }}
   .n {{
     position: absolute; top: 10px; left: 10px; z-index: 2;
     min-width: 26px; height: 26px; padding: 0 7px; border-radius: 999px;
@@ -220,7 +234,22 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
   .body {{ color: var(--muted-fg); font-size: 12.5px; margin: 4px 0 0;
            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }}
   figcaption a {{ color: var(--muted-fg); font-size: 12.5px; margin-top: 2px; }}
-  footer {{ max-width: 1400px; margin: 32px auto 0; color: var(--muted-fg); font-size: 13px; }}
+  footer {{ max-width: 1400px; margin: 32px auto 96px; color: var(--muted-fg); font-size: 13px; }}
+  .bar {{
+    position: fixed; inset: auto 0 0 0; z-index: 10;
+    background: var(--card); border-top: 1px solid var(--border);
+    padding: 12px 24px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }}
+  .bar .count {{ font-weight: 600; }}
+  .bar .pick {{ color: var(--muted-fg); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }}
+  .bar .spend {{ color: var(--muted-fg); font-size: 12.5px; flex: 1 1 260px; }}
+  .bar button {{
+    font: inherit; font-size: 13px; padding: 7px 13px; cursor: pointer;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--fg);
+  }}
+  .bar button.primary {{ background: var(--primary); color: var(--on-primary); border-color: var(--primary); }}
+  .bar button:disabled {{ opacity: .45; cursor: default; }}
   .notice {{
     max-width: 1400px; margin: 0 auto 20px; padding: 12px 16px;
     border: 1px solid var(--primary); border-radius: var(--radius);
@@ -230,7 +259,12 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
 </style>
 
 <header>
-  <h1>{len(picks)} ads for {query}</h1>
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 128 128" aria-label="Novoads" role="img">
+      <circle cx="64" cy="64" r="62"/><path d="{LOGO_PATH}"/>
+    </svg>
+    <h1>{len(picks)} ads for {query}</h1>
+  </div>
   <p class="sub">All of these are among Meta's highest-impression ads for this query
      ({media_type}). Meta publishes no per-ad impression number for commercial ads,
      so there is no figure to show.</p>
@@ -243,27 +277,85 @@ def build(data: dict, media_dir: Path, out: Path, top: int) -> int:
 </div>
 
 <footer>
-  Click a card to copy its pick line, then paste it in the chat. Or just type
-  <strong>clone 3</strong> — the number on each card is the one to use.
+  Click cards to select them, then Copy and paste in the chat. Or just type
+  <strong>clone 3</strong>, or <strong>clone 1, 4, 7</strong> — the numbers on the
+  cards are the ones to use.
 </footer>
 
+<div class="bar">
+  <span class="count">Nothing selected</span>
+  <span class="pick"></span>
+  <span class="spend">Each one you pick is its own clone run, priced before it spends.</span>
+  <button id="all">Select all</button>
+  <button id="clear" disabled>Clear</button>
+  <button id="copy" class="primary" disabled>Copy</button>
+</div>
+
 <script>
-  // Click-to-copy, with a typed fallback. The page cannot write to disk and a
-  // local server is machinery for one click, so the clipboard is the channel and
-  // the ordinal is the fallback when it is blocked.
-  for (const el of document.querySelectorAll('.card')) {{
-    const pick = () => {{
-      const text = el.dataset.pick;
-      const done = () => {{
-        for (const o of document.querySelectorAll('.copied')) o.classList.remove('copied');
-        el.classList.add('copied');
-      }};
-      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, done);
-      else done();
-    }};
-    el.addEventListener('click', pick);
-    el.addEventListener('keydown', e => {{ if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); pick(); }} }});
+  // Selection is a toggle per card; the bar is the only place the pick line
+  // exists, so the numbers on the cards and the string you paste cannot drift.
+  const cards = [...document.querySelectorAll('.card')];
+  const bar = {{
+    count: document.querySelector('.bar .count'),
+    pick:  document.querySelector('.bar .pick'),
+    spend: document.querySelector('.bar .spend'),
+    all:   document.getElementById('all'),
+    clear: document.getElementById('clear'),
+    copy:  document.getElementById('copy'),
+  }};
+
+  const chosen = () => cards.filter(c => c.getAttribute('aria-checked') === 'true')
+                            .map(c => +c.dataset.i)
+                            .sort((a, b) => a - b);
+
+  const line = () => {{ const n = chosen(); return n.length ? 'clone ' + n.join(', ') : ''; }};
+
+  function sync() {{
+    const n = chosen();
+    bar.count.textContent = n.length ? n.length + ' selected' : 'Nothing selected';
+    bar.pick.textContent = line();
+    // No credit figure here on purpose: this page is static and cannot price a
+    // run. It states the SHAPE of the spend and leaves the number to the live
+    // estimate, which is the only thing allowed to quote one.
+    bar.spend.textContent = n.length > 1
+      ? n.length + ' separate clone runs, each priced before it spends.'
+      : 'Each one you pick is its own clone run, priced before it spends.';
+    bar.clear.disabled = !n.length;
+    bar.copy.disabled = !n.length;
+    bar.all.textContent = n.length === cards.length ? 'Select none' : 'Select all';
   }}
+
+  const toggle = el => {{
+    el.setAttribute('aria-checked', el.getAttribute('aria-checked') === 'true' ? 'false' : 'true');
+    sync();
+  }};
+
+  for (const el of cards) {{
+    // A click on the Ad Library link should follow the link, not select the card.
+    el.addEventListener('click', e => {{ if (!e.target.closest('a')) toggle(el); }});
+    el.addEventListener('keydown', e => {{
+      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); toggle(el); }}
+    }});
+  }}
+
+  bar.all.addEventListener('click', () => {{
+    const on = chosen().length !== cards.length;
+    for (const c of cards) c.setAttribute('aria-checked', String(on));
+    sync();
+  }});
+  bar.clear.addEventListener('click', () => {{
+    for (const c of cards) c.setAttribute('aria-checked', 'false');
+    sync();
+  }});
+  bar.copy.addEventListener('click', () => {{
+    const text = line();
+    if (!text) return;
+    const done = () => {{ bar.copy.textContent = 'Copied'; setTimeout(() => bar.copy.textContent = 'Copy', 1400); }};
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, done);
+    else done();  // the numbers are on the cards; typing always works
+  }});
+
+  sync();
 </script>
 """
     out.parent.mkdir(parents=True, exist_ok=True)
