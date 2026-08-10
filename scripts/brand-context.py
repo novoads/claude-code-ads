@@ -55,6 +55,7 @@ FIELDS = {
     "market.competitors": "Competitors",
     "market.swept_at": "Last swept",
     "market.winning_ads": "Winning ads",
+    "brand.claims": "Verified claims",
 }
 
 # What each skill cannot proceed without.
@@ -97,7 +98,8 @@ CLONE_IMAGE_OPTIONAL = ["brand.name", "brand.colors", "brand.fonts", "brand.tone
                         "brand.sample_phrasings"]
 
 
-def clone_image_requirements(mode: str, product_in_ad: str | None) -> dict | None:
+def clone_image_requirements(mode: str, product_in_ad: str | None,
+                             claims_in_ad: str | None = None) -> dict | None:
     """None means "you have not told me enough to answer" — see cmd_check.
 
     template mode asks for nothing: a template is filled with a stand-in brand
@@ -106,12 +108,27 @@ def clone_image_requirements(mode: str, product_in_ad: str | None) -> dict | Non
     B4 asserts; the static table used to contradict both.
     """
     if mode == "template":
+        # A placeholder asserts nothing. {ad.headline} is not a claim, which is
+        # the entire point of a placeholder, so neither gate applies here.
         return {"blocking": [], "optional": CLONE_IMAGE_OPTIONAL + ["brand.logo"]}
-    if product_in_ad is None:
+    if product_in_ad is None or claims_in_ad is None:
         return None
     blocking = ["brand.logo"]
     if product_in_ad == "yes":
         blocking += ["product.photo", "product.description"]
+    if claims_in_ad == "testimonial":
+        # Not a claim you can substitute. A verified-figures list is the wrong
+        # currency: the source asserts that a specific named human said a
+        # specific thing. Two of the four real Arcads statics are exactly this.
+        return {"blocking": ["__testimonial__"], "optional": CLONE_IMAGE_OPTIONAL}
+    if claims_in_ad == "yes":
+        # Measured on four real Arcads statics: every one carried a number or a
+        # named human. "300 Natural AI Actors", "6,000+ teams", "99% reduction in
+        # cost". Rewriting those for our brand while keeping the layout invents
+        # a figure nobody verified — the ad looks right and asserts something
+        # untrue. Having a verified set on file is what makes a substitution
+        # honest rather than a rhythm-preserving guess.
+        blocking += ["brand.claims"]
     return {"blocking": blocking,
             "optional": CLONE_IMAGE_OPTIONAL +
             ([] if product_in_ad == "yes" else ["product.photo", "product.description"])}
@@ -227,20 +244,31 @@ def cmd_set(args) -> int:
 
 def cmd_check(args) -> int:
     if args.skill == "clone-image-ad":
-        req = clone_image_requirements(args.mode, args.product_in_ad)
+        req = clone_image_requirements(args.mode, args.product_in_ad,
+                                       args.claims_in_ad)
         if req is None:
             # Refuse rather than assume. Guessing here is guessing whether an
             # image model is about to invent a product, which is the failure a
             # viewer catches instantly.
             print("BLOCKED: nobody has said whether this ad shows a product.",
                   file=sys.stderr)
-            print("Look at the ad, then pass --product-in-ad yes|no. A product in "
-                  "the frame means a real photo is mandatory; none means there is "
-                  "nothing to pin and nothing to fabricate.", file=sys.stderr)
+            print("Look at the ad, then pass BOTH --product-in-ad yes|no and "
+                  "--claims-in-ad yes|no. A product in the frame means a real "
+                  "photo is mandatory; a number or a named person in the copy "
+                  "means we need a true one of our own to put there.",
+                  file=sys.stderr)
             return 2
     else:
         req = REQUIREMENTS[args.skill]
     have = read_all()
+    if "__testimonial__" in req["blocking"]:
+        print("BLOCKED: this ad quotes a named person.", file=sys.stderr)
+        print("Verified figures cannot stand in for it — the source asserts that "
+              "a specific human said a specific thing. The only honest inputs are "
+              "a real customer who really said it, with permission, or dropping "
+              "that zone from the clone.", file=sys.stderr)
+        return 2
+
     missing = [f for f in req["blocking"] if f not in have]
     absent_optional = [f for f in req["optional"] if f not in have]
 
@@ -429,6 +457,10 @@ def main() -> int:
     c.add_argument("--product-in-ad", choices=["yes", "no"], default=None,
                    help="clone-image-ad, ads mode: does the SOURCE ad show a "
                         "product? Judged by looking at it, not by the business")
+    c.add_argument("--claims-in-ad", choices=["yes", "no", "testimonial"],
+                   default=None,
+                   help="clone-image-ad, ads mode: does the SOURCE ad carry a "
+                        "number, a statistic or a named person's quote?")
     c.set_defaults(func=cmd_check)
 
     listing = sub.add_parser("list", help="every field and its value")
