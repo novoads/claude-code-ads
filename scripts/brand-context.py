@@ -300,6 +300,44 @@ def cmd_check(args) -> int:
     return 0
 
 
+def cmd_refs(args) -> int:
+    """Emit the --image-ref flags a render should carry, in order.
+
+    Order is load-bearing, and it is Arcads' ordering: the product goes in as
+    reference 1 because it is the strongest identity signal at the provider and
+    the thing that must not drift, then the mark. Getting this wrong is quiet —
+    the render still succeeds, it just draws somebody's idea of a logo.
+
+    This exists because the first real clone came back with a generic white
+    square: brand.logo was stored, it BLOCKED the run, and no renderer ever
+    received it. Which files, in which order, is arithmetic; it belongs here
+    rather than in a sentence somebody has to remember.
+    """
+    have = read_all()
+    order = ["product.photo", "brand.logo"]
+    refs = []
+    for field in order:
+        v = have.get(field)
+        if not v:
+            continue
+        # Absolute, because the render runs from wherever the agent happens to
+        # be and a relative ref resolves to nothing there.
+        refs.append(str(Path(v).expanduser().resolve()))
+
+    if not refs:
+        print("no product photo or logo stored — nothing to pass as a reference",
+              file=sys.stderr)
+        return 1
+    # ONE PATH PER LINE, not a joined flag string. Two reasons, both learned the
+    # hard way in the same minute: zsh does not word-split an unquoted $(...),
+    # so a joined string arrives as a single argument and argparse rejects the
+    # lot; and a path containing a space cannot survive space-joining at all,
+    # which user folders routinely contain. The caller builds the flags.
+    for r in refs:
+        print(r)
+    return 0
+
+
 def cmd_list(args) -> int:
     have = read_all()
     for field, label in FIELDS.items():
@@ -473,6 +511,11 @@ def main() -> int:
                    help="clone-image-ad, ads mode: does the SOURCE ad carry a "
                         "number, a statistic or a named person's quote?")
     c.set_defaults(func=cmd_check)
+
+    r = sub.add_parser(
+        "refs", help="the --image-ref flags a render should carry, in order")
+    r.add_argument("skill", choices=sorted(list(REQUIREMENTS) + ["clone-image-ad"]))
+    r.set_defaults(func=cmd_refs)
 
     listing = sub.add_parser("list", help="every field and its value")
     listing.set_defaults(func=cmd_list)

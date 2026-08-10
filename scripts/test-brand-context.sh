@@ -263,6 +263,55 @@ out=$($B check clone-image-ad --mode ads --product-in-ad no --claims-in-ad testi
 case "$out" in *"really said it"*) ok C7b "and it says what the only honest input is" ;;
                 *) bad C7b "the testimonial refusal does not say what to do" ;; esac
 
+# ---- L: the logo has to REACH the renderer ---------------------------------
+# The first real clone rendered a generic white square where the mark should be.
+# brand.logo was stored, it BLOCKED the run, and nothing passed it to the model
+# — a gate on an asset no renderer ever received. Arcads has had this right all
+# along: the logo goes in as a reference image, after the product.
+#
+# Which refs, in which order, is arithmetic, so it moves into the script. What
+# stays prose is what the prompt SAYS about the mark.
+
+fresh
+$B set brand.logo /tmp/logo.png >/dev/null
+$B set product.photo /tmp/shot.jpg >/dev/null
+
+# L1 -- product first, logo second. Order is load-bearing: reference 1 is the
+# strongest identity signal at the provider, and the product is what must not
+# drift.
+RSHOT=$(python3 -c "import pathlib;print(pathlib.Path('/tmp/shot.jpg').resolve())")
+RLOGO=$(python3 -c "import pathlib;print(pathlib.Path('/tmp/logo.png').resolve())")
+out=$($B refs clone-image-ad 2>/dev/null | tr '\n' '|')
+check L1 "$out" "$RSHOT|$RLOGO|" "product first, logo second, one per line"
+
+# L2 -- a stored logo with no product still goes. The mark is the universal one.
+fresh
+$B set brand.logo /tmp/logo.png >/dev/null
+check L2 "$($B refs clone-image-ad 2>/dev/null)" "$RLOGO" "the logo alone is still passed"
+
+# L3 -- nothing stored prints nothing, and exits 1 so a caller can branch. It
+# must not print an empty flag that the renderer would choke on.
+fresh
+out=$($B refs clone-image-ad 2>/dev/null); rc=$?
+check L3 "$rc:$out" "1:" "no assets prints nothing and exits 1"
+
+# L4 -- paths are absolute. The render runs from wherever the agent happens to
+# be, and a relative ref resolves to nothing there.
+fresh
+$B set brand.logo ./rel/logo.png >/dev/null
+case "$($B refs clone-image-ad 2>/dev/null)" in
+  /*) ok L4 "a relative stored path is emitted absolute" ;;
+  *) bad L4 "a relative path is passed through relative" ;;
+esac
+
+# L5 -- a path with a SPACE survives. The first format space-joined the flags,
+# which cannot represent one, and user folders are full of them.
+fresh
+mkdir -p "/tmp/my brand"; : > "/tmp/my brand/logo.png"
+$B set brand.logo "/tmp/my brand/logo.png" >/dev/null
+n=0; while IFS= read -r line; do n=$((n+1)); done < <($B refs clone-image-ad 2>/dev/null)
+check L5 "$n" "1" "a path containing a space is one line, not two"
+
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

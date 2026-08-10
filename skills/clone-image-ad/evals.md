@@ -273,3 +273,21 @@ testimonial: the source asserts a specific human said a specific thing. The only
 are a real customer who really said it, with permission, or dropping that zone.
 
 Automated as C1-C7b in `scripts/test-brand-context.sh`.
+
+
+---
+
+### B5b — the mark reaches the model, and is spelled out
+
+**Why:** the first clone this pack ever rendered put a generic white square where the logo
+belongs. `brand.logo` was stored, it blocked the run, and nothing passed it to the renderer —
+a gate on an asset no model received. Arcads has had all three of these rules since before we
+started; we had the gate and none of the guidance.
+
+**Check:** with a logo and a product on file, confirm the render call carries **both** as
+`--image-ref`, product first, taken from `brand-context.py refs` rather than hand-assembled.
+Confirm the prompt spells the wordmark letter by letter. Then look at the output: if the mark
+is wrong twice, confirm the run composites a clean PNG rather than paying for a third roll.
+
+Automated as L1-L4 in `scripts/test-brand-context.sh` for the flags and their order; the
+spelling and the composite decision are judgement and stay here.

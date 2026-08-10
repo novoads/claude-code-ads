@@ -172,6 +172,40 @@ the whole reason a SaaS or an agency can use this at all.
 The logo is the one thing required either way: every ad carries a mark, and that mark must
 never be the competitor's.
 
+### Getting the mark right — three rules, and the first one is why this exists
+
+**1. Pass the files, do not describe them.** The render call takes them as reference images, in
+this order, and the order is load-bearing — reference 1 is the strongest identity signal at the
+provider:
+
+```bash
+REFS=()
+while IFS= read -r r; do REFS+=(--image-ref "$r"); done \
+  < <(./scripts/brand-context.py refs clone-image-ad)
+# then pass "${REFS[@]}" to validate_image.py
+```
+
+**Build the array, do not interpolate a string.** `refs` prints one path per line for two
+reasons, both found by getting them wrong: zsh does not word-split an unquoted `$(...)`, so a
+joined flag string arrives as ONE argument and argparse rejects the lot; and a path containing
+a space cannot survive being space-joined at all, which user folders routinely contain. The first real clone this pack produced came back with a **generic
+white square** where the mark should be: `brand.logo` was stored, it *blocked* the run, and no
+renderer ever received it. A gate on an asset nothing passes is worse than no gate — it charges
+the user for a promise it does not keep.
+
+**2. Spell the wordmark letter by letter in the prompt.** Image models mangle brand text more
+reliably than anything else in a frame. Write it out: *the wordmark reads N-O-V-O-A-D-S,
+"novoads", eight letters, lowercase*. Then check the render against the spelling, not against
+your memory of it.
+
+**3. When it still comes back wrong, composite — do not re-roll.** Two bad wordmarks in a row
+means the third will probably be bad too, and each one costs. Burn a clean logo PNG onto the
+zone instead. **That is the reliable path to pixel-perfect brand text, not a fallback**, and it
+is the one part of this workflow with a guaranteed outcome.
+
+**No logo stored?** Omit the zone and say a logo overlay is available afterwards. Never invent a
+mark and never leave the competitor's.
+
 Exit 2 means blocked, and the output names exactly what is missing. **Ask for those and
 nothing else**, then write each answer back so no later run asks again:
 
