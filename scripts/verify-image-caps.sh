@@ -106,9 +106,9 @@ check_script() { # <script> <cap> [extra args...]
 }
 check_script "skills/chatgpt-image-ad/scripts/generate_image.py" 4
 check_script "skills/nano-banana-image-ad/scripts/generate_image.py" 14
-check_script "skills/image-ad-clone/scripts/validate_image.py" 4 --model gpt-image-2
-check_script "skills/image-ad-clone/scripts/validate_image.py" 14 --model nano-banana-pro
-check_script "skills/image-ad-clone/scripts/validate_image.py" 8 --model reve-2.1
+check_script "skills/clone-image-ad/scripts/validate_image.py" 4 --model gpt-image-2
+check_script "skills/clone-image-ad/scripts/validate_image.py" 14 --model nano-banana-pro
+check_script "skills/clone-image-ad/scripts/validate_image.py" 8 --model reve-2.1
 
 # The prompt ceiling, at the exact boundary. The gate measures the FINAL prompt,
 # meaning the body plus the three always-on suffixes, so the boundary is not the
@@ -151,9 +151,9 @@ check_prompt_cap() { # <script> <cap> [extra args...]
 }
 check_prompt_cap "skills/chatgpt-image-ad/scripts/generate_image.py" 32000
 check_prompt_cap "skills/nano-banana-image-ad/scripts/generate_image.py" 50000
-check_prompt_cap "skills/image-ad-clone/scripts/validate_image.py" 32000 --model gpt-image-2
-check_prompt_cap "skills/image-ad-clone/scripts/validate_image.py" 50000 --model nano-banana-pro
-check_prompt_cap "skills/image-ad-clone/scripts/validate_image.py" 4000 --model reve-2.1
+check_prompt_cap "skills/clone-image-ad/scripts/validate_image.py" 32000 --model gpt-image-2
+check_prompt_cap "skills/clone-image-ad/scripts/validate_image.py" 50000 --model nano-banana-pro
+check_prompt_cap "skills/clone-image-ad/scripts/validate_image.py" 4000 --model reve-2.1
 
 # ── 3. docs carry no resurrected universal-cap claim ─────────────────────────
 #
@@ -186,8 +186,8 @@ $RESIDUE"
 # paths a universal 4,000 claim is by definition about images, and wrong.
 IMAGE_PATHS=()
 for p in "$ROOT/skills/chatgpt-image-ad" "$ROOT/skills/nano-banana-image-ad" \
-         "$ROOT/skills/image-ad-clone" "$ROOT/shared/skills/chatgpt-image-ad" \
-         "$ROOT/shared/skills/nano-banana-image-ad" "$ROOT/shared/skills/image-ad-clone" \
+         "$ROOT/skills/clone-image-ad" "$ROOT/shared/skills/chatgpt-image-ad" \
+         "$ROOT/shared/skills/nano-banana-image-ad" "$ROOT/shared/skills/clone-image-ad" \
          "$ROOT/shared/skills/image-ad-prompting"; do
   [[ -e "$p" ]] && IMAGE_PATHS+=("$p")
 done

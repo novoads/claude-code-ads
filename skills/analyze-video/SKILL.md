@@ -18,13 +18,13 @@ that same style back from `seedance-2.0`.
 
 The output is **not** a single prompt. It is a **formula file** saved into
 `skills/novoads-api/prompting/prompt-library/`, built the way
-[seedance-2-ugc.md](../prompt-library/seedance-2-ugc.md) is built: layers, variables,
+[seedance-2-ugc.md](../novoads-api/prompting/prompt-library/seedance-2-ugc.md) is built: layers, variables,
 option banks, rules, and a worked example, so the agent can generate unlimited prompts in
 that style.
 
 **Nothing in steps 1 to 6 touches the API.** Frame extraction, transcription and analysis
 are local work on the user's own file: no calls, no credits. Only step 7, the optional test
-render, spends anything, and it runs through the two gates in [SKILL.md](../../SKILL.md)
+render, spends anything, and it runs through the two gates in [SKILL.md](../novoads-api/SKILL.md)
 like every other generation.
 
 **There is a hosted alternative, and it is not the default.** `POST /v1/analyses` reads an
@@ -70,7 +70,7 @@ Neither is a Novoads dependency. Both run locally on the user's file.
 ## Step 1: Extract frames and audio
 
 ```bash
-bash "skills/novoads-api/prompting/analyze-video/scripts/extract-frames.sh" \
+bash "skills/analyze-video/scripts/extract-frames.sh" \
   "<video_path>" "/tmp/video-analysis" <num_frames>
 ```
 
@@ -101,15 +101,15 @@ with action. All of that defines the style, and all of it has to survive into th
 Read the shipped formulas before you write one. They are the standard your output has to
 meet:
 
-- [seedance-2-ugc.md](../prompt-library/seedance-2-ugc.md) — 9-layer UGC formula, the richest example
-- [seedance-2-premium-reveal.md](../prompt-library/seedance-2-premium-reveal.md) — dark-void reveal, no person
-- [seedance-2-product-hero.md](../prompt-library/seedance-2-product-hero.md) — elemental product hero, no person
-- [seedance-2-studio-lookbook.md](../prompt-library/seedance-2-studio-lookbook.md) — studio lookbook with voiceover
-- [seedance-2-feature-walkthrough.md](../prompt-library/seedance-2-feature-walkthrough.md) — feature demo, multi-clip series
+- [seedance-2-ugc.md](../novoads-api/prompting/prompt-library/seedance-2-ugc.md) — 9-layer UGC formula, the richest example
+- [seedance-2-premium-reveal.md](../novoads-api/prompting/prompt-library/seedance-2-premium-reveal.md) — dark-void reveal, no person
+- [seedance-2-product-hero.md](../novoads-api/prompting/prompt-library/seedance-2-product-hero.md) — elemental product hero, no person
+- [seedance-2-studio-lookbook.md](../novoads-api/prompting/prompt-library/seedance-2-studio-lookbook.md) — studio lookbook with voiceover
+- [seedance-2-feature-walkthrough.md](../novoads-api/prompting/prompt-library/seedance-2-feature-walkthrough.md) — feature demo, multi-clip series
 
 And the platform guide, which every one of them defers to:
 
-- [seedance-2.md](../prompt-library/seedance-2.md) — request fields, the grid, prompt craft, what the estimate flags, the adaptation checklist
+- [seedance-2.md](../novoads-api/prompting/prompt-library/seedance-2.md) — request fields, the grid, prompt craft, what the estimate flags, the adaptation checklist
 
 Notice what they share:
 
@@ -220,7 +220,7 @@ in this style without ever seeing the source video.
 
 **Use when:** [the kind of video this produces]
 
-**Model guide:** read [seedance-2.md](../prompt-library/seedance-2.md) first for the request fields, the grid,
+**Model guide:** read [seedance-2.md](../novoads-api/prompting/prompt-library/seedance-2.md) first for the request fields, the grid,
 and the platform rules.
 
 **Mode:** `startImageAssetId` or `referenceAssetIds` — say which, and what each `@ImageN`
@@ -356,7 +356,7 @@ template that omits them manufactures the same defect in every prompt written fr
 
 1. Save to `skills/novoads-api/prompting/prompt-library/seedance-2-<style-name>.md`.
 2. **Add a row to the style directory** in
-   [seedance-2.md](../prompt-library/seedance-2.md) so the new formula is reachable —
+   [seedance-2.md](../novoads-api/prompting/prompt-library/seedance-2.md) so the new formula is reachable —
    user goal, file link, key trait, matching the rows already there. A formula nothing
    points at is a formula nobody reads.
 3. Summarise in chat: the style you identified, its layers, what makes it distinct, and the
@@ -370,7 +370,7 @@ source — that is the actual test — and run step 7.
 ## Step 7: Render a test clip (optional, and it costs credits)
 
 The template is the deliverable; this step only proves it. It runs the full sequence from
-[SKILL.md](../../SKILL.md), and **both gates apply**.
+[SKILL.md](../novoads-api/SKILL.md), and **both gates apply**.
 
 1. **Upload the product photo** if the prompt references one:
 
@@ -463,14 +463,14 @@ organization may be in flight at once.
 
 ## Related files
 
-- [clone-ad/SKILL.md](../clone-ad/SKILL.md) — the sibling: same analysis, but the output is
+- [clone-video-ad/SKILL.md](../clone-video-ad/SKILL.md) — the sibling: same analysis, but the output is
   a generated video for the user's product instead of a template file.
 - [scripts/extract-frames.sh](scripts/extract-frames.sh) — frame and audio extraction,
   shared by both skills.
-- [seedance-2.md](../prompt-library/seedance-2.md) — the platform guide every generated
+- [seedance-2.md](../novoads-api/prompting/prompt-library/seedance-2.md) — the platform guide every generated
   template defers to.
-- [../../SKILL.md](../../SKILL.md) — the call sequence, the two gates, polling, download.
-- [../../reference.md](../../reference.md) — every endpoint, field, limit and error code.
+- [../../SKILL.md](../novoads-api/SKILL.md) — the call sequence, the two gates, polling, download.
+- [../../reference.md](../novoads-api/reference.md) — every endpoint, field, limit and error code.
 
 ## File map
 
@@ -484,7 +484,7 @@ skills/novoads-api/
     ├── analyze-video/
     │   ├── SKILL.md                          ← THIS FILE — video → reusable template
     │   └── scripts/extract-frames.sh         ← ffmpeg frame + audio extraction
-    ├── clone-ad/
+    ├── clone-video-ad/
     │   └── SKILL.md                          ← video → adapted video for the user's product
     └── prompt-library/
         ├── seedance-2.md                     ← Seedance 2.0 platform guide (read first)

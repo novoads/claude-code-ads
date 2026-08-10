@@ -9,12 +9,11 @@ description: >-
   rendered with audio disabled and the API refuses it. Transcribes the audio with
   Whisper, groups words into reading phrases, renders the captions in a real
   browser via HyperFrames, and composites them over the source with ffmpeg using
-  a real alpha channel. Use when the user has an MP4 with narration, dialogue or
-  voiceover and asks to add captions, subtitles, burned-in text, TikTok-style
-  captions or word-by-word text to it and the API path has been ruled out. Runs
-  out of band, so it costs no credits and works on any video file whoever
-  generated it. Not for generating video (use the video skills) and not for a
-  separate .srt/.vtt sidecar file.
+  a real alpha channel. Use when the user has an MP4 with speech and asks to add
+  captions, subtitles, burned-in text, TikTok-style captions or word-by-word text
+  to it, and the API path has been ruled out. Runs out of band, so it costs no
+  credits and works on any video file whoever generated it. Not for generating
+  video (use the video skills) and not for a separate .srt/.vtt sidecar file.
 ---
 
 # Caption a finished video

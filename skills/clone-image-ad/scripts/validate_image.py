@@ -2,7 +2,7 @@
 """
 Round-trip a clone-workflow prompt through any Novoads image model.
 
-This is the image-ad-clone skill's validator, NOT a production generator. The two
+This is the clone-image-ad skill's validator, NOT a production generator. The two
 generator skills are deliberately model-locked (chatgpt-image-ad to gpt-image-2,
 nano-banana-image-ad to nano-banana-pro) so a production run cannot drift models by
 accident. Cloning has the opposite requirement: Phase 4 validates against one model

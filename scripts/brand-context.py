@@ -72,7 +72,7 @@ REQUIREMENTS = {
         "optional": ["brand.name", "brand.tone", "brand.vocab_dont",
                      "brand.sample_phrasings"],
     },
-    "image-ad-clone": {
+    "clone-image-ad": {
         "blocking": ["product.photo", "product.description"],
         "optional": ["brand.name", "brand.logo", "brand.colors", "brand.fonts",
                      "brand.tone"],

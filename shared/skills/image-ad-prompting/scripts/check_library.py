@@ -61,7 +61,7 @@ MAX_PROMPT_CHARS = {
 # gpt-image-2 and nano-banana-pro. So a body over gpt-image-2's room is a template
 # nobody can send on the default path, and that is L1's hard failure.
 DEFAULT_MODEL = "gpt-image-2"
-# reve-2.1 keeps the tight 4,000 and is reachable only from the image-ad-clone
+# reve-2.1 keeps the tight 4,000 and is reachable only from the clone-image-ad
 # validator. A body that fits gpt-image-2 but not this one is not broken, it is
 # narrower than the library implies, so L1 tracks it against an exact baseline
 # instead of failing on it.
@@ -121,7 +121,7 @@ NUMERIC_ART_PHRASE = "approximat"
 # brand name three different wrong ways while every on-screen glyph was perfect.
 SPOKEN_AUDIO_SKILLS = (
     "skills/novoads-api/SKILL.md",
-    "skills/novoads-api/prompting/clone-ad/SKILL.md",
+    "skills/novoads-api/prompting/clone-video-ad/SKILL.md",
     "skills/novoads-pixar-ad/SKILL.md",
     "skills/novoads-claymation-ad/SKILL.md",
 )

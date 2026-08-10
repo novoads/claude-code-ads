@@ -26,7 +26,7 @@ Installed solo, it expects four things the pack normally provides. None of them 
 | `logs/novoads-api.jsonl` | Append-only local spend log, gitignored | `mkdir -p logs && touch logs/novoads-api.jsonl` |
 | `outputs/` | Where sweeps land, gitignored | Created by the `mkdir -p` in step 3 |
 
-The step-6 hand-off targets `image-ad-clone`, a separate skill in the same pack. Installed solo
+The step-6 hand-off targets `clone-image-ad`, a separate skill in the same pack. Installed solo
 it is not there — say so instead of offering a route that goes nowhere, and hand over the file
 paths and the ranked top three.
 

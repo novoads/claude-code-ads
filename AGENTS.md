@@ -23,8 +23,10 @@ template below are mirrors — change them together. One or two status lines, th
 > **What you can ask for now:**
 > - "Make a UGC video ad for my product" — a presenter speaks your script
 > - "Make static image ads from this photo" — the 40-template library, run in batches
-> - "Clone this ad for my product" — three ready-to-run ads, and the layout saved
->   as a reusable template. No image? It finds one and says the price first
+> - "Clone my competitors' ads" — finds their live ads, ranks them, and clones the best
+>   one for your product. No image needed; it prices the search first
+> - "Clone this ad for my product" plus an image — three ready-to-run ads, and the layout
+>   saved as a reusable template
 > - "Clone this video ad" plus a competitor's clip — beat map, adapted script, your product
 > - "Make a Pixar-style ad" or "a claymation ad" — storyboard, voice-over, music, captions
 > - "Find my competitor's live ads" — pulls their real creatives from the Meta Ad Library
@@ -82,7 +84,7 @@ keeps it the only phrasing in the repo.
 
 ## Every session
 
-1. Read **[MASTER_CONTEXT.md](MASTER_CONTEXT.md)** for brand voice, default product, and accumulated learnings. It carries **no prices** — that is deliberate, see "Cost policy" below.
+1. Read **`MASTER_CONTEXT.md`** at the repo root for brand voice, default product, and accumulated learnings. It is gitignored and created by `scripts/setup.sh` from [MASTER_CONTEXT.template.md](MASTER_CONTEXT.template.md); read and write its fields with `scripts/brand-context.py`. It carries **no prices** — that is deliberate, see "Cost policy" below.
 2. Follow the skill at `.cursor/skills/` or `.claude/skills/` (synced from `skills/` via `scripts/sync-skill.sh`).
 3. The first time the user asks to generate something and `MASTER_CONTEXT.md` is missing a field that request needs (default product, brand voice), ask for it then — once — and write the answer back so no future session asks again. Ask only for what the request in hand needs; a setup-only session asks for nothing. Never write a credit number into it.
 4. After material changes, add a dated entry to **MASTER_CONTEXT.md** Changelog.
@@ -118,7 +120,7 @@ This repo ships a 3-skill ecosystem for generating standalone Meta image-ad crea
 
 Quick map:
 - **Generate from a brief** → `chatgpt-image-ad` (typography / UI mimicry) or `nano-banana-image-ad` (photoreal / lifestyle / multi-ref).
-- **Clone an existing ad into a reusable template** → `image-ad-clone` (single backend-agnostic skill; asks you which generator to validate against at Phase 1, optionally cross-validates against the other backend at Phase 8).
+- **Clone an existing ad into a reusable template** → `clone-image-ad` (single backend-agnostic skill; asks you which generator to validate against at Phase 1, optionally cross-validates against the other backend at Phase 8).
 - **Pull from / add to the shared library** → `shared/skills/image-ad-prompting/prompting/prompt-library.md` (40 ready-to-use validated prompts).
 - **Hand off finished images to Meta** → separate `meta-ad-builder` skill; the image-ad skills produce images only.
 
@@ -134,6 +136,6 @@ Quick map:
   - **Image-ad ecosystem** (3 skills + shared 40-template library) — see [shared/skills/image-ad-prompting/OVERVIEW.md](shared/skills/image-ad-prompting/OVERVIEW.md):
     - `chatgpt-image-ad` — generate via `gpt-image-2` (typography / UI-mimicry creatives)
     - `nano-banana-image-ad` — generate via `nano-banana-pro` (photoreal / lifestyle creatives)
-    - `image-ad-clone` — single backend-agnostic skill that reverse-engineers existing ads into reusable templates (asks which backend to validate against at Phase 1; optionally cross-validates at Phase 8)
+    - `clone-image-ad` — single backend-agnostic skill that reverse-engineers existing ads into reusable templates (asks which backend to validate against at Phase 1; optionally cross-validates at Phase 8)
 - **Setup check:** `./scripts/check-novoads-env.sh`.
 - **Logging:** every generation call is appended to `logs/novoads-api.jsonl`. Observability only — never a pricing input. Schema in [logs/README.md](logs/README.md).

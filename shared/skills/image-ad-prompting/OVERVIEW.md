@@ -24,13 +24,13 @@
 │ skills/nano-banana-image-ad/     → nano-banana-pro              │
 ├─────────────────────────────────────────────────────────────────┤
 │ TEMPLATE-CREATION SKILL (reverse-engineer an ad → library)      │
-│ skills/image-ad-clone/   asks which model to validate against,  │
+│ skills/clone-image-ad/   asks which model to validate against,  │
 │                          routes to the matching generator, and  │
 │                          can cross-check on a third (reve-2.1). │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-`reve-2.1` has no generator skill of its own. It is reachable from `image-ad-clone`'s
+`reve-2.1` has no generator skill of its own. It is reachable from `clone-image-ad`'s
 Phase-1 chooser and by naming it directly on a call — it exists as a second opinion when a
 template renders wrong on both of the other two, not as a default route.
 
@@ -195,7 +195,7 @@ The user's first sentence usually tells you which way to branch.
 
 - **Generating** → one of the two generator skills.
 - **Cloning** (they shared an ad image and want it as a reusable prompt) → the single
-  `image-ad-clone` skill (it asks which model to validate against at Phase 1).
+  `clone-image-ad` skill (it asks which model to validate against at Phase 1).
 
 **Step 2: Pick the model. This step is internal.**
 
@@ -208,11 +208,11 @@ gives above. The table itself is never shown.
 |---|---|
 | Apple Notes lists, fake search results, chat threads, ChatGPT-style conversations, iOS dialogs, Slack snapshots, comparison tables, Hinge cards, iMessage, calendar UI, weather forecast UI, magazine cover, anything **typography-heavy or UI-mimicry** | **`chatgpt-image-ad`** |
 | Handheld whiteboard signs, napkin handwritten testimonials, sticky-note + product flatlays, letter-board signs, lifestyle scenes, OOH/transit photography, scratch-off tickets, **photoreal / material-rich / multi-reference** ads | **`nano-banana-image-ad`** |
-| A second opinion after both of the above rendered the same template wrong, or a deliberately different look on a concept that already works | **`reve-2.1`**, via `image-ad-clone`'s chooser or by naming the model on the call |
+| A second opinion after both of the above rendered the same template wrong, or a deliberately different look on a concept that already works | **`reve-2.1`**, via `clone-image-ad`'s chooser or by naming the model on the call |
 | Ambiguous? | Look up the matching template in `prompting/prompt-library.md` and read its `Model notes:` block — every entry recommends one. |
 | No template applies **and** the concept carries no format signal either way | **`chatgpt-image-ad`** is the tiebreak. `gpt-image-2` is also the API default, so an unqualified call already lands there. |
 
-**Step 3: For cloning, the `image-ad-clone` skill handles all three models.** At Phase 1 it
+**Step 3: For cloning, the `clone-image-ad` skill handles all three models.** At Phase 1 it
 asks the user (or auto-detects from the reference's typography-vs-photo balance) which model
 to validate against. It then routes through the matching generator's
 `scripts/generate_image.py`. Phase 8 optionally cross-validates on a second model so the
@@ -333,10 +333,10 @@ This is the workflow inside any chat session where the user wants to make an ad:
 
 ## Standard workflow — clone an existing ad into a reusable template
 
-Use the `image-ad-clone` skill (single model-agnostic skill — Phase 1 asks which generator to
+Use the `clone-image-ad` skill (single model-agnostic skill — Phase 1 asks which generator to
 validate against, Phase 8 optionally cross-validates on another).
 
-The 10-phase workflow lives in `shared/skills/image-ad-clone/prompting/guide.md`. Key checkpoints:
+The 10-phase workflow lives in `shared/skills/clone-image-ad/prompting/guide.md`. Key checkpoints:
 
 - **Phase 2 (visual analysis)** — describe the reference structurally, separating brand-specific content from format/structure.
 - **Phase 4-5 (generate + iterate)** — round-trip the prompt through the matching generator until structure is faithful. Cap at 4 iterations.
@@ -376,7 +376,7 @@ skills/
   nano-banana-image-ad/
     SKILL.md
     scripts/generate_image.py
-  image-ad-clone/
+  clone-image-ad/
     SKILL.md
 
 shared/skills/
@@ -390,7 +390,7 @@ shared/skills/
     prompting/guide.md
   nano-banana-image-ad/
     prompting/guide.md
-  image-ad-clone/
+  clone-image-ad/
     prompting/guide.md
 ```
 
@@ -401,4 +401,4 @@ shared/skills/
 If you're a human reading this for the first time:
 - See [prompt-library.md](prompting/prompt-library.md) for the 40 validated ad templates.
 - See [chatgpt-image-ad/SKILL.md](../../../skills/chatgpt-image-ad/SKILL.md) and [nano-banana-image-ad/SKILL.md](../../../skills/nano-banana-image-ad/SKILL.md) for hands-on usage.
-- The `image-ad-clone` skill is for *making new templates*, not generating ads — only invoke it when you want to add to the library.
+- The `clone-image-ad` skill is for *making new templates*, not generating ads — only invoke it when you want to add to the library.

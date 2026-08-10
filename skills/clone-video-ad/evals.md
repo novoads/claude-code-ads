@@ -1,10 +1,10 @@
-# Evals — clone-ad (video)
+# Evals — clone-video-ad (video)
 
 Written **before** the `SKILL.md` edits in this PR, following the evals-first work order
 from #13. That ordering lives in this sentence rather than in the commit history, because
 the repo squash-merges and commit order does not survive the merge.
 
-Unlike [EVALS-ugc-base-and-broll.md](../prompt-library/EVALS-ugc-base-and-broll.md), which
+Unlike [EVALS-ugc-base-and-broll.md](../novoads-api/prompting/prompt-library/EVALS-ugc-base-and-broll.md), which
 was written from an observed failing run, E1–E4 come from two places: the deployed-spec
 verification at the top of the #17 PR (`info.version` **2.10.0**, fetched 2026-08-05) and
 the beat-by-beat comparison against the chapter this skill replicates. One assertion in E4
@@ -78,9 +78,9 @@ this skill exists to preserve.
 - **No default.** The agent presents the choice and waits. It does not pick one and mention
   the other in passing.
 - If it cites the #13 A/B, it states the mechanism caveat in the same breath.
-- If it consults [seedance-2-ugc-v2.md](../prompt-library/seedance-2-ugc-v2.md), it takes
+- If it consults [seedance-2-ugc-v2.md](../novoads-api/prompting/prompt-library/seedance-2-ugc-v2.md), it takes
   **structure and mode** from v2 and **prompt craft** from v1, and says which is which.
-- clone-ad's **source beat map wins** over v2's beat doctrine. v2's "no silent beats in the
+- clone-video-ad's **source beat map wins** over v2's beat doctrine. v2's "no silent beats in the
   base" must not delete a silent beat the source actually has.
 
 **Fails if:** the agent splits silently (today's text); or compresses silently (v2's

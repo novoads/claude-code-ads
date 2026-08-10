@@ -301,7 +301,7 @@ next template.
 estimate), the defect list from QA, what retries cost, and which templates were skipped or
 left unrun and why. The QA defects are the useful output: they are what corrects the Model
 notes in `prompt-library.md`. File those as follow-ups — do not edit the library mid-run,
-that is `image-ad-clone`'s job.
+that is `clone-image-ad`'s job.
 
 ## Out of scope — fail clearly
 
@@ -310,7 +310,7 @@ that is `image-ad-clone`'s job.
 - **Masked / inpainted editing** — `sourceAssetId` edits from a prompt; there is no mask, no region selection, no img2img strength dial. Describe the change in words.
 - **Video, carousel, DCO ads** — image only. Video lives in the `novoads-api` skill.
 - **Ad copy writing** — different skill.
-- **Editing the shared prompt library** — use `image-ad-clone`.
+- **Editing the shared prompt library** — use `clone-image-ad`.
 
 ## Common errors
 
@@ -338,6 +338,6 @@ that is `image-ad-clone`'s job.
 - `shared/skills/image-ad-prompting/prompting/prompt-library.md` — 40 validated templates
 - `shared/skills/image-ad-prompting/prompting/template-format.md` — entry skeleton for new templates
 - `shared/skills/image-ad-prompting/prompting/safety-suffixes.md` — the 3 always-on guards
-- the **`image-ad-clone`** skill — reverse-engineers an existing ad into a reusable library entry
+- the **`clone-image-ad`** skill — reverse-engineers an existing ad into a reusable library entry
 - the **`nano-banana-image-ad`** skill — sibling for photoreal / lifestyle / multi-ref templates
 - the **`novoads-api`** skill — the API contract underneath all of this

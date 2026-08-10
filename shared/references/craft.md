@@ -151,7 +151,7 @@ Skills that point here today:
 
 | Skill | Rule |
 |---|---|
-| `skills/novoads-api/prompting/clone-ad` | 1 — transcribe-verify (step 12.3) |
+| `skills/clone-video-ad` | 1 — transcribe-verify (step 12.3) |
 | `skills/novoads-api` | 1 — transcribe-verify (the QA step) |
 | `shared/skills/caption-video` | 3 — trim before captioning |
 | `skills/novoads-pixar-ad` | 2, 3 — canonical home for both |

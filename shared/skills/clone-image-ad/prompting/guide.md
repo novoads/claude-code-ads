@@ -1,6 +1,6 @@
-# image-ad-clone — reverse-engineer an existing ad into a reusable template
+# clone-image-ad — reverse-engineer an existing ad into a reusable template
 
-This guide is the shared brain for the **`image-ad-clone`** skill — taking an existing image ad and turning it into a parameterizable prompt template stored in the shared library.
+This guide is the shared brain for the **`clone-image-ad`** skill — taking an existing image ad and turning it into a parameterizable prompt template stored in the shared library.
 
 The workflow is **model-agnostic through Phase 6**. The model choice happens in Phase 1: the skill asks the user (or auto-detects from the reference's typography-vs-photo balance) which of the three Novoads image models to validate against:
 
@@ -101,7 +101,7 @@ expensive as anywhere else in the ecosystem.
 1. The reference image path resolves to an existing file. If not, stop and ask.
 2. `.env` has `NOVOADS_API_KEY`; `./scripts/check-novoads-env.sh` prints OK.
 3. **Pick the model.** Ask the user "validate against gpt-image-2, nano-banana-pro, or reve-2.1?" or auto-detect from the reference (typography-heavy → `gpt-image-2`; photoreal / handheld / multi-ref → `nano-banana-pro`). Default to one of those two; `reve-2.1` is a deliberate choice, not a fallback.
-4. Locate this skill's validator: `skills/image-ad-clone/scripts/validate_image.py`. It takes `--model` and applies that model's own aspect-ratio grid.
+4. Locate this skill's validator: `skills/clone-image-ad/scripts/validate_image.py`. It takes `--model` and applies that model's own aspect-ratio grid.
 5. Read the save target (the shared library). If the file exists, read its current entries to know what tags are taken. If not, plan to create it.
 
 ### Phase 2: Visual analysis
@@ -168,7 +168,7 @@ Show the v1 prompt to the user, then price the run (see **Cost** above) and get 
 Fire one generation with the original as a reference and the matched aspect ratio.
 
 ```bash
-./skills/image-ad-clone/scripts/validate_image.py \
+./skills/clone-image-ad/scripts/validate_image.py \
   --model <gpt-image-2|nano-banana-pro|reve-2.1> \
   --prompt "$(cat prompts/<tag>-v1.txt)" \
   --aspect-ratio <matched_ratio> \
@@ -253,7 +253,7 @@ changes, and the model repaints those zones while leaving the rest of the frame 
 exactly what Phase 7 is trying to prove, so it is the better instrument here:
 
 ```bash
-./skills/image-ad-clone/scripts/validate_image.py --model gpt-image-2 \
+./skills/clone-image-ad/scripts/validate_image.py --model gpt-image-2 \
   --prompt "$(cat prompts/<tag>-swap.txt)" --source-image original-ad.jpg \
   --out iterations/clone-<date>/T40/test-fill --env-file .env
 ```
@@ -350,7 +350,7 @@ them freely and do not invent a third one; see `AGENTS.md` ("Every session").
 
 ## Dependencies
 
-- `skills/image-ad-clone/scripts/validate_image.py` — this skill's own model-aware caller.
+- `skills/clone-image-ad/scripts/validate_image.py` — this skill's own model-aware caller.
 - `.env` with `NOVOADS_API_KEY`.
 - Python 3.12+.
 

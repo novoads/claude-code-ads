@@ -52,7 +52,7 @@ LOCKED_MODEL = "nano-banana-pro"
 #   reve-2.1                          8          4,000
 #
 # 2.16.0 is what ended the single 4,000 budget: only reve-2.1 still carries it, and
-# reve-2.1 is reachable only from the image-ad-clone validator. This model has the
+# reve-2.1 is reachable only from the clone-image-ad validator. This model has the
 # most room on the API, which is what makes a long layered brief sendable here.
 MAX_REFS = 14
 MAX_IMAGES = 4  # numImages enum: 1, 2, 3, 4
