@@ -88,6 +88,15 @@ list timed `0.15s apart`, or one that mentions a `10s` mark, satisfies it by acc
 warning vanishes. Measured both ways, 2026-08-10. Its absence is not a verdict on your prompt
 and its presence is not a defect to fix.
 
+**`banned_polish` from a quoted string is the other unfixable one, and it is common.** The
+rule matches `perfect`, `flawless`, `cinematic`, `4k`, `masterpiece` and friends, and its
+remedy is "delete the word and describe the real thing". That remedy is impossible when the
+word arrived inside a string you transcribed off the reference: deleting it re-letters the
+render, which is the one thing this skill exists to prevent. Check where the hit came from
+before you touch anything — if it is inside quotes, override it and say so. Measured on a
+real pricing page 2026-08-10, where the single warning traced to a card subtitle reading
+"Perfect for scaling your AI video ads". Marketing copy is full of these words, so expect it.
+
 **This file states no warning count, deliberately.** Three earlier drafts each asserted one
 and each was wrong, because the count moves with incidental digits in the beat timings and
 with words the craft itself recommends (`cinematic` in the key-art class trips a polish rule;

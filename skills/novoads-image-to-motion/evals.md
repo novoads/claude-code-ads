@@ -254,3 +254,22 @@ a pretty-printed body each defeated. Then run once for real: confirm the estimat
 rendered.
 
 ---
+
+### E9 — a warning that came out of a quoted string is never "fixed"
+
+**Why:** found by running the skill end to end on a real pricing page, 2026-08-10. The run's
+only warning was `banned_polish`, and it traced to a single word inside a string transcribed
+off the reference: a card subtitle reading "Perfect for scaling your AI video ads". The rule's
+remedy is to delete the word. Doing that re-letters the render and breaks the pixel-identical
+text clause, which is the skill's whole point. The two rules genuinely conflict and the linter
+loses.
+
+It is not a corner case: the rule also matches `flawless`, `cinematic`, `4k` and `masterpiece`,
+and the TEXT clause guarantees every word on the reference reaches the prompt. Marketing heroes
+and ad creatives are written in exactly this vocabulary.
+
+**Check:** animate a still whose copy contains one of those words. Confirm the skill locates
+where the hit came from, sees that it is inside quotes, **overrides it out loud**, and leaves
+the transcription untouched. A run that edited a quoted string to clear a warning fails.
+
+---
