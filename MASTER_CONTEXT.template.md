@@ -8,13 +8,65 @@
 - **After meaningful changes:** Append a new **dated entry** under [Changelog](#changelog) (Decision / What changed / Why).
 - **If fields are empty:** Fill them lazily. The first time the user asks to generate something that needs a field (default product, brand voice), ask for it then — once — and write the value back so no future session asks again. A setup session asks for nothing beyond the API key.
 
-## Brand (optional)
+## Brand context
 
-_Edit or replace with your real brand blocks. A starter template lives at `skills/novoads-api/prompting/brand-voice-starter.md`._
+**Nobody fills this in up front.** Each field is asked for the first time a skill
+genuinely needs it, once, and written back so no later session asks again. A blank
+file is the normal starting state.
+
+Read and write it with `scripts/brand-context.py` rather than by hand — it is the
+one file every skill reads, and hand edits drift the format. `check <skill>` says
+what is missing and nothing more:
+
+```bash
+./scripts/brand-context.py check clone-static   # exit 2 = blocked, and names why
+./scripts/brand-context.py set product.photo references/products/hero.png
+./scripts/brand-context.py list                 # everything, set or not
+```
+
+Editing by hand is fine too — keep one `- **Label:** value` per line.
+
+**Fastest way to fill most of it:** `./scripts/brand-context.py from-url https://yourbrand.com`
+drafts the brand block from your own site. It costs no credits, and every field it
+drafts is shown for correction before anything is generated from it.
+
+### Who you are
+
+- **Brand name:**
+- **One-liner:**
+- **Logo file:**
+- **Colors:**
+- **Fonts:**
+
+### How you sound
+
+Used when a clone rewrites the source's copy at the same length and rhythm. **Sample
+phrasings earn their keep here** — "direct, warm" is not something a model can act on,
+and a real line of your own copy is.
 
 - **Tone:**
 - **Audience:**
-- **Words to use / avoid:**
+- **Words to use:**
+- **Words to avoid:**
+- **Sample phrasings:**
+
+### What you sell
+
+The two blocking fields. No clone renders without them, because a competitor's ad says
+nothing about what your product looks like and a fabricated one is the failure a viewer
+catches instantly.
+
+- **Product photo:**
+- **Product description:**
+
+### Your market
+
+Filled by `spy-competitor-ads`. `Last swept` is what decides whether the next run reuses
+the stored swipe file or pays for a fresh sweep.
+
+- **Competitors:**
+- **Last swept:**
+- **Winning ads:**
 
 ## Reference images
 
