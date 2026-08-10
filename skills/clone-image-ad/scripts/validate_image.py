@@ -404,6 +404,39 @@ def generate(
     )
 
 
+# Scaffolding that must never reach a render. A finished ad with "Placeholder
+# Name" in it is useful to nobody: the person reviewing it cannot judge the
+# layout, and the person who ships it ships the word "Placeholder".
+#
+# The distinction that makes this coherent: a TEMPLATE carries {slots}; a RENDER
+# never does. Template mode writes the slots into the library entry, and the
+# image it produces is still filled in with plausible content.
+#
+# Found by rendering one: an ad went out reading "Placeholder Name" over
+# "agency.com / partner", beside a blank card and two grey skeleton bars.
+PLACEHOLDER_PATTERNS = [
+    (r"\bplaceholder\b", "the word 'placeholder'"),
+    (r"\blorem ipsum\b", "lorem ipsum"),
+    (r"\{[a-z_][a-z0-9_.]*\}", "an unfilled {template slot}"),
+    (r"\[[A-Z_]{3,}\]", "an unfilled [TOKEN]"),
+    (r"\byour name here\b", "'your name here'"),
+    (r"\bexample\.(com|org|net)\b", "example.com"),
+    (r"\bTBD\b", "TBD"),
+    (r"\bxxx+\b", "xxx filler"),
+    (r"\bskeleton (bar|placeholder)", "a skeleton bar"),
+    (r"\bgrey placeholder bar", "a grey placeholder bar"),
+]
+
+
+def lint_placeholders(prompt: str) -> list[str]:
+    """Return a human-readable list of scaffolding found in the prompt."""
+    found = []
+    for pattern, label in PLACEHOLDER_PATTERNS:
+        if re.search(pattern, prompt, re.I):
+            found.append(label)
+    return found
+
+
 def main() -> int:
     p = argparse.ArgumentParser(
         description="Round-trip a clone prompt through any Novoads image model (validator, not a generator).",
@@ -501,6 +534,18 @@ def main() -> int:
         ),
     )
     args = p.parse_args()
+
+    # Before anything that costs: a render must ship finished.
+    scaffolding = lint_placeholders(args.prompt)
+    if scaffolding:
+        log("error: the prompt still contains placeholder scaffolding — "
+            + ", ".join(scaffolding) + ".")
+        log("A rendered ad must be finished. Invent plausible copy, a plausible "
+            "name, a plausible domain; never ship the word 'placeholder', an "
+            "empty card or a grey skeleton bar. If you are building a TEMPLATE, "
+            "the {slots} belong in the library entry — the image it validates "
+            "with is still filled in.")
+        return 2
 
     if args.source_image and args.source_asset_id:
         log("error: pass --source-image OR --source-asset-id, not both.")

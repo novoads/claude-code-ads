@@ -157,11 +157,30 @@ a rhythm-preserving guess. Its absence never blocks.
 > • "35 languages" → "5 languages"
 > • "30% off first month" → "$1 trial"
 
-**A named person's quote is the one exception, and it is not about taste.** "Ashvin Melwani, CMO
-at Obvi" appearing in a Novoads ad puts words in an identifiable person's mouth about a company
-he never mentioned, and a well-made fake quote passes review precisely because it reads
-correctly. **Render the layout with that zone blank** and say why. Never invent a replacement,
-and never carry his.
+**Never carry a real named person through.** "Ashvin Melwani, CMO at Obvi" in a Novoads ad puts
+words in an identifiable person's mouth about a company he never mentioned. Replace him —
+invented name, invented company, invented quote, in the same register and roughly the same
+length as the source. What you must not do is keep his.
+
+### Every zone ships finished
+
+**A render never contains scaffolding.** No "Placeholder Name", no empty card, no grey skeleton
+bars, no `{brand.name}`, no lorem, no `example.com`. If a zone needs a name, invent a plausible
+one. If it needs a testimonial, write a plausible one. If it needs a domain, invent a plausible
+domain.
+
+This is not a style preference. A finished ad reading "Placeholder Name" is useful to nobody:
+the person reviewing it cannot judge the layout past the word, and the person who ships it ships
+the word. Blanking a zone is the same failure wearing a nicer coat — an empty white card is not
+a decision, it is an unfinished ad.
+
+The distinction that keeps this coherent: **a TEMPLATE carries `{slots}`; a RENDER never does.**
+Template mode writes the slots into the library entry, and the image it validates with is still
+filled in with plausible content.
+
+`validate_image.py` refuses a prompt carrying scaffolding **before it charges**, so this cannot
+reach a paid call. It was added after a render shipped reading "Placeholder Name" over
+"agency.com · partner", beside a blank card and two grey bars.
 
 **A product in the frame makes a real photo mandatory** — an image model will otherwise render
 a plausible bottle with invented label text, which is the failure a viewer catches instantly.
