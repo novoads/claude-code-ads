@@ -287,3 +287,54 @@ exists, the ceiling stands as written.
 - **No credit figures appear in this file by design.** Ratios and multipliers orient; the
   live estimate quotes. Absolute numbers for the acceptance run live in the PR description
   and in the run log, never in pack docs.
+
+---
+
+## No source supplied
+
+The mirror of `clone-image-ad`'s H-series. These exist because this skill's description
+advertised "clone my competitors' VIDEO ads" while its Step 0 required a source video and
+offered no way to obtain one — a door sold and not built. The image side got this branch
+first; this skill was promoted out of a buried directory and inherited the gap.
+
+### V1 — an attached clip is cloned, and nothing is swept
+
+**Why:** someone who handed over a video has already answered the question a sweep would ask.
+Sweeping anyway spends their credits to learn what is on screen.
+
+**Check:** hand over a local `.mp4` and ask for a clone. Zero calls to
+`POST /v1/competitor-ads`, and no `{"kind":"competitor-ads"}` estimate either.
+
+---
+
+### V2 — no clip means go and find one, in VIDEO mode, priced first
+
+**Why:** the failure this section was written for. Asking "which ad?" puts the work back on
+the user at the moment they asked us to do it.
+
+**Check:** say "clone my competitors' video ads" with nothing attached. Confirm the run does
+NOT ask which ad; that the sweep is requested with `mediaType: "video"` **without asking the
+user which mode** — a static sweep returns creatives this skill cannot open, so the mode is
+the skill's to fix and to state; that the total comes from a live `POST /v1/estimates` in this
+session; and that one word stops it. A run that asks the user to pick a media mode fails: that
+is a question with one correct answer.
+
+---
+
+### V3 — "stop" costs nothing
+
+**Check:** answer "stop" at V2's line. `POST /v1/estimates` may have run;
+`POST /v1/competitor-ads` did not, nothing was uploaded, and nothing rendered.
+
+---
+
+### V4 — the sweep's price is not presented as the run's price
+
+**Why:** a video render costs multiples of a sweep. A line that says "N credits total" before
+a run that will also render is a number that reads as the whole cost and is not — the exact
+shape the live-estimate rule exists to prevent.
+
+**Check:** the veto line quotes the sweeps as **sweeps** and says the render is priced
+separately before it runs. The existing cost gate at step 9 is unchanged and still fires. A
+line that implies the sweep total is the run total fails, even though every individual number
+in it came from a real estimate.

@@ -96,9 +96,37 @@ ask the user to install it before starting. A clean machine can clone an ad.
 
 ### Step 0: Gather inputs
 
+**If no source video was handed over, do not ask "which ad?".** That puts the work back on
+the user at the moment they asked us to do it. Run `spy-competitor-ads` and say what you are
+about to do in one line, with a price and a way out:
+
+> No clip attached. I'll sweep Arcads, Creatify and Icon for their **video** ads and clone
+> the strongest. N credits for the sweeps; I'll price the render before it runs. Say "stop",
+> or drop your own clip instead.
+
+Four things that line carries, and nothing else:
+
+- **`mediaType: "video"`, and it is not the user's choice.** A static sweep returns creatives
+  this skill cannot open, so the mode is fixed here and stated rather than asked. Asking is a
+  question with one correct answer.
+- **The competitors by name**, so a wrong guess is corrected before it is paid for. Default to
+  **three** when you picked them yourself; honor any list the user names.
+- **The sweep total from a live `POST /v1/estimates` in this session**, never a number from
+  memory or from this file — and quoted as *sweeps*, not as the run. A video render costs
+  multiples of a sweep, and step 9 is where that number gets its own gate. A line that implies
+  the sweep total is the whole cost is wrong even when every figure in it is real.
+- **One word that stops it**, and the escape: they can hand over their own clip instead.
+
+Then act. It is a proposal with a veto, **not a question and not a menu**. `spy-competitor-ads`
+returns file paths and a ranked top three; take the top one unless the user picked otherwise,
+and carry on into step 1 with that file.
+
+If the sweep comes back empty, say so in one line and stop. It is a charged, correct result —
+that brand has no fetchable video ads running — not a reason to re-sweep or to widen the mode.
+
 | Input | Required | Notes |
 |---|---|---|
-| **Source video** | yes | The ad to clone. `.mp4`, `.mov`, `.webm` |
+| **Source video** | yes | The ad to clone. `.mp4`, `.mov`, `.webm`. Handed over, or swept for above |
 | **Product photo** | strongly recommended | Becomes `startImageAssetId` or `@Image1` in `referenceAssetIds`. Without one, see "no photo" below — the answer is not "let Seedance invent it" |
 | **Product / offer description** | if no photo | Features, audience, selling points. Used to rewrite the dialogue and the product references, and to generate a still if they want one |
 | **A photo of the person** | optional | Only if the clone is a series — it is what holds one face across clips |

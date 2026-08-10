@@ -195,7 +195,7 @@ one. A sentence that fires two skills, or fires none, is a failing row.
 | 1 | "clone this ad" **+ a .jpg/.png attached** | `clone-image-ad` |
 | 2 | "clone this ad" **+ an .mp4 attached** | `clone-video-ad` |
 | 3 | "clone my competitors' ads" **with nothing attached** | `clone-image-ad`, which sweeps statics and names the video escape |
-| 4 | "clone my competitors' video ads" | `clone-video-ad` |
+| 4 | "clone my competitors' video ads" | `clone-video-ad` — and it must reach a clone **without asking for a file**, see below |
 | 5 | "clone this ad for my product" + a still | `clone-image-ad`, ads mode |
 | 6 | "turn this ad into a reusable template" + a still | `clone-image-ad`, template mode |
 | 7 | "recreate this video for my brand" + a clip | `clone-video-ad` |
@@ -206,3 +206,19 @@ one. A sentence that fires two skills, or fires none, is a failing row.
 Row 10 is a deliberate hole, not an oversight: hook-only cloning is unpublished here. Saying
 "we do not have that, here is the nearest thing" beats silently cloning the whole ad when the
 user asked for three seconds of it.
+
+| 11 | "clone my competitors' ads", then "video" at the veto line | a **second** sweep in video mode, priced and consented to, then `clone-video-ad` |
+
+**Row 4 was wrong when this table was written, and the table is the reason it got caught.**
+It asserted that "clone my competitors' video ads" resolves to `clone-video-ad` and stops
+there. Routing was only half the contract: that skill's Step 0 required a source video and
+had no branch to go and find one, so the description sold a door the body could not open.
+The row now states the whole contract — resolves **and** completes — because a routing row
+that stops at "the right skill triggered" passes while the user is still stuck.
+
+**Row 11 is the escape path, and it is a SECOND charge.** The first sweep already ran in
+image mode; there are no video creatives in it. Handing "the sweep" to `clone-video-ad` hands
+it a folder of stills it cannot open. Saying "video" means sweeping again with
+`mediaType: "video"`, which costs what a sweep costs, and the user has to hear that before it
+fires. A run that silently re-sweeps fails this row, and so does one that passes the static
+files along as if they were the answer.

@@ -96,14 +96,23 @@ user at the moment they asked us to do it. Run `spy-competitor-ads` in image mod
 say what you are about to do in one line with a price and a way out:
 
 > No ad attached. I'll sweep Arcads, Creatify and Icon for their **static** ads and clone
-> the strongest. N credits total. Say "stop", say "video" for their video ads instead, or
-> drop your own image.
+> the strongest. N credits for the sweeps; I'll price the renders before they run. Say
+> "stop", say "video" for their video ads instead, or drop your own image.
 
 - **Statics are the default, and the line says so.** A bare "clone my competitors' ads"
   lands here rather than on `clone-video-ad` because a static sweep returns more usable creatives
   and a static render costs a fraction of a video one. Naming the video escape in the same
   breath is what keeps that default honest — the user picks in one word instead of being
-  asked a question. If they say video, hand the sweep to `clone-video-ad` and stop.
+  asked a question.
+- **"video" means a SECOND sweep, and say so before firing it.** There is nothing to hand
+  over: the first sweep ran in image mode, so it holds stills `clone-video-ad` cannot open.
+  Switching media means sweeping again with `mediaType: "video"`, which costs what a sweep
+  costs. Quote it from a live estimate, get a yes, then hand the new files to
+  `clone-video-ad` and stop. Passing the statics along as if they answered the question is
+  the failure this clause exists to prevent.
+- **Quote the sweeps as sweeps.** The renders are priced at their own gate in Phase 4. A
+  line that reads as the run's total while covering only the search is wrong even when every
+  number in it came from a real estimate.
 - **Name the competitors**, so a wrong guess is corrected before it is paid for.
 - **The total comes from a live `POST /v1/estimates` in this session** — never a number
   from memory or from this file. N competitors is N charges and that multiplication is
