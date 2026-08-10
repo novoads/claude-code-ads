@@ -5,12 +5,13 @@ description: >-
   deliverable is a finished rendered MP4 — the WHOLE ad, not its opening, and not a
   template. Reads the source's style, pacing, camera work, dialogue and tone, adapts it
   into a Seedance 2.0 prompt, prices it, renders it, files the source beside the clones and
-  diffs each clip's transcript against the approved script. Use when asked to "clone this
-  ad", "clone this video ad", "make this ad but for my product", "recreate this video for
-  my brand", or when handed a video ad plus a product photo with a request for something
-  similar. Two neighbours it is NOT: a STATIC IMAGE ad is image-ad-clone, and rebuilding
-  only the first few seconds — where the hook ends and why it works — is a hook skill, not
-  this one. If the source does not move, this is the wrong skill.
+  diffs each clip's transcript against the approved script. Use for "clone this video ad",
+  "recreate this video for my brand", "make this ad but for my product" when the source is
+  a video, "clone my competitors' VIDEO ads", or a video ad handed over with a product
+  photo. **The source's medium decides, not the wording**: "clone this ad" plus a video
+  lands here; "clone this ad" plus a still, or with nothing attached, is image-ad-clone.
+  Two neighbours it is NOT: a STATIC IMAGE ad is image-ad-clone, and rebuilding only the
+  first few seconds is a hook skill. If the source does not move, this is the wrong skill.
 ---
 
 # Clone ad — Seedance 2.0
@@ -131,7 +132,7 @@ guesswork the user pays for.
 Reuse the analyze-video script. Do not duplicate it.
 
 ```bash
-bash "skills/novoads-api/prompting/analyze-video/scripts/extract-frames.sh" \
+bash "skills/analyze-video/scripts/extract-frames.sh" \
   "<source_video_path>" "/tmp/clone-ad-analysis" <num_frames>
 ```
 
@@ -193,7 +194,7 @@ result = whisper.load_model("base").transcribe("/tmp/clone-ad-analysis/audio.wav
 ```
 
 Two traps this pack has already paid for, the same ones
-[broll-overlay](../../../../shared/skills/broll-overlay/SKILL.md) documents:
+[broll-overlay](../../shared/skills/broll-overlay/SKILL.md) documents:
 
 - **whisper reports milliseconds where this API reports seconds.** Convert, or every beat
   boundary lands 1000× off.
@@ -414,17 +415,17 @@ The creative core. Working from step 3:
 - Keep the technical-flaw cues — phone quality, mic character, imperfect light. They are
   what makes it read as real.
 
-**Prompt composition.** Read [seedance-2.md](../prompt-library/seedance-2.md) before
+**Prompt composition.** Read [seedance-2.md](../novoads-api/prompting/prompt-library/seedance-2.md) before
 composing, and the closest formula for structure —
-[seedance-2-ugc.md](../prompt-library/seedance-2-ugc.md) for a talking-head source,
-[seedance-2-feature-walkthrough.md](../prompt-library/seedance-2-feature-walkthrough.md) for
-a fast demo, [seedance-2-premium-reveal.md](../prompt-library/seedance-2-premium-reveal.md)
-or [seedance-2-product-hero.md](../prompt-library/seedance-2-product-hero.md) for a
-product-only source, [seedance-2-studio-lookbook.md](../prompt-library/seedance-2-studio-lookbook.md)
+[seedance-2-ugc.md](../novoads-api/prompting/prompt-library/seedance-2-ugc.md) for a talking-head source,
+[seedance-2-feature-walkthrough.md](../novoads-api/prompting/prompt-library/seedance-2-feature-walkthrough.md) for
+a fast demo, [seedance-2-premium-reveal.md](../novoads-api/prompting/prompt-library/seedance-2-premium-reveal.md)
+or [seedance-2-product-hero.md](../novoads-api/prompting/prompt-library/seedance-2-product-hero.md) for a
+product-only source, [seedance-2-studio-lookbook.md](../novoads-api/prompting/prompt-library/seedance-2-studio-lookbook.md)
 for a polished voiceover source.
 
 **If the mode is a one-shot compression, read
-[seedance-2-ugc-v2.md](../prompt-library/seedance-2-ugc-v2.md) as well — for structure and
+[seedance-2-ugc-v2.md](../novoads-api/prompting/prompt-library/seedance-2-ugc-v2.md) as well — for structure and
 mode only.** Take the beats-inside-one-render mechanics from v2 and the prompt craft from
 v1, which is the scope that file's own contract sets — and say which came from which when
 you present the prompt, so a wrong borrow is visible before it renders. **Your source beat
@@ -467,7 +468,7 @@ carries the table.
 
 **Mandatory** for any clone that speaks. The line inside the double quotes is what the
 actor says out loud in the finished file, and it cannot be changed afterwards without
-paying for the render again. Use the format from [SKILL.md](../../SKILL.md):
+paying for the render again. Use the format from [SKILL.md](../novoads-api/SKILL.md):
 
 ```
 📝 Dialogue script (please confirm before I generate)
@@ -705,7 +706,7 @@ Then:
    downloads folder is cleared, a competitor's URL rots. Measured 2026-08-06 — a finished
    three-variant run was reopened four days later with its three ads intact and its source
    gone, which left no way to show the clone had been faithful to anything.
-3. **Transcribe every finished clip and diff it against the approved script.** (Doctrine: [shared/references/craft.md](../../../../shared/references/craft.md) § 1.) One
+3. **Transcribe every finished clip and diff it against the approved script.** (Doctrine: [shared/references/craft.md](../../shared/references/craft.md) § 1.) One
    `POST /v1/transcripts` per clip, 0.1 credits each, and it is the only thing that catches
    a spoken line that drifted. A reference image pins the **label**; nothing pins the
    **audio**, and the two fail independently. Measured 2026-08-06 across three clones of one
@@ -742,7 +743,7 @@ makes no Novoads call and costs no credits.
 
 ## Seedance 2.0 constraints that bite during a clone
 
-Full detail in [reference.md](../../reference.md).
+Full detail in [reference.md](../novoads-api/reference.md).
 
 | Constraint | What it means here |
 |---|---|
@@ -790,18 +791,18 @@ quote when reporting a problem.
   analysis, output is a reusable formula instead of a video.
 - [analyze-video/scripts/extract-frames.sh](../analyze-video/scripts/extract-frames.sh) —
   frame and audio extraction, shared by both.
-- [seedance-2.md](../prompt-library/seedance-2.md) — platform guide: fields, grid, craft,
+- [seedance-2.md](../novoads-api/prompting/prompt-library/seedance-2.md) — platform guide: fields, grid, craft,
   what the estimate flags. Read before composing any prompt.
-- [seedance-2-ugc.md](../prompt-library/seedance-2-ugc.md) — 9-layer UGC formula, for
+- [seedance-2-ugc.md](../novoads-api/prompting/prompt-library/seedance-2-ugc.md) — 9-layer UGC formula, for
   talking-head sources.
-- [seedance-2-premium-reveal.md](../prompt-library/seedance-2-premium-reveal.md) — for
+- [seedance-2-premium-reveal.md](../novoads-api/prompting/prompt-library/seedance-2-premium-reveal.md) — for
   dark-void, product-only sources.
-- [seedance-2-product-hero.md](../prompt-library/seedance-2-product-hero.md) — for
+- [seedance-2-product-hero.md](../novoads-api/prompting/prompt-library/seedance-2-product-hero.md) — for
   elemental / effects-driven product-only sources.
-- [seedance-2-studio-lookbook.md](../prompt-library/seedance-2-studio-lookbook.md) — for
+- [seedance-2-studio-lookbook.md](../novoads-api/prompting/prompt-library/seedance-2-studio-lookbook.md) — for
   polished voiceover sources.
-- [seedance-2-feature-walkthrough.md](../prompt-library/seedance-2-feature-walkthrough.md) —
+- [seedance-2-feature-walkthrough.md](../novoads-api/prompting/prompt-library/seedance-2-feature-walkthrough.md) —
   for fast-paced demo sources, and the reference for holding one person across a series.
-- [../../SKILL.md](../../SKILL.md) — the router: decision tree, both gates, the full call
+- [../../SKILL.md](../novoads-api/SKILL.md) — the router: decision tree, both gates, the full call
   sequence, polling and download.
-- [../../reference.md](../../reference.md) — every endpoint, field, limit and error code.
+- [../../reference.md](../novoads-api/reference.md) — every endpoint, field, limit and error code.

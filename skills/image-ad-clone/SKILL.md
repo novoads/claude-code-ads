@@ -1,18 +1,18 @@
 ---
 name: image-ad-clone
 description: >-
-  Clones a STATIC IMAGE ad, either into finished ads for your own product or into a
-  reusable prompt TEMPLATE — and produces both, because the template is what makes the
-  ads and the ads are what prove the template. Reads the frame structurally, round-trips
-  the draft prompt through gpt-image-2, nano-banana-pro or reve-2.1 until it reproduces,
-  replaces every brand-specific with a {placeholder}, then fills it with your product
-  pinned to a real photo. Use for "clone this ad for my product", "rebuild this
-  competitor's ad for us", "make me ads like this", "reverse engineer this ad", "turn
-  this ad into a prompt", "make this ad reusable", "add this to my prompt library", or
-  "clone my competitors' ads" with NO file attached — it sources one via
-  spy-competitor-ads rather than asking which. NOT for generating an ad from a brief or
-  an existing template (chatgpt-image-ad, nano-banana-image-ad), and NOT for a VIDEO ad
-  (clone-ad). Refuses to render your product without a real photo of it.
+  Clones a STATIC IMAGE ad into finished ads for your own product, into a reusable prompt
+  TEMPLATE, or both — the template is what makes the ads and the ads are what prove the
+  template. Round-trips the frame through gpt-image-2, nano-banana-pro or reve-2.1 until
+  it reproduces, replaces every brand-specific with a {placeholder}, then fills it with
+  your product pinned to a real photo. Use for "clone this ad for my product", "rebuild
+  this competitor's ad for us", "make me ads like this", "reverse engineer this ad",
+  "make this ad reusable", "add this to my prompt library", or "clone my competitors'
+  ads" with NO file attached — it sources one via spy-competitor-ads rather than asking
+  which. **The source's medium decides**: a still, or nothing attached, lands here;
+  "clone this ad" plus a VIDEO is clone-ad. NOT for generating an ad from a brief or a
+  template (chatgpt-image-ad, nano-banana-image-ad). Refuses to render your product
+  without a real photo of it.
 ---
 
 # image-ad-clone
@@ -95,9 +95,15 @@ sweep would ask.
 user at the moment they asked us to do it. Run `spy-competitor-ads` in image mode, and
 say what you are about to do in one line with a price and a way out:
 
-> No ad attached. I'll sweep Arcads, Creatify and Icon and clone the strongest static.
-> N credits total. Say "stop", or drop your own image instead.
+> No ad attached. I'll sweep Arcads, Creatify and Icon for their **static** ads and clone
+> the strongest. N credits total. Say "stop", say "video" for their video ads instead, or
+> drop your own image.
 
+- **Statics are the default, and the line says so.** A bare "clone my competitors' ads"
+  lands here rather than on `clone-ad` because a static sweep returns more usable creatives
+  and a static render costs a fraction of a video one. Naming the video escape in the same
+  breath is what keeps that default honest — the user picks in one word instead of being
+  asked a question. If they say video, hand the sweep to `clone-ad` and stop.
 - **Name the competitors**, so a wrong guess is corrected before it is paid for.
 - **The total comes from a live `POST /v1/estimates` in this session** — never a number
   from memory or from this file. N competitors is N charges and that multiplication is

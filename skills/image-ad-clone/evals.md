@@ -172,3 +172,37 @@ it is given.
 **Check:** point `from-url` at a site, take its image candidate, and try to clone. Confirm the
 candidate is downloaded and LOOKED AT before use, and that an unsuitable one is rejected
 rather than passed to the render because it was the only thing available.
+
+---
+
+## Routing — ten sentences, one skill each
+
+**Why this table exists:** four skills now answer some form of "clone this ad", and the
+collision is what let `clone-ad` sit undiscovered while `image-ad-clone`'s description
+claimed the phrase outright. Descriptions edited one at a time is how that happened. Edit
+this table and all four descriptions in the same pass, or not at all.
+
+**The rule: the source's medium decides, not the wording.** Nothing attached defaults to
+statics, because a static sweep returns more usable creatives and a static render costs a
+fraction of a video one — and the offer names the video escape in the same line, so the user
+picks in one word rather than answering a question.
+
+**Check:** say each sentence in a fresh session. Exactly one skill triggers, and it is this
+one. A sentence that fires two skills, or fires none, is a failing row.
+
+| # | The user says | Must resolve to |
+|---|---|---|
+| 1 | "clone this ad" **+ a .jpg/.png attached** | `image-ad-clone` |
+| 2 | "clone this ad" **+ an .mp4 attached** | `clone-ad` |
+| 3 | "clone my competitors' ads" **with nothing attached** | `image-ad-clone`, which sweeps statics and names the video escape |
+| 4 | "clone my competitors' video ads" | `clone-ad` |
+| 5 | "clone this ad for my product" + a still | `image-ad-clone`, ads mode |
+| 6 | "turn this ad into a reusable template" + a still | `image-ad-clone`, template mode |
+| 7 | "recreate this video for my brand" + a clip | `clone-ad` |
+| 8 | "I want to make videos like this" + a clip | `analyze-video` |
+| 9 | "what are Arcads running right now" | `spy-competitor-ads` |
+| 10 | "clone the hook of this ad" | none in this pack — say so and offer `clone-ad` for the whole ad |
+
+Row 10 is a deliberate hole, not an oversight: hook-only cloning is unpublished here. Saying
+"we do not have that, here is the nearest thing" beats silently cloning the whole ad when the
+user asked for three seconds of it.

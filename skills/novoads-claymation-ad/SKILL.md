@@ -132,7 +132,7 @@ The other entry, and the one this genre is usually asked for: someone shows you 
 clay ad and wants theirs. Do not guess at its structure from the thumbnail.
 
 **Read the reference locally.** Follow
-[`skills/novoads-api/prompting/analyze-video/SKILL.md`](../novoads-api/prompting/analyze-video/SKILL.md):
+[`skills/analyze-video/SKILL.md`](../analyze-video/SKILL.md):
 frames out with ffmpeg, dialogue out with Whisper, then read the beats off what
 you extracted. It costs nothing, needs no key, and — unlike a fixed-window
 reader — it covers the whole runtime, which is what a 60-second arc needs.

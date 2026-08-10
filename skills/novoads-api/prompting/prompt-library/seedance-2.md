@@ -189,8 +189,8 @@ Pick the formula that matches the goal, then read its file before composing:
 | Elemental product hero — splash, mist, effects (no person) | [seedance-2-product-hero.md](seedance-2-product-hero.md) | Product-only with environmental interaction |
 | Studio lookbook with voiceover (polished, multi-look) | [seedance-2-studio-lookbook.md](seedance-2-studio-lookbook.md) | Voiceover narration over styled product shots |
 | Fast-paced feature walkthrough / demo | [seedance-2-feature-walkthrough.md](seedance-2-feature-walkthrough.md) | Feature-per-beat physical demos with dialogue |
-| **Reverse-engineer a reference video** into a new formula for this library | [../analyze-video/SKILL.md](../analyze-video/SKILL.md) | Frames + transcript locally → a template file that lands in this folder and gets a row in this table |
-| **Clone one specific ad** for a different product | [../clone-ad/SKILL.md](../clone-ad/SKILL.md) | The same analysis, but the output is a rendered clip rather than a file |
+| **Reverse-engineer a reference video** into a new formula for this library | [../analyze-video/SKILL.md](../../../analyze-video/SKILL.md) | Frames + transcript locally → a template file that lands in this folder and gets a row in this table |
+| **Clone one specific ad** for a different product | [../clone-ad/SKILL.md](../../../clone-ad/SKILL.md) | The same analysis, but the output is a rendered clip rather than a file |
 
 If none fits, compose a custom prompt directly from the platform rules above, following Subject + Action + Camera + Style + Constraints.
 

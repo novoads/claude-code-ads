@@ -54,3 +54,23 @@ jobs:
       - uses: actions/checkout@v4
       - name: brand-context.py unit tests
         run: ./scripts/test-brand-context.sh
+
+  #   links     — a skill that tells the agent to read a file which is not there
+  #             fails SILENTLY: the agent shrugs and proceeds without the rules
+  #             that file carried. Promoting two skills from depth four to depth
+  #             two broke ~30 links in one commit, including every entry in the
+  #             Seedance prompt library.
+  #
+  #   frontmatter — the description is the router. Over 1024 chars it truncates,
+  #             and the tail is where the "NOT for X" disambiguation lives, so a
+  #             long one makes a skill steal its neighbour's sentences. A nested
+  #             SKILL.md is never registered at all — clone-ad sat fully written
+  #             with correct triggers that nothing could ever match.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every relative link resolves
+        run: ./scripts/check-links.sh
+      - name: Skill frontmatter is registered and within budget
+        run: ./scripts/check-skill-frontmatter.sh

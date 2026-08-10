@@ -248,10 +248,10 @@ skill.
 > "Reverse-engineer this video into a reusable Seedance template" ·
 > "Clone this video ad for our product"
 
-- **[analyze-video](skills/novoads-api/prompting/analyze-video/SKILL.md)** — pulls frames with
+- **[analyze-video](skills/analyze-video/SKILL.md)** — pulls frames with
   ffmpeg and the transcript with Whisper *locally*, reads out the beat structure, and writes a new
   parameterized formula into the prompt library. Nothing is charged until an optional test render.
-- **[clone-ad](skills/novoads-api/prompting/clone-ad/SKILL.md)** — the same local analysis, but the
+- **[clone-ad](skills/clone-ad/SKILL.md)** — the same local analysis, but the
   output is a rendered clip, so both gates apply. There is no video-to-video on this API: a source
   longer than the chosen model's ceiling becomes a series of clips held together by passing the same
   reference images to each one — though `seedance-2.5` reaches 30s in one call, so some sources that
