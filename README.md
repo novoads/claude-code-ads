@@ -9,6 +9,8 @@
 
 # Novoads — AI Video & Image Ad Skill Pack
 
+![Make AI video & image ads from Claude Code](assets/readme-banner.png)
+
 Make AI video ads and static image ads from **Claude Code** or **Cursor**, against your own
 [Novoads](https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack)
 account. The agent does the mechanical part — upload, price, generate, poll, download — and the
