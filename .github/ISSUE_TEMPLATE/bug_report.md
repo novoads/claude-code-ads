@@ -1,26 +1,40 @@
 ---
 name: Bug report
-about: A skill did the wrong thing, failed, or charged for something you did not get
+about: A skill did the wrong thing, failed, or produced something you did not ask for
 title: ''
 labels: bug
 assignees: ''
 ---
 
+<!-- For a charge, a refund, or anything about your account, use the Novoads dashboard instead.
+     Nobody reading this tracker can see your billing. -->
+
 **Which skill?**
 <!-- e.g. clone-image-ad, spy-competitor-ads, novoads-pixar-ad -->
 
 **What did you ask for, and what happened instead?**
+<!-- Describe the ask in a sentence. No need to paste the prompt text itself. -->
 
 
 **What did the estimate say?**
-<!-- The cost the agent quoted before the call, and whether the run matched it. If the run never
-     reached an estimate, say where it stopped. -->
+<!-- Just the credit number the estimate returned, and whether the finished run matched it. The
+     number is what we need, not the log line around it. If the run never reached an estimate,
+     say where it stopped instead. -->
 
 
-**Request and response ids**
-<!-- The generation id, and the x-request-id header if you have it. Both are safe to paste.
-     Never paste your API key: rotate it if one has already gone into a transcript. -->
+**The generation id**
+<!-- And the x-request-id header if you have it. -->
 
 
 **Anything else**
-<!-- Model, whether this reproduced, and the relevant lines from logs/ if the run wrote any. -->
+<!-- Model, and whether it reproduced. -->
+
+<!-- Before you post, a public issue is a public file:
+     - Never paste your API key or an Authorization header.
+     - Never paste an uploadUrl or outputUrl. Presigned URLs are live credentials until they
+       expire, and anyone reading the issue can use one.
+     - Never paste MASTER_CONTEXT.md. It holds your product ids and workspace data, which is
+       why it is gitignored.
+     - Do not paste raw lines from logs/, or full prompt text. Those carry your spend history,
+       your product ids and your creative. Quote the error string and the generation id instead.
+     If a key has already gone into an issue or a transcript, rotate it. -->

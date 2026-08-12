@@ -22,8 +22,7 @@ tag, in the order it shipped.
 ### 2026-08-10
 
 - `novoads-image-to-motion`, a transport-only port (#71).
-- Competitor sweeps run in parallel, and land as a contact sheet you can click and toggle rather
-  than a list you scroll (#58 through #65).
+- Competitor sweeps run in parallel, because the reason not to had died (#61 through #65).
 - A claim in a render now needs a true one of ours behind it, and a testimonial needs a person
   (#66, #67, #68).
 - The placeholder lint refuses a prompt carrying scaffolding before it charges, and reads the
@@ -35,6 +34,8 @@ tag, in the order it shipped.
   reused (#52).
 - The video cloner was unreachable through its own description, and the pair was misnamed. Both
   fixed (#54, #55).
+- Competitor candidates land as a contact sheet you can click and toggle, rather than a list you
+  scroll (#58, #59, #60).
 
 ### 2026-08-08
 
@@ -58,11 +59,12 @@ tag, in the order it shipped.
 - The two Pixar ad skills, and the clay storyboard skill (#20, #23, #27).
 - `craft.md`: one home for the three rules that kept getting recopied into every skill (#30).
 
-### 2026-08-04
+### 2026-08-04 to 2026-08-05
 
 - `broll-overlay` and `music-mix`, both evals-first and live-validated.
 - Transcripts come from the API, which retired the local whisper prerequisite (#16).
-- Per-model reference caps, a sanctioned batch clone, and a standing drift alarm (#14, #15).
+- Per-model reference caps, a sanctioned batch clone, and a standing drift alarm (#15), plus the
+  three cap claims that one missed (#14).
 
 ### 2026-08-02 to 2026-08-03
 
