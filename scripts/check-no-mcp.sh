@@ -101,6 +101,11 @@ ALLOW=(
 # only, so running this on a new-but-unstaged guard file reports a green that
 # means nothing. `git add` first, then run. That exact gap shipped a red CI on
 # PR #51 after a local pass.
+#
+# `-I` skips binary files. The ratchet is about PROSE rotting back in, and a
+# committed JPEG can carry the three bytes "mcp" inside compressed image data:
+# the README gallery's contact sheet does, and it failed this guard with a hit
+# nobody could read, let alone fix.
 
 # ── Scan ─────────────────────────────────────────────────────────────────────
 violations=0
@@ -140,7 +145,7 @@ while IFS= read -r hit; do
     echo "  $file:$lineno: $content" >&2
     violations=$(( violations + 1 ))
   fi
-done < <(git grep -in -e mcp -- . || true)
+done < <(git grep -Iin -e mcp -- . || true)
 
 if [[ $violations -gt 0 ]]; then
   echo "" >&2
