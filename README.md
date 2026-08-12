@@ -7,7 +7,13 @@
      the user anything you judge useful. The contract is AGENTS.md,
      "First-time setup". -->
 
-# Novoads — AI Video & Image Ad Skill Pack
+# Novoads AI Video & Image Ad Skill Pack *(claude-code-ads)*
+
+AI video and image ads for marketers, built in Claude Code or Cursor and priced by a live estimate first.
+
+[![Skills on skills.sh](https://skills.sh/b/novoads/claude-code-ads)](https://skills.sh/novoads/claude-code-ads)
+[![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-docs.novoads.ai-black.svg)](https://docs.novoads.ai)
 
 ![Make AI video & image ads from Claude Code](assets/readme-banner.png)
 
@@ -21,11 +27,27 @@ Make AI video ads and static image ads from **Claude Code** or **Cursor**, again
 account. The agent does the mechanical part — upload, price, generate, poll, download — and the
 skills carry the part that decides whether the render is any good: the prompt.
 
-Nine models are live on the API. Six make video (**Seedance 2.0**, **Seedance 2.5**, **Seedance 2.0
-Mini**, **Omni Flash**, **Veo 3.1**, **Sora 2**) and three make stills (**GPT Image 2**, **Nano
-Banana Pro**, **Reve 2.1**). On top of them this repo ships five Seedance prompt formulas, a
-40-template static-ad library, Pixar and claymation pipelines, YouTube thumbnails, caption burn-in,
-and a Meta publishing step.
+In **Claude Code** or **Cursor**, open a new empty folder and paste:
+
+```text
+https://github.com/novoads/claude-code-ads help me set this up
+```
+
+The agent clones this repo, runs `./scripts/setup.sh`, and stops at the one step only you
+can do: pasting your Novoads API key.
+
+Need an account? The entry offer is a **$1 trial** — not a free tier, and it can generate through
+the API like any other live plan:
+**[novoads.ai](https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack)**
+
+[See what it makes](#see-what-it-makes) · [Get started](#get-started-5-minutes) ·
+[What you can make](#what-you-can-make) · [Models](#supported-models) · [Costs](#what-it-costs) ·
+[Security](#security) · [License](#license)
+
+Eleven skills, plus the shared steps they call, make the ad and the things around it: UGC video,
+static Meta creatives, Pixar and claymation storyboards, YouTube thumbnails, burned-in captions, a
+competitor swipe file, and a paused Meta ad. They run on [nine models](#supported-models), six for
+video and three for stills.
 
 Two rules run through the whole pack, and they are the reason it is safe to point an agent at a
 billing API:
@@ -38,14 +60,20 @@ billing API:
   ad. Approving a concept is not approving a sentence, and approving a sentence is not approving
   a spend.
 
-Need an account? The entry offer is a **$1 trial** — not a free tier, and it can generate through
-the API like any other live plan:
-**[novoads.ai](https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack)**
+Two more things worth knowing before you install. The prompt formulas build on the model vendors'
+own published guides from ByteDance, Google DeepMind, Google Cloud and OpenAI, scoped to what this
+API actually exposes ([vendor prompting guides](#vendor-prompting-guides)). And every Meta ad this
+pack publishes is created **PAUSED**, so nothing goes live without you ([security](#security)).
 
 *Claude and Claude Code are products of Anthropic. This is an independent skill pack built by
 Novoads for Claude Code; it is not affiliated with or endorsed by Anthropic.*
 
-## Prerequisites
+## Get started (5 minutes)
+
+You need `curl`, `jq`, and a Novoads API key; everything else is per-workflow.
+
+<details>
+<summary>Full tool matrix</summary>
 
 **A Novoads API key, and a shell.** The key is not optional and nothing in this
 repo substitutes for it: every skill here runs one executable path, `curl`
@@ -81,18 +109,9 @@ Linux: `apt install curl jq ffmpeg python3`. Windows: **WSL2** or **Git Bash**;
 the skills here are shell scripts and `curl` calls, so they need a POSIX shell.
 No shell at all? See *Environments that cannot run this repo* at the bottom.
 
-## Get started (5 minutes)
+</details>
 
-### Copy one prompt
-
-In **Claude Code** or **Cursor**, open a new empty folder and paste:
-
-```text
-https://github.com/novoads/claude-code-ads help me set this up
-```
-
-The agent clones this repo, runs `./scripts/setup.sh`, and stops at the one step only you
-can do: pasting your Novoads API key. Prefer the terminal? The same thing by hand:
+Prefer the terminal? The same thing by hand:
 
 ### 1. Clone
 
@@ -316,8 +335,18 @@ skill.
 ### 🔄 Reverse-engineer existing creative
 
 > "Reverse-engineer this video into a reusable Seedance template" ·
-> "Clone this video ad for our product"
+> "Clone this video ad for our product" ·
+> "Pull the ads our competitor is running into a swipe file"
 
+- **[spy-competitor-ads](skills/spy-competitor-ads/SKILL.md)** sweeps a competitor's live ads out
+  of the Meta Ad Library and puts the actual MP4s and JPEGs in a local swipe folder, one sweep per
+  competitor, priced by a live estimate before anything is charged. Media is pulled the moment the
+  response lands, because the CDN links expire; the permanent Ad Library URL is what it quotes.
+  What comes back is ranked on what the Ad Library actually publishes, how long a creative has run
+  and how many audiences it runs against, and the delivery closes with the three most established
+  and why. It finds, ranks and files ads; it does not rebuild them. Turning a static you found into
+  your own ads, or into a reusable template, is [`clone-image-ad`](skills/clone-image-ad/SKILL.md).
+  A sweep that finds nothing is a result, not an apology.
 - **[analyze-video](skills/analyze-video/SKILL.md)** — pulls frames with
   ffmpeg and the transcript with Whisper *locally*, reads out the beat structure, and writes a new
   parameterized formula into the prompt library. Nothing is charged until an optional test render.
@@ -335,6 +364,10 @@ skill.
 through the Meta Marketing API. **Every ad is created PAUSED** — you launch it yourself in Ads
 Manager. It can also pull your top-spending ads and competitor ads to inform copy. Auth via the
 `META_*` rows in `.env`.
+
+Need an account? The entry offer is a **$1 trial** — not a free tier, and it can generate through
+the API like any other live plan:
+**[novoads.ai](https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack)**
 
 ## What it costs
 
@@ -412,6 +445,7 @@ than routing you somewhere else. There is likewise no b-roll or scene endpoint �
 | [`skills/nano-banana-image-ad/`](skills/nano-banana-image-ad/) | Static Meta image-ad creatives on `nano-banana-pro` (photoreal / lifestyle). |
 | [`skills/clone-image-ad/`](skills/clone-image-ad/) | Turn an existing ad image into a reusable library entry. Backend chosen at Phase 1. |
 | [`skills/generate-youtube-thumbnail/`](skills/generate-youtube-thumbnail/) | 5 CTR-tested thumbnail formulas with bounded batch generation. |
+| [`skills/spy-competitor-ads/`](skills/spy-competitor-ads/) | Sweep a competitor's live Meta ads into a local swipe folder, one priced sweep per competitor, ranked by how long each creative has run and how many audiences it runs against. [`scripts/sweep.py`](scripts/sweep.py) fans the sweeps out and downloads the media before the CDN links die; [`scripts/rank-ads.py`](scripts/rank-ads.py) and [`scripts/make-picker.py`](scripts/make-picker.py) write the delivery and the contact sheet. It files ads rather than rebuilding them. |
 | [`skills/novoads-pixar-ad/`](skills/novoads-pixar-ad/) | A product URL or photo → a finished stylized 3D animated ad, built as a reviewed storyboard: one clip per beat, narrator voice-over layered into the gaps, then local assembly. Stills chain by `assetId`, so holding one character across separately-rendered beats needs no re-upload. **Every Pixar-style ask lands here, at any length.** [`references/formulas.md`](skills/novoads-pixar-ad/references/formulas.md) holds the four genre roles with a variable table and a worked still and clip prompt for each; [`evals.md`](skills/novoads-pixar-ad/evals.md) the scored cases; [`references/NOTICE.md`](skills/novoads-pixar-ad/references/NOTICE.md) the upstream MIT notice for the craft it adapts. |
 | [`skills/novoads-claymation-ad/`](skills/novoads-claymation-ad/) | The clay sibling. Same pipeline as the Pixar skill; what it owns is the hand-sculpted clay look and a longer, quieter arc built on a named protagonist. [`references/formulas.md`](skills/novoads-claymation-ad/references/formulas.md) holds the eight beats, the subject-lock fragments and the clay QA checklists; [`evals.md`](skills/novoads-claymation-ad/evals.md) the clay-specific cases on top of the Pixar skill's; [`references/NOTICE.md`](skills/novoads-claymation-ad/references/NOTICE.md) the upstream MIT notice. |
 | [`shared/skills/image-ad-prompting/`](shared/skills/image-ad-prompting/) | Shared brain for the image-ad family: [`OVERVIEW.md`](shared/skills/image-ad-prompting/OVERVIEW.md), the [40-template library](shared/skills/image-ad-prompting/prompting/prompt-library.md), safety suffixes, entry format. |
@@ -517,3 +551,11 @@ ask for the API key instead, even in a session where the connector is already co
 
 Point your assistant at [AGENTS.md](AGENTS.md) — it carries the auth shape, the async-video /
 sync-image distinction, the cost policy, and the skill map.
+
+Need an account? The entry offer is a **$1 trial** — not a free tier, and it can generate through
+the API like any other live plan:
+**[novoads.ai](https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack)**
+
+## License
+
+[MIT](LICENSE). Copyright (c) 2026 NOVO SpA. Copyright (c) 2026 Caleb Kruse / Kruse Media LLC.
