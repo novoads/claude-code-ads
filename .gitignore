@@ -14,6 +14,12 @@ MASTER_CONTEXT.md
 # values, which is a de-facto price table — exactly what this repo refuses to hold.
 # logs/README.md is the schema and stays tracked.
 logs/*.jsonl
+# ...and the twin the documented update recipe leaves behind. logs/README.md
+# tells you to rewrite the log as `"$LOG" > "$LOG.tmp" && mv "$LOG.tmp" "$LOG"`,
+# precisely so an interrupted update cannot truncate it. That makes the leftover
+# the EXPECTED outcome of a failure, and it is a byte-for-byte copy of every
+# creditsCharged and job id the line above exists to keep local.
+logs/*.jsonl.tmp
 __pycache__/
 *.pyc
 outputs/
@@ -42,6 +48,14 @@ references/
 !shared/references/
 !shared/references/**
 
+# ...and the same again for a SHARED skill's own reference docs. The rule two
+# blocks up re-includes `skills/*/references/`, which does not reach
+# `shared/skills/*/references/`: four shared skills carry a SKILL.md, so a
+# reference doc added under one of them is dropped by `git add -A` while it sits
+# there on disk, passes check-links.sh locally, and lands a red CI.
+!shared/skills/*/references/
+!shared/skills/*/references/**
+
 
 # Disposable one-off thumbnail iteration scripts (not the canonical skill script)
 scripts/generate-thumbnails.sh
@@ -69,3 +83,13 @@ prompts/
 # not repo content. `git add -f iterations/<path>` still commits the rare one worth
 # keeping.
 iterations/
+
+# caption-video's DOCUMENTED output layout, and the same reasoning again. Its
+# prompting/guide.md writes `<source-video>-with-captions.mp4` and a
+# `<run-id>-captions/` project (source.mp4, trimmed.mp4, transcripts,
+# renders/*.mov) NEXT TO the file the user handed it, deliberately not under a
+# fixed parent, so no one home like generated/ or outputs/ can cover it. What
+# lands there is a customer's raw and rendered footage, in a clone whose next
+# commit is a public PR.
+*-captions/
+*-with-captions.mp4

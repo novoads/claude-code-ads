@@ -45,9 +45,10 @@ the API like any other live plan:
 [Security](#security) · [Support](#support) · [License](#license)
 
 Eleven skills, plus the shared steps they call, make the ad and the things around it. The generated
-creative runs on [nine models](#supported-models), six for video and three for stills: UGC video,
-static Meta creatives, Pixar and claymation storyboards, and YouTube thumbnails. Burned-in captions,
-a competitor swipe file and a paused Meta ad come from their own endpoints and APIs instead.
+picture runs on [nine models](#supported-models), six for video and three for stills: UGC video,
+static Meta creatives, Pixar and claymation storyboards, and YouTube thumbnails. Voice-over, a music
+bed, burned-in captions, a competitor swipe file and a paused Meta ad come from their own endpoints
+and APIs instead.
 
 Two rules run through the whole pack, and they are the reason it is safe to point an agent at a
 billing API:
@@ -60,10 +61,11 @@ billing API:
   ad. Approving a concept is not approving a sentence, and approving a sentence is not approving
   a spend.
 
-Two more things worth knowing before you install. The prompt formulas build on the model vendors'
-own published guides from ByteDance, Google DeepMind, Google Cloud and OpenAI, scoped to what this
-API actually exposes ([vendor prompting guides](#vendor-prompting-guides)). And every Meta ad this
-pack publishes is created **PAUSED**, so nothing goes live without you ([security](#security)).
+Two more things worth knowing before your first render. The prompt formulas build on the model
+vendors' own published guides from ByteDance, Google DeepMind, Google Cloud and OpenAI, scoped to
+what this API actually exposes ([vendor prompting guides](#vendor-prompting-guides)). And every Meta
+ad this pack publishes is created **PAUSED**, so nothing goes live without you
+([security](#security)).
 
 *Claude and Claude Code are products of Anthropic. This is an independent skill pack built by
 Novoads for Claude Code; it is not affiliated with or endorsed by Anthropic.*
@@ -89,7 +91,7 @@ first ad needs nothing from the optional table.
 | Tool | Needed for | Install (macOS) |
 |---|---|---|
 | **`curl` + `jq`** | Everything on the API: uploads, estimates, generation, polling, download | preinstalled / `brew install jq` |
-| **Python 3.10+** | The image-ad callers (`chatgpt-image-ad`, `nano-banana-image-ad`, `clone-image-ad`). Stdlib only, nothing to `pip install` | preinstalled or `brew install python@3.12` |
+| **Python 3.10+** | The image-ad callers (`chatgpt-image-ad`, `nano-banana-image-ad`, `clone-image-ad`) and the competitor sweep (`spy-competitor-ads`). Stdlib only, nothing to `pip install` | preinstalled or `brew install python@3.12` |
 | **`ffmpeg`** | Only the steps that assemble or edit video on your machine: the storyboard ads (`novoads-pixar-ad`, `novoads-claymation-ad`, both of which assemble locally at every length), the local post steps (`music-mix`, `broll-overlay`), and frame extraction in `analyze-video`. Every core API workflow needs nothing | `brew install ffmpeg` |
 
 Captions, transcripts and music are generated server-side and need **no local
@@ -111,6 +113,13 @@ the skills here are shell scripts and `curl` calls, so they need a POSIX shell.
 No shell at all? See *Environments that cannot run this repo* at the bottom.
 
 </details>
+
+Fastest path: in **Claude Code** or **Cursor**, open a new empty folder and paste this, and the
+agent clones the repo, runs setup, and stops at your API key.
+
+```text
+https://github.com/novoads/claude-code-ads help me set this up
+```
 
 Prefer the terminal? The same setup the pasted prompt above runs, by hand:
 
