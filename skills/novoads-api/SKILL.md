@@ -194,9 +194,9 @@ When it is short it also returns `shortBy` and `topUpUrl`.
   ] }
 ```
 
-Rules seen live: `no_spoken_line`, `missing_actor_descriptor`, `label_without_hold`, `chained_motion`. All four are **video** craft rules. A `kind: "image"` estimate carrying the same trigger words came back with no `warnings` key at all, so treat image prompts as unlinted (verified live 2026-08-04). A `kind: "caption"` estimate has no prompt to read and returns none either.
+Rules seen live: `no_spoken_line`, `missing_actor_descriptor`, `label_without_hold`, `chained_motion`, `no_aspect_ratio`. Those are **video** craft rules. **Image prompts are read too, by rules of their own** — `banned_polish` and `blank_label` observed on a `kind: "image"` estimate against deployed spec 2.19.0 (verified live 2026-08-12); an earlier probe on 2026-08-04 returned no `warnings` key for images, which described that deployment, and the advice here to treat image prompts as unlinted is retired. A `kind: "caption"` estimate has no prompt to read and returns none either.
 
-**They are purely advisory.** None of them refuses a generation, none changes the price, and a prompt that trips all four renders exactly like one that trips none. `/estimates` is the *only* endpoint that runs them — `POST /v1/videos` and `POST /v1/images` do not, and their responses carry no `warnings` field.
+**They are purely advisory.** None of them refuses a generation, none changes the price, and a prompt that trips every one of them renders exactly like one that trips none. `/estimates` is the *only* endpoint that runs them — `POST /v1/videos` and `POST /v1/images` do not, and their responses carry no `warnings` field.
 
 **They produce false positives, and you are the one who has to catch them.** Both of these were reproduced live on 2026-08-04:
 
@@ -654,7 +654,7 @@ Both exist. Present both and let the user pick; do not silently default.
 
 ## Images are synchronous
 
-`POST /v1/images` returns the finished images in the response body. **There is nothing to poll and no `/watch` step.** The response carries `images[]` with `url`, `expiresInSeconds`, `width`, and `height`, plus `jobId`, `status`, `model`, and `creditsCharged`. No `warnings` here either. The prompt rules run on `POST /v1/estimates` only, and every rule observed so far is **video** craft (spoken line, actor descriptor, label hold, chained motion) — an image estimate carrying "label" and "Then" came back with no `warnings` key at all (verified live 2026-08-04). Treat images as unlinted: the image prompt libraries are the only check there is.
+`POST /v1/images` returns the finished images in the response body. **There is nothing to poll and no `/watch` step.** The response carries `images[]` with `url`, `expiresInSeconds`, `assetId`, `width`, and `height`, plus `jobId`, `status`, `model`, and `creditsCharged`. **Chain downstream calls from `assetId`, not from `url`** — the URL is a one-hour presign and nothing downstream accepts it. No `warnings` here either. The prompt rules run on `POST /v1/estimates` only — and an image estimate does return them, from rules written for images: `banned_polish` and `blank_label` observed live on deployed spec 2.19.0 (verified 2026-08-12). The older claim here, that an image estimate came back with no `warnings` key at all, described the 2026-08-04 deployment. Read and judge them like the video ones; they are advisory and cannot refuse or reprice anything, so the image prompt libraries are still the real check.
 
 - `referenceAssetIds`: images only, order preserved and addressable positionally by the prompt. Upload each one first — there is no base64 field. **The cap is per model, not one number:** `nano-banana-pro` takes up to **14**, `reve-2.1` up to **8**, `gpt-image-2` up to **4**. The bodies are strict, so a fifth reference to `gpt-image-2` is a `400`, not a silently dropped image — which is the good outcome, because a dropped reference is a paid render missing the product.
 - `numImages`: 1 to 4, and it multiplies the price.

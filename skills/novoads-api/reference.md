@@ -266,11 +266,22 @@ There are **no idempotency keys.** See the 500 note below.
 
 **The reference cap is per model and is not uniform.** `gpt-image-2` takes 4, `nano-banana-pro` 14, `reve-2.1` 8. Do not carry one number across the set — the bodies are strict, so a fifth reference to `gpt-image-2` is `400 Too big: expected array to have <=4 items` rather than a silently dropped image, which is the good outcome: a dropped reference is a paid render missing the product. Verified live 2026-08-04 against spec 2.7.0 (which raised `nano-banana-pro` from 4 to 14), each probe pinned with an out-of-range `numImages` so no body could be valid: 15 refs on `nano-banana-pro` → too big, 14 → accepted; 9 on `reve-2.1` → too big, 8 → accepted; 5 on `gpt-image-2` → too big. Standing re-check: `./scripts/verify-image-caps.sh`.
 
-Synchronous. The response carries `images[]` (`url`, `expiresInSeconds` 3600, `width`, `height`), `jobId`, `status`, `creditsCharged`, and `model`. **No `warnings`**, for the same reason as video: the prompt rules run on `POST /estimates` only. In practice image prompts are unlinted either way — an image estimate carrying the words that trip the video rules returned no `warnings` key at all (verified live 2026-08-04). Nothing to poll. `numImages` multiplies the price.
+Synchronous. The response carries `images[]` (`url`, `expiresInSeconds` 3600, `assetId`, `width`, `height`), `jobId`, `status`, `creditsCharged`, and `model`. **No `warnings`**, for the same reason as video: the prompt rules run on `POST /estimates` only — where an image prompt *does* get read. `banned_polish` and `blank_label` observed on a `kind: "image"` estimate against deployed spec 2.19.0 (verified live 2026-08-12); the older note here, that images returned no `warnings` key at all, described the 2026-08-04 deployment. Nothing to poll. `numImages` multiplies the price.
 
 Reference order is preserved and can be addressed positionally by the prompt. There is no base64 field: upload first, pass ids.
 
 Images accept **no `startImageAssetId`** — there is no first-frame concept on a still — and **no `styleFamily`**, which no longer exists anywhere on this API.
+
+### Chain from `images[].assetId`, never from `images[].url`
+
+**A generated image URL is not an asset id.** `url` is a one-hour presign for fetching the
+bytes and nothing downstream accepts it; the id sits beside it as `images[].assetId`, and that
+is what `referenceAssetIds` / `startImageAssetId` on `POST /videos` and `referenceAssetIds` /
+`sourceAssetId` on `POST /images` take — no download and no re-upload hop. Read off deployed
+spec 2.19.0 on 2026-08-12, after a run that did the download-and-re-upload dance because this
+page had never named the field. It is **optional** in the schema, so read it rather than assume
+it: if a response ever omits it, the fallback is downloading the bytes and minting an id with
+`POST /v1/uploads`.
 
 ### `sourceAssetId` — editing an image (spec 2.10.0, `gpt-image-2` only)
 
@@ -529,6 +540,8 @@ This is also the recovery path when a call times out: the work may have run and 
 
 `jobId`, `status`, `kind`, `model`, `prompt`, `createdAt`, and once succeeded, `outputUrl` plus `outputUrlExpiresInSeconds` (3600). On failure, `error` carries our own wording, never a provider's raw text, and the credits are already refunded.
 
+**The echoed `prompt` can carry raw newlines, and a strict JSON parser will reject the whole response.** Observed live 2026-08-12 on a multi-line video prompt: the control characters arrive unescaped inside the string, so `json.loads()` raises and a poll loop that treats a parse error as "not ready yet" spins until it times out on a job that finished. Parse the poll response tolerantly — `json.loads(body, strict=False)` in Python, or the equivalent lenient mode elsewhere. It is a server-side escaping bug, not a signal about the job; nothing about the render or the charge is affected.
+
 **On a `kind: "audio"` job that has succeeded, there is also `audio[]`** — the two tracks a music request delivered, each `{ url, expiresInSeconds, durationSeconds, title }`. `audio[0]` is the canonical one and is what `outputUrl` points at; `audio[1]` is a second take of the same prompt, and **`audio[]` is the only place it is published** — it is not a separate library asset and it will not turn up in a listing. Both URLs are presigned and minted **when you read the job**, so re-poll for fresh ones instead of storing them.
 
 ## GET /generations/{jobId}/watch
@@ -714,6 +727,8 @@ only extra it does name. Do not branch on an undocumented `details` key.
 
 An agent that reads only "429 means slow down" backs off on the wrong axis when the real problem is jobs in flight — and, with five separate concurrency queues, it may be backing off the wrong queue entirely. Branch on `details.reason`.
 
+**The in-flight count is per organization, not per key or per session**, so `concurrency_limit` is the ordinary outcome of running several workflows at once — two agents each holding three renders open is a sixth submission refused, with neither of them individually misbehaving (observed live 2026-08-12 across parallel callers on one org). **Nothing is charged on the refusal**: the row is never created, so there is no job to find and no credit to reclaim. A render clears in roughly two minutes at the short durations, so resubmit the same body after one — the fix is a finished job, and minting a second key does not buy a slot.
+
 ### The 500 rule
 
 The generation endpoints charge credits, and a failure can land **after** the debit committed. A blind retry can pay twice, and there are no idempotency keys yet.
@@ -739,7 +754,7 @@ Dated. Struck through when fixed, never deleted, because a retraction is more us
 | Where | `POST /estimates` **only**. `POST /videos` and `POST /images` do not run them and return no `warnings` field. |
 | Shape | `warnings: [{ "rule": string, "message": string }]`. Omitted entirely when nothing fires. |
 | Force | **None.** Advisory. They never refuse a call, never change `credits`, and never reach the provider. |
-| Scope | Video craft. Rules seen live: `no_spoken_line`, `missing_actor_descriptor`, `label_without_hold`, `chained_motion`. An image estimate with the same trigger words returned **no** `warnings` key; a caption estimate has no prompt and returns none. |
+| Scope | Video **and image** craft. Video rules seen live: `no_spoken_line`, `missing_actor_descriptor`, `label_without_hold`, `chained_motion`, `no_aspect_ratio`. Image rules seen live: `banned_polish`, `blank_label` (deployed spec 2.19.0, verified live 2026-08-12 — an earlier probe on 2026-08-04 returned no `warnings` key for images at all, which described that deployment). A caption estimate has no prompt and returns none. |
 
 **They match substrings, so they false-positive.** Two reproduced live on 2026-08-04:
 

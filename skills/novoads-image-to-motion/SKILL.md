@@ -21,6 +21,23 @@ Any still can become a professional motion graphic. The work is direction, not d
 
 Vague prompts produce vague motion. Specific prompts produce the shot you pictured. That is the whole discipline.
 
+> **Known issue, 2026-08-12 — `seedance-2.5` will not take a start image. Render on `seedance-2.0` until this lifts.**
+>
+> `POST /v1/videos` with `"model": "seedance-2.5"` and a `startImageAssetId` fails server-side
+> almost immediately, every time. The edge answers a bare `502` with no JSON envelope, so the
+> caller never learns a row was created; the credits are charged and then refunded
+> automatically. Isolated with nine single-variable probes: it is not the asset, the brand,
+> `aspectRatio`, `audioEnabled`, `durationSeconds`, `resolution` or the prompt — 2.5 *without*
+> a start image succeeds, and 2.0 with the *same* start image succeeds. `POST /v1/estimates`
+> cannot warn you either: its video arm never sees `startImageAssetId`.
+>
+> **The workaround is one field.** Send `"model": "seedance-2.0"` and leave everything else as
+> written. The one thing that does not carry across is length — 2.0's grid stops at **15**
+> seconds where 2.5 runs to 30 — so a beat list written past 15s has to be re-cut or split
+> across clips. Price the substitution with a fresh estimate: it is a different model on a
+> different schedule, and the gate is per model. Re-test 2.5 before assuming this is still
+> true; it is a dated platform status, not how the model is meant to behave.
+
 ## Before anything: this runs on a Novoads account
 
 - **Base URL:** `https://api.novoads.ai/v1` (host overridable with `NOVOADS_BASE_URL` — host

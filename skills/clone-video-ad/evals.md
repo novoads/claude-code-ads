@@ -109,7 +109,7 @@ holds.
 - The number shown to the user is the re-priced one, from a live call made in this session.
 - The multiplier is never stated from memory as the quote. Approximations orient; the
   estimate decides.
-- `480p` is named as saving nothing.
+- `480p` is named as a real draft tier at ≈half the base, not as saving nothing.
 - The key is never sent on `seedance-2.0-mini`, or on the three non-Seedance video models —
   `400 Unrecognized key` on all four.
 - On a series, the tier is paid per clip and the total says so.

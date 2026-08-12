@@ -26,7 +26,7 @@ Only `model` and `prompt` are required. The body is **strict** — any key not i
 
 References are **images only** (`image/jpeg`, `image/png`, `image/webp`), even though `POST /v1/uploads` also accepts video. Ten references is `referenceAssetIds: Too big: expected array to have <=9 items`. `omni-flash` has no `referenceAssetIds` field at all — offering references on that route is `Unrecognized key`.
 
-**`resolution` exists on this model and it multiplies the bill** (verified live 2026-08-04, spec 2.6.0 — the older note here saying the field did not exist described a previous deployment). It takes `480p`, `720p`, `1080p`, `4k` and defaults to `720p`. Relative to that base: `480p` costs **the same** (so it is not a draft tier and buys nothing), `1080p` is **≈2.5x**, `4k` is **≈5x**.
+**`resolution` exists on this model and it multiplies the bill** (verified live 2026-08-04, spec 2.6.0 — the older note here saying the field did not exist described a previous deployment). It takes `480p`, `720p`, `1080p`, `4k` and defaults to `720p`. Relative to that base: `480p` costs **≈half**, `1080p` is **≈2.5x**, `4k` is **≈5x**. The `480p` arm was repriced on 2026-08-07 — it used to cost the same as `720p`, which is why the older note here called it no draft tier at all. It is one now: measured live 2026-08-12, exactly half the `720p` quote on `seedance-2.0` and on `seedance-2.5`, so a rehearsal render has an honest cheap tier to go to.
 
 Those are ratios for warning the user, **not a rate card — never quote a credit number from them.** Price the exact cell with `POST /v1/estimates`, which takes `resolution` on its video arm, and get the usual approval before rendering.
 
