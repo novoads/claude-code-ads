@@ -42,7 +42,7 @@ the API like any other live plan:
 
 [See what it makes](#see-what-it-makes) · [Get started](#get-started-5-minutes) ·
 [What you can make](#what-you-can-make) · [Models](#supported-models) · [Costs](#what-it-costs) ·
-[Security](#security) · [License](#license)
+[Security](#security) · [Support](#support) · [License](#license)
 
 Eleven skills, plus the shared steps they call, make the ad and the things around it. The generated
 creative runs on [nine models](#supported-models), six for video and three for stills: UGC video,
@@ -561,6 +561,12 @@ sync-image distinction, the cost policy, and the skill map.
 Need an account? The entry offer is a **$1 trial** — not a free tier, and it can generate through
 the API like any other live plan:
 **[novoads.ai](https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack)**
+
+## Support
+
+- **A bug, or a skill you wish existed:** [open an issue](https://github.com/novoads/claude-code-ads/issues). [CONTRIBUTING.md](CONTRIBUTING.md) covers eval cases and prompt-library PRs.
+- **What the API does:** [docs.novoads.ai](https://docs.novoads.ai), and [`GET /v1/openapi.json`](https://api.novoads.ai/v1/openapi.json) when a file here disagrees with it.
+- **Your account, your key, or a charge:** the [Novoads dashboard](https://novoads.ai/dashboard?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack). Nobody here can see your billing from a GitHub issue.
 
 ## License
 
