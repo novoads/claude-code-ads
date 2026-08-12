@@ -90,6 +90,12 @@ def main():
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
+    try:
+        voiceprint.require_readable(args.source)
+    except voiceprint.Unreadable as exc:
+        print(f"ERROR: {exc}")
+        return 1
+
     src = voiceprint.measure(args.source)
     if not src["f0Median"]:
         print("ERROR: no pitch could be measured in the source. Run check-speech.py first "

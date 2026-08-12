@@ -6,7 +6,7 @@ this sentence because the repo squash-merges and commit order does not survive t
 A is an **acceptance run**: every command below was run against production on 2026-08-12
 with a real key, and every number is a measurement rather than a design intention. B and C
 are assertions about behaviour that costs nothing to check — B is read off the deployed
-spec's own words, C is measured on eleven real audio files.
+spec's own words, C is measured on thirteen real audio files.
 
 The one thing A had to prove is the ratchet: **that the founder-approved re-voice of this
 pack's own promo ad can be reproduced end to end from the public API plus this skill's
@@ -202,14 +202,17 @@ ask for. **The gate is this skill's, it is free, and it runs first.**
 
 So this eval tests the skill's own check, not a `409`.
 
-**Measured 2026-08-12** on eleven real files, with `scripts/check-speech.py`:
+**Measured 2026-08-12** on thirteen real files, with `scripts/check-speech.py`. The same
+set is listed in that script's own docstring, beside the constants it chose:
 
 | File | voiced fraction | pitch spread | verdict |
 |---|---|---|---|
 | the 15s UGC ad above | 0.93 | 27 Hz | speech, exit 0 |
+| its speech span alone, from 2.2s | 0.96 | 26 Hz | speech |
 | its first 2.1s — the effect, before anyone speaks | 0.18 | 35 Hz | **no speech, exit 2** |
 | a re-voiced cut of the same ad | 0.91 | 18 Hz | speech |
 | three synthesized voice-over takes (en, es) | 0.97–1.00 | 49–56 Hz | speech |
+| a 5s UGC voice track | 0.99 | 33 Hz | speech |
 | an 85s phone recording of one speaker | 0.98 | 19 Hz | speech |
 | an instrumental hip-hop track, full and a 30s cut | 0.77–0.78 | 158–222 Hz | **no speech, exit 2** |
 | an instrumental film cue, full and a 30s cut | 0.48–0.49 | 58–212 Hz | **no speech, exit 2** |
@@ -260,7 +263,7 @@ had speech in it; or reads the local gate's refusal as a reason to retry the cal
 - **B is spec-backed, not measured.** Nothing was converted to prove it, deliberately: the
   proof would be a charged call whose result the deployed spec already describes in its own
   words. If a future run does spend one, the measurement belongs here.
-- **C's thresholds are calibrated on eleven files, which is not many.** They are two
+- **C's thresholds are calibrated on thirteen files, which is not many.** They are two
   independent measurements that must agree, with a deliberate "ask a human" band between the
   two verdicts, precisely because the calibration set is small.
 - **No credit figures appear in `SKILL.md`.** The numbers in this file are a dated record of

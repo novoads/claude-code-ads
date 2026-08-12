@@ -52,11 +52,11 @@ the API like any other live plan:
 [What you can make](#what-you-can-make) · [Models](#supported-models) · [Costs](#what-it-costs) ·
 [Security](#security) · [Support](#support) · [License](#license)
 
-Eleven skills, plus the shared steps they call, make the ad and the things around it. The generated
+Twelve skills, plus the shared steps they call, make the ad and the things around it. The generated
 creative runs on [nine models](#supported-models), six for video and three for stills: UGC video,
 static Meta creatives, Pixar and claymation storyboards, and YouTube thumbnails. The narrator
-voice-over, a music bed, burned-in captions, a competitor swipe file and a paused Meta ad come from
-their own endpoints and APIs instead.
+voice-over, a replacement voice for an ad already made, a music bed, burned-in captions, a
+competitor swipe file and a paused Meta ad come from their own endpoints and APIs instead.
 
 Two rules run through the whole pack, and they are the reason it is safe to point an agent at a
 billing API:

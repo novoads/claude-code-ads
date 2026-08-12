@@ -131,6 +131,11 @@ def main():
     for tool in ("ffmpeg", "ffprobe"):
         if not shutil.which(tool):
             raise SystemExit(f"{tool} is not on PATH. This step is local ffmpeg work.")
+    for flag, path in (("--source", args.source), ("--converted", args.converted)):
+        try:
+            voiceprint.require_readable(path)
+        except voiceprint.Unreadable as exc:
+            raise SystemExit(f"{flag}: {exc}")
 
     src_dur = voiceprint.duration_seconds(args.source)
     take_dur = voiceprint.duration_seconds(args.converted)

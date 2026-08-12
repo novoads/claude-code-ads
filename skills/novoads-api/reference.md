@@ -545,7 +545,7 @@ Reads only. Spends nothing, and unpaginated — a list to pick from, not a feed.
 | `age` | whole value, case-insensitive | `young`, `middle_aged`, `old`. Matched whole, so `old` does not also mean `middle_aged` |
 | `accent` | **substring**, case-insensitive | open-ended prose that drifts with the provider. `american` finds `african american` **and** `latin american`, roughly one result in eight |
 | `language` | base subtag | `es` finds a voice recorded as `es` or `es-CL`; `et` stays Estonian. The same rule `POST /voiceovers` applies to its own `language` |
-| `limit` | applied **after** the filters | a cap, not a page — no cursor, no continuation |
+| `limit` | applied **after** the filters | **1–200**, and a cap rather than a page — no cursor, no continuation. Outside that range is a `400` |
 
 **Filter, always.** Unfiltered this is thousands of voices and megabytes of JSON, which an
 agent pays for in context. Measured live 2026-08-12: `gender=male&language=en` returned
@@ -581,6 +581,12 @@ Free. It is a read.
 
 `401` on a bad key, `403` on an organization that may not use the API. A filter value that
 matches nothing is an empty `voices` array and a `200`, not an error.
+
+**There is also a `400`, and it is easy to trip:** a `limit` outside 1–200, a `language`
+that is not a language tag — and **voice-over generation being off on this deployment**.
+That last one matters to a caller reading a catalog before a conversion: this read is
+gated by the same flag the generation is, so on a deployment without it the *audition*
+fails first, at the same `400`, and it is not a bad key.
 
 ### What it does not do
 
@@ -915,7 +921,7 @@ Envelope, on every failure:
 | `method_not_allowed` | 405 | Real path, wrong verb. Carries an `Allow` header. |
 | `conflict` | 409 | Includes `/watch` on an unfinished job. |
 | `content_policy` | 422 | Moderation, and the **only** refusal of a prompt for what it says. Nothing charged. |
-| `rate_limited` | 429 | **Four causes.** See below. |
+| `rate_limited` | 429 | **Twelve causes**, nine of them broken out. See below. |
 | `internal_error` | 500 | **Do not blindly retry.** See below. |
 | `provider_failed` | 502 | Credits refunded automatically. |
 

@@ -29,7 +29,8 @@ HOW IT DECIDES. Two independent measurements, from voiceprint.measure():
   f0Iqr           the interquartile spread of the detected pitch, in Hz. ONE
                   person's voice lives in a narrow band. Music does not.
 
-Measured on 11 real files before the thresholds were chosen (2026-08-12):
+Measured on 13 real files before the thresholds were chosen (2026-08-12). The
+same set is tabulated in evals.md § C:
 
   a 15s UGC ad (speech + a glass-shatter effect)   voiced 0.93   iqr  27
   its speech span alone, from 2.2s                 voiced 0.96   iqr  26
@@ -82,6 +83,11 @@ def main(argv):
         if not shutil.which(tool):
             print(f"ERROR: {tool} is not on PATH. This check needs ffmpeg.")
             return 1
+    try:
+        voiceprint.require_readable(path)
+    except voiceprint.Unreadable as exc:
+        print(f"ERROR: {exc}")
+        return 1
 
     if not voiceprint.has_audio_stream(path):
         return report({"verdict": "no-speech", "reason": "no audio stream at all",

@@ -42,8 +42,43 @@ class NoAudio(Exception):
     """The file has no decodable audio at all."""
 
 
+class Unreadable(Exception):
+    """ffprobe could not open the file at all: it is missing, unreadable, or not
+    a container. A DIFFERENT answer from "this has no audio", and kept different
+    on purpose -- the two have opposite fixes."""
+
+
+def require_readable(path):
+    """Raise Unreadable unless ffprobe can open `path`. Every entry point calls
+    this first.
+
+    Without it a typo'd path is indistinguishable from a real file with nothing
+    in it, because ffprobe writes its complaint to stderr and returns an empty
+    stdout either way. The three callers each read that emptiness as an answer
+    rather than as a failure, and each said something wrong: the speech check
+    reported `no audio stream at all` and exit 2 -- which SKILL.md's Gate 1 tells
+    the agent to relay as "this file has no talking voice in it" -- while the
+    assembly step blamed `--speech-start` for being past a duration of 0.00.
+    A wrong diagnosis costs more than a crash: it sends someone to re-record a
+    file that was fine.
+    """
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=format_name",
+         "-of", "csv=p=0", str(path)],
+        capture_output=True, text=True,
+    )
+    if out.returncode != 0:
+        raise Unreadable(
+            f"could not read {path} -- check the path, and that it is an audio "
+            "or video file ffmpeg can open")
+
+
 def has_audio_stream(path):
-    """True when ffprobe reports at least one audio stream. Cheap, no decode."""
+    """True when ffprobe reports at least one audio stream. Cheap, no decode.
+
+    Answers the question honestly only for a file that OPENS: call
+    require_readable() first, or a missing path answers False here and reads as
+    a file with no audio in it."""
     out = subprocess.run(
         ["ffprobe", "-v", "error", "-select_streams", "a",
          "-show_entries", "stream=codec_type", "-of", "csv=p=0", str(path)],
