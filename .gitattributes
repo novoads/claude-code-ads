@@ -1,0 +1,18 @@
+# What GitHub's language bar says this repo is.
+#
+# Linguist ignores prose by default, so it was measuring only the helper
+# scripts and reporting the repo as Python. The product here is the Markdown:
+# roughly 1.3 MB of skills, prompt libraries and evals, against about 0.5 MB of
+# Python and Shell that exist to serve them.
+#
+# So the one line below turns Markdown ON as a counted language. Linguist still
+# drops the README files, CHANGELOG, CONTRIBUTING and .github/ under its own
+# documentation and vendored rules, which is about 75 KB and is not what this
+# line is reaching for. What is left counted is the skill content, and it beats
+# the Python alone by roughly 3.5 to 1.
+#
+# It turns nothing off and it relabels nothing. The scripts are still
+# first-party code we wrote and test in CI, so marking them vendored or
+# generated would be a false claim about where they came from, and neither
+# attribute is used here.
+*.md linguist-detectable=true
