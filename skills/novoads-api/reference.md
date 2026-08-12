@@ -47,6 +47,9 @@ Older copies of this file said analysis was deliberately absent here. That stopp
 | `POST` | `/transcripts` | The words of a video with their timings. **`200`, charged, SYNCHRONOUS — the transcript is in the response.** |
 | `POST` | `/analyses` | Read an uploaded ad (video or still) into a structured breakdown. **`200`, charged, SYNCHRONOUS.** Flat 1 credit. |
 | `POST` | `/competitor-ads` | Sweep a brand's live ads out of Meta's Ad Library. **`200`, charged, SYNCHRONOUS.** Behind a per-deployment flag. |
+| `GET` | `/voices` | The voices you may speak in. Filterable, reads only, spends nothing. |
+| `POST` | `/voiceovers` | Render a line of text as speech. **`200`, charged, SYNCHRONOUS — the mp3 is in the response.** Behind a per-deployment flag. |
+| `POST` | `/voice-changes` | Re-perform the speech in a source in another voice. **`200`, charged, SYNCHRONOUS — the mp3 is in the response.** Behind a per-deployment flag. |
 | `POST` | `/videos/{jobId}/captions` | Same operation, source in the path. Generated videos only. |
 | `GET` | `/caption-presets` | The 30 caption styles, with tier and per-minute rate. |
 | `GET` | `/generations` | List jobs, filterable and paginated. |
@@ -69,7 +72,9 @@ Request:
 { "contentType": "image/jpeg", "sizeBytes": 248193 }
 ```
 
-`contentType` is one of `image/jpeg`, `image/png`, `image/webp`, `video/mp4`, `video/quicktime`, `video/webm`. `sizeBytes` is the exact byte count, maximum 104,857,600 (100 MB).
+`contentType` is one of `image/jpeg`, `image/png`, `image/webp`, `video/mp4`, `video/quicktime`, `video/webm`, `audio/mpeg`, `audio/wav`. `sizeBytes` is the exact byte count, maximum 104,857,600 (100 MB).
+
+**The two audio types are newer than the rest and only one endpoint consumes them** (verified live 2026-08-12, deployed spec `2.21.0`): `POST /voice-changes`, whose whole subject is speech that may not have a picture attached. Everywhere else an audio `assetId` is refused by kind — `POST /transcripts` names it and says so. Minting one is free either way, so an audio id sitting unused costs nothing; sending it to the wrong endpoint is a `400`, not a conversion.
 
 Response `201`:
 
@@ -92,7 +97,9 @@ Response `201`:
 
 Discriminated on `kind`, and strict. Any field not listed is a 400.
 
-**There are more than two arms.** `kind: "caption"` prices `POST /captions` and `kind: "transcript"` prices `POST /transcripts` — see those sections for their fields and for the reason a sourceless quote is the one-minute minimum on both. Which arms a deployment publishes is flag-dependent (`music`, `transcript` and `voiceover` each have their own); read the live `openapi.json` `discriminator.mapping` rather than counting them here.
+**There are more than two arms.** `kind: "caption"` prices `POST /captions`, `kind: "transcript"` prices `POST /transcripts`, `kind: "voiceover"` prices `POST /voiceovers` and `kind: "voice-change"` prices `POST /voice-changes` — see those sections for their fields and for the reason a sourceless quote is the one-minute minimum on the three that are billed per minute. Which arms a deployment publishes is flag-dependent (`music`, `transcript`, `voiceover` and `voice-change` each have their own); read the live `openapi.json` `discriminator.mapping` rather than counting them here.
+
+**An arm's `kind` names the OPERATION, and the job it prices names its OUTPUT.** You estimate `voiceover` and `voice-change`; you poll a job whose `kind` is `"audio"`, exactly as with `music`. Neither is a typo to be fixed.
 
 | Field | `kind: "video"` | `kind: "image"` |
 |---|---|---|
@@ -390,7 +397,7 @@ Measured 2026-08-04: a 15-second ad comes back in about a second, a 5-minute sou
 | Field | Type | Notes |
 |---|---|---|
 | `jobId` | string, optional | A video this API generated. **Exactly one of `jobId` / `assetId`.** |
-| `assetId` | string, optional | A video you uploaded with `POST /uploads`. **Video only** — uploads accept no audio-only types. Exactly one. |
+| `assetId` | string, optional | A video you uploaded with `POST /uploads`. **Video only, and that is now a refusal rather than an impossibility**: since `2.21.0` uploads mint `audio/mpeg` and `audio/wav` ids too, and this endpoint names them and refuses them. Exactly one. |
 | `languageCode` | string, optional | `en` `es` `pt` `fr` `de` `it` `zh` `ja` `ko` `ar` `hi`. **Omit it.** Auto-detect is the right default; forcing the wrong language does not fail, it returns a confidently wrong transcript. Note the local `caption-video` path has the OPPOSITE default (it forces English), so do not assume parity. |
 
 Body is strict. There is **no granularity knob** — every response carries all three renderings,
@@ -517,6 +524,223 @@ Sending `prompt` alongside it is a `400` (`Unrecognized key: "prompt"`) — the 
 | `502` | The provider refused or failed. Terminal, and refunded. |
 
 A prompt the provider's own classifier refuses comes back as terminal status **`blocked`**, not `failed` — rephrase it rather than retrying it, because a retry buys the same refusal.
+
+---
+
+## GET /voices
+
+Documented from the live spec `2.21.0` on 2026-08-12, and **missing from this file entirely
+until then** — every skill that cast a voice was reading the one-line summary in
+`SKILL.md`'s call list.
+
+The voices `POST /voiceovers` will speak in and `POST /voice-changes` will convert to: the
+platform voices plus **your own** organization's cloned and designed ones. Another
+organization's clones are never listed, and asking for one by id is a `404`.
+
+Reads only. Spends nothing, and unpaginated — a list to pick from, not a feed.
+
+| Param | Matching | Notes |
+|---|---|---|
+| `gender` | whole value, case-insensitive | `male`, `female` are what the catalog records |
+| `age` | whole value, case-insensitive | `young`, `middle_aged`, `old`. Matched whole, so `old` does not also mean `middle_aged` |
+| `accent` | **substring**, case-insensitive | open-ended prose that drifts with the provider. `american` finds `african american` **and** `latin american`, roughly one result in eight |
+| `language` | base subtag | `es` finds a voice recorded as `es` or `es-CL`; `et` stays Estonian. The same rule `POST /voiceovers` applies to its own `language` |
+| `limit` | applied **after** the filters | a cap, not a page — no cursor, no continuation |
+
+**Filter, always.** Unfiltered this is thousands of voices and megabytes of JSON, which an
+agent pays for in context. Measured live 2026-08-12: `gender=male&language=en` returned
+**5,362 voices and 3.8 MB**; adding `age=young` cut it to 1,762 and 1.2 MB; adding
+`accent=american` to 875 and 598 KB. Filters AND together.
+
+**`limit` is not a sample.** The list comes back ordered by name, so `limit=12` on a
+filtered read hands you twelve voices whose names begin with A — verified live on the same
+day. Use it to bound a response you are about to page through in code, not to pick
+candidates: for that, read the filtered list and sample it yourself.
+
+**A filter hides an unlabelled voice, except your own.** `gender`, `age` and `accent` read
+labels the provider records, and a voice carrying none of them drops out of a filtered list.
+Your organization's own cloned and designed voices come back under **every** filter
+regardless — a clone is recorded with no labels at all, and a demographic filter would
+otherwise erase the voices you made. In a filtered list they sort **after** the matches, so
+`limit` trims them before it trims the brief.
+
+Per voice: `id`, `name`, `source` (`platform` | `organization`), and where recorded
+`previewUrl`, `languages`, `primaryLanguage`, `category`, `labels`.
+
+**`previewUrl` is a few seconds of the voice speaking, served from the provider's CDN
+without an API key.** Audition before you spend. It is absent where there is no sample,
+which is the normal case for a voice your organization cloned. `languages` is absent for the
+same voices, and a voice with no recorded languages accepts **any** `language` on
+`POST /voiceovers` while dropping out of a `language`-filtered list here.
+
+### Pricing
+
+Free. It is a read.
+
+### Failure modes
+
+`401` on a bad key, `403` on an organization that may not use the API. A filter value that
+matches nothing is an empty `voices` array and a `200`, not an error.
+
+### What it does not do
+
+No free-text search, no pagination, no ordering control, and no acoustic information: the
+labels describe a voice in words, and words are not a register. Two voices labelled
+identically can sit an octave apart. If the job is to match an existing performance, measure
+the candidates — `change-voice` ships a script that does exactly that.
+
+---
+
+## POST /voiceovers
+
+Documented from the live spec `2.21.0` on 2026-08-12. Gated on a per-deployment flag; where
+it is off the path answers `400` with a message naming what the deployment does render.
+
+Renders a line of text as speech and returns **the finished mp3** — `200`, not `202`. The
+provider answers in seconds and returns bytes rather than a job id, so there is nothing to
+poll. The `jobId` in the response exists to reconcile spend and to find the call again in
+`GET /generations` when **the response itself** is what times out. If that happens, do not
+call again: the audio was probably rendered and charged.
+
+| Field | Required | Notes |
+|---|---|---|
+| `script` | **yes** | 1–1,000 characters, about 40 seconds. Read **VERBATIM**, including anything in square brackets — the model reads those as performance tags rather than skipping them, so keep stage directions out |
+| `voiceId` | **yes** | no default, ever. From `GET /voices` |
+| `language` | no | ISO 639-1. Validated against the voice's own recorded languages |
+| `productId` | no | files the job under a product. Organizational only |
+
+Body is strict. Response `200`: `jobId`, `assetId`, `url`, `expiresInSeconds`,
+`creditsCharged`, `characters`, `voiceId`. **Download `url` immediately** — it is minted per
+response and time-limited; `assetId` is the durable handle.
+
+**`voiceId` is required and has no default.** A default voice is a performance you would be
+charged for without hearing it, and it would move under you whenever the catalog is
+re-synced.
+
+**A script over the cap is refused before anything is charged**, rather than rendered as one
+long take. That is the right shape anyway: one call per line is what a pipeline laying
+narration into gaps wants.
+
+**`language` is checked against the chosen voice**, so a mismatch is a named `400` rather
+than a charged take in the wrong accent. Voices with no recorded languages — typically your
+own clones — accept any value. Omit it and the model infers the language from the script.
+
+### Pricing
+
+**Per 100 characters of the TRIMMED script, rounded up**, with a floor of one centi-credit.
+The same schedule the dashboard bills for the same render. `POST /estimates` has its own arm:
+`{ "kind": "voiceover", "script": … }` — `script` is **required** there, because it is what
+the price is made of, and it is checked against the same cap, so a script this endpoint
+quotes is a script that endpoint accepts.
+
+### Failure modes
+
+| Code | Cause |
+|---|---|
+| `400` | Validation, a script over the cap, a language the voice does not speak, or voice-over being off on this deployment. Nothing charged. |
+| `402` | Not enough credits; `details` carries `required` and `available`. |
+| `404` | No such voice, **or one this organization may not use** — deliberately indistinguishable, because telling them apart would let a caller enumerate other organizations' clones. |
+| `422` | Moderation refused the script. Nothing charged. |
+| `429` | `details.reason: voiceover_concurrency_limit` — **10** in flight, its own queue. |
+| `502` | The provider failed. Credits refunded automatically. |
+
+Credits are charged before the provider call and refunded automatically if it fails.
+
+### What it does not do
+
+It does not clone a voice, and it does not take audio. It reads text in a voice that already
+exists in your catalog. Replacing the voice in something already recorded is
+`POST /voice-changes`, below.
+
+---
+
+## POST /voice-changes
+
+Documented from the live spec `2.21.0` on 2026-08-12, **and exercised end to end the same
+day** — every number in this section is from that run. Gated on a per-deployment flag; where
+it is off the path and the `voice-change` estimate arm are both absent from
+`GET /openapi.json` and the path answers `400`, not `404`.
+
+Takes a video this API rendered, or a video **or audio file** you uploaded, and returns
+**the finished audio** with the speech re-performed by a voice you choose. `200`, not `202`:
+the provider returns bytes rather than a job id.
+
+| Field | Required | Notes |
+|---|---|---|
+| `jobId` | one of the two | a video this API generated |
+| `assetId` | one of the two | a file you uploaded. **Video or audio** (`audio/mpeg`, `audio/wav`) — the only endpoint here that takes audio-only uploads |
+| `voiceId` | **yes** | no default, and **no substitution, ever**. From `GET /voices` |
+| `productId` | no | organizational only |
+
+Body is strict; exactly one source. Response `200`: `jobId`, `assetId`, `url`,
+`expiresInSeconds`, `creditsCharged`, `billedMinutes`, `voiceId`.
+
+**What it preserves: timing, pacing and delivery, frame-accurately.** The take drops back
+onto the original picture and stays in sync, which is the whole reason this exists rather
+than a text-to-speech call. Measured on a 15s ad: the largest per-word start drift between
+the source's transcript and the finished output's, across 33 words, was **0.021s**.
+
+**The level is matched for you.** The provider returns converted audio roughly 15 dB under
+the source; the endpoint measures the source and gains the take to within **1.5 dB** of it
+before storing. Measured on the same run: source `mean_volume −22.6 dB`, take **−23.2 dB**.
+Anything that arrives further off than that is a defect in your own mux, not in the take —
+the classic one being ffmpeg's default mono-to-stereo rematrix, which costs exactly 3 dB.
+
+**`voiceId` never substitutes.** Some internal paths swap in a replacement when a voice goes
+inactive; this one fails and refunds instead, because you chose a specific performance. A
+made-up id came back `404 not_found` naming the id, with nothing charged (verified live).
+
+**Converting the same source in the same voice twice is free.** The second call returns the
+**same `jobId` and `assetId`** with `creditsCharged: 0` and a freshly minted `url`. Verified
+live: two calls, one charge in the balance. A **different voice is a different conversion**
+and a new charge — so auditioning by conversion is the expensive way to cast. The identity
+covers the stored object's size, not just its name, so re-uploading different bytes under
+the same `assetId` is not a hit either.
+
+**Sources are capped at 5 minutes**, because the audio comes back inline rather than polled.
+A longer one answers `400` naming the limit and charges nothing. Split it and convert the
+parts. A 15-second source converted in **7.1 seconds**.
+
+### Pricing
+
+**Per minute of source audio: whole minutes, rounded UP, one-minute minimum**, with no
+resolution term — the converter reads an audio track and never sees the picture.
+`billedMinutes` on the response says what was counted. `POST /estimates` has its own arm:
+`{ "kind": "voice-change", jobId | assetId }`, at most one source. **Name the source for
+anything over a minute**; a sourceless quote is the one-minute minimum, which is why a 15s
+ad and an empty body quoted the same number on the acceptance run.
+
+### Failure modes
+
+| Code | Cause |
+|---|---|
+| `400` | Validation, a source **past the 5-minute cap** (named), or voice changes being off on this deployment. Nothing charged. |
+| `402` | Not enough credits; `details` carries `required` and `available`. |
+| `404` | No such job or asset for this organization, **or no such voice** — the voice cases are deliberately indistinguishable from "not yours". A voice that went inactive *after* the request started lands here too, with the credits refunded. |
+| `409` | The source job has not succeeded yet, it has **no audio to convert**, or **a conversion of this source in this voice is already in flight** — the message names that job id, so poll it or retry in a moment and the stored audio comes back without a second charge. Anything charged before a `409` is refunded. |
+| `429` | `details.reason: voice_change_concurrency_limit` — **10** in flight, its own queue, counted apart from renders, captions, transcripts and narration. |
+| `500` | **Do not blindly retry**: this endpoint charges, and a failure can land after the debit. Call `GET /generations` first. |
+| `502` | The provider failed. Credits refunded automatically. |
+
+### What it does not do
+
+Four assumptions callers arrive with, none of them true here:
+
+- **It does not translate.** The words that come back are the words that went in.
+- **It does not read a script.** There is no text field; the input is audio.
+- **It does not fix pronunciation** — and by extension it does not change an accent. The
+  model reproduces the source's phonemes, mistakes included, so a mispronounced brand name
+  comes back mispronounced in a nicer voice. The fix is to re-render the source with the
+  word spelled phonetically and convert that.
+- **It does not detect speech.** The gate is "does this have an audio track", not "is
+  anyone talking": a music bed sent here converts into vocal noise, is **charged in full**,
+  and answers `200`. That is a charged success, not an error, and there is nothing to refund.
+  Check for speech locally before you call — the `change-voice` skill ships a free check that
+  does it in about a second.
+
+And it does not return **video**. Muxing the take back over the picture, and deciding which
+spans to swap so a sound effect or a music bed survives untouched, is yours to do locally,
+deliberately: those are creative decisions a server should not make on your behalf.
 
 ---
 
@@ -650,6 +874,8 @@ About 4% of `seedance-2.0` renders run past 10 minutes. Failures are usually rep
 | Concurrent **caption** jobs per organization | 10 (`429`, `details.reason` `caption_concurrency_limit`) — a separate budget from the 5 above |
 | Concurrent **transcript** jobs per organization | 10 (`429`, `details.reason` `transcript_concurrency_limit`), where `POST /transcripts` is offered — again its own budget |
 | Concurrent **voice-over** jobs per organization | 10 (`429`, `details.reason` `voiceover_concurrency_limit`), where `POST /voiceovers` is offered — again its own budget |
+| Concurrent **voice-change** jobs per organization | 10 (`429`, `details.reason` `voice_change_concurrency_limit`), where `POST /voice-changes` is offered — again its own budget |
+| Source duration, `POST /voice-changes` | 5 minutes (`400`, named, nothing charged) |
 | JSON request body | 64 KB |
 | Upload size | 100 MB |
 | Upload URL lifetime | 900 seconds |
@@ -707,12 +933,17 @@ response names the field and the limit.
 
 **There is no second shape.** Until spec `2.0.0` a prompt-rule failure was also a 400, carrying `details.rule` and `details.violations[]`. Those keys no longer appear on any response — the rules that replaced them are **advisory only** and arrive as the `warnings` array on a `200` from `/estimates`, never as an error. Code that branches on `details.rule` is reading for something that will never arrive; code that wants the craft advice reads `warnings` off the estimate. (The earlier claim here that `warnings` was itself removed in spec `3.0.0` was wrong — deployed spec is `2.6.0` and it returns the field; verified live 2026-08-04.)
 
-### The eight causes of a 429
+### The causes of a 429
 
 Every one carries `details.reason` and a `Retry-After` header. Those two are the documented
 contract: sleep on the header, branch on the reason. `error.details` is a free-form object, so a
 response may carry more than the spec names — `details.inFlight` on a concurrency refusal is the
 only extra it does name. Do not branch on an undocumented `details` key.
+
+**The deployed spec names twelve reasons** (read off `2.21.0`, 2026-08-12). Nine are broken
+out below; the three this pack has never hit are `competitor_ads_concurrency_limit`,
+`analysis_concurrency_limit` and `analysis_hourly_limit`. Read the live spec's `429`
+description if you meet one that is not here — this table is a working set, not the contract.
 
 | `details.reason` | Cause | What to do |
 |---|---|---|
@@ -721,6 +952,7 @@ only extra it does name. Do not branch on an undocumented `details` key.
 | `caption_concurrency_limit` | **10 caption jobs already in flight** for the organization (verified in spec 2.6.0, 2026-08-04) | Same shape as above: wait, do not slow down. Counted **separately** from `concurrency_limit`, deliberately — a batch of captions can never block your next render, and vice versa. |
 | `transcript_concurrency_limit` | **10 transcripts already in flight** for the organization, where `POST /transcripts` is offered (verified against the deployed spec `2.12.0`, 2026-08-06) | Wait. A transcript is synchronous, so this bounds how many you can hold open at once and is often the first ceiling a batch meets. |
 | `voiceover_concurrency_limit` | **10 voice-overs already in flight** for the organization, where `POST /voiceovers` is offered (verified against the deployed spec `2.12.0`, 2026-08-06) | Wait — but on a two-second TTS call, not on your renders. Easy to misread as "stop generating video" when renders are legitimately in flight; they are unrelated queues. |
+| `voice_change_concurrency_limit` | **10 voice changes already in flight** for the organization, where `POST /voice-changes` is offered (verified against the deployed spec `2.21.0`, 2026-08-12) | Wait. Synchronous like transcripts, so this bounds how many conversions you can hold open at once rather than how fast you may ask. Its own queue: a batch of conversions never blocks a render, a caption or a narration line. |
 | `key_limit` | 60 requests per minute on this key | Honor `Retry-After`. The `X-RateLimit-*` trio tracks this ceiling and only this one. |
 | `organization_limit` | 180 requests per minute across every key the organization holds | Honor `Retry-After`. `X-RateLimit-*` will still show room on your key — correct, not a broken limiter. Minting another key does not raise it. |
 | `client_limit` | 1,200 requests per minute from one address, **pre-authentication** | Honor `Retry-After`. Carries no `X-RateLimit-*` trio. |
