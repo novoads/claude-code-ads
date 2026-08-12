@@ -96,7 +96,7 @@ keeps it the only phrasing in the repo.
    - `iterations/` — clone rounds (`iterations/clone-<date>/<tag>/`)
    - `logs/` — the generation log
 
-   **Never invent a new top-level directory.** A directory that is not on that list is not ignored, and the diff lands on the user: on 2026-08-08 a session composing ten image-ad prompts created `prompts/` unprompted — the right instinct, and why it is sanctioned above rather than forbidden — but nothing ignored it yet, so the next thing the user saw was a "+162 / Create PR" badge over files they never asked for. Writing into one of these five is always in scope and never needs permission. If a run genuinely needs a home that is not here, add it to `.gitignore` in the same breath as the first file you write into it.
+   **Never invent a new top-level directory.** A directory that is not on that list is not ignored, and the diff lands on the user: on 2026-08-08 a session composing ten image-ad prompts created `prompts/` unprompted — the right instinct, and why it is sanctioned above rather than forbidden — but nothing ignored it yet, so the next thing the user saw was a "+162 / Create PR" badge over files they never asked for. Writing into one of these five is always in scope and never needs permission. If a run genuinely needs a home that is not here, add it to `.gitignore` in the same breath as the first file you write into it. One exception is already handled for you: `caption-video` writes beside the file it was handed rather than under a home, so its documented `<run-id>-captions/` project and `<source-video>-with-captions.mp4` are ignored at the repo root.
 
 ## Cost policy
 
