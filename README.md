@@ -45,10 +45,10 @@ the API like any other live plan:
 [Security](#security) · [Support](#support) · [License](#license)
 
 Eleven skills, plus the shared steps they call, make the ad and the things around it. The generated
-picture runs on [nine models](#supported-models), six for video and three for stills: UGC video,
-static Meta creatives, Pixar and claymation storyboards, and YouTube thumbnails. Voice-over, a music
-bed, burned-in captions, a competitor swipe file and a paused Meta ad come from their own endpoints
-and APIs instead.
+creative runs on [nine models](#supported-models), six for video and three for stills: UGC video,
+static Meta creatives, Pixar and claymation storyboards, and YouTube thumbnails. The narrator
+voice-over, a music bed, burned-in captions, a competitor swipe file and a paused Meta ad come from
+their own endpoints and APIs instead.
 
 Two rules run through the whole pack, and they are the reason it is safe to point an agent at a
 billing API:
@@ -91,7 +91,7 @@ first ad needs nothing from the optional table.
 | Tool | Needed for | Install (macOS) |
 |---|---|---|
 | **`curl` + `jq`** | Everything on the API: uploads, estimates, generation, polling, download | preinstalled / `brew install jq` |
-| **Python 3.10+** | The image-ad callers (`chatgpt-image-ad`, `nano-banana-image-ad`, `clone-image-ad`) and the competitor sweep (`spy-competitor-ads`). Stdlib only, nothing to `pip install` | preinstalled or `brew install python@3.12` |
+| **Python 3.10+** | The Python-driven steps, including the image-ad callers (`chatgpt-image-ad`, `nano-banana-image-ad`, `clone-image-ad`) and the competitor sweep (`spy-competitor-ads`). Stdlib only, nothing to `pip install` | preinstalled or `brew install python@3.12` |
 | **`ffmpeg`** | Only the steps that assemble or edit video on your machine: the storyboard ads (`novoads-pixar-ad`, `novoads-claymation-ad`, both of which assemble locally at every length), the local post steps (`music-mix`, `broll-overlay`), and frame extraction in `analyze-video`. Every core API workflow needs nothing | `brew install ffmpeg` |
 
 Captions, transcripts and music are generated server-side and need **no local

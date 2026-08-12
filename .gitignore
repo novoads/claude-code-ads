@@ -25,6 +25,31 @@ __pycache__/
 outputs/
 output/
 
+# caption-video's DOCUMENTED output layout: it writes
+# `<source-video>-with-captions.mp4` and a `<run-id>-captions/` project
+# (source.mp4, trimmed.mp4, transcripts, renders/*.mov) BESIDE the file it was
+# handed, deliberately not under a fixed parent, so no existing home covered it.
+# What lands there is a customer's raw and rendered footage, in a clone whose
+# next commit is a public PR.
+#
+# Two things about the shape of these two lines, both load-bearing:
+#
+# They sit ABOVE the `references/` re-includes below because .gitignore is
+# LAST-MATCH-WINS. Placed after them, an unanchored `*-captions/` re-excludes
+# `shared/skills/caption-video/references/style-captions/`, a path those very
+# lines exist to rescue, and the negation silently loses.
+#
+# They are ROOT-ANCHORED because a pattern with no leading slash matches at EVERY
+# depth: bare `*-captions/` swallows a future `skills/auto-captions/` whole,
+# SKILL.md and all, so check-skill-frontmatter.sh would never see the skill; bare
+# `*-with-captions.mp4` swallows a gallery asset like
+# `assets/gallery/demo-with-captions.mp4`. Anchoring costs nothing real: run in a
+# fresh clone the skill's output IS at the root, and every other sanctioned home
+# it could run inside (outputs/ above, references/ and generated/ and
+# iterations/ below) is already ignored in full.
+/*-captions/
+/*-with-captions.mp4
+
 # All reference media is local-only (face photos, product shots, style boards).
 # Drop your refs into references/influencers/, references/products/,
 # references/aesthetics/, etc. — they stay on your machine.
@@ -52,7 +77,10 @@ references/
 # blocks up re-includes `skills/*/references/`, which does not reach
 # `shared/skills/*/references/`: four shared skills carry a SKILL.md, so a
 # reference doc added under one of them is dropped by `git add -A` while it sits
-# there on disk, passes check-links.sh locally, and lands a red CI.
+# there on disk. check-links.sh then fails on BOTH sides, and says so precisely:
+# it asks `git ls-files --error-unmatch`, not the filesystem, so the local run
+# already reports "exists locally but is NOT COMMITTED" rather than passing and
+# leaving CI to find it.
 !shared/skills/*/references/
 !shared/skills/*/references/**
 
@@ -83,13 +111,3 @@ prompts/
 # not repo content. `git add -f iterations/<path>` still commits the rare one worth
 # keeping.
 iterations/
-
-# caption-video's DOCUMENTED output layout, and the same reasoning again. Its
-# prompting/guide.md writes `<source-video>-with-captions.mp4` and a
-# `<run-id>-captions/` project (source.mp4, trimmed.mp4, transcripts,
-# renders/*.mov) NEXT TO the file the user handed it, deliberately not under a
-# fixed parent, so no one home like generated/ or outputs/ can cover it. What
-# lands there is a customer's raw and rendered footage, in a clone whose next
-# commit is a public PR.
-*-captions/
-*-with-captions.mp4
