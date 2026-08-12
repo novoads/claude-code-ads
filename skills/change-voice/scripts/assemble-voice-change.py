@@ -40,6 +40,7 @@ was written but is out of tolerance: read the numbers, do not ship it blind.
 
 import argparse
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -66,6 +67,30 @@ def has_video(path):
         capture_output=True, text=True,
     )
     return "video" in out.stdout
+
+
+def audio_duration_seconds(path):
+    """Duration of the AUDIO stream, not of the container.
+
+    `format=duration` on a muxed mp4 is driven by the longest stream, and the
+    video here is copied from the source bit for bit -- so the container always
+    reports the source's length whatever the audio does. Measured: a take short
+    by 0.20s (under the note threshold) produced `audio,8.41 / video,8.60` and
+    the script printed PASS. This function is what makes the closing check
+    measure the object it wrote rather than the picture it copied.
+
+    Falls back to the container when the stream carries no duration of its own,
+    which is the honest answer for a raw mp3.
+    """
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "a:0",
+         "-show_entries", "stream=duration", "-of", "json", str(path)],
+        capture_output=True, text=True,
+    ).stdout
+    try:
+        return float(json.loads(out)["streams"][0]["duration"])
+    except (ValueError, KeyError, IndexError, TypeError):
+        return voiceprint.duration_seconds(path)
 
 
 def audio_shape(path):
@@ -136,6 +161,12 @@ def main():
             voiceprint.require_readable(path)
         except voiceprint.Unreadable as exc:
             raise SystemExit(f"{flag}: {exc}")
+        if not voiceprint.has_audio_stream(path):
+            raise SystemExit(f"{flag}: {path} has no audio stream, so there is nothing "
+                             "to fence or to lay down.")
+    for flag, value in (("--speech-start", args.speech_start), ("--speech-end", args.speech_end)):
+        if value is not None and not math.isfinite(value):
+            raise SystemExit(f"{flag} must be a real number of seconds, not {value}.")
 
     src_dur = voiceprint.duration_seconds(args.source)
     take_dur = voiceprint.duration_seconds(args.converted)
@@ -153,6 +184,18 @@ def main():
             "a gap this size means the take was made from a different cut. Check before shipping.")
     if start >= end:
         raise SystemExit(f"--speech-start {start} is not before --speech-end {end}")
+    # The take is cut at the SOURCE's own timestamps, because speech-to-speech puts
+    # both on one timeline. A take that does not reach `end` is therefore not a
+    # short take, it is a DIFFERENT timeline -- typically a conversion of a CUT,
+    # whose t=0 is the source's speechStart. Laying that in at source timestamps
+    # slides every word by the length of the head and desyncs the lips, which is
+    # the one thing this skill promises not to do. Refuse before writing anything:
+    # convert the whole source, or pass the same cut as --source.
+    if take_dur < end - 0.05:
+        raise SystemExit(
+            f"--converted runs {take_dur:.2f}s but the fence needs it through {end:.2f}s. "
+            "The take and the source must be the same timeline: convert the WHOLE source, "
+            "or pass the cut you converted as --source too.")
 
     src_span = voiceprint.mean_volume_db(args.source, start, end)
     take_span = voiceprint.mean_volume_db(args.converted, start, end)
@@ -169,17 +212,24 @@ def main():
         [f"atrim={start}:{end}", "asetpts=N/SR/TB"]
     if gain:
         body.append(f"volume={gain:.2f}dB")
-    body.append(f"afade=t=in:st=0:d={SEAM_FADE}")
-    if end < src_dur - 0.01:
+    # A fade belongs to a SEAM, so it is emitted only where a seam exists. The
+    # fade-in used to be unconditional: with --speech-start 0 there is no head to
+    # join, and the ad opened on a 20 ms ramp up from silence the source never
+    # had (measured -17 dB into the first frames).
+    has_head = start > 0.01
+    has_tail = end < src_dur - 0.01
+    if has_head:
+        body.append(f"afade=t=in:st=0:d={SEAM_FADE}")
+    if has_tail:
         body.append(f"afade=t=out:st={max(0.0, end - start - SEAM_FADE)}:d={SEAM_FADE}")
     parts, labels = ["[1:a]" + ",".join(body) + "[body]"], []
-    if start > 0.01:
+    if has_head:
         parts.append(
             f"[0:a]atrim=0:{start},asetpts=N/SR/TB,"
             f"afade=t=out:st={max(0.0, start - SEAM_FADE)}:d={SEAM_FADE}[head]")
         labels.append("[head]")
     labels.append("[body]")
-    if end < src_dur - 0.01:
+    if has_tail:
         parts.append(f"[0:a]atrim={end},asetpts=N/SR/TB,"
                      f"afade=t=in:st=0:d={SEAM_FADE}[tail]")
         labels.append("[tail]")
@@ -197,14 +247,20 @@ def main():
     src_whole = voiceprint.mean_volume_db(args.source)
     out_whole = voiceprint.mean_volume_db(out)
     out_dur = voiceprint.duration_seconds(out)
+    out_audio_dur = audio_duration_seconds(out)
     delta = out_whole - src_whole
     ok_loud = abs(delta) <= args.tolerance_db
-    ok_dur = abs(out_dur - src_dur) <= 0.05
+    ok_dur = abs(out_dur - src_dur) <= 0.05 and abs(out_audio_dur - src_dur) <= 0.05
+    if abs(out_audio_dur - src_dur) > 0.05:
+        notes.append(
+            f"the finished AUDIO runs {out_audio_dur:.2f}s under a {src_dur:.2f}s picture, "
+            "so the ad ends on silence. The take did not cover the span it was fenced to.")
 
     result = {
         "out": out, "hasVideo": video,
         "sourceDurationSeconds": round(src_dur, 3),
         "outputDurationSeconds": round(out_dur, 3),
+        "outputAudioDurationSeconds": round(out_audio_dur, 3),
         "speechSpan": [round(start, 2), round(end, 2)],
         "sourceSpanMeanDb": src_span, "takeSpanMeanDb": take_span,
         "gainAppliedDb": round(gain, 2),
@@ -223,7 +279,8 @@ def main():
               f"gain applied {gain:+.2f} dB")
         print(f"  whole file    source {src_whole:+.1f} dB, output {out_whole:+.1f} dB, "
               f"delta {delta:+.2f} dB (tolerance {args.tolerance_db})")
-        print(f"  duration      {src_dur:.2f}s -> {out_dur:.2f}s")
+        print(f"  duration      {src_dur:.2f}s -> {out_dur:.2f}s "
+              f"(audio stream {out_audio_dur:.2f}s)")
         for n in notes:
             print(f"  NOTE  {n}")
         print("  " + ("PASS" if ok_loud and ok_dur else "OUT OF TOLERANCE"))

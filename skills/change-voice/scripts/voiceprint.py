@@ -20,9 +20,15 @@ Method, and why each choice:
   lags -- an octave error that reads as a voice half its real pitch.
 * Only frames within 16 dB of the loudest frame are measured. Room tone has no
   pitch and would otherwise contribute noise to the distribution.
-* At most 400 frames, spread evenly. This bounds the work at roughly half a second
-  of CPU whatever the source's length, and a spread sample is what a distribution
-  wants anyway.
+* Roughly 400 frames, spread evenly. The step is integer division, so the real
+  ceiling is 2*MAX_FRAMES-1 rather than MAX_FRAMES -- stated rather than rounded
+  up, because the sampling is what the thresholds in check-speech.py were
+  calibrated against and changing it would move numbers that are on the record.
+  A spread sample is what a distribution wants anyway.
+* The span walk (_sustained, _walk) measures frames OUTSIDE that budget, so it is
+  bounded by loudness instead: it stops at the edge of the loud region. Measured
+  end to end on the endpoint's own 5-minute cap: 0.95s for a source talking
+  throughout, 0.63s for the walk's worst shape (295s of quiet hum, then speech).
 """
 
 import array
@@ -211,12 +217,13 @@ def measure(path, start=None, length=None):
         result["f0Median"] = round(ordered[len(ordered) // 2], 1)
         result["f0Q1"], result["f0Q3"] = round(q1, 1), round(q3, 1)
         result["f0Iqr"] = round(q3 - q1, 1)
-    first = _sustained(samples, starts, voiced_idx)
-    last = _sustained(samples, starts, list(reversed(voiced_idx)))
+    first = _sustained(samples, starts, voiced_idx, rms, threshold)
+    last = _sustained(samples, starts, list(reversed(voiced_idx)), rms, threshold)
     if first is not None:
-        result["speechStart"] = round(_walk(samples, starts, first, -1), 2)
+        result["speechStart"] = round(_walk(samples, starts, first, -1, rms, threshold), 2)
     if last is not None:
-        result["speechEnd"] = round(_walk(samples, starts, last, 1) + FRAME / SR, 2)
+        result["speechEnd"] = round(
+            _walk(samples, starts, last, 1, rms, threshold) + FRAME / SR, 2)
     return result
 
 
@@ -224,8 +231,8 @@ RUN_FRAMES = 8  # 128 ms
 RUN_MIN_VOICED = 6
 
 
-def _sustained(samples, starts, candidates):
-    """The first candidate that is part of a SUSTAINED voiced run.
+def _sustained(samples, starts, candidates, rms, threshold):
+    """The first candidate that is part of a SUSTAINED, LOUD voiced run.
 
     An isolated periodic frame is not speech: a glass-shatter effect, a door slam
     and a synth stab all produce one. A syllable does not -- it holds for at least
@@ -233,12 +240,17 @@ def _sustained(samples, starts, candidates):
     0.58s, inside its opening sound effect, instead of at 2.2s where the actor
     starts talking, and an assembly fenced on it would have overwritten the effect
     with converted silence.
+
+    LOUD matters as much as periodic, and for the same reason. `voiced_idx` is
+    drawn from the loud frames, but a run measured without the loudness test
+    walks straight out of them into whatever quiet periodic material lies next
+    door -- mains hum, room tone, a music bed under the head of an ad. See _walk.
     """
     for i in candidates:
         voiced = 0
         for k in range(RUN_FRAMES):
             j = i + k
-            if j >= len(starts):
+            if j >= len(starts) or rms[j] < threshold:
                 break
             hz, r = _f0(samples[starts[j]:starts[j] + FRAME])
             if r >= VOICED_R and hz:
@@ -248,15 +260,28 @@ def _sustained(samples, starts, candidates):
     return None
 
 
-def _walk(samples, starts, index, direction):
+def _walk(samples, starts, index, direction, rms, threshold):
     """Walk one frame at a time from a confirmed voiced frame toward the edge of
-    its own run, so a coarse sample step does not blur the boundary."""
+    its own run, so a coarse sample step does not blur the boundary.
+
+    The edge is where the audio stops being LOUD or stops being periodic --
+    either one ends the run. Testing only periodicity was a real defect: on a 65s
+    file carrying a quiet 100 Hz hum for its first minute and speech only in the
+    last five seconds, the walk followed the hum all the way home and reported
+    `speechStart 0.00`. SKILL.md hands that number to the assembly step as the
+    fence, and a fence at 0 emits no head segment at all -- so the whole original
+    track, effects and music included, is replaced by converted audio. That is
+    the exact damage the fence exists to prevent, reported as success.
+    """
     i = index
     while 0 <= i + direction < len(starts):
-        hz, r = _f0(samples[starts[i + direction]:starts[i + direction] + FRAME])
+        nxt = i + direction
+        if rms[nxt] < threshold:
+            break
+        hz, r = _f0(samples[starts[nxt]:starts[nxt] + FRAME])
         if r < VOICED_R or not hz:
             break
-        i += direction
+        i = nxt
     return starts[i] / SR
 
 

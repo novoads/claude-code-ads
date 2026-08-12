@@ -111,10 +111,14 @@ python3 skills/change-voice/scripts/check-speech.py <the source file>
 - **exit 3, `UNCLEAR`** — the two measurements disagree. Play the file. Proceeding on
   the optimistic reading is how a charged conversion of nothing happens.
 
-The check reads a whole file, and it has two blind spots worth stating out loud when
-they apply: **singing** reads as speech (one singer is one voice), and **narration over
+The check reads a whole file, and it has three blind spots worth stating out loud when
+they apply: **singing** reads as speech (one singer is one voice); **narration over
 a music bed** reads as speech, correctly — but the endpoint will convert the bed too, so
-either fence it in assembly or convert a cut where the bed plays alone.
+either fence it in assembly or convert a cut where the bed plays alone; and **a sustained
+single pitch** (a drone, a synth pad, an organ note) reads as speech, because it is one
+periodic thing in the human range. That last one shows in the numbers rather than the exit
+code: a reported pitch spread near 0 Hz is a machine, not a person. Read it before you
+proceed.
 
 ### Gate 2 — price it, announce it, wait
 

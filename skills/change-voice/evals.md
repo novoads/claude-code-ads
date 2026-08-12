@@ -249,6 +249,13 @@ had speech in it; or reads the local gate's refusal as a reason to retry the cal
   only where the bed plays alone.
 - **It measures the whole file.** A source that is thirty seconds of music and then four
   seconds of speech has speech in it. Read `speechStart` from `--json` and cut.
+- **A sustained single pitch reads as speech** — a drone, a synth pad, an organ note, a
+  stack of steady tones. It is one periodic thing in the human range, which is what the
+  first measurement asks for, and its spread is narrow, which is what the second asks for.
+  Reproduced 2026-08-12 on four mixed sine tones: `voiced 0.99, spread 0 Hz`, exit 0. The
+  tell is in the output rather than the exit code — the narrowest real voice in the table
+  above is 18 Hz, and a spread near zero is a machine. No floor is set on the spread
+  because thirteen files is not enough to place one honestly.
 
 ---
 

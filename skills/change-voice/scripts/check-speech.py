@@ -53,6 +53,12 @@ WHAT IT CANNOT DO, stated because a gate that oversells itself is worse than non
 
 * SUNG vocals read as speech. One singer is one periodic voice in the same range.
   A song sent to the endpoint converts and charges like any other source.
+* A SUSTAINED SINGLE PITCH reads as speech: a drone, a synth pad, an organ note,
+  a harmonic stack of tones. Those are exactly one periodic thing in the range,
+  which is what this measures. The tell is in the output rather than the exit
+  code -- a pitch spread near 0 Hz is a machine, not a person, and the narrowest
+  real voice in the calibration set above is 18 Hz. No threshold is set on it
+  here because 13 files is not enough to place one; read the reported spread.
 * Narration OVER a music bed reads as speech, correctly -- but the endpoint
   converts the WHOLE track, bed included. Fence the bed in assembly, or convert a
   music-free cut of the audio.
@@ -103,7 +109,16 @@ def main(argv):
         return report(m, as_json, 2)
 
     voiced, iqr = m["voicedFraction"], m["f0Iqr"]
-    speechy = voiced >= SPEECH_MIN_VOICED and iqr <= SPEECH_MAX_IQR
+    # A pitch is REQUIRED for a speech verdict, never for a refusal. Under four
+    # voiced frames f0Median and f0Iqr stay at their 0.0 defaults, and 0.0
+    # SATISFIES `iqr <= SPEECH_MAX_IQR` -- so without this term the answer was
+    # "one periodic voice, pitch spread 0 Hz around 0 Hz" and exit 0, which
+    # SKILL.md reads as "proceed" and whose reported pitch it calls the casting
+    # brief's spine. match-voice.py refuses that same input outright, so the two
+    # gates disagreed and the one authorizing a charge was the optimistic one.
+    # It only ever removes an exit 0: a confident refusal still wins below.
+    measured_pitch = m["f0Median"] > 0
+    speechy = voiced >= SPEECH_MIN_VOICED and iqr <= SPEECH_MAX_IQR and measured_pitch
     not_speechy = voiced < NOSPEECH_MAX_VOICED or iqr > NOSPEECH_MIN_IQR
 
     if speechy and not not_speechy:
@@ -119,6 +134,11 @@ def main(argv):
             why.append(f"pitch jumps over {iqr:.0f} Hz, wider than one voice")
         m.update(verdict="no-speech", reason="; ".join(why))
         code = 2
+    elif not measured_pitch:
+        m.update(verdict="unclear",
+                 reason="too few voiced frames to measure a pitch at all, so there is "
+                        "no voice here to cast against; listen before spending")
+        code = 3
     else:
         m.update(verdict="unclear",
                  reason=f"voiced {voiced:.2f} and pitch spread {iqr:.0f} Hz do not "

@@ -39,8 +39,10 @@ exactly the ones the catalog has no sample for.
 """
 
 import argparse
+import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -48,10 +50,30 @@ import tempfile
 import voiceprint
 
 
+def preview_path(cache, url):
+    """Where a preview is cached: a hash of its URL, never a string the catalog
+    supplied.
+
+    `voice["id"]` used to be the filename, and a remote string as a path
+    component is an arbitrary file write. Verified against this script: an id of
+    `/tmp/x/ESCAPED` makes os.path.join DISCARD the --cache prefix outright, and
+    `../ESCAPED` climbs out of it -- in both cases the cache directory was left
+    empty and the bytes the preview URL served landed wherever the id pointed.
+    Keying on the URL also closes the smaller hole beside it: a file already
+    sitting at the expected path short-circuits the download and is measured and
+    ranked as if it were that voice.
+    """
+    return os.path.join(cache, hashlib.sha256(url.encode("utf-8")).hexdigest()[:20] + ".mp3")
+
+
 def fetch(url, dest):
+    # `--` ends option parsing: a previewUrl beginning with a dash is read by curl
+    # as an OPTION otherwise (verified: `-K/path` was taken as --config). --proto
+    # holds it to https, so a catalog value of `file:///Users/you/.env` cannot
+    # quietly become the thing we measure and hand back a path to.
     r = subprocess.run(
-        ["curl", "-sS", "-L", "--max-time", "30", "-A", "novoads-skill/change-voice",
-         "-o", dest, url],
+        ["curl", "-sS", "-L", "--proto", "=https", "--proto-redir", "=https",
+         "--max-time", "30", "-A", "novoads-skill/change-voice", "-o", dest, "--", url],
         capture_output=True, text=True,
     )
     return r.returncode == 0 and os.path.exists(dest) and os.path.getsize(dest) > 0
@@ -90,6 +112,10 @@ def main():
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
+    for tool in ("ffmpeg", "ffprobe"):
+        if not shutil.which(tool):
+            print(f"ERROR: {tool} is not on PATH. Measuring a voice is local ffmpeg work.")
+            return 1
     try:
         voiceprint.require_readable(args.source)
     except voiceprint.Unreadable as exc:
@@ -104,7 +130,10 @@ def main():
 
     with open(args.voices) as fh:
         payload = json.load(fh)
-    voices = payload.get("voices", payload if isinstance(payload, list) else [])
+    # Order matters: `payload.get(...)` is evaluated before its default, so the
+    # documented top-level-array form used to die on AttributeError instead of
+    # taking the fallback it was written for.
+    voices = payload if isinstance(payload, list) else payload.get("voices", [])
     if not voices:
         print("ERROR: no voices in that file. Did the filters return an empty list?")
         return 1
@@ -115,11 +144,22 @@ def main():
 
     ranked, unauditionable = [], []
     for v in candidates:
+        if not v.get("id"):
+            # pick() already tolerates this; the download loop used to subscript
+            # v["id"] and take the whole audition down with a KeyError after other
+            # previews had been fetched.
+            unauditionable.append(dict(v, note="catalog entry carries no id"))
+            continue
         url = v.get("previewUrl")
         if not url:
             unauditionable.append(v)
             continue
-        dest = os.path.join(cache, f"{v['id']}.mp3")
+        if not str(url).lower().startswith("https://"):
+            # curl is held to https as well; this arm exists so the reason is a
+            # sentence rather than a generic download failure.
+            unauditionable.append(dict(v, note="preview URL is not https"))
+            continue
+        dest = preview_path(cache, url)
         if not os.path.exists(dest) and not fetch(url, dest):
             unauditionable.append(dict(v, note="preview would not download"))
             continue
