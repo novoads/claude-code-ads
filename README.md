@@ -11,9 +11,17 @@
 
 AI video and image ads for marketers, built in Claude Code or Cursor and priced by a live estimate first.
 
-[![Skills on skills.sh](https://skills.sh/b/novoads/claude-code-ads)](https://skills.sh/novoads/claude-code-ads)
+<!-- The skills.sh count badge is parked, not dropped. Their index still holds a
+     pre-rename snapshot of this repo: it lists 8 skills, three of them under
+     names that no longer exist here, so the badge rendered "Skills: 8" one
+     screen above a page that says eleven. The listing LINK stays, because the
+     solo-install path runs through it. Restore the badge once their index
+     reflects the current skill set:
+     [![Skills on skills.sh](https://skills.sh/b/novoads/claude-code-ads)](https://skills.sh/novoads/claude-code-ads)
+     Tracking: https://github.com/vercel-labs/skills/issues -->
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-docs.novoads.ai-black.svg)](https://docs.novoads.ai)
+[Skills on skills.sh](https://skills.sh/novoads/claude-code-ads)
 
 ![Make AI video & image ads from Claude Code](assets/readme-banner.png)
 
