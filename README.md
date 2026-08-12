@@ -44,10 +44,10 @@ the API like any other live plan:
 [What you can make](#what-you-can-make) · [Models](#supported-models) · [Costs](#what-it-costs) ·
 [Security](#security) · [License](#license)
 
-Eleven skills, plus the shared steps they call, make the ad and the things around it: UGC video,
-static Meta creatives, Pixar and claymation storyboards, YouTube thumbnails, burned-in captions, a
-competitor swipe file, and a paused Meta ad. They run on [nine models](#supported-models), six for
-video and three for stills.
+Eleven skills, plus the shared steps they call, make the ad and the things around it. The generated
+creative runs on [nine models](#supported-models), six for video and three for stills: UGC video,
+static Meta creatives, Pixar and claymation storyboards, and YouTube thumbnails. Burned-in captions,
+a competitor swipe file and a paused Meta ad come from their own endpoints and APIs instead.
 
 Two rules run through the whole pack, and they are the reason it is safe to point an agent at a
 billing API:
@@ -70,7 +70,8 @@ Novoads for Claude Code; it is not affiliated with or endorsed by Anthropic.*
 
 ## Get started (5 minutes)
 
-You need `curl`, `jq`, and a Novoads API key; everything else is per-workflow.
+You need a POSIX shell (macOS or Linux; **WSL2** or **Git Bash** on Windows), plus `curl`, `jq` and
+a Novoads API key. Everything else is per-workflow.
 
 <details>
 <summary>Full tool matrix</summary>
@@ -111,7 +112,7 @@ No shell at all? See *Environments that cannot run this repo* at the bottom.
 
 </details>
 
-Prefer the terminal? The same thing by hand:
+Prefer the terminal? The same setup the pasted prompt above runs, by hand:
 
 ### 1. Clone
 
@@ -141,6 +142,8 @@ prepares the workspace, prints the one step left for a human, and exits 0.
 Re-check connectivity any time with `./scripts/check-novoads-env.sh`. It tells you *which* failure
 you have: a `401` is a bad or revoked key, a `403` with `plan_required` is a good key on an account
 without API access. Different problems, different fixes.
+
+Steps 3 and 4 are the same whichever way you installed, pasted prompt or terminal.
 
 ### 3. Open in your editor
 
@@ -446,6 +449,9 @@ than routing you somewhere else. There is likewise no b-roll or scene endpoint �
 | [`skills/clone-image-ad/`](skills/clone-image-ad/) | Turn an existing ad image into a reusable library entry. Backend chosen at Phase 1. |
 | [`skills/generate-youtube-thumbnail/`](skills/generate-youtube-thumbnail/) | 5 CTR-tested thumbnail formulas with bounded batch generation. |
 | [`skills/spy-competitor-ads/`](skills/spy-competitor-ads/) | Sweep a competitor's live Meta ads into a local swipe folder, one priced sweep per competitor, ranked by how long each creative has run and how many audiences it runs against. [`scripts/sweep.py`](scripts/sweep.py) fans the sweeps out and downloads the media before the CDN links die; [`scripts/rank-ads.py`](scripts/rank-ads.py) and [`scripts/make-picker.py`](scripts/make-picker.py) write the delivery and the contact sheet. It files ads rather than rebuilding them. |
+| [`skills/analyze-video/`](skills/analyze-video/) | Deconstruct a reference video into a reusable Seedance 2.0 formula file, written into the prompt library: structure, pacing, camera work, edit style and tone, as variables anyone can plug a new product into. Frames come from ffmpeg and the transcript from Whisper, both local. The output is a formula, not a single prompt. |
+| [`skills/clone-video-ad/`](skills/clone-video-ad/) | Clone a video ad end to end for a different product: reads the source's style, pacing, dialogue and tone, adapts it into a Seedance 2.0 prompt, prices it, renders it, and diffs each clip's transcript against the approved script. The deliverable is the whole ad, not its opening and not a template. |
+| [`skills/novoads-image-to-motion/`](skills/novoads-image-to-motion/) | Animate a finished still as-is. Motion vocabulary for UI, marketing hero, flat-lay, key art, collage, product and character images, plus the prompt clauses that pin camera, timing, frozen regions and text fidelity, so printed words stay legible instead of being redrawn. |
 | [`skills/novoads-pixar-ad/`](skills/novoads-pixar-ad/) | A product URL or photo → a finished stylized 3D animated ad, built as a reviewed storyboard: one clip per beat, narrator voice-over layered into the gaps, then local assembly. Stills chain by `assetId`, so holding one character across separately-rendered beats needs no re-upload. **Every Pixar-style ask lands here, at any length.** [`references/formulas.md`](skills/novoads-pixar-ad/references/formulas.md) holds the four genre roles with a variable table and a worked still and clip prompt for each; [`evals.md`](skills/novoads-pixar-ad/evals.md) the scored cases; [`references/NOTICE.md`](skills/novoads-pixar-ad/references/NOTICE.md) the upstream MIT notice for the craft it adapts. |
 | [`skills/novoads-claymation-ad/`](skills/novoads-claymation-ad/) | The clay sibling. Same pipeline as the Pixar skill; what it owns is the hand-sculpted clay look and a longer, quieter arc built on a named protagonist. [`references/formulas.md`](skills/novoads-claymation-ad/references/formulas.md) holds the eight beats, the subject-lock fragments and the clay QA checklists; [`evals.md`](skills/novoads-claymation-ad/evals.md) the clay-specific cases on top of the Pixar skill's; [`references/NOTICE.md`](skills/novoads-claymation-ad/references/NOTICE.md) the upstream MIT notice. |
 | [`shared/skills/image-ad-prompting/`](shared/skills/image-ad-prompting/) | Shared brain for the image-ad family: [`OVERVIEW.md`](shared/skills/image-ad-prompting/OVERVIEW.md), the [40-template library](shared/skills/image-ad-prompting/prompting/prompt-library.md), safety suffixes, entry format. |
