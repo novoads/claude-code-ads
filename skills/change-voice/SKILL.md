@@ -136,6 +136,13 @@ curl -sS -X POST https://api.novoads.ai/v1/estimates -A novoads-skill/change-voi
   -H "Authorization: Bearer $NOVOADS_API_KEY" -H 'Content-Type: application/json' \
   -d '{"kind":"voice-change","assetId":"<assetId>"}'
 # → { credits, balance, sufficient }
+
+# the conversion is not the only charge in this run. Gate 7 reads the finished file
+# back, and reading it against the source needs the source's words too. Price that
+# here, on the same assetId, unless you already have the source's own script.
+curl -sS -X POST https://api.novoads.ai/v1/estimates -A novoads-skill/change-voice \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"kind":"transcript","assetId":"<assetId>"}'
 ```
 
 **A source already rendered by this API needs no upload** — pass its `jobId` instead of
@@ -143,15 +150,25 @@ curl -sS -X POST https://api.novoads.ai/v1/estimates -A novoads-skill/change-voi
 body.
 
 **Name the source in the estimate.** The price is per minute of source audio, so a quote
-with no source is the one-minute minimum and says nothing about a four-minute file.
+with no source is the one-minute minimum and says nothing about a four-minute file. The
+transcript arm bills per minute the same way, so the same rule applies to it.
 
-Then announce it in one line and proceed. This is an announcement, not a question, with
-two exceptions: `sufficient: false` is a blocker — name the shortfall and give the
-`topUpUrl`; and a balance that covers this conversion but not a second one is worth one
-clause, because **a different voice is a different conversion and a new charge**.
+**Announce the whole run, not just the conversion.** The conversion is the large charge
+and it is not the only one: **the verification in Gate 7 is a charged call too**, and
+reading it against the source is a second one unless you already hold the source's script.
+Say so in the same line — the conversion at the price quoted above, the source transcript
+at the price quoted beside it, and the read-back of the finished file quoted at Gate 7,
+because the file it prices does not exist yet. A run that announces one number and spends
+three times is a run the operator did not actually approve.
 
-Never state a price from memory. There are no rate tables in this repo, the estimate is
-free, and it is the only legitimate source of a number.
+Then proceed. This is an announcement, not a question, with two exceptions:
+`sufficient: false` is a blocker — name the shortfall and give the `topUpUrl`; and a
+balance that covers this conversion but not a second one is worth one clause, because
+**a different voice is a different conversion and a new charge**.
+
+Never state a price from memory, and never estimate one of these calls by reasoning from
+another. There are no rate tables in this repo, the estimate is free on every arm, and it
+is the only legitimate source of a number.
 
 ### Gate 3 — the casting brief
 
@@ -164,9 +181,15 @@ Three inputs, all free, and none of them is the voice catalog yet.
    Apparent gender and apparent age are what the catalog filters on. Note them as
    apparent, because that is all a frame supports.
 2. **What language, and what register.** The transcript tells you the language and shows
-   you the copy. If you have the source's own script, that is enough; otherwise
-   `POST /v1/transcripts` on the same `assetId` reads it back cheaply, and you will want
-   it again in Gate 7 anyway.
+   you the copy. If you have the source's own script, that is enough and this costs
+   nothing; otherwise `POST /v1/transcripts` on the same `assetId` reads it back — **a
+   charged call**, quoted at Gate 2 and wanted again in Gate 7, so it is one charge and
+   not two. Never quote it from memory:
+   ```bash
+   curl -sS -X POST https://api.novoads.ai/v1/estimates -A novoads-skill/change-voice \
+     -H "Authorization: Bearer $NOVOADS_API_KEY" -H 'Content-Type: application/json' \
+     -d '{"kind":"transcript","assetId":"<assetId>"}'
+   ```
 3. **What the current voice measures.** `check-speech.py` already reported it: a median
    pitch and a spread. That number, not an adjective, is what Gate 4 ranks against.
 
@@ -289,12 +312,24 @@ span, or accept the conversion across an effect and listen to it before shipping
 > Doctrine: [shared/references/craft.md](../../shared/references/craft.md) § 1. The call
 > below is this surface's; the rule is not this skill's.
 
+**This step spends.** It is the last charge in the run and the one most easily mistaken for
+housekeeping. Upload the finished file, price the read-back, say the number, then read it.
+
 ```bash
-# upload the finished file, then read it back
+# upload the finished file, then price the read-back on ITS assetId — the file did
+# not exist at Gate 2, so this is the first moment it can be quoted at all
+curl -sS -X POST https://api.novoads.ai/v1/estimates -A novoads-skill/change-voice \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"kind":"transcript","assetId":"<the finished file>"}'
+
 curl -sS -X POST https://api.novoads.ai/v1/transcripts -A novoads-skill/change-voice \
   -H "Authorization: Bearer $NOVOADS_API_KEY" -H 'Content-Type: application/json' \
   -d '{"assetId":"<the finished file>"}' | jq -r '.text'
 ```
+
+Skipping it to save the charge is not an option on offer: an unread run is not finished,
+and the whole point of the gate is that a conversion can drop a word silently. If the
+budget only stretches to one read-back, it is this one.
 
 Read it against the source's transcript, word for word. A conversion that dropped or
 mangled a word is a failed run, not a note in the report. Timings come back in
@@ -317,7 +352,9 @@ POST /v1/uploads        { contentType: "video/mp4" | "audio/mpeg" | "audio/wav" 
                           with `headers` VERBATIM. Free. The URL expires in 900s; the
                           assetId does not expire.
 
-POST /v1/estimates      { kind: "voice-change", assetId | jobId }
+POST /v1/estimates      { kind: "voice-change" | "transcript", assetId | jobId }
+                        Both arms are used here, and both are free. Price the
+                        conversion and the read-backs, not just the conversion.
                         → { credits, balance, sufficient, shortBy?, topUpUrl? }
                           Strict. At most one source. No source = the one-minute minimum.
 
@@ -332,7 +369,9 @@ POST /v1/voice-changes  { assetId | jobId, voiceId (REQUIRED), productId? }
 
 POST /v1/transcripts    { assetId | jobId }
                         → 200 { text, words[], segments[], srt, creditsCharged }
-                          Timings in SECONDS. The same source twice is free.
+                          CHARGED, per minute of source. Timings in SECONDS. The
+                          same source twice is free, which is why Gate 3's read of
+                          the source is the same charge Gate 7 compares against.
 
 GET  /v1/generations?kind=audio   → the recovery path when a response never arrived.
 ```
@@ -386,6 +425,9 @@ GET  /v1/generations?kind=audio   → the recovery path when a response never ar
 - **Gate 1 before the upload.** A music bed converts, succeeds, and bills.
 - Every number shown to a user comes from `POST /v1/estimates` in this session. This file
   contains no prices and neither does anything else in this repo.
+- **Every charged call in the run is announced, not just the big one.** The conversion is
+  one of three: the verification transcript is charged, and so is the source transcript
+  when you need it.
 - The picture is copied, never re-encoded, and the effects come from the original track.
 - Verify by transcribing your own output. A run that was not read back is not finished.
 - A different voice is a new charge. Audition with previews, not with conversions.
@@ -398,7 +440,9 @@ GET  /v1/generations?kind=audio   → the recovery path when a response never ar
 1. **SOURCE** — what it is, how long, and what Gate 1 measured: speech present, the span,
    the current voice's pitch.
 2. **BRIEF** — who is on screen, the language, the register the replacement has to hold.
-3. **COST** — the live estimate, in one line, before anything is charged.
+3. **COST** — the live estimates, in one line, before anything is charged: the
+   conversion **and** the transcript read-backs the verification needs. One number for
+   one of three charges is not the cost of the run.
 4. **SHORTLIST** — two or three candidates with their measurements and their preview
    files. Then **stop** and wait for the pick.
 5. Then convert, assemble, and verify.

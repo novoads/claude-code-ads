@@ -6,6 +6,43 @@ This is not an API changelog. When a file here and the deployed spec disagree, t
 and [`GET /v1/openapi.json`](https://api.novoads.ai/v1/openapi.json) is where its own history
 lives.
 
+## Unreleased
+
+### 2026-08-12
+
+- `change-voice`, the twelfth skill: replace the voice in a finished ad with one from the
+  catalog and keep the timing, so the lips still match. `POST /v1/voice-changes` returns audio
+  and nothing else, so the three decisions it cannot make are the skill — which voice, which
+  spans to replace, and whether the result is any good (#84).
+  - Casting is by **measurement**, not by label. `match-voice.py` measures the source's pitch,
+    auditions candidate previews and ranks by semitone distance; it shortlists and a human
+    picks. No `voiceId` is ever defaulted.
+  - `check-speech.py` is a free local refusal that runs **before the upload**. The endpoint
+    gates on "does this have an audio track", not "is anyone talking", so a music bed converts
+    into vocal noise, bills in full and answers `200`.
+  - `assemble-voice-change.py` fences the spans nobody is talking in, so the sound effects
+    survive from the original track, copies the picture bit for bit, and measures the file it
+    wrote rather than the one it meant to write.
+- `novoads-api/reference.md` gains `GET /voices` and `POST /voiceovers`, which had **no
+  sections at all** — every skill that cast a voice was working off a one-line summary — plus
+  `POST /voice-changes` and its rows in the Limits table and the 429 catalog. Three corrections
+  fall out of the same read against deployed spec `2.21.0`: `POST /uploads` mints `audio/mpeg`
+  and `audio/wav` ids, the estimates arm list gains `voiceover` and `voice-change`, and the 429
+  section stops claiming eight causes when the spec names twelve (#84).
+- Review rounds on the above, each one a defect that reported itself as success (#84):
+  - The speech check's span walk followed a quiet hum out of the loud region to `0.00`, and
+    SKILL.md hands that number to the fence — so an ad with a hum under its head had its whole
+    original track overwritten. The walk now stops at the edge of the loud region.
+  - The assembly's closing check read the container's duration, which the copied video stream
+    drives, so a take that ended early printed PASS over an ad ending in silence. It measures
+    the audio stream now, and refuses a take that cannot cover the span it was fenced to.
+  - A voice id from the catalog was used as a filename, so an absolute one wrote outside the
+    preview cache. Previews are keyed on a hash of their URL, and curl is held to https.
+  - A path that could not be read was reported as a file with no speech in it, which is a
+    different problem with a different fix.
+  - The cost gate announced the conversion and then spent on two transcripts nobody had
+    priced. It announces every charged call in the run, each quoted by its own free estimate.
+
 ## v1.0.0 (2026-08-12)
 
 First tagged release. Eleven skills on one executable path (REST plus `NOVOADS_API_KEY`), nine

@@ -101,6 +101,11 @@ is gone from the caller's side of the line.
 - The local speech check runs **before** the upload, and the run says what it found.
 - The number shown to the human comes from `POST /v1/estimates` in the same session.
   Nothing here is quoted from memory, and this skill states no price anywhere.
+  **The run priced the conversion only.** The two transcripts it then spent on were not
+  estimated first, which is the gap SKILL.md's Gate 2 now closes by announcing the
+  read-backs alongside the conversion and quoting each at its own step. A re-run under the
+  current text prices three calls, not one; the numbers in the table below are unaffected,
+  because what changed is what gets said before the spend, not what the spend costs.
 - The catalog is read **filtered** (`gender`, `age`, `accent`, `language`), never whole:
   unfiltered it is thousands of voices, and `gender=male&language=en` alone returned 5,362
   entries and 3.8 MB of JSON on the day of the run.
@@ -111,7 +116,8 @@ is gone from the caller's side of the line.
 - The finished file is verified by transcribing **our own output** — not by trusting that a
   render preserved words it was never shown.
 
-**Fails if:** the conversion fires before an estimate is shown; or the skill picks the voice;
+**Fails if:** any charged call fires before its estimate is shown — the conversion or either
+transcript; or the skill picks the voice;
 or the whole source is overwritten and the effect comes back as vocal noise; or the output
 is delivered without a loudness number and a transcript read against the source.
 
