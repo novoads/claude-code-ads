@@ -402,16 +402,16 @@ Rules for the board:
 3. **The low point is the shortest beat and the most important one.** Everything
    rides on that face.
 4. **Word budget is per beat, not per ad.** Two spoken lines per 5-second beat is
-   the ceiling. Across five beats that is a 45 to 60 word script, which is
-   correct for 25 seconds. Count the words before you write the prompt.
+   the ceiling: at the measured 2.0 words/sec that is ~10 words a beat, so five
+   beats make a **45–50 word** script for 25s (60 needs 30s). Count before you write.
 5. **VO and SYNC never overlap in the same beat.** Write the SYNC lines first;
    fit the narration into beats that have none. And keep the narrator's words out
    of the prompt for any beat you are giving a VO line — see the hard constraint
    above. The board's Track column is what records that decision per beat.
 6. **The two tracks own different things.** VO owns the problem, the mechanism,
    the offer and the brand: that track carries the selling. SYNC owns proof that
-   the feeling is real. Never give SYNC the offer. Sign-off under 6 words, and
-   give the hero card at least 2 seconds.
+   the feeling is real. Never give SYNC the offer. Sign-off under 6 words (~3s at
+   the measured rate — read it against its gap), hero card at least 2 seconds.
 7. **Prefer escalating specifics over comparisons.** "Four times. Four and a
    half. Five. All the way to six" argues the same point as "most stop at three"
    without asserting a competitor fact you cannot verify.
@@ -584,11 +584,11 @@ organization is a `404`.
 
 **Write the lines to the gaps, not to the beats.** A beat with a SYNC line has no
 room for narration. Read each line aloud against the beat's length before
-generating it: about 15 characters per second of speech, so a 5-second beat holds
-roughly 70 characters of narration and no more. The hard ceiling is 1,000
-characters per call, about 40 seconds, and a longer script is refused with a
-`400` before anything is charged — which is the right shape for this skill
-anyway, where every take is one line into one gap.
+generating it: **13 characters per second** of speech — so a 5-second beat holds
+~**65 characters**, and the hard 1,000-character ceiling is ~**75 seconds**,
+refused with a `400` before anything is charged. (Measured 13.2 = the 2.0
+words/sec rate written out: 29 words/188 chars over a 14.2s span, 2026-08-11, one
+render, spaces counted. This read 15/sec yet called 1,000 chars 40s, implying 25.)
 
 **The script is read VERBATIM**, including anything in square brackets — the
 model interprets those as performance tags rather than skipping them. Keep stage

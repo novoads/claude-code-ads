@@ -122,6 +122,17 @@ When references are in play, say out loud that they must not drift:
 
 Repeat the actor tag **verbatim** rather than back-referencing it. `the same woman` resolves to nobody — no identity carries across a cut — and an elaborated tag re-casts as readily as a missing one.
 
+### When the label garbles in motion
+
+The anchor above is necessary and not sufficient, and the gap between them is a stage difference: **stills render label lines that clips destroy.** Measured 2026-08-12 on one product across both stages — the still rendered all five printed lines on the can correctly, and the clip built from that same still came back with `STILL ARTESIAN WATER` as `CTILLNETERAN WATER` in every frame. A legible invented word is worse than a blurred one: it reads as the brand's own copy.
+
+**The lever is type size in frame, not prompt wording.** That is the opposite of where retries usually go. The fix that worked: pin the product close to the lens so it renders about **1.5× larger** — the smallest line went from roughly 14px to roughly 28px — and spell every printed line **verbatim** in the prompt. All five lines came back correct and sharp. Rewording the label-hold clause alone does not do it, because the model cannot resolve type it has not been given the pixels for.
+
+Two counterweights, both worth the minute they cost:
+
+- **Cut in past the bad frames first — it is free.** On the next beat the same defect ran only to frame 12 at 24fps, so trimming 0.5s off the head fixed the deliverable for zero credits. Sweep the frames before paying for a re-render; the wrong word is often legible only at the head.
+- **A framing pin can blow a banding artefact.** A parallel claymation render in the same run picked up a white band across the bottom rows after a shot-distance pin was added. This render did not (worst bottom-260-row mean 47/255 against its own mid-frame 40) — but that was checked, not assumed. After any framing change, sweep the **full** frame, not just the label.
+
 ### Style anchors
 
 Include at least one: `documentary` (natural, observational), `photorealistic` (grounded, no stylization), `handheld` (reinforces the phone-filmed look), `commercial` (polished — sparingly, and never on UGC).
@@ -153,15 +164,19 @@ It has no opinion about your prompt. Nothing in the API reads a prompt for craft
 
 ## Duration and dialogue
 
-Any integer 4 to 15 seconds. Pick it from the spoken word count — a dense product line runs **2.5 to 3 words per second**, a calmer lifestyle line closer to 1.5, and that slack is what leaves room for a silent beat.
+Any integer 4 to 15 seconds. Pick it from the spoken word count.
+
+**A rendered line runs about 2.0 words per second, and the render opens with about 0.5s of silence before the first word.** So the word budget is `2.0 × (durationSeconds − 0.5)` — 29 words for a 15s clip. (Measured 2026-08-11 on one `seedance-2.0` render: a 29-word script, speech occupying 0.48s to 14.72s of 15.07s, Whisper word timings. One render, so treat it as the working figure and re-measure when you have another.)
+
+That 2.0 already absorbs ordinary pausing — the measured take spent a 3s performed sip beat inside that span and still fit. It is deliberately **not** the articulation rate: words divided by voiced time alone came to ~2.5, and planning at 2.5 is what overruns, because it quietly assumes the actor never stops. Script to 2.0 and the silence takes care of itself.
 
 | Script word count | Duration |
 |---|---|
 | 1–8 words | 4–5s |
 | 9–15 words | 6–8s |
-| 16–25 words | 9–12s |
-| 26–35 words | 13–15s |
-| **36+ words** | **Too long** — offer to split into multiple clips |
+| 16–23 words | 9–12s |
+| 24–29 words | 13–15s |
+| **30+ words** | **Too long** — offer to split into multiple clips |
 
 For no-dialogue styles (product hero, premium reveal), default to **15s**.
 
