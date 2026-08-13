@@ -1,0 +1,35 @@
+{
+  "name": "novoads",
+  "owner": {
+    "name": "Novoads",
+    "url": "https://novoads.ai"
+  },
+  "description": "AI video and image ad skills for Claude Code, from Novoads.",
+  "plugins": [
+    {
+      "name": "skills",
+      "source": "./",
+      "description": "AI video and image ads for marketers, built in Claude Code or Cursor and priced by a live estimate first. Skills clone a competitor's ad, build Pixar and claymation spots, turn a product photo into motion, generate thumbnails and Meta ad frames, swap a voice, and sweep the Meta Ad Library. Every skill runs on the Novoads REST API and quotes a live estimate before anything is charged.",
+      "author": {
+        "name": "Novoads",
+        "url": "https://novoads.ai"
+      },
+      "homepage": "https://github.com/novoads/agent-skills",
+      "repository": "https://github.com/novoads/agent-skills",
+      "license": "MIT",
+      "keywords": [
+        "ads",
+        "advertising",
+        "marketing",
+        "video",
+        "image-generation",
+        "ugc",
+        "creative"
+      ],
+      "skills": [
+        "./skills",
+        "./shared/skills"
+      ]
+    }
+  ]
+}
