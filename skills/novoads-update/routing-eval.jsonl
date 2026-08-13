@@ -1,0 +1,41 @@
+// novoads-update is the only skill here that acts on the INSTALLATION rather than
+// on a creative, so its near-misses are not other ad skills — they are other
+// things called "update". Its four options are one dialog, which is the routing
+// risk worth pinning: a description that lost its consent tail would keep winning
+// "update the pack" and quietly stop winning the last three, and nothing would go
+// red, because the skill it still wins would still work.
+{"intent":"this clone has been sitting here since March, pull in whatever I have missed","expected_skill":"novoads-update"}
+{"intent":"has anything landed upstream since I grabbed this, and can you bring it in","expected_skill":"novoads-update"}
+// The banner is a surface the user did not ask for, so it gets answered in
+// fragments rather than in sentences. This one names neither the pack nor the act.
+{"intent":"yes to whatever that startup message just said about new commits","expected_skill":"novoads-update"}
+// Consent, in both directions, and neither opens by asking for an update. Option 2
+// arrives as delegation and option 4 arrives as a complaint — the two phrasings
+// most likely to be lost first if the description is ever trimmed to fit the cap.
+{"intent":"just keep this current by itself, I do not want to approve each one","expected_skill":"novoads-update"}
+{"intent":"quit bringing this up every single time I open a session","expected_skill":"novoads-update"}
+// Indirect: names no update, no clone, no version and no banner. The deliverable
+// is still the four-way dialog, because the diagnosis is that they are behind.
+{"intent":"a teammate has a claymation skill in theirs and there is nothing like it in mine","expected_skill":"novoads-update"}
+// The sibling boundary, and why it is a real one: novoads-api is the only other
+// skill in this pack that talks about the INSTALL rather than about a render. It
+// owns .env and the key that lives there; this one owns what happens to that file
+// during a merge, which is the question actually being asked.
+{"intent":"if I pull the new version down does it wipe the file my key is in","expected_skill":"novoads-update","ambiguous_with":["novoads-api"]}
+// Naming a model is the loudest routing signal in this pack and the model list
+// lives in novoads-api's description and nowhere else. The ask is still "is my
+// copy current", which nothing on the API surface can answer.
+{"intent":"is Seedance 2.5 supposed to be in here already or is my copy old","expected_skill":"novoads-update","ambiguous_with":["novoads-api"]}
+// Names a sibling outright, which is normally decisive. It is not here: the
+// complaint is that the file on disk disagrees with the documentation, which is a
+// version question rather than a Pixar one. Routing to the named skill would have
+// the agent debugging a storyboard it cannot reproduce.
+{"intent":"the pixar one is not behaving the way the docs describe, am I on an old copy","expected_skill":"novoads-update","ambiguous_with":["novoads-pixar-ad"]}
+// Near-misses. All three borrow this skill's own vocabulary — update, upgrade,
+// roll back — and point it at something that is not this pack, which is exactly
+// how it decays: the words match and the object does not. The middle one is the
+// boundary Step 0 opens with, and the most expensive to get wrong, because acting
+// on it writes consent into a directory no hook will ever read.
+{"intent":"upgrade my Claude Code CLI to whatever the newest release is","expected_skill":null}
+{"intent":"my project dependencies are stale, bump them and reinstall","expected_skill":null}
+{"intent":"roll our production deploy back to yesterday's build","expected_skill":null}
