@@ -169,6 +169,11 @@ appended, or the quote will be short by roughly 1,500 characters' worth of promp
   --env-file .env
 ```
 
+`--image-ref` uploads the file on every invocation. For a batch that reuses one product
+photo — or the same character shot, which is what holds a face steady across runs — upload
+it once and pass `--ref-asset-id <assetId>` instead: same reference, no repeat upload. The
+two are interchangeable and share the 14-reference cap.
+
 Each line on stdout is one JSON image (`variant`, `path`, `job_id`, `width`, `height`,
 `prompt`, `aspect_ratio`, `model`, `credits_charged`).
 
