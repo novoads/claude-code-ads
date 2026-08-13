@@ -10,7 +10,9 @@ Entries land under `## Unreleased`. `./scripts/release.sh` dates that heading in
 `## vX.Y.Z — YYYY-MM-DD` and opens a fresh one; it never invents the prose. Group an entry
 as Added / Changed / Fixed, or as dated `###` subsections like the ones below.
 
-## v1.1.0 (unreleased)
+## Unreleased
+
+## v1.1.0 — 2026-08-13
 
 ### 2026-08-13
 
