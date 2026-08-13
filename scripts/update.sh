@@ -122,17 +122,26 @@ short() { printf '%.12s' "$1"; }
 
 # git, credential-hardened. Used for EVERY invocation, not only the network
 # ones: uniformity is cheaper to audit than a rule about which calls count.
-g() { git -c credential.helper= "$@"; }
+#
+# `3>&- 4>&-` closes the wire and the prose to the child. Descriptors are
+# INHERITED, so without this a repo-local hook — a post-merge hook is the easy
+# one, and `git merge` runs whatever the clone carries — can `echo >&3` and put
+# a line on stdout AHEAD of the STATUS line, which is the whole contract. One
+# chokepoint, because a rule about which git calls can reach a hook is a rule
+# somebody gets wrong later.
+g() { git -c credential.helper= "$@" 3>&- 4>&-; }
 
 # Bounded execution. `timeout(1)` is NOT on stock macOS, and git's own
 # GIT_HTTP_LOW_SPEED_* knobs do not bound the CONNECT phase — a blackhole
 # address takes 75 seconds to fail naturally. So: coreutils when present, an
 # explicit watchdog when not. Returns 124 on the timeout, like timeout(1).
+# `3>&- 4>&-` here for the same reason as in g(): this runs git directly rather
+# than through the wrapper, because `timeout` cannot invoke a shell function.
 run_bounded() {
   secs="$1"; shift
-  if command -v timeout >/dev/null 2>&1; then timeout "$secs" "$@"; return $?; fi
-  if command -v gtimeout >/dev/null 2>&1; then gtimeout "$secs" "$@"; return $?; fi
-  "$@" &
+  if command -v timeout >/dev/null 2>&1; then timeout "$secs" "$@" 3>&- 4>&-; return $?; fi
+  if command -v gtimeout >/dev/null 2>&1; then gtimeout "$secs" "$@" 3>&- 4>&-; return $?; fi
+  "$@" 3>&- 4>&- &
   _rb_pid=$!
   _rb_n=0
   while kill -0 "$_rb_pid" 2>/dev/null && [ "$_rb_n" -lt "$secs" ]; do
@@ -313,7 +322,7 @@ recover_unmerged() {
   if [ "$STASHED" = yes ] && g rev-parse --verify --quiet refs/stash >/dev/null 2>&1; then
     g checkout -- . >/dev/null 2>&1 || true
     g reset --hard --quiet HEAD >/dev/null 2>&1 || true
-    say "NOTE=interrupted mid-merge of your local edits. The tree was returned to a clean state and your work is safe in the stash: git stash list"
+    say "NOTE=interrupted while replaying your local edits; the tree was returned to a clean state."
   else
     # Discarding here would destroy the only copy, so it does not.
     say "WARNING=interrupted with a conflicted index and no stash to fall back on; the tree was left exactly as found."
@@ -332,6 +341,15 @@ on_signal() {
     g merge --abort >/dev/null 2>&1 || true
   fi
   recover_unmerged
+  # Said on EVERY interrupted run that stashed, not only the one that got as far
+  # as a conflict. An interrupt in the merge window leaves the customer's edits
+  # sitting in a stash they never asked for and were never told about, and a
+  # working tree that silently lost the change you were making is the report we
+  # would get instead.
+  if [ "$STASHED" = yes ] && g rev-parse --verify --quiet refs/stash >/dev/null 2>&1; then
+    say "HINT=Your local edits were set aside before this run touched the tree and are still there:"
+    say "HINT=  git stash list   then   git stash pop"
+  fi
   restore_env
   emit "STATUS=interrupted"
   say "HINT=Interrupted. Your .env is intact and nothing is half-applied."
@@ -344,16 +362,19 @@ on_signal() {
 # it as a failure because a follow-up step complained would be a lie about the
 # repo's state. Their output goes to stderr so the wire stays clean.
 
+# Both are handed the prose descriptor and then have BOTH of ours closed, so
+# they can talk to the user without being able to reach the wire. The order is
+# load-bearing: the dups happen first, so fd1/fd2 survive the close.
 run_sync_skill() {
   [ -f "$REPO_DIR/shared/scripts/sync-skill.sh" ] || return 0
-  if ! bash "$REPO_DIR/shared/scripts/sync-skill.sh" >&4 2>&4; then
+  if ! bash "$REPO_DIR/shared/scripts/sync-skill.sh" >&4 2>&4 3>&- 4>&-; then
     say "NOTE=sync-skill.sh reported a failure; the update itself stands. Re-run it by hand."
   fi
 }
 
 run_migrations() {
   [ -f "$REPO_DIR/migrations/run.sh" ] || return 0
-  if ! bash "$REPO_DIR/migrations/run.sh" >&4 2>&4; then
+  if ! bash "$REPO_DIR/migrations/run.sh" >&4 2>&4 3>&- 4>&-; then
     say "NOTE=the migration runner reported a failure; the update itself stands."
   fi
 }
@@ -530,12 +551,31 @@ update_path() {
   # sit between git and this script in the process tree, and a signal delivered
   # mid-merge would land on the subshell instead of on the trap that restores
   # .env. The merge's output is captured through a file for the same reason.
+  # The record is written BEFORE the merge, naming the commit about to be
+  # installed. Written after, there is a window — the whole merge, hooks and
+  # all — where an interrupt leaves HEAD on the new commit with nothing that
+  # knows how to undo it: the update landed and `--rollback` answers
+  # no_recorded_update. A record that briefly describes an update still in
+  # flight is the cheaper error, because the only thing that reads it refuses
+  # unless HEAD is exactly the TO it names.
+  prev_record=""
+  [ -f "$RECORD" ] && prev_record="$(cat "$RECORD" 2>/dev/null || true)"
+  write_update_record "$local_sha" "$target"
+
   merge_log="$STATE_DIR/merge.log"
   ensure_state_dir || merge_log="/dev/null"
   if ! g merge --ff-only --quiet "$target" >"$merge_log" 2>&1; then
     [ "$STASHED" = yes ] && g stash pop --quiet >/dev/null 2>&1
     restore_env
     rm -f "$merge_log" 2>/dev/null || true
+    # Put back whatever was there. Simply deleting would strip an EARLIER
+    # update's record because a LATER one failed to start, and take a legitimate
+    # rollback with it.
+    if [ -n "$prev_record" ]; then
+      printf '%s\n' "$prev_record" > "$RECORD" 2>/dev/null || true
+    else
+      rm -f "$RECORD" 2>/dev/null || true
+    fi
     emit "STATUS=blocked REASON=dirty_unresolvable"
     say "HINT=Local files block the fast-forward and could not be set aside safely."
     say "HINT=Nothing was changed. Move or commit them, then re-run ./scripts/update.sh"
@@ -544,9 +584,9 @@ update_path() {
   rm -f "$merge_log" 2>/dev/null || true
 
   new_sha="$(g rev-parse HEAD 2>/dev/null || true)"
-  # Written the moment HEAD moves, so an interrupted or crashed run still leaves
-  # a --rollback that knows exactly what to undo.
-  write_update_record "$local_sha" "$new_sha"
+  # --ff-only cannot land anywhere but the target, and the record still has to
+  # describe what is actually there rather than what was intended.
+  [ "$new_sha" = "$target" ] || write_update_record "$local_sha" "$new_sha"
 
   # A stash-pop conflict must NEVER be left in the tree. Conflict markers inside
   # a SKILL.md are not a merge state an agent recognises — they are content it
