@@ -59,7 +59,7 @@ matters, and send the field either way.
 | `LIGHTING_SOURCE` | natural living room light, bright overhead apartment light, daylight from large windows, bedroom lamp light | Indoor residential — never a lit studio |
 | `CAMERA_ANGLE` | casual handheld selfie angle, phone propped at chest height, phone in one hand slightly below eye level | Always front-facing, always personal |
 
-**The 15-second constraint:** a natural speaker covers 2–3 short sentences in 15 seconds. This style is fast, so 3–4 short punchy lines is the ceiling — around 30 to 40 words at 2.5 words per second. Structure each clip as **one hook + 1–2 feature demos + a kicker**.
+**The 15-second constraint:** a natural speaker covers 2–3 short sentences in 15 seconds. This style is fast, so 3–4 short punchy lines is the ceiling — around **30 words at 2.0 words per second**, which is what 15 seconds actually holds (measured 2026-08-11: 29 words filled a 15s `seedance-2.0` render end to end; one render, treat it as the working figure). "Fast" is a delivery note, not a rate multiplier — the measured render was a punchy comic read and still came in at 2.0. The **40** that stood here was 2.5-words/sec arithmetic and would have clipped the kicker. Structure each clip as **one hook + 1–2 feature demos + a kicker**.
 
 **Multi-clip strategy:** if the product has 4+ features, split across 2–3 prompts:
 
@@ -281,7 +281,7 @@ The sound is direct from phone mic — his voice is clear and close,
 minimal room echo, no music underneath.
 ```
 
-30 spoken words across three beats at 15 seconds — about 2 words per second, which fits a fast delivery with the demo actions given room.
+30 spoken words across three beats at 15 seconds — about 2 words per second, which fits a fast delivery with the demo actions given room. That is the measured rate, not a rounding: a 29-word script filled a 15s render end to end on 2026-08-11. This example was right all along; the 2.5-words/sec rule that used to sit above it was not.
 
 ### Clip B — secondary features + CTA
 
@@ -356,7 +356,7 @@ then multiply by the clip count, show the per-clip number, the count, the total 
 - [ ] **15 seconds** — `durationSeconds: 15` set explicitly (the default is 5)
 - [ ] **`aspectRatio` set** — `9:16` (the default is `16:9`), and restated as `Vertical 9:16.` at the end of the prompt
 - [ ] **Max 3 beats per clip** — hook, feature demo, kicker
-- [ ] **Max 3–4 short lines**, around 30–40 words for 15 seconds — more dialogue means another clip
+- [ ] **Max 3–4 short lines**, around **27–30 words** for 15 seconds (2.0 words/sec, measured 2026-08-11) — more dialogue means another clip, not a faster read
 - [ ] **Gate 1 run per clip** — numbered beats, word count, `language`, explicit yes
 - [ ] **Every feature beat has a physical demonstration** — no talking-only beats
 - [ ] **Hook is a bold claim** — superlative, confident, no hedging

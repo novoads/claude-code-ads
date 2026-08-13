@@ -132,10 +132,18 @@ here; they are an input to the next step, not scratch.
 - [ ] **Actor tag verbatim** in all four; no `the same woman` / `as before`
 - [ ] **Setting declared unchanged**; only framing varies
 - [ ] Script read aloud at an unhurried pace **fits the runtime** — timed, not estimated
-- [ ] …and **fills** it: ~2.5 words/sec, so a 15s ad wants **35–40 spoken words**, not 25.
-      An under-written script does not produce a shorter ad — it produces the same ad with
-      the slack rendered as silence (measured: 5.9s of dead air across 5 gaps in a 15s
-      render built from ~27 words, 2026-08-03)
+- [ ] …and **fills** it: **~2.0 words/sec** of delivered speech, so a 15s ad wants
+      **27–30 spoken words**. Measured 2026-08-11: a 29-word script filled a 15s
+      `seedance-2.0` render exactly — speech from 0.48s to 14.72s of 15.07s, with no
+      tail room left. One render, so treat it as the working figure. The **35–40**
+      that stood here was 2.5-words/sec arithmetic, and at that rate the last line
+      runs past the end: 35 words needs about 18s, so the verdict beat gets clipped
+- [ ] **Dead air is a delivery problem, not a word-count one.** An under-written script
+      does render its slack as silence (measured 2026-08-03: 5.9s across 5 gaps in a 15s
+      render built from ~27 words) — but 29 words filled the same runtime on 2026-08-11,
+      so two words are plainly not what separated them. The variable is pausing, and the
+      item below is the fix. Never pad a script to reach a word count: the padding is
+      what gets clipped
 - [ ] **No "pause after each sentence" instruction.** Correct for a single-shot testimonial,
       harmful across four beats where every pause compounds. Ask for a steady delivery from
       first frame to last instead
@@ -177,5 +185,7 @@ stream-copies the picture and would otherwise have nothing final to sit under.
 - *"One clip per scene, then stitch"* — still valid as the escape hatch, no longer the
   default. It costs roughly double and requires post-production.
 - *"Reserve +4s for leading silence"* — measured at 0.44s and 0.0s on start-frame and
-  reference renders respectively (n=2). Treat the reserve as unverified for this
-  workflow; budget the script by speaking pace and check the render.
+  reference renders respectively (n=2), then at 0.515s, 0.529s and 0.482s across three
+  more reference renders on 2026-08-11 (n=5). The +4s reserve does not draw in this
+  workflow; budget about **0.5s** of leading silence, spend the rest on words, and
+  check the render.

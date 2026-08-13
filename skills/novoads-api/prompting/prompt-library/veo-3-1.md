@@ -78,14 +78,14 @@ No logos on clothing. No on-screen text, no captions, no background music. Verti
 
 ## Duration from word count
 
-The 2.5-words-per-second arithmetic and nothing more — **unmeasured on this model.** Budget no silence, because nobody here knows whether Veo front-loads it the way Seedance does. Find out with the QA step and write the number down.
+The **2.0**-words-per-second arithmetic and nothing more — **unmeasured on this model.** The rate is Seedance's, measured 2026-08-11 on one render, and it is carried here only because it is the sole figure anyone has actually timed; the 2.5 that used to drive this table was never measured on anything. Budget no silence, because nobody here knows whether Veo front-loads it the way Seedance does. Find out with the QA step and write the number down.
 
 | Script length | Duration |
 |---|---|
-| 1–10 words | 4s |
-| 11–15 words | 6s |
-| 16–20 words | 8s |
-| **21+ words** | **Too long** — 8s is the ceiling. Split, or move to Seedance |
+| 1–8 words | 4s |
+| 9–12 words | 6s |
+| 13–16 words | 8s |
+| **17+ words** | **Too long** — 8s is the ceiling. Split, or move to Seedance |
 
 ## QA
 

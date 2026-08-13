@@ -146,7 +146,7 @@ Voiceover: "{{OPENING_LINE}}. {{FEATURE_LINE}}. {{CLOSER_LINE}}."
 - Hits 1–2 specific features
 - Closes with the brand name or where to buy
 - Relaxed and measured, not rushed
-- **Count the words.** A calm lifestyle narration runs about 1.5 words per second, so 15 seconds is roughly 22–35 words, not 50. Over-writing is the most common way this style comes back rushed.
+- **Count the words.** A calm lifestyle narration is **deliberately slower** than the library's 2.0 words/sec baseline — about **1.5 words/sec** — so 15 seconds is roughly **22–29 words**, not 50. The two ends of that range mean different things: 22 is the *style* (1.5 words/sec, the unhurried read this format is for), and 29 is *physics* (2.0 words/sec, measured 2026-08-11 — a 29-word script filled a 15s render end to end with no tail room). Write toward 22. Past 29 the narration is not merely rushed, it is cut off. Over-writing is the most common way this style comes back rushed.
 
 Set `language` to the language you wrote it in, and write the prompt in that language too. Nothing on the API pushes back on a Spanish or Portuguese narration, and the estimate's advice arrives in the prompt's own language.
 
@@ -292,7 +292,7 @@ Price it first. The estimate takes the pricing fields only; `referenceAssetIds` 
 }
 ```
 
-Then run gate 1 on the narration before submitting — 29 words against 15 seconds is about 1.9 words per second, just above a calm lifestyle read and close to the ceiling for this style. Another sentence would rush it.
+Then run gate 1 on the narration before submitting — 29 words against 15 seconds is **2.0 words per second** of delivered speech, which is not "close to the ceiling", it *is* the ceiling: a 29-word script filled a 15s render end to end on 2026-08-11, leaving no tail room. So this example sits at the fast end of a style whose whole point is an unhurried read, and another sentence would not rush it — it would clip it. (That measurement is a lip-synced talking head; whether a Seedance voiceover front-loads its silence the same way is unmeasured, so check the render.)
 
 ---
 
@@ -302,7 +302,7 @@ Then run gate 1 on the narration before submitting — 29 words against 15 secon
 - [ ] **`aspectRatio` set** — `9:16` for social (the default is `16:9`), and restated as `Vertical 9:16.` at the end of the prompt
 - [ ] **3–4 shots per clip** — each lingering ~3–4 seconds, separated by `Cut to`
 - [ ] **Voiceover, not talking to camera** — narration over the visuals, no lip-sync
-- [ ] **Max 2–3 narration sentences**, roughly 22–35 words for 15 seconds
+- [ ] **Max 2–3 narration sentences**, roughly **22–29 words** for 15 seconds — aim at 22, because this style is the deliberate 1.5-words/sec read; 29 is the measured hard ceiling
 - [ ] **Gate 1 run on the narration** — numbered beats, word count, explicit yes
 - [ ] **At least one BTS element** — studio light, camera rig, or the seamless edge
 - [ ] **Product constant across looks** — only the surrounding styling changes

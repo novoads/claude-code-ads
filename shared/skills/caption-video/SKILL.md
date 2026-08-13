@@ -51,6 +51,9 @@ Come here instead when the user:
   are the usual reason: transcription mishears them, and the API gives you
   nowhere to fix it,
 - is captioning enough footage that per-minute credits add up,
+- has a line the API path burns **wrong**. Its renderer can truncate a word even
+  when its own transcript is correct — see *Safety rules* below. There is nothing
+  to fix on that path, so the local burn is the fix,
 - or has a source rendered with `audioEnabled: false`, which the API refuses with
   a `409`. This skill can still caption it if the user supplies the words.
 
@@ -127,6 +130,15 @@ The guide carries the exact commands for each step.
   deployed ad costs a re-render.
 - **Show the user the grouped phrases** (or the first render) before treating the
   captions as final.
+- **Read the burned frames, not just the transcript.** A correct transcript does
+  not prove a correct caption. On 2026-08-12 the API path's `hustle` preset burned
+  `BOTT.` for `bottle.` in every frame of a closing line while its own transcript
+  had the word right — `bottle.` at 13.199–13.439s. The fault sat in the render
+  layer, downstream of transcription, so every check that stopped at the words
+  passed it. Compare the burned cards **word for word against the approved
+  script** before shipping, and treat a truncated or garbled word as a failed run
+  rather than a note. That take was charged and thrown away; the local burn is
+  what shipped.
 
 ## Hand-off
 
