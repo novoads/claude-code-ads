@@ -22,23 +22,27 @@ batch.
 folder of face photos: headshot, two three-quarter angles, a smiling one, a neutral one.
 Five, because the skill says five.
 
-**Observed drift, in this file, today.** Three numbers disagree inside one document:
+**Observed drift — found, and reconciled.** Three numbers disagreed inside one document.
+Recorded here because the shape recurs whenever a vendor raises a limit: the section that
+announces the new number gets rewritten, and the sentences that merely *use* the old one do
+not. The four survivors were:
 
-- *References — how many, and why it changed back* says **14**, and says the 4-on-every-
+- *References — how many, and why it changed back* said **14**, and said the 4-on-every-
   model advice "has been corrected".
-- The same section then says **"Always use 5+ face references for character work."**
-- Workflow step 2 ends **"Then pick the 4 that will be cited (see the cap section
-  above)"** — pointing at the section that just said fourteen.
-- *Quirks and pitfalls* → `referenceAssetIds` is an array of plain strings ends
+- The same section then said **"Always use 5+ face references for character work."**
+- Workflow step 2 ended **"Then pick the 4 that will be cited (see the cap section
+  above)"** — pointing at the section that had just said fourteen.
+- *Quirks and pitfalls* → `referenceAssetIds` is an array of plain strings ended
   **"Maximum 4."**
-- And *Compose prompts* still tells the reader to lean on the likeness block harder
-  "since it is now carrying work the 5th reference used to do" — a sentence that only
-  makes sense under the retired cap.
+- And *Compose prompts* told the reader to lean on the likeness block harder "since it is
+  now carrying work the 5th reference used to do" — a sentence that only parses under the
+  retired cap.
 
-An agent reading the workflow in order obeys the last instruction it hit and cites four
-references on a model that takes fourteen, **while the same file tells it five is the
-minimum for the job it is doing**. Nothing refuses a short array, so the run completes,
-the likeness generalises, and the cause is invisible.
+An agent reading the workflow in order obeys the last instruction it hit, so it cited four
+references on a model that takes fourteen, **while the same file told it five was the
+minimum for the job it was doing**. Nothing refuses a short array, so the run completes, the
+likeness generalises, and the cause is invisible. All five sentences now name 14 or defer to
+`reference.md`; the assertions below are what a future edit must not break.
 
 `reference.md` settles it: `nano-banana-pro` takes **14**, verified live 2026-08-04
 against spec `2.7.0` with pinned out-of-range probes — 15 refused, 14 accepted. It also

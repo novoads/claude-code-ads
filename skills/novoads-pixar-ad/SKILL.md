@@ -6,9 +6,8 @@ description: >-
   four to six beats, each rendered from its own key frame, narration laid into
   the gaps, a music bed, captions burned on, assembled locally with ffmpeg.
   Carries the genre's beat formulas (anthropomorphized problem character,
-  protagonist reveal, mascot mechanism scene, composited end card) and produces
-  a product read, cast sheet, beat board, per-beat still and clip, and the
-  exact curl calls. Use for ANY Pixar-style, Disney-style, 3D animated or
+  protagonist reveal, mascot mechanism scene, composited end card).
+  Use for ANY Pixar-style, Disney-style, 3D animated or
   animated-film-look ad at ANY length: "Pixar style ad", "3D animated ad",
   "animated movie look", "cute 3D character ad", "a quick animated ad", "15
   second animated ad", "30 second animated ad", "storyboard ad", "several

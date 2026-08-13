@@ -135,6 +135,7 @@ on any prose around it:
 | `updated_with_conflict FROM=… TO=… STASH=<ref>` | Updated, **and their local edits are parked in `<ref>`**. Lead with the stash — that is the part with their work in it. Recover with `git stash pop <ref>`. |
 | `offline` | No network. Nothing changed, the pack still works. |
 | `blocked REASON=<reason>` | Nothing changed and the repo is exactly as it was. Report the reason and its fix; do not try to work around it. |
+| `interrupted` | Someone stopped the run (Ctrl-C, or the terminal went away). **This is a safe state, not a broken one:** any in-flight merge was aborted, `.env` was restored, and nothing is half-applied. The remedy is to run `./scripts/update.sh` again — never a raw `git pull` to "finish the job", which is the exact thing this script exists to keep off the tree. Read its stderr before you report: if it stashed local edits first they are still in the stash and it says so, and in the one case it cannot clean up safely — a conflicted index with no stash behind it — it leaves the tree exactly as found and prints what to inspect. Exit code is nonzero. |
 | `rolled_back TO=<sha>` | Only from `--rollback`. |
 
 Then summarize what changed, in **six bullets or fewer**, from `CHANGELOG.md`

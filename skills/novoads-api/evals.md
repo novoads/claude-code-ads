@@ -150,19 +150,21 @@ the array is treated as a verdict in either direction.
 
 **Scenario.** An agent reads this skill top to bottom and reaches *Guardrails* last.
 
-**Observed drift, in this file, today.** The `POST /v1/images` section states the
+**Observed drift — found, and corrected.** The `POST /v1/images` section states the
 reference cap is per model — `nano-banana-pro` **14**, `reve-2.1` 8, `gpt-image-2` 4 —
 and [reference.md](reference.md) agrees, with the probe log attached: verified live
 2026-08-04 against spec `2.7.0`, *which raised `nano-banana-pro` from 4 to 14*, each
 probe pinned with an out-of-range `numImages` so no body could be valid (15 refused, 14
 accepted; 9 on `reve-2.1` refused, 8 accepted; 5 on `gpt-image-2` refused).
 
-The *Guardrails* bullet still reads **"4 on `gpt-image-2` and `nano-banana-pro`"** — the
-pre-`2.7.0` value. It is the last statement in the file on the subject, it is stated as
-a rule rather than as a reference, and it is wrong. An agent that trusts it caps a
-fourteen-reference model at four, **silently**: nothing refuses a short array, the
-render succeeds, and the missing references show up as a likeness that drifted or a
-brand mark that got invented.
+The *Guardrails* bullet read **"4 on `gpt-image-2` and `nano-banana-pro`"** — the
+pre-`2.7.0` value — for as long as it took someone to read the file top to bottom rather
+than in the order it was edited. It was the last statement in the file on the subject, it
+was stated as a rule rather than as a reference, and it was wrong. An agent that trusted
+it capped a fourteen-reference model at four, **silently**: nothing refuses a short array,
+the render succeeds, and the missing references show up as a likeness that drifted or a
+brand mark that got invented. The bullet now names all three caps in the body's order; the
+assertions below are what a future edit must not undo.
 
 This is the failure the guardrail list is *designed* to cause when it goes stale, which
 is the general lesson: a summary that restates a number owns that number forever.

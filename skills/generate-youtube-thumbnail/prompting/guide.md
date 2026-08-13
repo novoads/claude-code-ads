@@ -56,7 +56,7 @@ likeness must be preserved.
 
 ### Why this works
 
-The AI defaults to "average face that matches the description." Naming features explicitly, emphasizing "specific real person", and citing four well-varied references forces it to interpolate from the actual reference data instead of falling back to its training prior. With the reference count capped at 4, the explicitness of this block is the lever you still control — be more specific than feels necessary.
+The AI defaults to "average face that matches the description." Naming features explicitly, emphasizing "specific real person", and citing several well-varied references forces it to interpolate from the actual reference data instead of falling back to its training prior. The references and this block are two different levers and neither replaces the other: the references fix what the face IS, the block fixes what the prompt must not let drift — so be more specific than feels necessary even with a full set cited.
 
 ## 2. Expressions cheat sheet
 

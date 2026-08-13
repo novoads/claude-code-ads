@@ -743,7 +743,7 @@ Append one line per new failure. Forward only. Every bullet is a real thing that
 - **Never put `-v error` on the `volumedetect` or `silencedetect` calls.** It suppresses the results and the check reports nothing while looking like it passed.
 - Spell invented brand names phonetically inside the quoted line, and re-run gate 1 when you do — the words changed.
 - `audioEnabled` exists on the three Seedance variants only. Sending it to `omni-flash`, `sora-2` or `veo-3.1` is a 400, and sending it to `/v1/estimates` is a 400 on any model.
-- Image `referenceAssetIds` caps are per model: 8 on `reve-2.1`, 4 on `gpt-image-2` and `nano-banana-pro`. There is no single number.
+- Image `referenceAssetIds` caps are per model: 14 on `nano-banana-pro`, 8 on `reve-2.1`, 4 on `gpt-image-2`. There is no single number.
 - Sora 2 and Veo 3.1 **are** on this API. Only Kling is not.
 - Real brands only in prompts. Do not substitute a blank bottle for a product the user has not given you — the API will happily render it and charge for it, and nothing will tell you. Ask for the photo.
 

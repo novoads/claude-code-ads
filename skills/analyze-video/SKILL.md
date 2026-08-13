@@ -30,8 +30,8 @@ like every other generation.
 
 **There is a hosted alternative, and it is not the default.** `POST /v1/analyses` reads an
 uploaded ad into a structured breakdown (hook boundary, beat timeline, on-screen text,
-casting, layer zones) in one synchronous call, flat **1 credit**, priced through
-`POST /v1/estimates` with `{"kind":"analysis"}` first like every other spend. Two reasons it
+casting, layer zones) in one synchronous call, at a **flat fee per analysis** that does not move
+with length. Price it through `POST /v1/estimates` with `{"kind":"analysis"}` first. Two reasons it
 is the fallback and not the front door here: the local path costs nothing and reads the whole
 runtime, while `/analyses` defaults to the first 20 seconds (120 is the ceiling, and raising
 it trades hook precision for coverage). Reach for it when ffmpeg is not installed, when the

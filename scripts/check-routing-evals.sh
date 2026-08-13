@@ -300,6 +300,14 @@ if problems:
     print("", file=sys.stderr)
     sys.exit(1)
 
-print(f"OK: {len(rows)} routing evals, {sum(totals)} fixtures "
-      f"({totals[0]} positive, of which {totals[1]} ambiguous; {totals[2]} negative).")
+# AMBIGUOUS IS A SUBSET OF POSITIVE, not a third class — the loop above counts a
+# fixture as positive and THEN, if it carries `ambiguous_with`, as ambiguous too.
+# So the total is positives plus negatives; `sum(totals)` counted every ambiguous
+# fixture twice and reported 234 for a file set holding 195. Nothing failed, which
+# is why it survived: the number is only ever read as reassurance, and an inflated
+# one reassures better. Said in the message as "incl." so the arithmetic is legible
+# from the line itself and the next reader does not have to re-derive it.
+total = totals[0] + totals[2]
+print(f"OK: {len(rows)} routing evals, {total} fixtures "
+      f"({totals[0]} positive incl. {totals[1]} ambiguous, {totals[2]} negative).")
 PY

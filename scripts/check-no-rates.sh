@@ -71,10 +71,16 @@ ALLOW=(
   'skills/novoads-api/prompting/prompt-library/seedance-2-ugc-v2\.md::worth a same-prompt A/B when someone has 14 credits to spend'
 
   # B2 — the flat `/analyses` fee and the per-clip transcript rate, restated in
-  #      the two video skills. Same defect as the copies fixed in this PR and the
-  #      same remedy (defer to the estimate arm); left for the owner of those
-  #      files so this PR does not reach across a boundary it was scoped out of.
-  'skills/analyze-video/SKILL\.md::in one synchronous call, flat \*\*1 credit\*\*, priced through'
+  #      clone-video-ad. Same defect as the copies fixed when this section was
+  #      written and the same remedy (defer to the estimate arm); left for the
+  #      owner of that file.
+  #
+  #      This group used to hold analyze-video's copy of the `/analyses` line too,
+  #      and that entry is GONE rather than commented out: the line now names the
+  #      flat SHAPE of the fee and sends the reader to the estimate arm for the
+  #      number, which is exactly the rewrite this guard asks for. The section only
+  #      ever shrinks, and a fixed line's exemption is deleted along with it — a
+  #      dead exemption is a live hole waiting for the next person who trusts it.
   'skills/clone-video-ad/SKILL\.md::synchronous call, flat \*\*1 credit\*\*, priced through'
   'skills/clone-video-ad/SKILL\.md::per clip, 0\.1 credits each, and it is the only thing that catches'
   'skills/clone-video-ad/evals\.md::5 segments, an .srt., for \*\*0\.1 credits\*\*'
