@@ -153,7 +153,7 @@ Skills that point here today:
 |---|---|
 | `skills/clone-video-ad` | 1 — transcribe-verify (step 12.3) |
 | `skills/novoads-api` | 1 — transcribe-verify (the QA step) |
-| `shared/skills/caption-video` | 3 — trim before captioning |
+| `shared/skills/caption-video` | 1, 3 — read the burned frames; trim before captioning |
 | `skills/novoads-pixar-ad` | 2, 3 — canonical home for both |
 | `skills/novoads-claymation-ad` | 2, 3 — points at its Pixar sibling |
 

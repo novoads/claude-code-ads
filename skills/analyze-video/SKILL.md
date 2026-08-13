@@ -470,8 +470,8 @@ organization may be in flight at once.
   a generated video for the user's product instead of a template file.
 - [scripts/extract-frames.sh](scripts/extract-frames.sh) — frame and audio extraction,
   shared by both skills.
-- [seedance-2.md](../novoads-api/prompting/prompt-library/seedance-2.md) — the platform guide every generated
-  template defers to.
+- [seedance-2.md](../novoads-api/prompting/prompt-library/seedance-2.md) — the platform guide every generated template defers to. The other two live video models carry their own grids, and you need one the moment a template targets them rather than Seedance: [sora-2.md](../novoads-api/prompting/prompt-library/sora-2.md) when the first spoken word has to land immediately (it measured no leading silence, where Seedance front-loads 3–5s), [veo-3-1.md](../novoads-api/prompting/prompt-library/veo-3-1.md) when the user names Veo or the shot has to evolve over its runtime. Neither takes `referenceAssetIds`.
+- [ugc-selfie-style.md](../novoads-api/prompting/prompt-library/ugc-selfie-style.md) — the cross-model UGC guide. Its *Core principles* transfer to Seedance; its per-model formulas do not — never port one across by find-and-replace.
 - [../../SKILL.md](../novoads-api/SKILL.md) — the call sequence, the two gates, polling, download.
 - [../../reference.md](../novoads-api/reference.md) — every endpoint, field, limit and error code.
 
@@ -502,8 +502,8 @@ skills/novoads-api/
         ├── character-sheet.md                ← image formulas (character consistency)
         ├── character-sheet-gpt-image-2.md    ← the same on gpt-image-2
         ├── nano-banana.md                    ← image formulas (Nano Banana Pro)
-        └── sora-2.md · veo-3-1.md · kling-3.md · ugc-selfie-style.md
-                                              ← parked: those models are not on this API
+        ├── sora-2.md · veo-3-1.md            ← the other two LIVE video models' grids
+        └── kling-3.md · ugc-selfie-style.md  ← Kling is not on this API; the selfie guide is cross-model
 ```
 
 New formulas you write land in `prompt-library/` beside the Seedance files, and get a row

@@ -78,6 +78,11 @@ subtitle file rather than pixels; Whisper alone covers that.
 2. **[prompting/guide.md](prompting/guide.md)** — the full recipe: Whisper model
    choice, the silence-offset transcription pattern, the word-grouping helper,
    the composition skeleton, the alpha composite, and the pitfall table.
+3. **[shared/references/craft.md](../../references/craft.md)** § 3 — the
+   trim-before-captioning doctrine step 1 below rests on, and § 1 for why the
+   burned frames are the check rather than the transcript. Read it before you
+   restate either rule anywhere; it holds one position per rule, and the copy is
+   the failure mode.
 
 ## Prerequisites
 
