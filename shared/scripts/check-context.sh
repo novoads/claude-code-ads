@@ -58,6 +58,42 @@ update_check_enabled() {
   esac
 }
 
+# ── Snooze reader (spec §4) ──────────────────────────────────────────────────
+# `.update-state/update-snoozed` is written by the novoads-update skill's "Not
+# now". Format, key=value, and the shape shared/scripts/auto-update.sh writes:
+#   level=<1|2|3+>   ladder position (1=24h, 2=48h, 3+=7d)
+#   until=<epoch>    when the snooze lapses
+#   version=<sha>    the upstream commit the answer was about
+#
+# "Not now" is an answer about the version in hand, so it silences the NAG and
+# nothing else. It does NOT silence the fetch above — that fetch is how we learn
+# a NEWER commit arrived, which is one of the three ways the answer expires —
+# and it does not reach ./scripts/update.sh or the skill, which stay available
+# the whole time. The kill switch silences the channel; a snooze silences one
+# sentence.
+#
+# All three lapse conditions resolve toward SPEAKING: the clock runs out, a new
+# upstream commit lands beyond the snoozed one, or the file does not parse. That
+# last bias is the opposite of auto-update.sh's, and deliberately so: for a hook
+# that APPLIES changes unattended the safe failure is to do nothing, and for a
+# banner that only informs the safe failure is to inform.
+banner_snoozed() {
+  local f="$ROOT/.update-state/update-snoozed" ref="$1" until_s ver now up
+  [[ -f "$f" ]] || return 1
+  until_s="$(sed -n 's/^[[:space:]]*until[[:space:]]*=[[:space:]]*\([0-9]\{1,\}\).*$/\1/p' "$f" 2>/dev/null | tail -1)"
+  ver="$(sed -n 's/^[[:space:]]*version[[:space:]]*=[[:space:]]*\([0-9a-fA-F]\{1,\}\).*$/\1/p' "$f" 2>/dev/null | tail -1)"
+  [[ -n "$until_s" ]] || return 1                    # no readable clock → notify
+  [[ -n "$ver" ]] || return 1                        # no readable version → notify
+  now="$(date +%s 2>/dev/null || echo 0)"
+  (( until_s > now )) || return 1                    # lapsed → notify
+  up="$(git -C "$ROOT" rev-parse "$ref" 2>/dev/null || true)"
+  [[ -n "$up" ]] || return 1                         # cannot compare → notify
+  # Abbreviated or full, either way: same commit → the answer still stands.
+  case "$up" in "$ver"*) return 0 ;; esac
+  case "$ver" in "$up"*) return 0 ;; esac
+  return 1                                           # upstream moved → notify
+}
+
 # ── Upstream-updates check ───────────────────────────────────────────────────
 # If this is a git clone with an `origin` remote, quietly check whether any
 # commits are pending upstream. Notify only — never auto-apply. Applying is a
@@ -86,6 +122,13 @@ if update_check_enabled && [[ -d "$ROOT/.git" ]] && git -C "$ROOT" remote get-ur
       [[ -n "$(git -C "$ROOT" status --porcelain 2>/dev/null)" ]] && upstream_dirty=1
     fi
   fi
+fi
+
+# Asked and answered: "Not now" holds until it lapses. Evaluated here rather
+# than inside the output block so the banner stays a wall of printf.
+upstream_snoozed=0
+if (( upstream_behind > 0 )) && banner_snoozed "$upstream_ref"; then
+  upstream_snoozed=1
 fi
 
 # ── Untracked working-tree check ─────────────────────────────────────────────
@@ -247,7 +290,7 @@ done
   printf '\nCost: every price comes from POST /v1/estimates, which also returns\n'
   printf '      your balance. This repo ships no credit tables.\n'
 
-  if (( upstream_behind > 0 )); then
+  if (( upstream_behind > 0 && upstream_snoozed == 0 )); then
     printf '\n⚠️  %d update(s) available from %s:\n' "$upstream_behind" "$upstream_ref"
     while IFS= read -r line; do
       [[ -n "$line" ]] && printf '   %s\n' "$line"
