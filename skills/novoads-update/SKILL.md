@@ -163,11 +163,22 @@ thing that has to be said out loud, even when it is obviously what they meant.
 **b. Verify BOTH halves, and say so out loud.** The flag and the reader are
 different facts, and either one alone is a promise that will not be kept:
 
+Assert each key **is on**, matching the exact set of values the hook accepts —
+`on ON On true TRUE True yes YES 1`. Do not test for the literal string `off`:
+the hook treats anything outside that on-list as off, so `update_check=OFF`,
+`disabled` or `0` would sail past an off-grep while the hook vetoes on them, and
+the skill would report all-clear on a clone that will never update. Check for
+the value that permits, not for one spelling of the value that forbids.
+
 ```bash
+ON='(on|ON|On|true|TRUE|True|yes|YES|1)'
 grep -q 'auto-update' .claude/settings.json && echo "reader: registered"
-grep -qE '^[[:space:]]*auto_apply[[:space:]]*=[[:space:]]*on' .update-state/config && echo "flag: auto_apply=on"
-grep -qE '^[[:space:]]*update_check[[:space:]]*=[[:space:]]*off' .update-state/config && echo "PROBLEM: kill switch still off"
+grep -qE "^[[:space:]]*auto_apply[[:space:]]*=[[:space:]]*$ON([[:space:]#].*)?\$"   .update-state/config && echo "flag: auto_apply is on"
+grep -qE "^[[:space:]]*update_check[[:space:]]*=[[:space:]]*$ON([[:space:]#].*)?\$" .update-state/config && echo "kill switch: on, updates permitted"
 ```
+
+All three lines must print. A missing line is a reason to stop and say what is
+wrong, not to round up to "should be fine".
 
 Report the result in plain words: the flag is on, the kill switch is not
 standing in its way, **and** the SessionStart hook that reads it is registered
@@ -176,8 +187,17 @@ claim that when all three checks agree.
 
 **c. Check for the machine-wide veto.**
 
+Mirror the hook's pass-through set here too, in the other direction: it ignores
+`0 false FALSE no NO off OFF` and an empty value, and vetoes on anything else.
+Warning on any non-empty value would tell someone with
+`NOVOADS_PACK_NO_UPDATE_CHECK=0` that their updates are blocked when they are
+not — under-promising is friendlier than the reverse, but it is still wrong.
+
 ```bash
-[ -n "${NOVOADS_PACK_NO_UPDATE_CHECK:-}" ] && echo "env veto is set: $NOVOADS_PACK_NO_UPDATE_CHECK"
+case "${NOVOADS_PACK_NO_UPDATE_CHECK:-}" in
+  ''|0|false|FALSE|no|NO|off|OFF) echo "env veto: not active" ;;
+  *) echo "env veto ACTIVE: NOVOADS_PACK_NO_UPDATE_CHECK=$NOVOADS_PACK_NO_UPDATE_CHECK" ;;
+esac
 ```
 
 `NOVOADS_PACK_NO_UPDATE_CHECK=1` in the environment overrides the config file
