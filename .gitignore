@@ -115,3 +115,20 @@ prompts/
 # not repo content. `git add -f iterations/<path>` still commits the rare one worth
 # keeping.
 iterations/
+
+# Update-system runtime state, written by ./scripts/update.sh and the
+# SessionStart hooks: the mkdir-lock, the out-of-band `.env` copy taken around a
+# merge, the kill-switch config, the throttle stamps and the migration
+# touchfiles. It is per-clone state, never repo content — and it must be IGNORED
+# rather than merely untracked, because `git stash --include-untracked` sweeps
+# untracked files: an unignored state dir would be stashed mid-update, taking
+# the lock and the .env backup with it at the exact moment they are load-bearing.
+# (update.sh also drops a self-ignoring `*` .gitignore inside it, so a clone
+# whose copy of this file predates the line is covered too.)
+.update-state/
+
+# The documented home for skills you write or fork for yourself. Anything here
+# is yours: it is never updated, never overwritten, and never shows up as a diff
+# you did not make. Copy a shipped skill into it before editing, and the update
+# path stops being a negotiation with your own edits.
+local-skills/

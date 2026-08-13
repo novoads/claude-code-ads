@@ -32,16 +32,85 @@ fi
 
 REPO_NAME="$(basename "$ROOT")"
 
+# ── Update-check kill switch ─────────────────────────────────────────────────
+# `.update-state/config`, key=value lines, `update_check=on|off` (default on).
+# The env override `NOVOADS_PACK_NO_UPDATE_CHECK=1` wins over the file.
+#
+# Off means OFF: no fetch, no banner, no network call of any kind from this
+# hook. The nag meta-pattern is well documented — a check gets added, an opt-out
+# gets added under pressure, and the opt-out ships broken — so this is one
+# function, read at one place, and the harness mutation-tests it in both
+# directions. It deliberately does NOT reach ./scripts/update.sh: a kill switch
+# that strands the manual path is not a kill switch.
+#
+# The file is read with grep, never sourced. A config file that can execute is a
+# config file that can be a payload.
+update_check_enabled() {
+  [[ "${NOVOADS_PACK_NO_UPDATE_CHECK:-}" == "1" ]] && return 1
+  local cfg="$ROOT/.update-state/config" line val
+  [[ -f "$cfg" ]] || return 0
+  line="$(grep -E '^[[:space:]]*update_check[[:space:]]*=' "$cfg" 2>/dev/null | tail -1)"
+  [[ -n "$line" ]] || return 0
+  val="$(printf '%s' "${line#*=}" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+  case "$val" in
+    off|0|false|no) return 1 ;;
+    *) return 0 ;;
+  esac
+}
+
+# ── Snooze reader (spec §4) ──────────────────────────────────────────────────
+# `.update-state/update-snoozed` is written by the novoads-update skill's "Not
+# now". Format, key=value, and the shape shared/scripts/auto-update.sh writes:
+#   level=<1|2|3+>   ladder position (1=24h, 2=48h, 3+=7d)
+#   until=<epoch>    when the snooze lapses
+#   version=<sha>    the upstream commit the answer was about
+#
+# "Not now" is an answer about the version in hand, so it silences the NAG and
+# nothing else. It does NOT silence the fetch above — that fetch is how we learn
+# a NEWER commit arrived, which is one of the three ways the answer expires —
+# and it does not reach ./scripts/update.sh or the skill, which stay available
+# the whole time. The kill switch silences the channel; a snooze silences one
+# sentence.
+#
+# All three lapse conditions resolve toward SPEAKING: the clock runs out, a new
+# upstream commit lands beyond the snoozed one, or the file does not parse. That
+# last bias is the opposite of auto-update.sh's, and deliberately so: for a hook
+# that APPLIES changes unattended the safe failure is to do nothing, and for a
+# banner that only informs the safe failure is to inform.
+banner_snoozed() {
+  local f="$ROOT/.update-state/update-snoozed" ref="$1" until_s ver now up
+  [[ -f "$f" ]] || return 1
+  until_s="$(sed -n 's/^[[:space:]]*until[[:space:]]*=[[:space:]]*\([0-9]\{1,\}\).*$/\1/p' "$f" 2>/dev/null | tail -1)"
+  ver="$(sed -n 's/^[[:space:]]*version[[:space:]]*=[[:space:]]*\([0-9a-fA-F]\{1,\}\).*$/\1/p' "$f" 2>/dev/null | tail -1)"
+  [[ -n "$until_s" ]] || return 1                    # no readable clock → notify
+  [[ -n "$ver" ]] || return 1                        # no readable version → notify
+  now="$(date +%s 2>/dev/null || echo 0)"
+  (( until_s > now )) || return 1                    # lapsed → notify
+  # The longest rung of the ladder is 7 days. A parseable `until` far past that
+  # is not a snooze, it is a permanent mute wearing a snooze's clothes — from a
+  # clock skew, a milliseconds-for-seconds bug, or an edit. Treat it as corrupt,
+  # which here means notify. "Never ask again" is a real answer with its own
+  # switch (`update_check=off`); it is not something a stray digit gets to say.
+  (( until_s <= now + 3456000 )) || return 1         # > 40 days → corrupt → notify
+  up="$(git -C "$ROOT" rev-parse "$ref" 2>/dev/null || true)"
+  [[ -n "$up" ]] || return 1                         # cannot compare → notify
+  # Abbreviated or full, either way: same commit → the answer still stands.
+  case "$up" in "$ver"*) return 0 ;; esac
+  case "$ver" in "$up"*) return 0 ;; esac
+  return 1                                           # upstream moved → notify
+}
+
 # ── Upstream-updates check ───────────────────────────────────────────────────
 # If this is a git clone with an `origin` remote, quietly check whether any
-# commits are pending upstream. Notify only — never auto-pull. The actual pull
-# requires the user to run `git pull` themselves (so their local edits and
-# in-flight work stay safe).
+# commits are pending upstream. Notify only — never auto-apply. Applying is a
+# separate, explicit step the user takes with ./scripts/update.sh, which stashes
+# their in-flight work, copies `.env` out of git's reach across the merge, and
+# puts both back afterwards.
 upstream_behind=0
 upstream_ref=""
 upstream_log=""
 upstream_dirty=0
-if [[ -d "$ROOT/.git" ]] && git -C "$ROOT" remote get-url origin >/dev/null 2>&1; then
+if update_check_enabled && [[ -d "$ROOT/.git" ]] && git -C "$ROOT" remote get-url origin >/dev/null 2>&1; then
   # Quiet fetch with a 10s ceiling so offline sessions don't hang.
   if command -v timeout >/dev/null 2>&1; then
     timeout 10 git -C "$ROOT" fetch origin --quiet 2>/dev/null || true
@@ -59,6 +128,13 @@ if [[ -d "$ROOT/.git" ]] && git -C "$ROOT" remote get-url origin >/dev/null 2>&1
       [[ -n "$(git -C "$ROOT" status --porcelain 2>/dev/null)" ]] && upstream_dirty=1
     fi
   fi
+fi
+
+# Asked and answered: "Not now" holds until it lapses. Evaluated here rather
+# than inside the output block so the banner stays a wall of printf.
+upstream_snoozed=0
+if (( upstream_behind > 0 )) && banner_snoozed "$upstream_ref"; then
+  upstream_snoozed=1
 fi
 
 # ── Untracked working-tree check ─────────────────────────────────────────────
@@ -220,7 +296,7 @@ done
   printf '\nCost: every price comes from POST /v1/estimates, which also returns\n'
   printf '      your balance. This repo ships no credit tables.\n'
 
-  if (( upstream_behind > 0 )); then
+  if (( upstream_behind > 0 && upstream_snoozed == 0 )); then
     printf '\n⚠️  %d update(s) available from %s:\n' "$upstream_behind" "$upstream_ref"
     while IFS= read -r line; do
       [[ -n "$line" ]] && printf '   %s\n' "$line"
@@ -228,11 +304,16 @@ done
     if (( upstream_behind > 5 )); then
       printf '   (... and %d more)\n' "$((upstream_behind - 5))"
     fi
+    # The remediation is ./scripts/update.sh in BOTH branches, because the one
+    # thing that separated them — "you have local changes, deal with them
+    # yourself first" — is precisely what that script does for you. A raw pull
+    # is not offered at all: it destroys a gitignored .env, silently and with
+    # exit 0, the moment upstream starts tracking that path.
     if (( upstream_dirty == 1 )); then
-      printf '\n   ⚠️  You have uncommitted local changes. Stash or commit first:\n'
-      printf '       git stash && git pull && git stash pop\n'
+      printf '\n   You have uncommitted local changes — that is fine, the updater expects it:\n'
+      printf '       ./scripts/update.sh   (stashes your work, fast-forwards, puts it back)\n'
     else
-      printf '\n   To update: git pull   (then re-run ./scripts/sync-skill.sh if skills changed)\n'
+      printf '\n   To update: ./scripts/update.sh   (re-syncs skills for you; --rollback undoes it)\n'
     fi
   fi
 
