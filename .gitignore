@@ -6,6 +6,10 @@ MASTER_CONTEXT.md
 .claude/worktrees/
 .claude/settings.local.json
 .cursor/skills/
+# The Codex mirror, and the ONE line here that must not carry a trailing slash:
+# it is a symlink, which git matches as a file, so `.agents/skills/` ignores
+# nothing and the link lands in `git status` on every clone. Measured, not read.
+.agents/skills
 .DS_Store
 *.log
 
