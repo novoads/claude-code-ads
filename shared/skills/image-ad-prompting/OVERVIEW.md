@@ -16,7 +16,7 @@
 │   ├ prompting/template-format.md  entry-format skeleton         │
 │   ├ prompting/safety-suffixes.md  3 always-on prompt guards     │
 │   ├ scripts/check_library.py      the evals, runnable, free     │
-│   ├ EVALS-image-ad-prompting.md   what they check and why       │
+│   ├ evals.md                      what they check and why       │
 │   └ OVERVIEW.md                   this file                     │
 ├─────────────────────────────────────────────────────────────────┤
 │ GENERATOR SKILLS (produce image files)                          │
@@ -47,7 +47,7 @@ the run ended there.
 
 Every turn has the same shape: **one decision, already made, with an escape hatch.**
 Recommend, say why in one line, offer exactly one alternative. The evals for this section are
-E1 to E3 in [EVALS-image-ad-prompting.md](EVALS-image-ad-prompting.md).
+E1 to E3 in [evals.md](evals.md).
 
 ### A. No product named yet
 
@@ -281,7 +281,7 @@ python3 shared/skills/image-ad-prompting/scripts/check_library.py --selftest # p
 
 They cover the prompt budget, conflicting element counts, documented model limits, the
 transcribe-verify rule, and the entry format. Run them before landing a library change.
-[EVALS-image-ad-prompting.md](EVALS-image-ad-prompting.md) says what each one caught.
+[evals.md](evals.md) says what each one caught.
 
 ---
 

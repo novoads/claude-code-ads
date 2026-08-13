@@ -4,7 +4,7 @@ Written **before** the `SKILL.md` edits in this PR, following the evals-first wo
 from #13. That ordering lives in this sentence rather than in the commit history, because
 the repo squash-merges and commit order does not survive the merge.
 
-Unlike [EVALS-ugc-base-and-broll.md](../novoads-api/prompting/prompt-library/EVALS-ugc-base-and-broll.md), which
+Unlike [evals.md](../novoads-api/prompting/prompt-library/evals.md), which
 was written from an observed failing run, E1–E4 come from two places: the deployed-spec
 verification at the top of the #17 PR (`info.version` **2.10.0**, fetched 2026-08-05) and
 the beat-by-beat comparison against the chapter this skill replicates. One assertion in E4

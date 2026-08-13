@@ -121,9 +121,12 @@ jobs:
   #             ways: a stale entry sends the agent nowhere, and an unlisted
   #             section is invisible to it.
   #
-  #   evals     — WARNS, never fails, and is wired in anyway so the six skills with
-  #             no written definition of "working" are named on every run instead
-  #             of being rediscovered every few weeks.
+  #   evals     — every routable skill carries an evals.md. It warned while six
+  #             skills had none, because a guard that arrives already red gets
+  #             deleted rather than satisfied; naming them every run was what a
+  #             warning could usefully do. The list reached zero, so the bar goes
+  #             up and stays up: a new skill arrives with its evals or it does not
+  #             arrive.
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -138,7 +141,7 @@ jobs:
         run: ./scripts/check-skill-targets.sh
       - name: Tables of contents match their files
         run: ./scripts/check-toc.sh
-      - name: Evals coverage (warning only)
+      - name: Every routable skill carries an evals.md
         run: ./scripts/check-evals-present.sh
 
   #   media   — the two scripts that actually push pixels and samples around, and
