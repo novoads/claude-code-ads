@@ -1,0 +1,35 @@
+// novoads-api is the catch-all: it owns any generation ask that names no craft
+// anchor and no sibling's medium. Its negatives are the load-bearing half — the
+// things adjacent to "make me an ad" that this pack does not do at all.
+{"intent":"I need a 15 second vertical clip of a woman raving about my serum","expected_skill":"novoads-api"}
+{"intent":"we launch Thursday with zero creative, get me something to post on Reels","expected_skill":"novoads-api"}
+{"intent":"put someone on camera holding this bottle and have her say the three benefits","expected_skill":"novoads-api"}
+// Naming a model is the loudest routing signal in the pack: the model list lives
+// in this description and in no sibling's.
+{"intent":"run the script through Seedance 2.5 and send me the mp4","expected_skill":"novoads-api"}
+{"intent":"same spot again but on Veo 3.1 this time","expected_skill":"novoads-api"}
+// Indirect: names no video, no ad and no model. The deliverable is still a clip.
+{"intent":"our TikTok is dead because we only ever post stills, do something about that","expected_skill":"novoads-api"}
+// A product photo forks two ways and only the SCENE decides: inventing a kitchen
+// the photo does not contain seeds a new scene, so it lands here rather than on
+// the skill that moves the picture it was handed.
+{"intent":"here is a photo of our jar, make an ad where someone uses it in a kitchen","expected_skill":"novoads-api","ambiguous_with":["novoads-image-to-motion"]}
+// No model named and no craft anchor — no dense type, no photoreal lifestyle cue —
+// so the still stays on the catch-all instead of going to either image specialist.
+{"intent":"one static creative for Meta, pick whichever model suits it","expected_skill":"novoads-api","ambiguous_with":["chatgpt-image-ad","nano-banana-image-ad"]}
+// "Several scenes" and "a start frame for each scene" are literal triggers in the
+// pixar skill's description. With no animated-style cue this is the API's own
+// per-scene startImage mode instead, and it is priced one call per scene.
+{"intent":"do it as four scenes, each one starting from its own frame","expected_skill":"novoads-api","ambiguous_with":["novoads-pixar-ad"]}
+// There is no b-roll endpoint: a silent ambient clip is an ordinary render here.
+// The overlay skill only enters once there is a finished base to cut away from.
+{"intent":"a silent clip of the bottle on a marble counter, no people in it","expected_skill":"novoads-api","ambiguous_with":["broll-overlay"]}
+// Captions on a finished MP4 are a two-path offer owned here (one call, presets,
+// costs credits). The local skill is the fallback, reached for when the presets
+// or the wording will not do.
+{"intent":"burn subtitles into this finished mp4 for me","expected_skill":"novoads-api","ambiguous_with":["caption-video"]}
+// Near-misses. Measurement, tracking and live production each sit one step from
+// "make me an ad", and none of them is anywhere in this pack.
+{"intent":"what was our cost per acquisition on last month's TikTok spend","expected_skill":null}
+{"intent":"install the Meta pixel on our checkout page so conversions report back","expected_skill":null}
+{"intent":"find me a casting agency in Santiago for a live shoot next week","expected_skill":null}

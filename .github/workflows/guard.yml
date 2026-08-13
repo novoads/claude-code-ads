@@ -141,6 +141,25 @@ jobs:
       - name: Evals coverage (warning only)
         run: ./scripts/check-evals-present.sh
 
+  #   routing-evals — the fixtures that say which sentences each skill must win.
+  #             The platform routes but never verifies: a description decays in
+  #             silence, and the first symptom is a user getting the wrong skill.
+  #             Structure only, no model in the loop, so it runs on a fork PR with
+  #             no credentials like everything else here.
+  #
+  #             Its own job rather than a step in `docs` for the same reason the
+  #             three prose ratchets are separate: the remedy is specific and does
+  #             not generalise. Every other check in `docs` reports a document that
+  #             is wrong; this one usually reports a skill with no fixtures at all,
+  #             or an intent that has to be rewritten because it quoted the trigger
+  #             it was meant to test. Sharing a red X would report the wrong fix.
+  routing-evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every routable skill has a structurally valid routing eval
+        run: ./scripts/check-routing-evals.sh
+
   #   media   — the two scripts that actually push pixels and samples around, and
   #             the 29 cases that were sitting in the repo unrun by anything.
   #             They are the highest-value tests here and the only ones with a

@@ -1,0 +1,22 @@
+// broll-overlay cuts away and comes back: the base audio keeps running and the
+// final duration equals the base duration. It generates the cutaway clips itself
+// once the base is approved, so "make me some cutaways for this ad" is still here.
+{"intent":"cut away to the product at four seconds and come back to her","expected_skill":"broll-overlay"}
+{"intent":"I have three clips in b-roll/, drop them over the talking head where she names each feature","expected_skill":"broll-overlay"}
+{"intent":"the middle of this ad is boring, break up the face with something","expected_skill":"broll-overlay"}
+{"intent":"keep her audio running but show the app screen while she explains it","expected_skill":"broll-overlay"}
+{"intent":"it's thirty seconds of one face, put some visual variety in it","expected_skill":"broll-overlay"}
+// Indirect: describes the edit, never names b-roll or an overlay.
+{"intent":"show what she's talking about instead of just her saying it","expected_skill":"broll-overlay"}
+// Cutaways have to be generated before they can be overlaid, and this skill does
+// both halves once there is an approved base. A silent ambient clip with no base
+// to cut into is an ordinary render on the API.
+{"intent":"make the cutaway clips and put them into the finished ad","expected_skill":"broll-overlay","ambiguous_with":["novoads-api"]}
+// Two passes in one sentence. Picture first; the bed is a separate skill and runs
+// last, after the captions.
+{"intent":"drop the app footage over her voice and put a track underneath","expected_skill":"broll-overlay","ambiguous_with":["music-mix"]}
+// Near-misses: joining clips end to end is not overlaying them, extending a video
+// is refused by construction, and a webcam corner is compositing rather than a cut.
+{"intent":"stitch these five clips together one after another","expected_skill":null}
+{"intent":"make the ad forty five seconds instead of thirty","expected_skill":null}
+{"intent":"add a picture in picture webcam corner to my screen recording","expected_skill":null}

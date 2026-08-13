@@ -1,0 +1,19 @@
+// generate-youtube-thumbnail runs the same model as the photoreal image-ad skill,
+// so the routing signal is the SURFACE — a video's cover frame, not an ad slot.
+{"intent":"my face, shocked, huge yellow text, the cover frame for tomorrow's upload","expected_skill":"generate-youtube-thumbnail"}
+{"intent":"five cover options for this episode so I can test which one gets clicked","expected_skill":"generate-youtube-thumbnail"}
+{"intent":"the click through rate on this video is awful, redo the cover image","expected_skill":"generate-youtube-thumbnail"}
+{"intent":"make the 1280x720 image for the video using this headshot of me","expected_skill":"generate-youtube-thumbnail"}
+{"intent":"high contrast cover with our logo and the product, big readable text","expected_skill":"generate-youtube-thumbnail"}
+// Indirect: never says thumbnail, and nothing else in the pack has a cover frame.
+{"intent":"nobody is clicking the video, the picture in the feed is the problem","expected_skill":"generate-youtube-thumbnail"}
+// Same model, same face-plus-text craft as the photoreal ad skill. Only the
+// surface separates them, and this sentence does not name one.
+{"intent":"a still of my face with big text over it","expected_skill":"generate-youtube-thumbnail","ambiguous_with":["nano-banana-image-ad"]}
+// Type-dominant layouts belong to the other image skill, but a video's cover is
+// this one's whatever the type is doing.
+{"intent":"a cover for the episode laid out like a before and after table","expected_skill":"generate-youtube-thumbnail","ambiguous_with":["chatgpt-image-ad"]}
+// Near-misses: the rest of shipping a YouTube video, none of it in this pack.
+{"intent":"upload the video and schedule it for nine tomorrow morning","expected_skill":null}
+{"intent":"write the title and description for the episode","expected_skill":null}
+{"intent":"get our channel ranking for ai ads in youtube search","expected_skill":null}

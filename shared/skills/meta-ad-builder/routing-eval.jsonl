@@ -1,0 +1,21 @@
+// meta-ad-builder is the only skill here that publishes. Everything before the
+// upload belongs to a generator, and everything about budget and targeting belongs
+// to the ad set it is handed rather than to this.
+{"intent":"put this mp4 live in the prospecting ad set, paused so I can check it first","expected_skill":"meta-ad-builder"}
+{"intent":"upload the creative and build the asset feed with five bodies and five titles","expected_skill":"meta-ad-builder"}
+{"intent":"which of our ads had the best return on ad spend last month","expected_skill":"meta-ad-builder"}
+{"intent":"get this into the ad account and leave it switched off","expected_skill":"meta-ad-builder"}
+{"intent":"create the ad object in facebook for the new video","expected_skill":"meta-ad-builder"}
+// Indirect: the creative exists, and what is missing is that it is not running.
+{"intent":"the video has been sitting in the folder for a week and it still isn't live","expected_skill":"meta-ad-builder"}
+// The other Ad Library reader. The split is the deliverable: files on disk is a
+// sweep, competitor copy to write asset-feed bodies against is this.
+{"intent":"show me their ad copy so I can write better bodies for our asset feed","expected_skill":"meta-ad-builder","ambiguous_with":["spy-competitor-ads"]}
+// "We need this running" reads like a generation ask and is not: the creative is
+// finished, and the missing step is publication.
+{"intent":"we need this creative running by Friday","expected_skill":"meta-ad-builder","ambiguous_with":["novoads-api"]}
+// Near-misses: ad-set level settings it is given rather than sets, another
+// network, and reporting that is not the ROAS pull.
+{"intent":"raise the daily budget to fifty dollars and widen the audience","expected_skill":null}
+{"intent":"push the same creative into our google ads account","expected_skill":null}
+{"intent":"write the weekly performance report for the client","expected_skill":null}

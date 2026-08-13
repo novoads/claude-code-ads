@@ -1,0 +1,29 @@
+// clone-video-ad delivers the WHOLE ad, rendered, for a different product. Its
+// boundary with the image cloner is one rule its description states twice: the
+// source's medium decides, not the wording.
+{"intent":"take this mp4 and rebuild the same ad for our energy drink","expected_skill":"clone-video-ad"}
+{"intent":"the reference is at ./swipe/ad3.mp4 — I want ours, same beats, same energy","expected_skill":"clone-video-ad"}
+{"intent":"their 20 second spot, our product, our script, rendered","expected_skill":"clone-video-ad"}
+{"intent":"I love this creator's ad, do the same thing for my supplement, video attached","expected_skill":"clone-video-ad"}
+{"intent":"copy this competitor's video ad end to end, we sell a coffee subscription","expected_skill":"clone-video-ad"}
+// Indirect: names no clone verb at all, but hands over a video and a product.
+{"intent":"outputs/reference.mp4 is what good looks like, make ours look like that","expected_skill":"clone-video-ad"}
+// This pack has no hook-only skill. The opening alone is the whole ad cloned and
+// then cut, so a hook ask lands here rather than falling through to nothing.
+{"intent":"I only want the first three seconds of this video ad, rebuilt for us","expected_skill":"clone-video-ad"}
+// The medium rule in its hardest form: identical wording to the image cloner's
+// trigger, and only the attachment separates them.
+{"intent":"clone this ad, video is attached","expected_skill":"clone-video-ad","ambiguous_with":["clone-image-ad"]}
+// Same source video, two deliverables. Wanting it "over and over" is a formula
+// file; wanting this one, finished, for one product is a render.
+{"intent":"study this ad and give me the same thing for my brand, rendered","expected_skill":"clone-video-ad","ambiguous_with":["analyze-video"]}
+// A bare "clone my competitors' ads" is the image cloner's — statics are the
+// default and it sweeps for them. Naming VIDEO is what moves it here, and it
+// costs a second sweep in video mode before there is anything to clone.
+{"intent":"clone whatever video ads our competitors are running right now","expected_skill":"clone-video-ad","ambiguous_with":["clone-image-ad","spy-competitor-ads"]}
+// Near-misses. There is no video-to-video on this API, so restyling footage is
+// not a thin version of cloning it — it is impossible. The other two are the
+// business around the clone rather than the clone.
+{"intent":"restyle our existing footage so it looks hand drawn","expected_skill":null}
+{"intent":"ask our lawyer whether copying a competitor's ad this closely is allowed","expected_skill":null}
+{"intent":"plan the media buy and budget split for running this across Meta and TikTok","expected_skill":null}

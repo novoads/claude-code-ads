@@ -1,0 +1,21 @@
+// spy-competitor-ads finds, ranks and files. It never rebuilds — the moment the
+// ask turns into "and make ours", a cloner owns it, and the offer at the end of a
+// sweep is made once rather than acted on.
+{"intent":"what is Arcads running on Meta right now","expected_skill":"spy-competitor-ads"}
+{"intent":"I want their whole swipe file on disk before Monday's meeting","expected_skill":"spy-competitor-ads"}
+{"intent":"pull down every creative these three brands have live and rank them","expected_skill":"spy-competitor-ads"}
+{"intent":"which of our competitors has the most creatives in market","expected_skill":"spy-competitor-ads"}
+{"intent":"grab the mp4s from the ad library for icon and creatify","expected_skill":"spy-competitor-ads"}
+// Indirect: never names a competitor, the Ad Library, or a sweep.
+{"intent":"refresh the folder of reference ads we keep, it is months out of date","expected_skill":"spy-competitor-ads"}
+// Sourcing a reference is this skill; the rebuild that usually follows is not.
+{"intent":"I need a good reference ad to work from and I don't have one","expected_skill":"spy-competitor-ads","ambiguous_with":["clone-image-ad"]}
+// The other skill that reads the Ad Library. The split is the deliverable: files
+// on disk here, competitor copy to feed an asset feed there.
+{"intent":"check who is out-advertising us on Facebook this quarter","expected_skill":"spy-competitor-ads","ambiguous_with":["meta-ad-builder"]}
+// Near-misses. Spend, positioning and a written brief are all things people
+// expect back from a competitive sweep, and none of them is what it returns —
+// recurrence is not spend, and it writes no analysis.
+{"intent":"estimate how much they are spending a month from their traffic","expected_skill":null}
+{"intent":"compare their pricing page against ours and tell me where we lose","expected_skill":null}
+{"intent":"write next quarter's creative brief from what we found","expected_skill":null}
