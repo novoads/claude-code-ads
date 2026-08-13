@@ -69,25 +69,20 @@ live subscription. Say which one it is rather than "auth failed".
 
 ## What one run costs
 
-A five-beat, 25-second ad, at the defaults this file recommends:
+**There is no rate table here, on purpose.** Every credit number this run shows a
+user comes from `POST /v1/estimates`, in this session, before anything is
+charged: a price written into a skill file goes on being quoted long after it has
+moved.
 
-| Step | Calls | Centi-credits |
-|---|---|---|
-| Cast sheet | 1 image | 3 |
-| Beat stills | 5 images | 15 |
-| Beat clips | 5 × 5s Seedance | 150 |
-| Voice-over | 5 lines | 10 |
-| Music bed | 1 | 5 |
-| Captions | 1 pass | 4 |
-| **Total** | | **187 cc ≈ 18.7 credits** |
-
-Check it rather than trust it. `POST /v1/estimates` prices every one of these
-kinds and spends nothing; Gate 2 below fires it before anything else.
-
-Two numbers worth holding: **the clips are 80% of the bill**, and a still costs
-a fiftieth of the clip it produces. That is the whole economic argument for the
-still gate — and for never re-rendering a beat you have not first tried to fix
-in its still.
+What Gate 2 prices, for a five-beat board: **1 cast sheet image · 1 still per
+beat · 1 clip per beat · 1 voice-over line per VO beat · 1 music bed · 1
+transcript of the master · 1 caption pass.** Four calls cover all of it, because
+the arms repeat — price each KIND once (`image`, `video`, `voiceover`, `music`),
+multiply by those counts, and quote what came back. The one shape worth holding
+is an ordering rather than a number: **the clips are most of the bill, and a
+still is a small fraction of the clip it seeds.** That is the whole economic
+argument for the still gate, and for never re-rendering a beat you have not first
+tried to fix in its still.
 
 ## Hard constraints
 
@@ -217,8 +212,8 @@ pricing a different ad.
 
 Then announce in one line and proceed:
 
-> Cast sheet + 5 stills + 5 clips + 5 VO lines + music + captions ≈ 18.7 credits
-> (balance: 340). Starting.
+> Cast sheet + 5 stills + 5 clips + 5 VO lines + music + captions ≈ <the total
+> the estimates returned> credits (balance: <what they reported>). Starting.
 
 This is an announcement, not a question. Two cases change it:
 
@@ -227,7 +222,7 @@ This is an announcement, not a question. Two cases change it:
 - **The balance covers the run and no retry.** Say so in one clause before
   firing: "this covers one pass, not a re-render." At this length a re-render is
   a beat, not the whole ad — which is worth saying too, because it is the good
-  news: a bad beat costs 3 credits to redo, not 18.
+  news: a bad beat is one still and one clip to redo, not the whole board.
 
 **The `warnings` array is advice.** `POST /v1/estimates` is the only call that
 lints a prompt — `POST /v1/videos` and `POST /v1/images` return no such field —
@@ -431,21 +426,21 @@ sheet and the previous still:
 POST /v1/uploads (product photo) → PUT the bytes with the returned `headers` VERBATIM
       │
       ▼
-POST /v1/images  cast sheet   1:1   ref [product]                       3 cc
+POST /v1/images  cast sheet   1:1   ref [product]
       │  ← returns images[].assetId. Pass it straight to the next call.
       ▼
-POST /v1/images  beat 1       9:16  ref [castSheet, product]            3 cc
-POST /v1/images  beat 2       9:16  ref [castSheet, beat1]              3 cc
-POST /v1/images  beat 3       9:16  ref [castSheet, beat2]              3 cc      ← sequential,
-POST /v1/images  beat 4       9:16  ref [castSheet, beat3]              3 cc        each on the
-POST /v1/images  beat 5       9:16  ref [castSheet, beat4]              3 cc        one before
+POST /v1/images  beat 1       9:16  ref [castSheet, product]
+POST /v1/images  beat 2       9:16  ref [castSheet, beat1]
+POST /v1/images  beat 3       9:16  ref [castSheet, beat2]        ← sequential,
+POST /v1/images  beat 4       9:16  ref [castSheet, beat3]          each on the
+POST /v1/images  beat 5       9:16  ref [castSheet, beat4]          one before
       │  ← each one's assetId feeds the next, no upload in between
       ▼
 ╔═══════════════════════════════════════════════════════════════════════╗
 ║  BOARD GATE — show all six images in order. Wait for the operator.    ║
-║  18 cc spent. The clips are 150. A wrong character, a wrong palette   ║
-║  or a wrong location caught here costs an eighth of what it costs     ║
-║  after the renders.                                                   ║
+║  Six images spent, every clip still unspent — and the clips are       ║
+║  most of the run. A wrong character, a wrong palette or a wrong       ║
+║  location caught here is the cheapest fix this pipeline has.          ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -544,8 +539,8 @@ renders and charges a second time.
 
 ### Per-clip QA, before you spend a voice-over on it
 
-Check each clip as it lands. A beat that fails here is 3 credits to redo; a beat
-that fails after the mix has cost the mix too.
+Check each clip as it lands. A beat that fails here is one still and one clip to
+redo; a beat that fails after the mix has cost the mix too.
 
 1. The character is the same character as the cast sheet.
 2. The action in the prompt is the action on screen, and it is ONE action.
@@ -615,15 +610,33 @@ carries `details.reason: voiceover_concurrency_limit` and clears in seconds.
 curl -sS -X POST https://api.novoads.ai/v1/music \
   -H "Authorization: Bearer $NOVOADS_API_KEY" \
   -H 'Content-Type: application/json' \
-  -d '{"prompt":"<what it sits under>","instrumental":true}'      # 5 cc
+  -d '{"prompt":"<what it sits under>","instrumental":true}'
 # → 202 { jobId } — poll GET /v1/generations/{jobId}, then read audio[]
 ```
 
+**Generating the bed is this gate. LAYING it is the LAST thing that happens**, and
+never as hand-written ffmpeg — it goes through
+[music-mix](../../shared/skills/music-mix/SKILL.md) *after* Gate 8's burn, because
+the script stream-copies the picture and the burn's own transcription of the voice
+should never have music under it:
+
+```bash
+python3 shared/skills/music-mix/scripts/music_mix.py \
+  captioned.mp4 music.mp3 master-lofi-warm.mp4
+```
+
+Read that skill first. What it does that a hand-written chain did not: it
+**measures** the bed rather than multiplying it — `volume=0.10` is -20 dB on a
+level nobody checked, measured on a real run at -33 to -40 dB, a bed paid for and
+never heard — refuses a silent track or an inaudible gain before rendering, ducks
+under the voice, masters, and verifies. Report its verification line verbatim.
+
 One request returns TWO takes for one charge. Listen to both and use the one that
 sits better under the voice; they differ in length and arrangement, not price.
-Expect one to two minutes of audio whatever you ask for — you will trim it.
-`audio[]` on the polled job is the only place the second take is published; it
-never turns up in a listing.
+Two takes is also what makes 2 or 3 named variants free — another `music_mix.py`
+pass each, no second generation. Expect one to two minutes of audio whatever you
+ask for; the script trims it. `audio[]` on the polled job is the only place the
+second take is published.
 
 `prompt` is capped at 500 characters, and the cap applies to the **composed**
 prompt: `style` and the instrumental sentence are concatenated into it before
@@ -633,7 +646,13 @@ submission. A music job spends one of the five shared video slots.
 behind a deployment flag; where music is off the path answers `400 invalid_input`
 rather than a `404`, and the `music` estimate arm is gone too. Say one sentence —
 "no music bed on this account, mixing without one" — and carry on. The ad works
-without it; clip audio plus narration is a complete mix.
+without it; clip audio plus narration is a complete mix. No bed means no script
+pass either, so master the captioned cut by hand, to the target the mixer uses:
+
+```bash
+ffmpeg -i captioned.mp4 -af loudnorm=I=-14:TP=-1.5:LRA=11 -c:v copy master.mp4
+ffmpeg -i master.mp4 -af ebur128=framelog=quiet -f null -    # read Integrated
+```
 
 ## Gate 7 — local assembly
 
@@ -659,18 +678,12 @@ ffprobe -v error -show_entries format=duration -of csv=p=0 beat2-vo.mp3
 ffmpeg -i beat2.mp4 -t <vo+0.5> -c:v libx264 -c:a aac beat2-trimmed.mp4
 ```
 
-A beat with no narration keeps its own length.
-
-**Trimming is the default, not the only option.** Measure both and pick per beat:
-
-| Option | When | How |
-|---|---|---|
-| **A. Trim the clip to the VO** (default) | The VO is shorter than the clip. Most beats. | Re-encode to `vo + 0.5s`: 0.25s lead, 0.25s tail. |
-| **B. Extend the VO to fill the clip** | The visual needs its full length to land: a long camera move, the mascot mechanism, a CTA hold. | Add one or two words, or a second short line. Re-render the take and re-measure. |
-
-The allowed micro-buffer is about 0.25s of lead and 0.25s of tail. Anything past
-that is dead air, and dead air at the end of a beat is the single most common
-tell that an ad was assembled rather than shot.
+**Trimming is the default, not the only option.** A beat with no narration keeps
+its own length; otherwise measure both and pick per beat. **A**, most beats: the
+VO is shorter, so re-encode the clip to `vo + 0.5s` — 0.25s of lead, 0.25s of
+tail, and anything past that is dead air. **B**, when the visual needs its full
+length for a long camera move, the mascot mechanism or a CTA hold: extend the VO
+instead, a word or two or a second short line, re-rendered and re-measured.
 
 **If the VO is LONGER than the clip, never speed it up.** No `atempo`. Split the
 line across two beats, or re-render the beat at a longer duration. A voice at
@@ -681,66 +694,49 @@ cut is not the frame that was there before, so a caption band that sat over clea
 floor can land on a face or a label. This is why captions are burned AFTER the
 trim and the mix, never before: the timings and the safe area both move.
 
-### Concatenate, then mix
+### Concatenate, then build ONE voice track
+
+The picture and the voice are assembled here. **The bed is not** — Gate 6 says why.
 
 ```bash
+FMT="aformat=sample_rates=48000:channel_layouts=stereo"   # one shape for all
+
 # 1. concat the trimmed beats
 printf "file '%s'\n" beat*-trimmed.mp4 > beats.txt
 ffmpeg -f concat -safe 0 -i beats.txt -c copy stitched.mp4
 
-# 2. one VO track: the lines, each delayed to its beat's start
-#    (adelay is in MILLISECONDS, per channel)
-ffmpeg -i beat2-vo.mp3 -af "adelay=5000|5000" vo2-placed.mp3
-# …then amix the placed lines into one vo.mp3
+# 2. place each VO line at its beat's start. adelay is MILLISECONDS and takes one
+#    delay PER CHANNEL: `adelay=5000|5000` on a MONO take delays the single
+#    channel it has and drops the second value. `all=1` delays whatever it finds.
+ffmpeg -i beat2-vo.mp3 -af "adelay=5000:all=1,$FMT" vo2-placed.wav
 
-# 3. the mix
-ffmpeg -i stitched.mp4 -i vo.mp3 -i music.mp3 -filter_complex \
-  "[0:a]volume=0.28[clip];[1:a]volume=1.0[vo];[2:a]volume=0.10[bed];\
-   [clip][vo][bed]amix=inputs=3:duration=first:dropout_transition=0[a]" \
-  -map 0:v -map "[a]" -c:v copy -c:a aac master.mp4
+# 3. the beats' own audio, placed the same way, split by track type
+ffmpeg -i beat1-sync.mp4 -vn -af "adelay=0:all=1,$FMT" sync1.wav
+ffmpeg -i beat2-vo.mp4   -vn -af "volume=0.28,adelay=5000:all=1,$FMT" amb2.wav
+
+# 4. one voice track. duration=longest, NEVER `first` — `first` ends the mix when
+#    input 0 ends: measured, the audio stopped 2.4s before the picture and the
+#    hero card played silent. normalize=0 stops amix dividing by the input count.
+ffmpeg -i vo2-placed.wav -i sync1.wav -i amb2.wav -filter_complex \
+  "[0:a][1:a][2:a]amix=inputs=3:duration=longest:normalize=0:dropout_transition=0[a]" \
+  -map "[a]" voice.wav
+
+# 5. the voice onto the picture. Read its duration back against stitched.mp4.
+ffmpeg -i stitched.mp4 -i voice.wav -map 0:v -map 1:a -c:v copy -c:a aac voiced.mp4
 ```
 
 **The clip track is TWO different things and one level cannot serve both.** On a
-VO beat the clip audio is ambience and belongs at about 28%. **On a SYNC beat the
-clip audio IS the dialogue and belongs at 100%**, alongside the narrator, because
-attenuating it is attenuating the only line in the shot.
-
-Measured, and the reason this is stated as a rule: a run mixed at a flat 28%
-buried its SYNC beat so far down that an independent judge measured the line at
--36 dB under a caption that said the words the viewer could not hear. The ad had
-a caption for a line nobody could hear. That is worse than no line.
-
-So split the clip track before you mix:
-
-```bash
-# SYNC beats keep their own audio at full; VO beats drop to ambience level
-ffmpeg -i beat1-sync.mp4 -vn -c:a aac sync1.m4a
-ffmpeg -i beat2-vo.mp4   -vn -af "volume=0.28" -c:a aac amb2.m4a
-# …then place each on the timeline with adelay, exactly as the VO lines are placed
-```
-
-**The music bed is set by MEASUREMENT, not by a multiplier.** `volume=0.10` is
--20 dB applied to a source whose own level you did not check, and on a quiet
-generated bed that lands somewhere inaudible: measured on a real run at -33 to
--40 dB, which is a bed that was paid for and never heard. Normalize it to a known
-level first, then place it a fixed distance under the voice:
-
-```bash
-# bring the bed to a known loudness, THEN sit it ~18 dB under the narration
-ffmpeg -i music.mp3 -af "loudnorm=I=-30:TP=-2:LRA=7" -c:a aac bed.m4a
-```
-
-**Master the finished mix to -16 LUFS and verify it.** Vertical social placements
-sit near -16; a mix delivered at -22 plays quiet against everything around it and
-the viewer reads that as cheap. Measure, do not assume:
-
-```bash
-ffmpeg -i master.mp4 -af loudnorm=I=-16:TP=-1.5:LRA=11 -c:v copy master-loud.mp4
-ffmpeg -i master-loud.mp4 -af ebur128=framelog=quiet -f null -    # read Integrated
-```
+VO beat the clip audio is ambience and belongs at about 28%, which is what step 3
+does to it. **On a SYNC beat the clip audio IS the dialogue and belongs at 100%**,
+because attenuating it is attenuating the only line in the shot. Measured, and
+the reason this is a rule: a run mixed at a flat 28% buried its SYNC beat so far
+down that an independent judge measured the line at -36 dB, under a caption
+spelling out words the viewer could not hear. That is worse than no line.
 
 If the narration is fighting something, lower the AMBIENCE track before you raise
-the voice. Never lower a SYNC beat's own track to make room.
+the voice. Never lower a SYNC beat's own track to make room. **The order from
+here is fixed:** end card → concat → voice mix → transcribe → captions (Gate 8) →
+the bed, laid by `music_mix.py`.
 
 **If you hear a line twice, the mix is not the problem.** That beat's prompt
 carried the narrator's words and Seedance rendered them, and no level will fix
@@ -763,11 +759,15 @@ ffmpeg -i beat5-trimmed.mp4 -vf "select='gt(scene,0.3)',showinfo" -f null - 2>&1
 # 2. measure the product's bounding box in BOTH the rendered card and the real
 #    photo, then scale and position the real one to match. Matching by eye jumps.
 # 3. fade the real card in on the render's own dissolve curve, at full opacity
-#    BEFORE the wordmark becomes legible, or the misspelling ghosts through
+#    BEFORE the wordmark becomes legible, or the misspelling ghosts through.
+#    `-loop 1` is an INFINITE input and overlay runs to its LONGEST one, so
+#    without `shortest=1` and `-shortest` this repeats the last frame forever:
+#    measured, a 155 MB end card on a 5-second beat.
 ffmpeg -i beat5-trimmed.mp4 -loop 1 -i endcard.png -filter_complex \
   "[1:v]scale=<w>:-1,format=rgba,fade=t=in:st=<t0>:d=0.4:alpha=1[card];\
-   [0:v][card]overlay=<x>:<y>:enable='gte(t,<t0>)'" \
-  -c:a copy beat5-carded.mp4
+   [0:v][card]overlay=<x>:<y>:shortest=1:enable='gte(t,<t0>)'" \
+  -shortest -c:a copy beat5-carded.mp4
+# 4. card BEFORE the concat, and add this to beats.txt: that glob wants -trimmed
 ```
 
 **Match the card's background to the render before you composite it.** A retail
@@ -807,8 +807,8 @@ curl -sS -X POST https://api.novoads.ai/v1/transcripts \
 ```
 
 **`POST /v1/transcripts` is synchronous and charged** — the words are in the
-response, and it bills 0.1 credits per billed minute with a one-minute minimum,
-so a 25-second ad costs 0.1. It returns `text`, `words[]` with per-word timings
+response, billed per minute of source with a one-minute minimum, so an ad this
+length bills the minimum. It returns `text`, `words[]` with per-word timings
 **in seconds**, `segments[]` and an `srt`. **Transcribing the same source twice
 is free**, so a retry after a timeout is not a second charge. It sits behind the
 `TRANSCRIPT_API` flag: where it is off the path answers `400` naming what the
@@ -839,11 +839,10 @@ curl -sS -X POST https://api.novoads.ai/v1/captions \
 # → 202 { jobId } — poll GET /v1/generations/{jobId}
 ```
 
-`GET /v1/caption-presets` lists the styles with their tier and rate; the basic
-tier is 0.4 credits per billed minute and the dynamic tier is 0.8. A 25-second ad
-bills one minute — the minimum — either way. **Read the list rather than trusting
-the names below**; presets are added and the tiers are the product surface, not
-this file.
+`GET /v1/caption-presets` lists the styles with their tier and rate, and an ad
+this length bills the one-minute minimum on either tier. **Read the list rather
+than trusting the names below** — presets are added, and the rate is the list's
+to state, not this file's.
 
 Two things worth knowing before you iterate: **re-captioning the same video in
 the same preset is free and idempotent**, and the second call returns the first
@@ -861,8 +860,8 @@ picking from the list.
 
 | You want | Reach for | Note |
 |---|---|---|
-| The default heavy-outline social look | a basic-tier preset such as `hustle`, `slay` or `flex` | 0.4 cr/min. Fixed styling, which is the point: it will not surprise you |
-| Per-phrase emphasis, a punchline that pops | a dynamic-tier preset such as `glide` or `fusion` | 0.8 cr/min. Context-aware animation, worth it on a hook beat |
+| The default heavy-outline social look | a basic-tier preset such as `hustle`, `slay` or `flex` | Fixed styling, which is the point: it will not surprise you |
+| Per-phrase emphasis, a punchline that pops | a dynamic-tier preset such as `glide` or `fusion` | Context-aware animation, worth it on a hook beat. Read its rate off the list |
 | A quiet, typographic register | `simple`, `plain` or `lowkey` | Basic tier. Right when the ad is doing the work and the captions should not |
 
 Two things the preset cannot do for you, and both are yours:
@@ -932,8 +931,9 @@ Deliver in this order, no preamble:
    per beat against the two-line ceiling. At least one SYNC beat.
 7. **COST** — the `POST /v1/estimates` figures, announced in one line.
 8. Then generate: cast sheet, all stills, **stop at the board gate**, clips, VO,
-   music, assemble, composite the end card, verify, caption, **read the captions
-   against the script before calling it finished**.
+   music, composite the end card, assemble the voice mix, verify, caption, lay
+   the bed with `music_mix.py`, and **read the captions against the script before
+   calling it finished**.
 
 ## The calls
 
@@ -1090,10 +1090,11 @@ their characters.
   back to Gate 7.
 - **A caption for a line nobody can hear.** The SYNC beat's own audio was mixed
   at the ambience level. Its track goes at 100%, not 28%. See Gate 7.
-- **The music bed cannot be heard at all.** It was set with a multiplier instead
-  of a measurement. Normalize the bed to a known loudness first.
-- **The whole ad plays quiet.** It was never mastered. -16 LUFS, verified with
-  `ebur128`, not assumed.
+- **The music bed cannot be heard at all**, or **the whole ad plays quiet.** The
+  bed was laid by hand: a multiplier instead of a measurement, and no mastering
+  pass. Lay it with `music_mix.py`, which refuses an inaudible bed before it
+  renders and masters and verifies afterwards.
+- **The audio ends before the picture.** `amix=duration=first`. Use `longest`.
 - **The render duplicated a prop or a character.** Measured: one cot and one baby
   came back as two. Name the count in the prompt ("exactly one cot, exactly one
   baby") and negate the clone, and review the clip at full size.
@@ -1103,8 +1104,7 @@ their characters.
 ## Hard rules
 
 - One product per run.
-- Stop at the board gate. The operator approves the board before 150 credits of
-  clips fire.
+- Stop at the board gate. The operator approves the board before any clip fires.
 - Never invent reviews, ratings, prices, or performance claims.
 - Never claim what the reviews contradict.
 - Use the real brand and the real packaging from the photo. Never invent a brand

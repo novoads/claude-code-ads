@@ -74,28 +74,30 @@ unchanged.
 
 ## What one run costs
 
-Two shapes, and the choice is the operator's:
+Two shapes, and the choice is the operator's. What changes between them is the
+COUNT of the same components, never their kind:
 
-| Step | 5-beat short | 8-beat full |
+| Component | 5-beat short | 8-beat full |
 |---|---|---|
-| Cast sheet | 3 cc | 3 cc |
-| Beat stills | 5 × 3 = 15 | 8 × 3 = 24 |
-| Beat clips | 5 × 6s = 170 | 8 × 7s = 304 |
-| Voice-over | 5 lines = 10 | 8 lines = 16 |
-| Music bed | 5 | 5 |
-| Captions | 4 | 4 |
-| **Total** | **207 cc ≈ 20.7 credits** | **356 cc ≈ 35.6 credits** |
+| Cast sheet image | 1 | 1 |
+| Beat stills | 5 | 8 |
+| Beat clips | 5 × 6s | 8 × 7s |
+| Voice-over lines | 5 | 8 |
+| Music bed | 1 | 1 |
+| Transcript, then one caption pass | 1 each | 1 each |
 
-**The clips are 82% of the bill either way**, and a still costs a eleventh of the
-clip it produces. That is the whole economic argument for the board gate.
+**There is no price column, on purpose.** Every credit number this run shows a
+user comes from `POST /v1/estimates`, in this session, before anything is
+charged: price each KIND once, multiply by the counts above, and quote what came
+back. A rate written into a skill file goes on being quoted long after it moved.
 
-Check it rather than trust it. `POST /v1/estimates` prices every one of these
-kinds and spends nothing.
+**The clips are most of the bill either way**, and a still is a small fraction of
+the clip it seeds. That is the whole economic argument for the board gate.
 
 **Say the shape out loud before pricing it.** An 8-beat clay ad is the most
 expensive thing in this family, and the honest question at Gate 0 is whether
-beats 3, 4 and 5 are earning their 100+ credits. They often are; the arc is what
-this genre is for. But the operator decides that, not you.
+beats 3, 4 and 5 are earning the three extra clips they cost. They often are; the
+arc is what this genre is for. But the operator decides that, not you.
 
 ## Hard constraints
 
@@ -139,7 +141,7 @@ reader — it covers the whole runtime, which is what a 60-second arc needs.
 
 **There is a hosted alternative, and it is not the default.**
 `POST /v1/analyses` returns the structured hook/beat/casting breakdown in one
-synchronous call, flat 1 credit, priced through `POST /v1/estimates` with
+synchronous call, priced through `POST /v1/estimates` with
 `{"kind":"analysis"}`. Reach for it only when ffmpeg is missing or the local
 read has already failed: the local path costs nothing, ffmpeg is a hard
 dependency of the assembly anyway, and `/analyses` defaults to reading the
@@ -244,8 +246,12 @@ ads do.
 If the operator wants the judder, it is a post step and never a prompt:
 
 ```bash
-ffmpeg -i master.mp4 -filter:v "fps=12,fps=24" -c:a copy master-judder.mp4
+ffmpeg -i captioned.mp4 -filter:v "fps=12,fps=24" -c:a copy captioned-judder.mp4
 ```
+
+**Run it before the music bed goes on.** `music_mix.py` stream-copies the
+picture, so every pass that re-encodes the picture belongs ahead of it — and then
+the file the mixer measures and verifies is the file you ship.
 
 Asking the render for "stop-motion judder" does not control frame rate and does
 break the look. Do not put it in a prompt.
@@ -297,8 +303,8 @@ budget, VO and SYNC never overlapping in the same beat, no em dashes, never
 
 ## The cast sheet
 
-Same call, same 3 credits, different contents. Clay ads usually carry **two named
-characters**, and the narrator is a third presence who is never on screen.
+Same call, same single image, different contents. Clay ads usually carry **two
+named characters**, and the narrator is a third presence who is never on screen.
 
 Write the sheet text first from the template in
 [`references/formulas.md`](references/formulas.md), then render it. The template's
@@ -323,33 +329,42 @@ Gates 2 through 8 are `novoads-pixar-ad`'s, unchanged, including:
   announce in one line, proceed.
 - **Gate 3** — every still before any clip, each chained on the cast sheet and
   the previous still by the `assetId` that `POST /v1/images` returns, then
-  **STOP at the board gate**. At eight beats the stills are 27 credits and the
-  clips are 304. This gate is worth more here than anywhere else in the family.
+  **STOP at the board gate**. At eight beats there are eight clips waiting behind
+  it. This gate is worth more here than anywhere else in the family.
 - **Gate 4** — clips in waves of at most five. **Eight beats is two waves**, five
   then three, because a sixth concurrent `POST /v1/videos` comes back `429` with
   `details.reason: concurrency_limit`, and that is a real refusal, not a queue.
 - **Gate 5** — one voice, chosen once from `GET /v1/voices` and passed as
-  `voiceId` on every `POST /v1/voiceovers`. **Gate 6** — the music bed.
-- **Gate 7** — trim each clip to its narration plus 0.5 seconds, concat, mix,
-  composite the end card from the real photograph, transcribe and read it back.
-  **Read the levels out of the Pixar skill rather than from here** — the mix is
-  per beat, not one recipe, and this line used to restate it as a flat
-  `VO 100% / clip 28% / music 10%`. That recipe was written when every beat was
-  a VO beat. This genre has a SYNC beat (beat 3), where the clip's own audio IS
-  the dialogue, and 28% buries it under a caption spelling out words the viewer
-  cannot hear. One number cannot serve both cases, so this file states none.
+  `voiceId` on every `POST /v1/voiceovers`. **Gate 6** — generate the music bed.
+  **Laying** it is the last thing that happens in the run and it belongs to
+  [music-mix](../../shared/skills/music-mix/SKILL.md) and its
+  `scripts/music_mix.py`, run over the captioned cut, never to hand-written
+  ffmpeg.
+- **Gate 7** — trim each clip to its narration plus 0.5 seconds, concat, build
+  ONE voice track, composite the end card from the real photograph, transcribe
+  and read it back. **Read the mix out of the Pixar skill rather than from here**
+  — the clip level is per beat, not one recipe, and this line used to restate it
+  as a flat `VO 100% / clip 28% / music 10%`. That recipe was written when every
+  beat was a VO beat. This genre has a SYNC beat (beat 3), where the clip's own
+  audio IS the dialogue, and 28% buries it under a caption spelling out words the
+  viewer cannot hear. One number cannot serve both cases, so this file states
+  none — and the bed's level is no longer a number at all, it is whatever the
+  mixer measures.
 - **Gate 8** — captions, and the **BLOCKING** caption gate.
   **A garbled brand name is a failed run, not a note in the report.**
 
-Gate 7 in particular carries three rules this genre needs verbatim and does not
+Gate 7 in particular carries four rules this genre needs verbatim and does not
 restate here: trim to the VO or extend the VO to fill the shot, **never
-`atempo`** a long line to fit, and re-check the caption's vertical position
-after trimming because the frame at the new cut is not the frame that was there.
+`atempo`** a long line to fit, re-check the caption's vertical position after
+trimming because the frame at the new cut is not the frame that was there, and
+build the voice track with **`amix=duration=longest`** — `first` ends the mix
+when its first input ends, which is how an eight-beat arc ships a silent
+resolution card.
 
 **Do the assembly in `outputs/<ad-name>/`, not in the directory you started in.** The
 downloaded beats, `beats.txt`, the trimmed clips, the placed VO lines and the master are one
 run's working set — a dozen of them loose in a repo root is a diff somebody else has to
-explain. That includes the judder pass above: `master.mp4` and `master-judder.mp4` live
+explain. That includes the judder pass above: `captioned-judder.mp4` and the master live
 there too.
 
 Two caption looks fit this genre, and the preset guidance in the Pixar skill's
@@ -386,8 +401,9 @@ Deliver in this order, no preamble:
 5. **BEAT BOARD** — the table. At least one SYNC beat.
 6. **COST** — the `POST /v1/estimates` figures, announced in one line.
 7. Then generate: cast sheet, all stills, **stop at the board gate**, clips, VO,
-   music, assemble, composite the end card, verify, caption, **read the captions
-   against the script before calling it finished**.
+   music, composite the end card, assemble the voice mix, verify, caption, lay
+   the bed with `music_mix.py`, and **read the captions against the script before
+   calling it finished**.
 
 ## The calls
 
