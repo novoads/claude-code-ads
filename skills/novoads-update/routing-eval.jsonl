@@ -1,0 +1,26 @@
+// novoads-update owns the CLONE's version and the consent that governs it. Its
+// hard cases are not synonyms for "update" — they are the sentences where the
+// user names a symptom (a stale skill, a nagging banner) and never the operation,
+// and the sentences where "update" means something this pack does not do at all.
+{"intent":"am I running the newest copy of these skills or has it drifted","expected_skill":"novoads-update"}
+{"intent":"pull down whatever has changed in the pack since I cloned it","expected_skill":"novoads-update"}
+{"intent":"the banner keeps telling me commits are waiting, just deal with it","expected_skill":"novoads-update"}
+{"intent":"stop nagging me about this every single time I open the project","expected_skill":"novoads-update"}
+{"intent":"keep this current by itself from now on, I would rather not be asked","expected_skill":"novoads-update"}
+{"intent":"how far behind upstream am I, and what would I be getting","expected_skill":"novoads-update"}
+// Indirect: names the staleness as a symptom, never the operation.
+{"intent":"I cloned this back in June and have not touched it since","expected_skill":"novoads-update"}
+// Indirect and adversarial: the user proposes the WRONG mechanism by name. The
+// skill exists partly to intercept this — a raw pull is the path that eats .env.
+{"intent":"just git pull this repo for me and re-sync the skills","expected_skill":"novoads-update"}
+// A named skill misbehaving reads two ways: a fault in that skill, or a clone old
+// enough to predate its fix. The sibling owns the craft; this owns the version.
+{"intent":"the pixar skill is doing something odd, is there a newer one by now","expected_skill":"novoads-update","ambiguous_with":["novoads-pixar-ad"]}
+// A model the catalog does not offer is either an API question or a stale clone,
+// and the sentence almost never says which.
+{"intent":"I want the model that launched last week and I do not see it here","expected_skill":"novoads-update","ambiguous_with":["novoads-api"]}
+// Near-misses. Each is adjacent — the word "update" or "version" is right there —
+// and nothing in this pack should fire for any of them.
+{"intent":"upgrade the node version and refresh the lockfile in this project","expected_skill":null}
+{"intent":"what shipped in the last few releases of claude code itself","expected_skill":null}
+{"intent":"swap the packaging shot in this ad for the new label","expected_skill":null}
