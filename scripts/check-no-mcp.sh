@@ -95,6 +95,25 @@ ALLOW=(
   #    person who trusts it.
   'scripts/test-parity-i2m\.sh::# still refuses to run without a key\. check-no-mcp\.sh allowlists exactly this'
   'scripts/test-parity-i2m\.sh::# actual remedy instead of an MCP violation\.'
+
+  # 9. The collision sentinel's list of HOST built-in command names. `/mcp` is one
+  #    of the host's 87 commands, and the sentinel's entire job is to refuse a
+  #    skill that would shadow one — so it has to be able to say the name. This is
+  #    the "a rule has to name the thing it forbids" exemption both guards already
+  #    carry, and it is about the host's namespace, not about which surface this
+  #    repo runs on: nothing here calls a connector or offers one as a key
+  #    substitute. Anchored to the exact array element, so an `mcp` mention
+  #    anywhere else in that file is still caught. Never `path::.*` — the
+  #    whole-file exemption that shipped for check-no-gag.sh was proved to be a
+  #    hole, and a guard is the last place to leave one.
+  'scripts/check-skill-collisions\.sh::^  mcp$'
+  'scripts/check-skill-collisions\.sh::^# reasoning the MCP guard carries for its own allowlist\.$'
+
+  # 10. The rates guard, naming this script as the precedent for warning on a
+  #     dead allowlist entry rather than failing. Same "a guard has to be able to
+  #     cite its sibling" exemption as entries 7 and 8, and the same line anchor
+  #     rather than a whole-file wildcard.
+  'scripts/check-no-rates\.sh::^# the reasoning check-no-mcp\.sh carries for its own allowlist\. Warn rather than$'
 )
 
 # NOTE for anyone verifying a change here: `git grep` searches TRACKED files

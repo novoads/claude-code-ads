@@ -81,11 +81,13 @@ REQUIREMENTS = {
         "optional": ["brand.name", "brand.logo", "brand.colors", "brand.fonts",
                      "brand.tone", "brand.vocab_dont", "brand.sample_phrasings"],
     },
-    "clone-hook": {
-        "blocking": ["product.photo", "product.description"],
-        "optional": ["brand.name", "brand.tone", "brand.vocab_dont",
-                     "brand.sample_phrasings"],
-    },
+    # There is deliberately no "clone-hook" entry. This pack ships no hook-cloner
+    # (the house repo does; it is not one of the twelve skills here), and the keys
+    # of this dict are the CLI's `choices` for both `check` and `require` — so the
+    # entry was a menu option no shipped skill could ever select, and a
+    # requirements table nothing on earth read. Removed rather than left as
+    # documentation: a dead entry is a live hole waiting for the next person who
+    # trusts it. If the hook-cloner is ever ported, add it back WITH its skill.
     "spy": {
         # A sweep needs something to search for and nothing else. Refusing on a
         # product photo here would block research that needs no product at all.

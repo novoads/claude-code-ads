@@ -33,9 +33,11 @@ isn't one yet, say so and stop.
 2. **Its transcript, with timings.** One call to **`POST /v1/transcripts`** with
    the base's `jobId` (or its `assetId` if it was uploaded). It returns `text`,
    word-level `words[]` and `segments[]` — **timings in SECONDS**, which is what
-   the EDL below takes — plus an `srt` you can ignore here. Priced at 0.1 credits
-   per minute of source, rounded up from a one-minute minimum, and **a repeat of
-   the same source is free**, so asking twice costs once. No local install.
+   the EDL below takes — plus an `srt` you can ignore here. **Price it with the
+   transcript arm of `POST /v1/estimates` and quote that number**, never one from
+   this file. The meter is per minute of source, rounded up from a one-minute
+   minimum, and **a repeat of the same source is free**, so asking twice costs
+   once. No local install.
 
    *(The **captions** endpoint still cannot supply this — it burns subtitles into
    a new MP4 and returns no text or timings, verified 2026-08-04 and re-checked

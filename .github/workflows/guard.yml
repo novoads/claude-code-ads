@@ -21,6 +21,13 @@ name: guard
 #             attention than saying nothing would have (2026-08-08). Separate
 #             job because it is a separate failure with a separate fix, and a
 #             combined one would report the wrong remedy for half its hits.
+#
+#   no-rates — a credit RATE written into a skill file. The agent reads these at
+#             spend time and quotes what it finds, so when a price moves the
+#             skill quotes a number that stopped being true and nothing goes
+#             red. Third prose ratchet, third separate job, same reasoning as
+#             the two above: its remedy is specific (defer to the free
+#             /v1/estimates arm) and does not generalise to the others.
 
 on:
   pull_request:
@@ -41,6 +48,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: No instructions to hide things from the user
         run: ./scripts/check-no-gag.sh
+
+  no-rates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No credit rates written into skill files
+        run: ./scripts/check-no-rates.sh
 
   #   brand-context — the field store every skill reads. Two of its cases are
   #             already regressions caught in review: a regex that swallowed a
@@ -92,6 +106,24 @@ jobs:
   #             long one makes a skill steal its neighbour's sentences. A nested
   #             SKILL.md is never registered at all — the video cloner sat fully written
   #             with correct triggers that nothing could ever match.
+  #   collisions — a skill directory name IS its slash command, so installing this
+  #             pack adds sixteen names to a namespace we do not own. A name that
+  #             is already a host built-in shadows a command the user has had for
+  #             months, and which one wins is the host's decision, not ours.
+  #
+  #   targets   — a routing sentence naming a skill that is not here. #87 found
+  #             three. A dangling route is worse than no route: the agent reports
+  #             the skill unavailable and the user is left holding a name.
+  #             check-links.sh cannot see these — they are bare names in prose,
+  #             with no path to resolve.
+  #
+  #   toc       — a table of contents that no longer matches its file. Silent both
+  #             ways: a stale entry sends the agent nowhere, and an unlisted
+  #             section is invisible to it.
+  #
+  #   evals     — WARNS, never fails, and is wired in anyway so the six skills with
+  #             no written definition of "working" are named on every run instead
+  #             of being rediscovered every few weeks.
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -100,3 +132,44 @@ jobs:
         run: ./scripts/check-links.sh
       - name: Skill frontmatter is registered and within budget
         run: ./scripts/check-skill-frontmatter.sh
+      - name: No skill name collides with a host built-in
+        run: ./scripts/check-skill-collisions.sh
+      - name: Every routing sentence names a skill that exists
+        run: ./scripts/check-skill-targets.sh
+      - name: Tables of contents match their files
+        run: ./scripts/check-toc.sh
+      - name: Evals coverage (warning only)
+        run: ./scripts/check-evals-present.sh
+
+  #   media   — the two scripts that actually push pixels and samples around, and
+  #             the 29 cases that were sitting in the repo unrun by anything.
+  #             They are the highest-value tests here and the only ones with a
+  #             system dependency: both build their own fixtures with ffmpeg and
+  #             measure the result with ffprobe, so a broken mix or a dropped
+  #             overlay is caught by measurement rather than by exit code. Own
+  #             job because of that dependency — the rest of this workflow must
+  #             not wait on an apt install, and a runner-image change that drops
+  #             ffmpeg should fail HERE, where the message says so.
+  media:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Install only if the image does not already carry it. GitHub's runner
+      # images have changed what they ship before; checking first means this
+      # costs nothing on an image that has ffmpeg and still works on one that
+      # does not, without anyone having to track which is true this month.
+      - name: ffmpeg and ffprobe
+        run: |
+          if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1; then
+            echo "runner image already carries ffmpeg"
+          else
+            echo "runner image has no ffmpeg — installing"
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
+      - name: music-mix (15 cases)
+        run: python3 shared/skills/music-mix/scripts/test_music_mix.py
+      - name: broll-overlay (14 cases)
+        run: python3 shared/skills/broll-overlay/scripts/test_broll_overlay.py

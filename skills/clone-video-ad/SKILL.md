@@ -436,8 +436,8 @@ The creative core. Working from step 3:
 - Keep the **same energy arc**: excited → calm, flat, or building.
 - Replace product-specific references with the user's product name, features and claims.
 - Match each line's **word count within about ±3 words** so the pacing survives.
-- Read it back at a natural pace against the target duration: 2.5 to 3 words per second for
-  a dense product line, closer to 1.5 for a calm one.
+- Read it back at a natural pace against the target duration: **2.0 words per second** measured
+  (~13 chars/sec with spaces), so a `D`-second clip holds about `2.0 × (D − 0.5)` words.
 - **Script variants.** If they asked for N *script variants* rather than N renders of one
   script (step 5), write N distinct adaptations that share the beat structure, the
   silent-beat placement and the per-line word counts, and differ in the hook angle, the

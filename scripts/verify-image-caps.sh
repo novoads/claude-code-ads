@@ -127,6 +127,35 @@ print(len(mod.NO_CHROME_SUFFIX) + len(mod.SAFE_ZONE_SUFFIX) + len(mod.GLYPH_SAFE
 PY
 }
 
+# The probe body is repeated "probe ", never repeated "x".
+#
+# This is the fix for a guard-vs-guard collision that made the whole prompt-cap
+# half of this audit test NOTHING while reporting red. validate_image.py runs the
+# placeholder lint (PR #72) BEFORE the length gate, deliberately — a render must
+# ship finished, and refusing scaffolding is worth doing before anything else. But
+# a body of `'x' * N` is one long `xxxxxx…` token, and `\bxxx+\b` is one of the
+# lint's patterns. So every probe was refused as "xxx filler", the refusal never
+# named the cap, and all six assertions failed for a reason unrelated to caps: the
+# script could have had NO length check at all and this audit would have looked
+# exactly the same.
+#
+# Fixed on the probe side rather than by exempting the caps guard from the lint.
+# A probe-mode bypass would put a door in a spend-time guard for the convenience
+# of a test, and the lint is the one guard whose whole job is refusing text that
+# looks like a stand-in. "probe " repeated is a real word, matches no pattern in
+# PLACEHOLDER_PATTERNS, and costs the audit nothing.
+#
+# If you change this filler, check it against PLACEHOLDER_PATTERNS in
+# skills/clone-image-ad/scripts/validate_image.py first. Anything with a {slot},
+# an [TOKEN], a bare domain, "TBD", or three consecutive x's puts the collision
+# straight back.
+probe_body() { # <length>
+  python3 -c "
+n = $1
+print(('probe ' * (n // 6 + 1))[:n])
+"
+}
+
 check_prompt_cap() { # <script> <cap> [extra args...]
   local script="$1" cap="$2"; shift 2
   local suffixes out body
@@ -136,14 +165,14 @@ check_prompt_cap() { # <script> <cap> [extra args...]
     return
   fi
   # One character past the boundary → must refuse, naming the cap.
-  body="$(python3 -c "print('x' * ($cap - $suffixes + 1))")"
+  body="$(probe_body "$((cap - suffixes + 1))")"
   out="$(python3 "$ROOT/$script" "$@" --prompt "$body" --aspect-ratio 1:1 \
     --out /tmp/vc-out --env-file /nonexistent/none 2>&1)" \
     && problem "$script accepted a prompt 1 char over the $cap ceiling"
   [[ "$out" == *"$cap"* ]] || problem "$script prompt refusal does not name cap $cap: $out"
   # Exactly at the boundary → the gate must OPEN (the script then dies at the fake
   # .env, which proves it got past the length check without touching the network).
-  body="$(python3 -c "print('x' * ($cap - $suffixes))")"
+  body="$(probe_body "$((cap - suffixes))")"
   out="$(python3 "$ROOT/$script" "$@" --prompt "$body" --aspect-ratio 1:1 \
     --out /tmp/vc-out --env-file /nonexistent/none 2>&1)" \
     && problem "$script with a prompt exactly at $cap exited 0 (should die at the fake .env)"
