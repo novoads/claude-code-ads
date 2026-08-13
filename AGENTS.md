@@ -98,6 +98,13 @@ keeps it the only phrasing in the repo.
 
    **Never invent a new top-level directory.** A directory that is not on that list is not ignored, and the diff lands on the user: on 2026-08-08 a session composing ten image-ad prompts created `prompts/` unprompted — the right instinct, and why it is sanctioned above rather than forbidden — but nothing ignored it yet, so the next thing the user saw was a "+162 / Create PR" badge over files they never asked for. Writing into one of these five is always in scope and never needs permission. If a run genuinely needs a home that is not here, add it to `.gitignore` in the same breath as the first file you write into it. One exception is already handled for you: `caption-video` writes beside the file it was handed rather than under a home, so its documented `<run-id>-captions/` project and `<source-video>-with-captions.mp4` are ignored at the repo root.
 
+## Codex
+
+Codex discovers skills only under `.agents/skills` — it never reads `.claude/skills/` or
+`.cursor/skills/`. `scripts/sync-skill.sh` (which `scripts/setup.sh` runs) links that path at
+the synced tree, so a Codex session in a set-up clone is offered these skills with nothing
+further to install. Everything else on this page holds unchanged, the REST key above included.
+
 ## Cost policy
 
 Every credit number shown to a user must come from a live `POST /v1/estimates` call made in the current session, and the user approves it before anything is generated. There are no rate tables in this repo — not in `MASTER_CONTEXT.md`, not in `logs/`. The estimate is free and runs the same structural validation the paid call runs, so there is no reason to skip it. It also returns an advisory `warnings` array of craft notes on a video prompt (verified live 2026-08-04) — the generation endpoints do not. Those warnings never refuse a call or change the price, and they false-positive on substring matches, so read them, judge each one against the prompt, and say so when you override one.

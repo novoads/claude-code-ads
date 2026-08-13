@@ -452,7 +452,10 @@ fi
 
 echo ""
 
-# ── Step 3: Sync skills to .claude/ and .cursor/ ─────────────────────────────
+# ── Step 3: Sync skills to .claude/, .cursor/ and .agents/ ───────────────────
+# The third path is the Codex one and is a symlink rather than a copy; the
+# wrapper explains why. Setup is where it gets created, because a Codex user
+# never triggers the SessionStart hook that keeps the other two warm.
 bash "$ROOT/scripts/sync-skill.sh"
 
 echo ""
