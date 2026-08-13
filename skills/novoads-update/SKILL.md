@@ -32,7 +32,13 @@ every instruction below is pointed at the wrong repository. Step 1's git
 commands would report on the **user's own project**, and option 2 would write a
 consent flag into a directory no hook will ever read.
 
+**Every command in this skill runs from the clone root.** Move there first, and
+keep doing it at the top of each block below — a session can open anywhere, and
+this is the one thing that silently changes what the commands mean:
+
 ```bash
+root="$(git rev-parse --show-toplevel 2>/dev/null)" && [ -n "$root" ] && cd "$root"
+
 if git remote get-url origin 2>/dev/null | grep -q 'novoads/claude-code-ads' \
    || [ -f shared/scripts/auto-update.sh ]; then
   echo "pack clone confirmed"
@@ -40,6 +46,12 @@ else
   echo "NOT the pack clone — stop here"
 fi
 ```
+
+Git commands walk up to find the repository; **plain paths do not.** From a
+subdirectory `./scripts/update.sh` is simply not found, `[ -f shared/scripts/... ]`
+reports a false negative on a real clone, and a `.update-state/config` written
+there lands somewhere no hook will ever read — consent recorded, nothing
+reading it, which is the exact failure this pack's design exists to prevent.
 
 If neither probe fires, **stop here and offer none of the four options.** Say
 plainly:
@@ -59,6 +71,7 @@ design exists to make impossible. Do not offer to "try anyway".
 Run these from the repo root. None of them changes anything:
 
 ```bash
+cd "$(git rev-parse --show-toplevel)"                 # every path below is root-relative
 git rev-parse --abbrev-ref HEAD                       # expect: main
 git fetch --quiet origin main 2>/dev/null || true     # bounded by git's own config
 git rev-list --count HEAD..origin/main                # how many commits behind
@@ -98,8 +111,14 @@ and the headline of the newest one. Then act on the answer.
 ## Option 1 — "Update now"
 
 ```bash
+cd "$(git rev-parse --show-toplevel)"
 ./scripts/update.sh
 ```
+
+If that reports **exit 127 / not found**, you are not at the clone root — `cd`
+there and re-run. Do not reach for `git pull` instead. It is not a workaround
+for this, it is the path that destroys a gitignored `.env`, and `update.sh`
+exists precisely because it does.
 
 Never pass `--fresh`. The default target is the newest commit older than 24
 hours, and that gap is the supply-chain buffer: it is the window in which a bad
@@ -147,6 +166,7 @@ picked option 4 and now picks option 2 would otherwise end up with consent
 recorded, the reader registered, and nothing ever updating. Set both keys:
 
 ```bash
+cd "$(git rev-parse --show-toplevel)"   # a config written elsewhere has no reader
 mkdir -p .update-state
 touch .update-state/config
 # preserve every other key; replace or append the two this option owns
@@ -266,6 +286,7 @@ Set `update_check=off` in `.update-state/config`, using the same preserve-other-
 keys approach as option 2:
 
 ```bash
+cd "$(git rev-parse --show-toplevel)"   # a config written elsewhere has no reader
 mkdir -p .update-state
 touch .update-state/config
 grep -v '^[[:space:]]*update_check[[:space:]]*=' .update-state/config > .update-state/config.tmp 2>/dev/null || true
