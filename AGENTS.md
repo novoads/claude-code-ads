@@ -131,7 +131,7 @@ narrower: `.env` restored and no merge half-applied, which is not the same as un
 | Line | What happened | What you do next |
 |---|---|---|
 | `STATUS=updated FROM=<sha> TO=<sha>` | fast-forwarded, skills re-synced, pending migrations run | summarize the `CHANGELOG.md` entries between the two shas, at most six bullets |
-| `STATUS=current` | nothing to apply | say so once and stop. Do not re-run it |
+| `STATUS=current AT=<sha>` | nothing to apply, and `AT` is the commit the clone is already sitting on | say so once and stop. Do not re-run it |
 | `STATUS=updated_with_conflict FROM=<sha> TO=<sha> STASH=<ref>` | the update landed, restoring the user's own work conflicted, the tree was rolled back to its pre-restore state and that work is intact in the named stash. No conflict markers anywhere | tell the user which stash holds their work and let them decide. Do not resolve it for them |
 | `STATUS=offline` | no network | drop it. A later session picks it up |
 | `STATUS=blocked REASON=diverged\|detached_head\|no_such_remote\|dirty_unresolvable\|lock_held` | a decision is required and the repo is exactly as it was found | relay the reason. Do not route around it with raw git |
