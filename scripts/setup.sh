@@ -311,6 +311,8 @@ print_agent_close() {
   echo "and quoting costs in different units, so they cannot finish this setup."
   echo "Say so if it comes up; just do not offer it as a second way to get a key."
   echo ""
+  echo "Updates are checked every session; /novoads-update applies them."
+  echo ""
   echo "──── FINAL MESSAGE START ────"
   if [[ "$variant" == "ready" ]]; then
     echo "Setup's done — your key works."

@@ -105,6 +105,45 @@ Codex discovers skills only under `.agents/skills` — it never reads `.claude/s
 the synced tree, so a Codex session in a set-up clone is offered these skills with nothing
 further to install. Everything else on this page holds unchanged, the REST key above included.
 
+## Staying current
+
+Updates to this pack are applied by `./scripts/update.sh`. **Never run `git pull` here.** A plain
+pull silently deletes the gitignored `.env` the moment upstream tracks that path, and
+`git pull --autostash` can exit `0` having left `<<<<<<<` markers inside a skill file that you would
+then read as instructions.
+
+**The signal is the SessionStart banner.** When it reports commits pending upstream, that is when to
+offer an update, and it is the only cue you need: do not fetch, poll or update on your own
+initiative. A silent banner is not proof the clone is current, either. The user may have set
+`update_check=off` in `.update-state/config` (or `NOVOADS_PACK_NO_UPDATE_CHECK=1`), which silences
+the banner and the auto-updater while leaving `./scripts/update.sh` working.
+
+**Never enable auto-apply yourself.** `auto_apply=on` is a standing grant to run upstream shell
+scripts on the user's machine. Only the user's own answer inside the `novoads-update` skill may
+write it. Offering it, and recording it after they choose it, is the whole permitted path.
+
+**Read the `STATUS=` line, not the prose.** `update.sh` prints exactly one, last, on stdout;
+anything human-facing comes after it or on stderr. Exit `0` means the clone is in a usable state.
+Exit `1` means a decision belongs to the user and the clone was left exactly as it was found.
+
+| Line | What happened | What you do next |
+|---|---|---|
+| `STATUS=updated FROM=<sha> TO=<sha>` | fast-forwarded, skills re-synced, pending migrations run | summarize the `CHANGELOG.md` entries between the two shas, at most six bullets |
+| `STATUS=current` | nothing to apply | say so once and stop. Do not re-run it |
+| `STATUS=updated_with_conflict FROM=<sha> TO=<sha> STASH=<ref>` | the update landed, restoring the user's own work conflicted, the tree was rolled back to its pre-restore state and that work is intact in the named stash. No conflict markers anywhere | tell the user which stash holds their work and let them decide. Do not resolve it for them |
+| `STATUS=offline` | no network | drop it. A later session picks it up |
+| `STATUS=blocked REASON=diverged\|detached_head\|no_such_remote\|dirty_unresolvable\|lock_held` | a decision is required and the repo is exactly as it was found | relay the reason. Do not route around it with raw git |
+| `STATUS=interrupted` | the run was cut short. `.env` is restored and no merge is half-applied | re-run it when the user is idle |
+| `STATUS=rolled_back TO=<sha>` | `--rollback` put the clone back | confirm the sha |
+
+Two footnotes on that table. The sync and the migrations after an update are non-fatal by contract:
+either can warn on stderr without undoing the update, so a warning there is not a failed update. And
+do not pass `--fresh` on the user's behalf. Normal runs install what has been public for about a
+day; `--fresh` takes the untested tip of `main`, which is a call only the user makes.
+
+`./scripts/update.sh --rollback` is the undo, and it refuses on a dirty worktree rather than
+steamrolling. A `dirty_unresolvable` block there is the guard working, not a bug to work around.
+
 ## Cost policy
 
 Every credit number shown to a user must come from a live `POST /v1/estimates` call made in the current session, and the user approves it before anything is generated. There are no rate tables in this repo — not in `MASTER_CONTEXT.md`, not in `logs/`. The estimate is free and runs the same structural validation the paid call runs, so there is no reason to skip it. It also returns an advisory `warnings` array of craft notes on a video prompt (verified live 2026-08-04) — the generation endpoints do not. Those warnings never refuse a call or change the price, and they false-positive on substring matches, so read them, judge each one against the prompt, and say so when you override one.
