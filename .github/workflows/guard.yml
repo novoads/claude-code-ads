@@ -154,21 +154,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Install only if the image does not already carry it. GitHub's runner
-      # images have changed what they ship before; checking first means this
-      # costs nothing on an image that has ffmpeg and still works on one that
-      # does not, without anyone having to track which is true this month.
-      - name: ffmpeg and ffprobe
+      # broll_overlay.py needs ffmpeg >= 7.1, and apt on ubuntu-24.04 ships 6.1.
+      #
+      # This is not a preference. The script scales each overlay against the base
+      # branch with `scale=w=rw:h=rh`, deliberately, because probed width/height
+      # LIE on two common inputs — a phone capture carries rotation in a display
+      # matrix and an anamorphic one carries it in the SAR. Those `rw`/`rh`
+      # reference constants arrived in scale in 7.1, when it absorbed what
+      # scale2ref used to do. On 6.1 the filter graph does not parse at all:
+      # "Undefined constant or missing '(' in 'rw'", four of the fourteen cases
+      # down, and the error says nothing about a version.
+      #
+      # Found by wiring these tests up: they had never run anywhere but a
+      # developer laptop with a Homebrew ffmpeg, which is 8.x.
+      #
+      # A pinned static build rather than apt, from the same GitHub that already
+      # serves actions/checkout — same trust boundary, no new one.
+      - name: ffmpeg >= 7.1 (rw/rh reference scaling)
         run: |
-          if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1; then
-            echo "runner image already carries ffmpeg"
-          else
-            echo "runner image has no ffmpeg — installing"
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq ffmpeg
-          fi
+          curl -fsSL -o /tmp/ffmpeg.tar.xz \
+            https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
+          mkdir -p /tmp/ffmpeg && tar -xJf /tmp/ffmpeg.tar.xz -C /tmp/ffmpeg --strip-components=1
+          sudo install -m755 /tmp/ffmpeg/bin/ffmpeg /tmp/ffmpeg/bin/ffprobe /usr/local/bin/
+          hash -r
           ffmpeg -version | head -1
           ffprobe -version | head -1
+      # Prove the capability rather than parsing a version string: builds report
+      # versions in several shapes and "master" is not a number. If this step
+      # fails, the diagnosis is in its name, instead of four cases failing later
+      # with a filter-graph error nobody will connect to an ffmpeg upgrade.
+      - name: ffmpeg understands rw/rh
+        run: |
+          ffmpeg -hide_banner -loglevel error \
+            -f lavfi -i color=red:s=64x64:d=0.1 \
+            -f lavfi -i color=blue:s=32x32:d=0.1 \
+            -filter_complex "[1:v][0:v]scale=w=rw:h=rh:force_original_aspect_ratio=decrease[o]" \
+            -map "[o]" -frames:v 1 -f null - \
+            || { echo "::error::ffmpeg does not support scale rw/rh (needs >= 7.1); broll_overlay.py cannot build its filter graph"; exit 1; }
+          echo "rw/rh reference scaling available"
       - name: music-mix (15 cases)
         run: python3 shared/skills/music-mix/scripts/test_music_mix.py
       - name: broll-overlay (14 cases)

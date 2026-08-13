@@ -125,6 +125,12 @@ zero-frame windows, a clip shorter than its window, a rotated phone base
 composited at the wrong geometry, a window that quietly composited nothing.
 Improvised ffmpeg is how the founding failure happened.
 
+**It needs ffmpeg 7.1 or newer.** The script scales each overlay against the base
+branch with `scale=w=rw:h=rh`, and those reference constants arrived in 7.1. On an
+older build — Ubuntu 24.04's apt ships 6.1 — the graph does not parse and the
+error names `rw`, not a version. Check with `ffmpeg -version` before blaming the
+EDL; on Debian/Ubuntu the fix is a static build, not `apt install ffmpeg`.
+
 **Escape hatch:** if a request genuinely doesn't fit the EDL model — a speed
 ramp, a picture-in-picture inset, audio that actually needs editing — say so and
 ask the user how to proceed. Do not improvise around the script.
