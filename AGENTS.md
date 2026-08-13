@@ -123,8 +123,10 @@ scripts on the user's machine. Only the user's own answer inside the `novoads-up
 write it. Offering it, and recording it after they choose it, is the whole permitted path.
 
 **Read the `STATUS=` line, not the prose.** `update.sh` prints exactly one, last, on stdout;
-anything human-facing comes after it or on stderr. Exit `0` means the clone is in a usable state.
-Exit `1` means a decision belongs to the user and the clone was left exactly as it was found.
+anything human-facing comes after it or on stderr. Branch on the STATUS rather than on the exit
+code alone: `0` means the clone is in a usable state, and every `blocked` status exits `1` having
+left the clone exactly as it was found. An interrupted run can exit nonzero too, and its promise is
+narrower: `.env` restored and no merge half-applied, which is not the same as untouched.
 
 | Line | What happened | What you do next |
 |---|---|---|

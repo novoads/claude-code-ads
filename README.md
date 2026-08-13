@@ -548,22 +548,25 @@ Three more things it does that a pull does not:
   `.claude/skills/` and `.cursor/skills/` match what just landed. Neither of those failing undoes
   the update.
 - **It ends in one machine-readable `STATUS=` line.** Exit `0` means the clone is in a usable state.
-  Exit `1` means a decision is yours and the clone was left exactly as it was found. The full
-  vocabulary is in [AGENTS.md](AGENTS.md), for the agent reading it.
+  A `blocked` status exits `1` and leaves the clone exactly as it was found, with the decision
+  yours. An interrupted run can exit nonzero too, and promises something narrower: `.env` restored
+  and no merge half-applied. The full vocabulary is in [AGENTS.md](AGENTS.md), for the agent
+  reading it.
 
 **If an update goes wrong, `./scripts/update.sh --rollback`** puts the clone back on the commit it
 was on, `.env` and all. It refuses on a dirty worktree rather than steamrolling what you were doing.
 
-**`/novoads-update`** is the same update with a conversation around it: update now, always keep me
-up to date, not now, or never ask again. "Not now" snoozes the banner on an escalating ladder (a
-day, then two, then a week), and a genuinely new version resets it. Snoozing quiets the nag only:
-the skill and `./scripts/update.sh` both still run whenever you ask them to.
+**The `novoads-update` skill** is the same update with a conversation around it. Ask your agent to
+run it and it offers four answers: update now, always keep me up to date, not now, or never ask
+again. "Not now" snoozes the banner on an escalating ladder (a day, then two, then a week), and a
+genuinely new version resets it. Snoozing quiets the nag only: the skill and
+`./scripts/update.sh` both still run whenever you ask them to.
 
 **Auto-apply is opt-in and stays that way.** "Always keep me up to date" is a standing grant to run
 upstream code on your machine, so it is never on by default and no agent may switch it on for you.
 Your answer to that question is what writes `auto_apply=on`. Once it is on, the hook applies updates
 at session start without holding the session up, never takes the tip, tries at most once an hour,
-and tells the session to reload its skills when something lands.
+and asks the session to reload its skills when something lands, where the harness supports that.
 
 **Turning the whole thing off.** `.update-state/config` takes `update_check=off`, which silences the
 banner's fetch and the auto-updater together, and `NOVOADS_PACK_NO_UPDATE_CHECK=1` does the same
@@ -579,19 +582,20 @@ protection that failed.
 
 **Customizing a shipped skill file** is the one thing that collides. Those files are tracked, so
 your edits are real diffs and every update has to stash and restore them. If a customization is
-meant to last, keep the customized copy in an untracked `local-skills/` directory at the repo root
-and point your agent at that, rather than editing under `skills/`. Exclude it via
-`.git/info/exclude` rather than `.gitignore`: `.gitignore` is itself a tracked file, so excluding it
-there turns your exclusion into one more diff to stash on every update.
+meant to last, keep the customized copy in `local-skills/` at the repo root and point your agent at
+it there, rather than editing under `skills/`. That directory is gitignored, so nothing you keep in
+it is ever a diff to stash. One caveat if you would rather install your copy into `.claude/skills/`
+directly: give it a different name from the pack skill. The session sync deletes and re-copies
+every live pack skill name each time it runs, so a copy sitting under the same name is overwritten.
 
 ### If you installed a skill on its own
 
 Everything above assumes you cloned the repo. If you installed through the `skills` CLI instead:
 
-- **Pin to a release with a tag:** `npx skills add novoads/claude-code-ads#v1.1.0`. Tags work.
-  40-character commit SHAs do not, because the CLI installs by cloning a branch or a tag. A pinned
-  install moves only when you point it at a newer tag. Releases are tagged `vX.Y.Z` and written up
-  in [CHANGELOG.md](CHANGELOG.md).
+- **Pin to a release with a tag:** `npx skills add novoads/claude-code-ads#v1.0.0`, naming the
+  latest release tag (`v1.0.0` today). Tags work. 40-character commit SHAs do not, because the CLI
+  installs by cloning a branch or a tag. A pinned install moves only when you point it at a newer
+  tag. Releases are tagged `vX.Y.Z` and written up in [CHANGELOG.md](CHANGELOG.md).
 - **Update with `npx skills update`**, and read this before you do. **The reinstall is `rm -rf` on
   the skill folder followed by a fresh copy: no backup, no prompt, no diff.** A file you added
   inside the skill folder is deleted, and an edit you made to `SKILL.md` is reverted. Copy anything

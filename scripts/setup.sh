@@ -310,8 +310,8 @@ print_agent_close() {
   echo "session they are a different surface, carrying none of this repo's skills"
   echo "and quoting costs in different units, so they cannot finish this setup."
   echo "Say so if it comes up; just do not offer it as a second way to get a key."
-  echo ""
-  echo "Updates are checked every session; /novoads-update applies them."
+  echo "Same category: the pack checks for updates every session and the"
+  echo "novoads-update skill applies them, so neither belongs in the close either."
   echo ""
   echo "──── FINAL MESSAGE START ────"
   if [[ "$variant" == "ready" ]]; then
