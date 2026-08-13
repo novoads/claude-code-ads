@@ -102,7 +102,7 @@ approximating it here with a reference-led regeneration.
 |---|---|
 | Seed prompt | The creative direction in their words. You will rewrite it (see Phase 3). |
 | Aspect ratio | One of the ten above. Reject anything else. |
-| Reference image(s) | Optional but strongly recommended for a specific product, character or brand mark. Up to 4. |
+| Reference image(s) | Optional but strongly recommended for a specific product, character or brand mark. Up to 14. |
 | Variant count `N` | Default 1. Cap at 4. Each one is charged. |
 
 ## Workflow
@@ -114,7 +114,7 @@ approximating it here with a reference-led regeneration.
 
 ### Phase 2: Gather inputs
 
-Collect: seed prompt, reference paths (up to 4), variant count, aspect ratio.
+Collect: seed prompt, reference paths (up to 14), variant count, aspect ratio.
 
 Present choices per `shared/skills/image-ad-prompting/OVERVIEW.md` § Presenting choices to
 the user, which is one decision at a time and never this four-item brief up front.
@@ -169,6 +169,11 @@ appended, or the quote will be short by roughly 1,500 characters' worth of promp
   --env-file .env
 ```
 
+`--image-ref` uploads the file on every invocation. For a batch that reuses one product
+photo — or the same character shot, which is what holds a face steady across runs — upload
+it once and pass `--ref-asset-id <assetId>` instead: same reference, no repeat upload. The
+two are interchangeable and share the 14-reference cap.
+
 Each line on stdout is one JSON image (`variant`, `path`, `job_id`, `width`, `height`,
 `prompt`, `aspect_ratio`, `model`, `credits_charged`).
 
@@ -213,7 +218,7 @@ write them to `./generated/run-<ts>.jsonl` for downstream consumption.
 
 | What you see | What it means |
 |---|---|
-| `400 invalid_input` with `details.issues` | A malformed field. Most often more than 4 `referenceAssetIds`, a `numImages` above 4, or a prompt over the model's cap. Nothing was charged. |
+| `400 invalid_input` with `details.issues` | A malformed field. Most often more than **14** `referenceAssetIds` — that is this model's cap, and 4 is `gpt-image-2`'s, so do not carry the sibling's number here — a `numImages` above 4, or a prompt over this model's 50,000 characters. The refusal reads `Too big: expected array to have <=14 items`. Nothing was charged. |
 | `401 unauthorized` | Missing, malformed or revoked key. Send the user to <https://novoads.ai/dashboard/settings?tab=api>. |
 | `402 insufficient_credits` | `details` carries `required` and `available`. Tell the user the gap; do not retry. |
 | `403 forbidden` | `details.reason` says which: `plan_required`, `subscription_inactive`, or API access off for the account. |
