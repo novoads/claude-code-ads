@@ -32,6 +32,16 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 MAX_DESC=1024
+# The warn band. A description is not edited down to the character on the day it
+# crosses 1024 — it drifts there one clarifying clause at a time, and the commit
+# that finally trips the cap is rarely the one that caused the problem. 900 leaves
+# roughly one sentence of runway, which is about what a "NOT for X, use Y" tail
+# costs, so the warning arrives while there is still somewhere to put it.
+#
+# WARN, not fail: a description between 900 and 1024 is correct and shipping. The
+# thing being reported is proximity, and reddening CI for proximity teaches people
+# to stop reading the output.
+WARN_DESC=900
 MAX_LINES=500
 BASELINE=scripts/skill-size-baseline.txt
 UPDATE=0
@@ -73,6 +83,10 @@ PY
   elif [ "$len" -gt "$MAX_DESC" ]; then
     echo "FAIL  $name: description $len chars, over the $MAX_DESC cap (it will truncate)"
     fail=$((fail + 1))
+  elif [ "$len" -gt "$WARN_DESC" ]; then
+    echo "warn  $name: description $len chars, $((MAX_DESC - len)) from the $MAX_DESC cap"
+    echo "      the tail is the disambiguation; trim before it is the part that truncates"
+    warn=$((warn + 1))
   fi
 
   lines=$(wc -l < "$file" | tr -d ' ')

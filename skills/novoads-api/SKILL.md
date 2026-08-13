@@ -266,7 +266,7 @@ Show `credits`, the count, the total, and `balance`. Get a yes. Then generate.
 
 ## Script length → duration
 
-Count the words in the spoken line and round **up**. A dense product script runs about **2.5 to 3 spoken words per second**; a calmer lifestyle line runs closer to 1.5, and that slack is what leaves room for a silent beat. Plan on 2.5 and give the line air.
+Count the words in the spoken line and round **up**. Delivery was measured at **2.0 spoken words per second** — about **13 characters per second, spaces included**, if you would rather count those — with **~0.5s of leading silence** before the first word (2026-08-11 render, n=5 leading-silence samples). Plan on 2.0 and give the line air; the older 2.5-to-3 figure was an estimate nobody had timed, and it over-filled every clip it touched.
 
 **These tables are speech time. Seedance needs a silence budget on top of them.**
 
@@ -276,9 +276,9 @@ Count the words in the spoken line and round **up**. A dense product script runs
 |---|---|
 | 1–8 words | 4–5s |
 | 9–15 words | 6–8s |
-| 16–25 words | 9–12s |
-| 26–35 words | 13–15s |
-| **36+ words** | **Too long** — offer to split |
+| 16–23 words | 9–12s |
+| 24–29 words | 13–15s |
+| **30+ words** | **Too long** — offer to split |
 
 **Seedance spends time on dead air, and how much is a draw, not a constant. Reserve room for it because you MIGHT get it — not because you will.**
 
@@ -291,7 +291,7 @@ Measured across six `seedance-2.0` renders: leading silence ran **3.2–3.7s in 
 | `en` | **+4s** (observed 3.2–3.7s) |
 | `es`, and any language nobody has measured | **+5s** (observed up to 5.24s) |
 
-When the line is tight, do the arithmetic rather than reading the table alone: **`words ÷ 2.5`, plus the reservation, rounded up into the grid.** The table is the shortcut; this is the check. If the result runs past 15s on these two models, the fix is a shorter line, a split, or `seedance-2.5` — not a longer clip on a model that does not render one.
+When the line is tight, do the arithmetic rather than reading the table alone: **`words ÷ 2.0`, plus the reservation, rounded up into the grid** — equivalently, a `D`-second clip holds **`2.0 × (D − 0.5)`** words once the leading silence is paid for. The table is the shortcut; this is the check. If the result runs past 15s on these two models, the fix is a shorter line, a split, or `seedance-2.5` — not a longer clip on a model that does not render one.
 
 A render that comes back with 1s of silence instead of 5s has not wasted the reservation — it has spent it on air at the end, which is trimmable in post. A render that draws 5s against a 4s budget has clipped the line, which is not.
 
@@ -304,16 +304,16 @@ For no-dialogue styles (product hero, premium reveal), default to **15s**. The s
 ### `seedance-2.5` — any integer 4 to 30
 
 Same family, same craft, twice the room. The table above still holds for anything up to 15s; past
-it, keep planning at **2.5 words per second** and keep the same silence reserve — it is the same
+it, keep planning at **2.0 words per second** and keep the same silence reserve — it is the same
 model family and nobody has measured 2.5's leading silence separately, so budget `en` +4s and
 everything else +5s until someone has.
 
 | Script length | Duration |
 |---|---|
-| 36–50 words | 16–20s |
-| 51–65 words | 21–25s |
-| 66–80 words | 26–30s |
-| **81+ words** | **Too long even here** — split, or cut the script |
+| 30–39 words | 16–20s |
+| 40–49 words | 21–25s |
+| 50–59 words | 26–30s |
+| **60+ words** | **Too long even here** — split, or cut the script |
 
 **A longer clip is not a longer script poured into the same ad.** Thirty seconds wants more beats,
 not slower delivery: a second location, a demo the actor actually performs, a reaction. If the
@@ -326,20 +326,20 @@ fleet range for it; say the wait is unknown and poll.
 
 | Script length | Duration |
 |---|---|
-| 1–10 words | 4s |
-| 11–15 words | 6s |
-| 16–20 words | 8s |
-| 21–25 words | 10s |
-| **26+ words** | **Too long** — split, or move to Seedance |
+| 1–8 words | 4s |
+| 9–12 words | 6s |
+| 13–16 words | 8s |
+| 17–20 words | 10s |
+| **21+ words** | **Too long** — split, or move to Seedance |
 
 ### `sora-2` — enum 4, 8, 12
 
 | Script length | Duration |
 |---|---|
-| 1–10 words | 4s |
-| 11–20 words | 8s |
-| 21–30 words | 12s |
-| **31+ words** | **Too long** — split, or move to Seedance |
+| 1–8 words | 4s |
+| 9–16 words | 8s |
+| 17–24 words | 12s |
+| **25+ words** | **Too long** — split, or move to Seedance |
 
 No silence budget: the one measured render spoke continuously from the first frame. The grid is coarse — there is no 6s and no 10s — so a line that lands between two rungs goes **up**, never down.
 
@@ -347,12 +347,12 @@ No silence budget: the one measured render spoke continuously from the first fra
 
 | Script length | Duration |
 |---|---|
-| 1–10 words | 4s |
-| 11–15 words | 6s |
-| 16–20 words | 8s |
-| **21+ words** | **Too long** — 8s is this model's ceiling. Split, or move to Seedance |
+| 1–8 words | 4s |
+| 9–12 words | 6s |
+| 13–16 words | 8s |
+| **17+ words** | **Too long** — 8s is this model's ceiling. Split, or move to Seedance |
 
-Unmeasured here, so these are the 2.5-words-per-second arithmetic and nothing more. Budget no silence and promise no wait until someone has timed one.
+Unmeasured here, so these are the 2.0-words-per-second arithmetic and nothing more — and with no leading silence to pay for, the budget is a flat `2.0 × duration` rather than the Seedance form. Budget no silence and promise no wait until someone has timed one.
 
 ### `resolution` — `seedance-2.0` and `seedance-2.5` only, and it moves the price
 
@@ -613,7 +613,7 @@ Response is `202` with `jobId`, `status`, `creditsCharged`, and `model` (always 
 
 ### Presets and price
 
-`GET /v1/caption-presets` lists all **30** styles with tier and rate. Verified live 2026-08-04: **21 `basic` at 0.4 credits per billed minute, 9 `dynamic` at 0.8** (`dynamic` is context-aware and animated). Its own endpoint rather than a `kind` on `GET /v1/models`, because a caption style generates nothing.
+`GET /v1/caption-presets` lists all **30** styles, each carrying its own `tier` and its own rate. There are two tiers: `basic`, and the costlier `dynamic` (context-aware and animated). **Read the rate off that endpoint and confirm it with the caption arm of `POST /v1/estimates`** — a rate written into this file is a rate that rots, and the one you quote the user must be the one the API just gave you. Its own endpoint rather than a `kind` on `GET /v1/models`, because a caption style generates nothing.
 
 **Billing is per minute of source, rounded up, one-minute minimum** — so everything this API generates (≤30s, on `seedance-2.5`; ≤15s everywhere else) still costs exactly the tier rate for one minute. Above the 1080p tier it doubles again, **measured on the short edge**: an ordinary portrait `1080x1920` is 1080p held sideways and is **not** doubled; a true 4K source is.
 
@@ -646,7 +646,7 @@ Both exist. Present both and let the user pick; do not silently default.
 | Setup | None — one API call | **Heavy**: Whisper, HyperFrames, a working Node/npm project, and an ffmpeg alpha composite. Homebrew ffmpeg ships without `libass`, which is the trap the local guide exists to route around |
 | Styles | **30 presets**, fixed | Anything you can write in HTML/CSS/GSAP |
 | Output | A new MP4, subtitles burned in | A new MP4, subtitles burned in |
-| Transcript / SRT | **Not from this endpoint** — but `POST /v1/transcripts` returns text, word timings and an SRT for 0.1 credits/minute, no install | **Yes** — Whisper gives word-level timings you keep and can re-use |
+| Transcript / SRT | **Not from this endpoint** — but `POST /v1/transcripts` returns text, word timings and an SRT, billed per minute of source and priced through `POST /v1/estimates`, no install | **Yes** — Whisper gives word-level timings you keep and can re-use |
 | Control over wording | None — transcribed, not authored | Full — edit the transcript before rendering |
 | Source | An API `jobId`, or any video you upload | Any local file |
 

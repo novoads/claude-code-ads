@@ -75,7 +75,7 @@ It reads exactly like a revoked key or a dead subscription and is **neither**. T
 
 ### Ad analysis is on this API now
 
-Reading an existing ad into a structured hook, beats, casting and layout breakdown is **`POST /v1/analyses`** (spec `2.19.0`, verified live 2026-08-08). It is synchronous, the breakdown comes back in the response body, and there is no `jobId` to poll. The fee is **flat: 1 credit per call**, whatever comes back, priced through `POST /v1/estimates` with `{"kind":"analysis"}` like every other spend.
+Reading an existing ad into a structured hook, beats, casting and layout breakdown is **`POST /v1/analyses`** (spec `2.19.0`, verified live 2026-08-08). It is synchronous, the breakdown comes back in the response body, and there is no `jobId` to poll. The fee is **flat per call** whatever comes back — price it through `POST /v1/estimates` with `{"kind":"analysis"}` like every other spend, and quote the number that comes back rather than one from this file.
 
 That fee is why it is never the default. Frames plus a transcript on the user's own machine cost nothing and read the whole runtime; the hosted call is what you reach for when there is no ffmpeg, when the read has to be structured rather than prose, or when the frame-by-frame pass has already failed. Offer it as the paid alternative, priced first, and let the user choose.
 
@@ -92,7 +92,7 @@ Older copies of this file said analysis was deliberately absent here. That stopp
 | `POST` | `/music` | Generate a music bed from a prompt. `202`, charged, asynchronous. Returns **two** tracks. |
 | `POST` | `/captions` | Burn subtitles into a generated or uploaded video. `202`, charged, asynchronous. |
 | `POST` | `/transcripts` | The words of a video with their timings. **`200`, charged, SYNCHRONOUS — the transcript is in the response.** |
-| `POST` | `/analyses` | Read an uploaded ad (video or still) into a structured breakdown. **`200`, charged, SYNCHRONOUS.** Flat 1 credit. |
+| `POST` | `/analyses` | Read an uploaded ad (video or still) into a structured breakdown. **`200`, charged, SYNCHRONOUS.** Flat per-call fee. |
 | `POST` | `/competitor-ads` | Sweep a brand's live ads out of Meta's Ad Library. **`200`, charged, SYNCHRONOUS.** Behind a per-deployment flag. |
 | `GET` | `/voices` | The voices you may speak in. Filterable, reads only, spends nothing. |
 | `POST` | `/voiceovers` | Render a line of text as speech. **`200`, charged, SYNCHRONOUS — the mp3 is in the response.** Behind a per-deployment flag. |
@@ -407,11 +407,11 @@ Response `202`: `jobId`, `status`, `creditsCharged`, `model`. `model` is always 
 
 ### Presets and pricing
 
-`GET /caption-presets` → `{ "presets": [{ "id", "tier", "credits" }] }`. Verified live 2026-08-04: **30 presets — 21 `basic` at 0.4 credits/billed minute, 9 `dynamic` at 0.8.** The `dynamic` nine are `glass`, `whisper`, `glide`, `glide2`, `fusion`, `terminal`, `handwritten`, `backdrop`, `backdrop2`.
+`GET /caption-presets` → `{ "presets": [{ "id", "tier", "credits" }] }`. **30 presets in two tiers** — `basic`, and the costlier `dynamic`. The `credits` field on each entry is that preset's per-billed-minute rate and is the only place to read it; this file deliberately does not restate the numbers, because a rate copied into a skill file goes stale without anything going red. The `dynamic` nine are `glass`, `whisper`, `glide`, `glide2`, `fusion`, `terminal`, `handwritten`, `backdrop`, `backdrop2`.
 
 The meter is `rate x whole minutes, rounded up, minimum one`, **doubled again above the 1080p tier, measured on the SHORT edge** — a portrait `1080x1920` is 1080p held sideways and is *not* doubled; a true 4K source is. Duration and resolution are read from the file at request time, not declared. Everything this API generates is ≤30s (`seedance-2.5`'s ceiling; every other model stops at 15), so it still bills exactly one minute.
 
-**`POST /estimates` has a third arm for this:** `{ "kind": "caption", "preset", jobId | assetId }`. `preset` is required; the source is optional but **name it for anything over a minute**, because a sourceless quote is the one-minute minimum. Verified live 2026-08-04: sourceless `casper` → `credits: 0.4`; sourceless `glass` → `credits: 0.8`. No prompt, so no `warnings`.
+**`POST /estimates` has a third arm for this:** `{ "kind": "caption", "preset", jobId | assetId }`. `preset` is required; the source is optional but **name it for anything over a minute**, because a sourceless quote is the one-minute minimum. A sourceless quote therefore returns exactly that preset's tier rate for one minute — verified live 2026-08-04 against `basic` (`casper`) and `dynamic` (`glass`), each matching its own entry in `GET /caption-presets`. No prompt, so no `warnings`.
 
 ### Failure modes
 
@@ -471,10 +471,10 @@ Response `200`:
 
 ### Pricing
 
-**1 centi-credit = 0.1 display credits per BILLED MINUTE**, `ceil(seconds / 60)` with a
-one-minute floor. A 15-second ad and a 55-second one both cost **0.1 credits**; a 10-minute
-source costs **1.0**. There is **no resolution term** — unlike captions — because the
-transcriber is billed on duration and never sees the picture.
+Billed **per BILLED MINUTE**, `ceil(seconds / 60)` with a one-minute floor, so a 15-second ad
+and a 55-second one cost exactly the same and a 10-minute source costs ten times that. There
+is **no resolution term** — unlike captions — because the transcriber is billed on duration
+and never sees the picture. The rate itself comes from the estimate arm below, not from here.
 
 **`POST /estimates` has its own arm:** `{ "kind": "transcript", jobId | assetId }`. Source is
 optional; name it for anything over a minute, because a sourceless quote is the one-minute
@@ -555,7 +555,7 @@ Response `202`: `jobId`, `status`, `creditsCharged`, `model`. `model` is a **fix
 { "kind": "music" }
 ```
 
-Sending `prompt` alongside it is a `400` (`Unrecognized key: "prompt"`) — the price is **flat per request**, so there is nothing to price on. Verified live 2026-08-04: `credits: 0.5`, and **no `warnings` key**, because there is no visual prompt to advise about.
+Sending `prompt` alongside it is a `400` (`Unrecognized key: "prompt"`) — the price is **flat per request**, so there is nothing to price on. Verified live 2026-08-04: the arm returns a `credits` number and **no `warnings` key**, because there is no visual prompt to advise about. Take the fee from that call.
 
 **Mind the kind asymmetry, it is deliberate:** you *estimate* `kind: "music"` and you *poll* a job whose `kind` is `"audio"`. The estimate names the operation; the job names its output. Neither is a typo to be fixed.
 

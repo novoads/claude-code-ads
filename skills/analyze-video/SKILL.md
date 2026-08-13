@@ -188,9 +188,9 @@ Before building anything, map the style onto one clip:
   video".
 - **Does it need a series?** If the power is in a narrative arc or a feature rundown, it
   needs 2–3 clips. If it is a vibe or a single moment, one clip is enough.
-- **How many spoken lines fit?** A dense product line runs 2.5 to 3 words per second, a
-  calmer lifestyle line closer to 1.5. Fifteen seconds is 2–3 short sentences, and the
-  slack is what leaves room for a silent beat. Count the source's lines and keep the ones
+- **How many spoken lines fit?** Delivery measures **2.0 words per second** (~13 characters a
+  second, spaces included) after ~0.5s of leading silence. Fifteen seconds is 2–3 short
+  sentences, and the slack is what leaves room for a silent beat. Count the source's lines and keep the ones
   carrying the voice.
 - **What is the beat skeleton?** 15 seconds is 2–3 beats: hook → core moment → kicker.
 
@@ -344,9 +344,9 @@ template that omits them manufactures the same defect in every prompt written fr
   reviewing a serum in her bedroom, the example is a guy reviewing a protein bar in his
   kitchen. That is what proves the template generalises.
 
-- **Dialogue has to fit.** Count the words: about 2.5 to 3 per second for a dense product
-  line, 1.5 for a calm one. If the source talks fast, say so in the template and keep each
-  line punchy.
+- **Dialogue has to fit.** Count the words: **2.0 per second** measured, so a `D`-second
+  clip holds about `2.0 × (D − 0.5)` once the leading silence is paid for. If the source
+  talks fast, say so in the template and keep each line punchy.
 
 - **No credit numbers anywhere in the template.** Prices come from a live
   `POST /v1/estimates` in the session that spends them. A template that quotes a number

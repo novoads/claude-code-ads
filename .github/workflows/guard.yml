@@ -21,6 +21,13 @@ name: guard
 #             attention than saying nothing would have (2026-08-08). Separate
 #             job because it is a separate failure with a separate fix, and a
 #             combined one would report the wrong remedy for half its hits.
+#
+#   no-rates — a credit RATE written into a skill file. The agent reads these at
+#             spend time and quotes what it finds, so when a price moves the
+#             skill quotes a number that stopped being true and nothing goes
+#             red. Third prose ratchet, third separate job, same reasoning as
+#             the two above: its remedy is specific (defer to the free
+#             /v1/estimates arm) and does not generalise to the others.
 
 on:
   pull_request:
@@ -41,6 +48,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: No instructions to hide things from the user
         run: ./scripts/check-no-gag.sh
+
+  no-rates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No credit rates written into skill files
+        run: ./scripts/check-no-rates.sh
 
   #   brand-context — the field store every skill reads. Two of its cases are
   #             already regressions caught in review: a regex that swallowed a
@@ -92,6 +106,24 @@ jobs:
   #             long one makes a skill steal its neighbour's sentences. A nested
   #             SKILL.md is never registered at all — the video cloner sat fully written
   #             with correct triggers that nothing could ever match.
+  #   collisions — a skill directory name IS its slash command, so installing this
+  #             pack adds sixteen names to a namespace we do not own. A name that
+  #             is already a host built-in shadows a command the user has had for
+  #             months, and which one wins is the host's decision, not ours.
+  #
+  #   targets   — a routing sentence naming a skill that is not here. #87 found
+  #             three. A dangling route is worse than no route: the agent reports
+  #             the skill unavailable and the user is left holding a name.
+  #             check-links.sh cannot see these — they are bare names in prose,
+  #             with no path to resolve.
+  #
+  #   toc       — a table of contents that no longer matches its file. Silent both
+  #             ways: a stale entry sends the agent nowhere, and an unlisted
+  #             section is invisible to it.
+  #
+  #   evals     — WARNS, never fails, and is wired in anyway so the six skills with
+  #             no written definition of "working" are named on every run instead
+  #             of being rediscovered every few weeks.
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -100,3 +132,67 @@ jobs:
         run: ./scripts/check-links.sh
       - name: Skill frontmatter is registered and within budget
         run: ./scripts/check-skill-frontmatter.sh
+      - name: No skill name collides with a host built-in
+        run: ./scripts/check-skill-collisions.sh
+      - name: Every routing sentence names a skill that exists
+        run: ./scripts/check-skill-targets.sh
+      - name: Tables of contents match their files
+        run: ./scripts/check-toc.sh
+      - name: Evals coverage (warning only)
+        run: ./scripts/check-evals-present.sh
+
+  #   media   — the two scripts that actually push pixels and samples around, and
+  #             the 29 cases that were sitting in the repo unrun by anything.
+  #             They are the highest-value tests here and the only ones with a
+  #             system dependency: both build their own fixtures with ffmpeg and
+  #             measure the result with ffprobe, so a broken mix or a dropped
+  #             overlay is caught by measurement rather than by exit code. Own
+  #             job because of that dependency — the rest of this workflow must
+  #             not wait on an apt install, and a runner-image change that drops
+  #             ffmpeg should fail HERE, where the message says so.
+  media:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # broll_overlay.py needs ffmpeg >= 7.1, and apt on ubuntu-24.04 ships 6.1.
+      #
+      # This is not a preference. The script scales each overlay against the base
+      # branch with `scale=w=rw:h=rh`, deliberately, because probed width/height
+      # LIE on two common inputs — a phone capture carries rotation in a display
+      # matrix and an anamorphic one carries it in the SAR. Those `rw`/`rh`
+      # reference constants arrived in scale in 7.1, when it absorbed what
+      # scale2ref used to do. On 6.1 the filter graph does not parse at all:
+      # "Undefined constant or missing '(' in 'rw'", four of the fourteen cases
+      # down, and the error says nothing about a version.
+      #
+      # Found by wiring these tests up: they had never run anywhere but a
+      # developer laptop with a Homebrew ffmpeg, which is 8.x.
+      #
+      # A pinned static build rather than apt, from the same GitHub that already
+      # serves actions/checkout — same trust boundary, no new one.
+      - name: ffmpeg >= 7.1 (rw/rh reference scaling)
+        run: |
+          curl -fsSL -o /tmp/ffmpeg.tar.xz \
+            https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz
+          mkdir -p /tmp/ffmpeg && tar -xJf /tmp/ffmpeg.tar.xz -C /tmp/ffmpeg --strip-components=1
+          sudo install -m755 /tmp/ffmpeg/bin/ffmpeg /tmp/ffmpeg/bin/ffprobe /usr/local/bin/
+          hash -r
+          ffmpeg -version | head -1
+          ffprobe -version | head -1
+      # Prove the capability rather than parsing a version string: builds report
+      # versions in several shapes and "master" is not a number. If this step
+      # fails, the diagnosis is in its name, instead of four cases failing later
+      # with a filter-graph error nobody will connect to an ffmpeg upgrade.
+      - name: ffmpeg understands rw/rh
+        run: |
+          ffmpeg -hide_banner -loglevel error \
+            -f lavfi -i color=red:s=64x64:d=0.1 \
+            -f lavfi -i color=blue:s=32x32:d=0.1 \
+            -filter_complex "[1:v][0:v]scale=w=rw:h=rh:force_original_aspect_ratio=decrease[o]" \
+            -map "[o]" -frames:v 1 -f null - \
+            || { echo "::error::ffmpeg does not support scale rw/rh (needs >= 7.1); broll_overlay.py cannot build its filter graph"; exit 1; }
+          echo "rw/rh reference scaling available"
+      - name: music-mix (15 cases)
+        run: python3 shared/skills/music-mix/scripts/test_music_mix.py
+      - name: broll-overlay (14 cases)
+        run: python3 shared/skills/broll-overlay/scripts/test_broll_overlay.py

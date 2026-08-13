@@ -101,10 +101,11 @@ Automated.
 
 ### E4 — the board gate actually stops
 
-**Why:** it is the reason this skill is survivable. Eighteen centi-credits to
-learn the character is wrong, versus a hundred and eighty-seven. A run that
-renders the stills and keeps going has removed the only cheap decision point in
-the flow.
+**Why:** it is the reason this skill is survivable. Learning the character is
+wrong at the board costs the stills; learning it after the clips render costs an
+order of magnitude more, because the stills are a small fraction of a full run.
+A run that renders the stills and keeps going has removed the only cheap
+decision point in the flow.
 
 **Check:** human. Run it end to end and confirm it shows all six images together
 and waits. Reviewer says "beat 3 does not follow beat 2" and confirms no clip was
@@ -120,7 +121,8 @@ and nothing recovers it after the clips exist.
 
 **Check:** human. Put beat 1 and beat 5 side by side at full size. Same face,
 same wardrobe, same proportions. If not, the stills were chained wrong — and the
-fix is 15 centi-credits of stills, not 150 of clips.
+fix is re-rendering stills, not clips, which is the cheaper half of the run by
+an order of magnitude.
 
 ---
 
@@ -196,9 +198,9 @@ bed, and still delivers a finished master.
 
 ### E12 — the cost announcement matches what was spent
 
-**Why:** the skill announces a number before spending 18 credits. If that number
-is wrong the announcement is worse than none, because the operator stopped
-checking.
+**Why:** the skill announces a number before it spends, and a full run is the
+most expensive thing here. If that number is wrong the announcement is worse
+than none, because the operator stopped checking.
 
 **Check:** human. Compare the announced total with the balance delta after a full
 run. They should differ by zero. A voice-over line longer than the estimate's

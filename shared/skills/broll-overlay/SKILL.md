@@ -33,9 +33,11 @@ isn't one yet, say so and stop.
 2. **Its transcript, with timings.** One call to **`POST /v1/transcripts`** with
    the base's `jobId` (or its `assetId` if it was uploaded). It returns `text`,
    word-level `words[]` and `segments[]` — **timings in SECONDS**, which is what
-   the EDL below takes — plus an `srt` you can ignore here. Priced at 0.1 credits
-   per minute of source, rounded up from a one-minute minimum, and **a repeat of
-   the same source is free**, so asking twice costs once. No local install.
+   the EDL below takes — plus an `srt` you can ignore here. **Price it with the
+   transcript arm of `POST /v1/estimates` and quote that number**, never one from
+   this file. The meter is per minute of source, rounded up from a one-minute
+   minimum, and **a repeat of the same source is free**, so asking twice costs
+   once. No local install.
 
    *(The **captions** endpoint still cannot supply this — it burns subtitles into
    a new MP4 and returns no text or timings, verified 2026-08-04 and re-checked
@@ -122,6 +124,12 @@ fails silently by hand: duration drift, re-encoded audio, overlapping or
 zero-frame windows, a clip shorter than its window, a rotated phone base
 composited at the wrong geometry, a window that quietly composited nothing.
 Improvised ffmpeg is how the founding failure happened.
+
+**It needs ffmpeg 7.1 or newer.** The script scales each overlay against the base
+branch with `scale=w=rw:h=rh`, and those reference constants arrived in 7.1. On an
+older build — Ubuntu 24.04's apt ships 6.1 — the graph does not parse and the
+error names `rw`, not a version. Check with `ffmpeg -version` before blaming the
+EDL; on Debian/Ubuntu the fix is a static build, not `apt install ffmpeg`.
 
 **Escape hatch:** if a request genuinely doesn't fit the EDL model — a speed
 ramp, a picture-in-picture inset, audio that actually needs editing — say so and
