@@ -86,6 +86,12 @@ banner_snoozed() {
   [[ -n "$ver" ]] || return 1                        # no readable version → notify
   now="$(date +%s 2>/dev/null || echo 0)"
   (( until_s > now )) || return 1                    # lapsed → notify
+  # The longest rung of the ladder is 7 days. A parseable `until` far past that
+  # is not a snooze, it is a permanent mute wearing a snooze's clothes — from a
+  # clock skew, a milliseconds-for-seconds bug, or an edit. Treat it as corrupt,
+  # which here means notify. "Never ask again" is a real answer with its own
+  # switch (`update_check=off`); it is not something a stray digit gets to say.
+  (( until_s <= now + 3456000 )) || return 1         # > 40 days → corrupt → notify
   up="$(git -C "$ROOT" rev-parse "$ref" 2>/dev/null || true)"
   [[ -n "$up" ]] || return 1                         # cannot compare → notify
   # Abbreviated or full, either way: same commit → the answer still stands.
