@@ -10,7 +10,7 @@ description: >-
   publish / launch a creative as a Meta or Facebook ad, build a Meta ad, push a
   video or image into an ad set, pull their top ads, or research competitor ads.
   Not for generating creative (use the image/video skills) and not for writing
-  AdTable/Airtable rows (use adtable-light).
+  ad-table rows.
 ---
 
 # Meta ad builder
@@ -44,8 +44,8 @@ Trigger on phrases like:
 
 Do **not** use this skill to *generate* creative — that's `pixar-style-ad`,
 `novoads-claymation-ad`, `generate-youtube-thumbnail`, `uni1-image-ad`, etc. Do not use
-it to write AdTable/Airtable rows — that's `adtable-light`. This skill is the
-*direct Meta Marketing API* deployment step.
+it to write ad-table rows. This skill is the *direct Meta Marketing API*
+deployment step.
 
 ## Read order
 
