@@ -1,0 +1,26 @@
+// clone-image-ad takes a STILL and returns finished ads, a reusable template, or
+// both. It is also where a bare "clone my competitors' ads" lands: statics are the
+// default, and it sweeps behind one veto line rather than asking which ad.
+{"intent":"here's a screenshot of their ad, give me three of the same for our app","expected_skill":"clone-image-ad"}
+{"intent":"turn this static into something I can reuse with any product","expected_skill":"clone-image-ad"}
+{"intent":"strip the brand out of this creative and leave me placeholders to fill","expected_skill":"clone-image-ad"}
+{"intent":"take this apart and put our bottle in it, three variants","expected_skill":"clone-image-ad"}
+{"intent":"add this creative to our prompt library so we can run it every month","expected_skill":"clone-image-ad"}
+// Indirect: no clone verb, just a path to a still and a product.
+{"intent":"the ad in swipe/arcads-01.jpg is working for them, I want ours","expected_skill":"clone-image-ad"}
+// Nothing attached. The rule is to sweep rather than ask which ad, and to sweep
+// for statics: the render is the expensive half, and a sweep's 20 results all go
+// to whichever medium was asked for.
+{"intent":"clone whatever our competitors are running","expected_skill":"clone-image-ad","ambiguous_with":["spy-competitor-ads","clone-video-ad"]}
+// The medium rule mirrored: the same sentence as the video cloner's fixture,
+// with a still attached instead.
+{"intent":"clone this ad, the jpeg is attached","expected_skill":"clone-image-ad","ambiguous_with":["clone-video-ad"]}
+// "Make me ads like this" is a cloning trigger and "photoreal" is the other
+// skill's anchor. A reference in hand beats a style word: there is something to
+// reproduce, so this is a clone and not a generation from a brief.
+{"intent":"make me photoreal ads like this one, with our product in them","expected_skill":"clone-image-ad","ambiguous_with":["nano-banana-image-ad"]}
+// Near-misses: an editable source file, the page behind the ad, and the legal
+// question. All three follow a cloned ad around and none of them is a render.
+{"intent":"send our designer the layered psd behind this ad","expected_skill":null}
+{"intent":"build the landing page this ad clicks through to","expected_skill":null}
+{"intent":"file a trademark complaint, a competitor is copying our creative","expected_skill":null}

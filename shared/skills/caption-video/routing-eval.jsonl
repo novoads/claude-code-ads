@@ -1,0 +1,22 @@
+// caption-video is the FALLBACK. The API's captions endpoint is the default path
+// and it belongs to novoads-api, so every positive here carries the reason the API
+// path was ruled out: the style, the wording, or a source with no audio track.
+{"intent":"burn karaoke style captions in our own brand font, the presets don't have it","expected_skill":"caption-video"}
+{"intent":"the transcript is wrong in three places, fix the words first and then burn them in","expected_skill":"caption-video"}
+{"intent":"the api refused this file because it was rendered without audio, caption it locally","expected_skill":"caption-video"}
+{"intent":"word by word captions in the exact colours from our brand kit","expected_skill":"caption-video"}
+{"intent":"caption this without spending anything, the file is already on my machine","expected_skill":"caption-video"}
+// Indirect: the constraint is the budget, and free is what makes the local path
+// the answer instead of the one-call endpoint.
+{"intent":"we're out of credits until Monday but this clip still needs text on it","expected_skill":"caption-video"}
+// The bare ask is the API's, offered as two paths. A style the presets cannot
+// express is what moves it here.
+{"intent":"captions on this, but none of the preset styles are right","expected_skill":"caption-video","ambiguous_with":["novoads-api"]}
+// Same file, same operation, different reason: the words have to be read and
+// corrected before they are burned into pixels, which the endpoint cannot do.
+{"intent":"subtitle this clip, and let me read the text before it goes on","expected_skill":"caption-video","ambiguous_with":["novoads-api"]}
+// Near-misses: a sidecar file is refused by name, and the other two are on-screen
+// text that is not a caption.
+{"intent":"give me an srt file for this video","expected_skill":null}
+{"intent":"add a lower third with his name and title at three seconds","expected_skill":null}
+{"intent":"make youtube's auto captions accurate on the uploaded version","expected_skill":null}

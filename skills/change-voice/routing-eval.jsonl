@@ -1,0 +1,21 @@
+// change-voice replaces SPEECH that already exists and keeps the timing. Its two
+// sharpest near-misses are written into its own description as out of scope, and
+// they are here because a refusal nobody tests is a refusal that erodes.
+{"intent":"the delivery is fine but she sounds like a robot, fix the voice and keep the video","expected_skill":"change-voice"}
+{"intent":"can we make the guy sound older and warmer without re-rendering the whole thing","expected_skill":"change-voice"}
+{"intent":"put a female voice on the finished cut instead","expected_skill":"change-voice"}
+{"intent":"everything about this ad works except how he sounds","expected_skill":"change-voice"}
+{"intent":"run it through a different voice from the catalog, the lip sync has to survive","expected_skill":"change-voice"}
+// Indirect: names a symptom, never the operation.
+{"intent":"the actor reads it flat and the whole ad feels cheap because of it","expected_skill":"change-voice"}
+// Two passes in one sentence. The voice is the ask; the bed is a follow-on that
+// belongs to another skill and runs after.
+{"intent":"make him sound less flat, and put something under it while you're there","expected_skill":"change-voice","ambiguous_with":["music-mix"]}
+// A silent clip needs a voice-over generated on the API; a clip that already
+// speaks needs this. The sentence rarely says which, so the source decides.
+{"intent":"the voice on this clip is wrong, give me a better one","expected_skill":"change-voice","ambiguous_with":["novoads-api"]}
+// Near-misses: two are refused by name in the description — it is not translation
+// and it changes neither pronunciation nor accent — and one is audio restoration.
+{"intent":"dub the ad into portuguese for the brazil launch","expected_skill":null}
+{"intent":"he says our brand name wrong, fix his pronunciation","expected_skill":null}
+{"intent":"clean the background hiss out of this recording","expected_skill":null}

@@ -1,0 +1,21 @@
+// music-mix enters from a finished cut, never touches the picture and never
+// changes the length. It sources the track itself, so "find me something to put
+// under this" is still this skill and not a missing input.
+{"intent":"this cut is too dry, put something upbeat underneath and duck it under her voice","expected_skill":"music-mix"}
+{"intent":"two versions with different tracks so I can pick one","expected_skill":"music-mix"}
+{"intent":"lay a soundtrack under the finished ad and don't touch the video","expected_skill":"music-mix"}
+{"intent":"it needs energy, a bed that fades out on the end card","expected_skill":"music-mix"}
+{"intent":"same ad twice, one with a track and one without","expected_skill":"music-mix"}
+// Indirect: names neither music nor a track.
+{"intent":"the silence behind her voice makes this feel unfinished","expected_skill":"music-mix"}
+// It names the voice, but only as the thing to sit under. Nothing about the
+// speech is being replaced, which is the sibling's whole job.
+{"intent":"put a track under this and keep it below the voice over","expected_skill":"music-mix","ambiguous_with":["change-voice"]}
+// "A version" can read as a new render. It is not: the video stream is copied
+// untouched and only the bed changes.
+{"intent":"give me a lofi version of this ad","expected_skill":"music-mix","ambiguous_with":["novoads-api"]}
+// Near-misses: licensing, a standalone track with no video to sit under, and a
+// length change this skill refuses by design.
+{"intent":"can we legally use this song in a paid ad","expected_skill":null}
+{"intent":"make me a thirty second jingle with our brand name sung in it","expected_skill":null}
+{"intent":"stretch the ad to forty seconds so the music can breathe","expected_skill":null}

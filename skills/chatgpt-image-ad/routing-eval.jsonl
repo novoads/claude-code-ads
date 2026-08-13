@@ -1,0 +1,20 @@
+// chatgpt-image-ad owns the typography-heavy and UI-mimicry half of the static
+// split. Its twin owns photoreal. Neither may ever answer for the other, which is
+// why both descriptions carry an explicit refusal of the other's cues.
+{"intent":"an ad that looks like an imessage thread between two founders","expected_skill":"chatgpt-image-ad"}
+{"intent":"make the creative look like a slack channel where someone recommends us","expected_skill":"chatgpt-image-ad"}
+{"intent":"a fake search results page with us sitting at the top","expected_skill":"chatgpt-image-ad"}
+{"intent":"mostly type: a big pull quote and a three column comparison against the competition","expected_skill":"chatgpt-image-ad"}
+{"intent":"render this one with gpt-image-2","expected_skill":"chatgpt-image-ad"}
+// Indirect: names no model and no style, but the whole creative is a UI.
+{"intent":"an ad that looks like a screenshot of my notes app to do list","expected_skill":"chatgpt-image-ad"}
+// Both anchors in one sentence — a table is type, a bottle is a photo. Type wins:
+// the glyphs are the thing that has to survive.
+{"intent":"a comparison table ad with our bottle in the corner","expected_skill":"chatgpt-image-ad","ambiguous_with":["nano-banana-image-ad"]}
+// Dense copy with no model named. The catch-all takes an unanchored static; this
+// one is anchored by how much text has to stay legible.
+{"intent":"a Meta static with a lot of copy on it that still has to be readable","expected_skill":"chatgpt-image-ad","ambiguous_with":["novoads-api"]}
+// Near-misses: typography work that is not an ad creative.
+{"intent":"pick the typefaces for our new brand identity","expected_skill":null}
+{"intent":"fix the kerning on the headline in this figma file","expected_skill":null}
+{"intent":"typeset our whitepaper as a print ready pdf","expected_skill":null}

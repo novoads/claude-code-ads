@@ -1,0 +1,21 @@
+// analyze-video's deliverable is a FORMULA FILE, not a render. Everything that
+// separates it from the video cloner is "repeatable" against "this one, finished".
+{"intent":"break down what makes this creator's videos work and write it down so we can repeat it","expected_skill":"analyze-video"}
+{"intent":"I want a formula for this style, not a single prompt","expected_skill":"analyze-video"}
+{"intent":"study this reference and add the style to our prompt library","expected_skill":"analyze-video"}
+{"intent":"what is the structure of this ad — pacing, camera, cuts — so we can run it weekly","expected_skill":"analyze-video"}
+{"intent":"save this look so we can drop any product into it later","expected_skill":"analyze-video"}
+// Indirect: the ask is repeatability, phrased as a volume problem.
+{"intent":"we need forty of these a month and I can't brief each one from scratch","expected_skill":"analyze-video"}
+// The sibling boundary, and why it is one: same source video, two deliverables.
+// "Keep making" is the template; one product, rendered, is the clone.
+{"intent":"I want to keep making videos like this one","expected_skill":"analyze-video","ambiguous_with":["clone-video-ad"]}
+// The hosted breakdown lives on the API surface and is the fallback here, not the
+// front door: the local read costs nothing and sees the whole runtime instead of
+// the first twenty seconds.
+{"intent":"read this ad and tell me its hook, its beats and its on-screen text","expected_skill":"analyze-video","ambiguous_with":["novoads-api"]}
+// Near-misses: three things people call "analysing a video" that this does not do.
+// The transcript one matters because a sidecar file is refused across the pack.
+{"intent":"check this ad against our brand guidelines and tell me if it is on brand","expected_skill":null}
+{"intent":"summarise this forty minute webinar into bullet points","expected_skill":null}
+{"intent":"give me the transcript of this video as an srt file","expected_skill":null}

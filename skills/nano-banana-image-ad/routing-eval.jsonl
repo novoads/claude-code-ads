@@ -1,0 +1,19 @@
+// nano-banana-image-ad owns the photoreal, lifestyle, held-object and
+// multi-reference half of the static split.
+{"intent":"a photoreal shot of someone holding a whiteboard with our tagline on it","expected_skill":"nano-banana-image-ad"}
+{"intent":"sticky note flat lay on a desk, our offer written on the note","expected_skill":"nano-banana-image-ad"}
+{"intent":"the ingredients laid out around the jar, shot like a magazine spread","expected_skill":"nano-banana-image-ad"}
+{"intent":"give it the look of a real billboard photographed on a street","expected_skill":"nano-banana-image-ad"}
+{"intent":"use nano-banana-pro for this creative","expected_skill":"nano-banana-image-ad"}
+// Indirect: multi-reference is the anchor, stated as a consistency problem.
+{"intent":"three lifestyle stills with the same model and the same product in hand","expected_skill":"nano-banana-image-ad"}
+// Both anchors again, the other way round: a short line of type over a real
+// scene. The photo is doing the work, so it stays here.
+{"intent":"a static of the product in a bathroom with one short line of text","expected_skill":"nano-banana-image-ad","ambiguous_with":["chatgpt-image-ad"]}
+// No model named, so the catch-all is in play — but three reference photos is
+// this skill's anchor and the catch-all has no multi-reference craft.
+{"intent":"build a Meta image ad out of these three reference photos","expected_skill":"nano-banana-image-ad","ambiguous_with":["novoads-api"]}
+// Near-misses: photography work that sits either side of a generated still.
+{"intent":"retouch this product photo, the label is crooked","expected_skill":null}
+{"intent":"book a photographer for a half day lifestyle shoot","expected_skill":null}
+{"intent":"colour grade our existing product photography to match the brand","expected_skill":null}
