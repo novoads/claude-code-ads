@@ -1,5 +1,6 @@
 ---
 name: nano-banana-image-ad
+metadata: {packVersion: 1.0.0}
 description: >-
   Generate one or more standalone Meta image-ad creatives via Nano Banana Pro through the Novoads API. Locks the model, auto-strips platform chrome, enforces edge-safe layouts. Use when the user asks for a "Nano Banana ad", "Gemini image ad", "nano-banana-pro ad creative", "make a static image ad with Gemini", or anchors on a need for photoreal / lifestyle / multi-reference / handheld-object / clay-texture ad creatives (sticky-note flatlays, held-whiteboard signs, lifestyle portraits, ingredient collages, OOH photography). Does NOT trigger on ChatGPT Image cues — use chatgpt-image-ad for those.
 ---
@@ -63,6 +64,8 @@ concurrency, the upload contract — the `novoads-api` skill's `reference.md` is
 > are a different surface with different behavior, including the units they quote
 > costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
 > install checks `NOVOADS_API_KEY` in the environment.
+
+**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/claude-code-ads> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
 
 ## Configuration
 

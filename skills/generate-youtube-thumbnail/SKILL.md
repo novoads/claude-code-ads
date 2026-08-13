@@ -1,5 +1,6 @@
 ---
 name: generate-youtube-thumbnail
+metadata: {packVersion: 1.0.0}
 description: >-
   Generate high-CTR YouTube thumbnails using Nano Banana Pro via the Novoads API. Handles reference image upload, character likeness alignment, proven CTR-tested prompt formulas, and bounded batch generation. Use when the user asks to create a YouTube thumbnail, video thumbnail, A/B test thumbnail variations, or refers to thumbnail design with their face, brand assets, or product photos.
 ---
@@ -53,6 +54,8 @@ skill's `reference.md` is the authority.
 > are a different surface with different behavior, including the units they quote
 > costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
 > install checks `NOVOADS_API_KEY` in the environment.
+
+**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/claude-code-ads> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
 
 If references are missing or the user pastes images in chat instead of saving them, **stop and
 ask the user to drop the actual files into a project folder** (e.g. `references/youtube thumbnail/`).

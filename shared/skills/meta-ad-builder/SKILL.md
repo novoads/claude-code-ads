@@ -1,5 +1,6 @@
 ---
 name: meta-ad-builder
+metadata: {packVersion: 1.0.0}
 description: >-
   Publish finished creatives as live Meta (Facebook/Instagram) ads via the Meta
   Marketing API, plus research and ad-copy support. Uploads an image or video,
@@ -69,6 +70,8 @@ skill is the *direct Meta Marketing API* deployment step.
 > are a different surface with different behavior, including the units they quote
 > costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
 > install checks `NOVOADS_API_KEY` in the environment.
+
+**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/claude-code-ads> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
 
 ### The Meta app must be published (Live) — check this first
 

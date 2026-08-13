@@ -460,6 +460,22 @@ bash "$ROOT/scripts/sync-skill.sh"
 
 echo ""
 
+# ── Step 3b: Replay any migrations this clone has not run ────────────────────
+# A clone made months ago is not a fresh clone plus some commits: a renamed
+# skill leaves its old copy registered, a renamed config key still parses and
+# means nothing, and generated output orphaned by a move is never collected.
+# `git pull` fixes none of that and reports success. The runner replays the
+# one-time repairs above `.update-state/last-setup-version`; a fresh install
+# adopts the current VERSION and replays nothing.
+#
+# It runs HERE, before the connectivity check, because both branches below can
+# exit 0 — a clone with no key yet still needs its tree repaired. The `|| echo`
+# is load-bearing under `set -e`: the runner is non-fatal by contract, and a
+# repair that did not happen must not take the setup with it.
+bash "$ROOT/migrations/run.sh" || echo "Setup continued; see the migration warnings above."
+
+echo ""
+
 # ── Step 4: Verify API connectivity ──────────────────────────────────────────
 # In non-interactive mode this step REPORTS and never fails the run. Asserting
 # connectivity is check-novoads-env.sh's job and it exits non-zero for exactly

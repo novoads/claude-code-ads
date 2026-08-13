@@ -6,7 +6,51 @@ This is not an API changelog. When a file here and the deployed spec disagree, t
 and [`GET /v1/openapi.json`](https://api.novoads.ai/v1/openapi.json) is where its own history
 lives.
 
-## Unreleased
+Entries land under `## Unreleased`. `./scripts/release.sh` dates that heading into
+`## vX.Y.Z — YYYY-MM-DD` and opens a fresh one; it never invents the prose. Group an entry
+as Added / Changed / Fixed, or as dated `###` subsections like the ones below.
+
+## v1.1.0 (unreleased)
+
+### 2026-08-13
+
+**Added — the pack can now update itself, and knows how old it is.**
+
+- `VERSION` at the repo root, and `metadata.packVersion` stamped into all sixteen
+  `SKILL.md` files. Both hold the **last published tag** — `release.sh` is what moves them,
+  at cut time — so a main-tracking clone's stamp matches what the world can actually
+  download. Every `/v1` response carries `X-Novoads-Pack-Version`, and a skill mentions a
+  newer pack **only when that header is ahead of its stamp**: someone tracking main sits
+  ahead of the tag by design and must not be told they are behind. That is the whole
+  self-check — it does not nag, and it never blocks a run.
+- `migrations/` — the one-time repairs a fast-forward cannot perform. A clone made months
+  ago is not a fresh clone plus some commits: renamed skills, renamed config keys and
+  orphaned generated output all survive a `git pull` that thinks it succeeded.
+  `migrations/run.sh` replays them in `sort -V` order above
+  `.update-state/last-setup-version`, gates each one on its own touchfile, and is called
+  from both `setup.sh` and `update.sh` so either path repairs the same tree. Fresh installs
+  adopt the current version and replay nothing. A migration that fails is reported, retried
+  next run, and never stops the ones after it.
+- `scripts/release.sh` — the one writer of a release. It bumps `VERSION`, re-stamps every
+  skill, dates the changelog, commits, and tags **that same commit**. Dry-run by default,
+  and it never pushes.
+  - The invariant it exists to hold: **the tag commit is the VERSION-bump commit.** gstack
+    shipped the other arrangement and got two clocks — a hand-maintained `VERSION` on one
+    schedule, installs delivered from branch HEAD on another. Across a measured 29-day
+    window, clones sat silently behind while reporting themselves current, and two clones
+    holding different trees reported the same version. The assertion interrogates the
+    **tag**, not the working copy: it reads `vX.Y.Z:VERSION` back out of the tagged tree and
+    requires the stamps in the same commit, because asking whether a tag just created on
+    HEAD points at HEAD is a question that answers itself.
+  - On `--apply` it prints the post-release checklist, because two of the three steps are
+    in another repository and nothing fails when they are skipped: the well-known skill
+    index keeps serving the previous tag, and the `/v1` version header keeps advertising
+    the previous release, both of them quietly and indefinitely.
+  - It warns when any skill description passes 1000 characters. The platform truncates at
+    1024, and the tail is where the "NOT for X, use Y instead" disambiguation lives, so a
+    description that goes over does not fail — it quietly starts stealing sentences that
+    belong to its neighbour. Three descriptions are inside 25 characters of that cliff
+    today.
 
 ### 2026-08-12
 
@@ -43,7 +87,7 @@ lives.
   - The cost gate announced the conversion and then spent on two transcripts nobody had
     priced. It announces every charged call in the run, each quoted by its own free estimate.
 
-## v1.0.0 (2026-08-12)
+## v1.0.0 — 2026-08-12
 
 First tagged release. Eleven skills on one executable path (REST plus `NOVOADS_API_KEY`), nine
 models, and a live estimate in front of anything that spends. Everything below landed before the

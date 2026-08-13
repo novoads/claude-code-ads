@@ -1,5 +1,6 @@
 ---
 name: music-mix
+metadata: {packVersion: 1.0.0}
 description: >-
   Lays a music bed under a finished video — the music is trimmed and faded to the
   video's exact length and ducks beneath the voice, while the video stream is copied
@@ -52,6 +53,8 @@ If the cut is still moving, wait. Remixing is cheap; re-rendering the pipeline i
 > are a different surface with different behavior, including the units they quote
 > costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
 > install checks `NOVOADS_API_KEY` in the environment.
+
+**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/claude-code-ads> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
 
 **(a) Generated through the Novoads API — the default.** `POST /v1/music` on the
 `$NOVOADS_API_KEY` this pack already uses: no second account, no second bill. Price it
