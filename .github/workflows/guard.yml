@@ -163,6 +163,37 @@ jobs:
       - name: Every routable skill has a structurally valid routing eval
         run: ./scripts/check-routing-evals.sh
 
+  #   generated — the two storyboard skills' SKILL.md files are built from
+  #             sections/, and this proves the committed artifact is what the
+  #             sections produce. It catches both directions, which is the whole
+  #             point: an edit typed straight into the 1,124-line generated file
+  #             (the change would be silently reverted by the next build), and an
+  #             edit made properly in a section but never rebuilt (the change
+  #             would never reach a reader at all). The second is the quiet one —
+  #             the section diff looks correct in review and ships nothing.
+  #
+  #             `--check` is a pure read: it builds in memory and compares. The
+  #             `git diff --exit-code` after it is not redundant, it is the
+  #             belt — it fails on a dirty tree even if --check ever grew a way
+  #             to pass while writing.
+  #
+  #             Own job rather than a step in `docs` for the reason the other
+  #             jobs here are separate: the remedy is specific and does not
+  #             generalise. Everything in `docs` reports a document that is
+  #             wrong; this one reports a document that is merely OLD, and its
+  #             fix is one command rather than an edit.
+  generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: SKILL.md matches the sections it is generated from
+        run: python3 scripts/build-skill-md.py --check
+      - name: Rebuilding leaves the tree clean
+        run: |
+          python3 scripts/build-skill-md.py
+          git diff --exit-code -- '*/SKILL.md' \
+            || { echo "::error::a generated SKILL.md was edited directly; put the change in sections/ and re-run scripts/build-skill-md.py"; exit 1; }
+
   #   media   — the two scripts that actually push pixels and samples around, and
   #             the 29 cases that were sitting in the repo unrun by anything.
   #             They are the highest-value tests here and the only ones with a

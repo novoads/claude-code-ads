@@ -1,0 +1,91 @@
+{
+  "skill": "novoads-claymation-ad",
+  "version": 1,
+  "note": "PASSIVE registry. Fields are ids, file paths, human titles and human-readable trigger text ONLY. Nothing here decides anything at runtime: the agent reads the generated SKILL.md, never this file. It exists so a human can find the one section to edit without opening a 1,000-line document, and so the generator has a deterministic order to concatenate in. scripts/build-skill-md.py asserts that every section file is listed here exactly once and that its own header matches this row.",
+  "sections": [
+    {
+      "id": "frontmatter",
+      "file": "00-frontmatter.md.in",
+      "title": "Frontmatter: name, packVersion stamp, and the routing description",
+      "trigger": "always, and before the body exists: it is the only thing the router matches a sentence against"
+    },
+    {
+      "id": "overview",
+      "file": "01-overview.md.in",
+      "title": "What this skill builds, and how it differs from its Pixar sibling",
+      "trigger": "at the top of every run, and whenever the choice between the two skills is live"
+    },
+    {
+      "id": "account",
+      "file": "02-account.md.in",
+      "title": "Account, API key and ffmpeg preflight",
+      "trigger": "before any generation work, to prove the run can happen at all"
+    },
+    {
+      "id": "run-cost",
+      "file": "03-run-cost.md.in",
+      "title": "What one run costs: the 5-beat short against the 8-beat full",
+      "trigger": "when the operator picks the arc length, ahead of Gate 2"
+    },
+    {
+      "id": "hard-constraints",
+      "file": "04-hard-constraints.md.in",
+      "title": "Hard constraints: the three this genre changes from the Pixar set",
+      "trigger": "while writing the board, and again before every render call"
+    },
+    {
+      "id": "two-ways-in",
+      "file": "05-two-ways-in.md.in",
+      "title": "Two ways in: from a product, or from a found clay ad",
+      "trigger": "at the start, once it is clear what the operator actually handed over"
+    },
+    {
+      "id": "clay-look",
+      "file": "06-clay-look.md.in",
+      "title": "The clay look: style lock, negatives, material detail, quirky faces, judder",
+      "trigger": "when writing any prompt, and when a clip drifts toward smooth plastic"
+    },
+    {
+      "id": "arc",
+      "file": "07-arc.md.in",
+      "title": "The eight-beat arc, and which beats earn their place by category",
+      "trigger": "when writing the beat board and choosing what to drop"
+    },
+    {
+      "id": "cast-sheet",
+      "file": "08-cast-sheet.md.in",
+      "title": "The cast sheet: named characters and the narrator persona",
+      "trigger": "before the cast sheet image is rendered"
+    },
+    {
+      "id": "gates",
+      "file": "09-gates.md.in",
+      "title": "Gates 2 to 8, and the four Gate 7 rules this genre needs verbatim",
+      "trigger": "through the whole render and assembly, borrowed from the Pixar skill"
+    },
+    {
+      "id": "output-format",
+      "file": "10-output-format.md.in",
+      "title": "Output format: the order the deliverables are reported in",
+      "trigger": "when reporting back to the operator, at every stop"
+    },
+    {
+      "id": "calls",
+      "file": "11-calls.md.in",
+      "title": "The calls, and the worked SYNC beat prompt the house test reads",
+      "trigger": "whenever a request body or a response shape is in question"
+    },
+    {
+      "id": "failure-modes",
+      "file": "12-failure-modes.md.in",
+      "title": "Failure modes this genre owns, on top of the Pixar list",
+      "trigger": "when a clip, a face or a transformation comes back wrong"
+    },
+    {
+      "id": "hard-rules",
+      "file": "13-hard-rules.md.in",
+      "title": "Hard rules: the lines that end a run rather than bend",
+      "trigger": "before delivering, as the last read of the run"
+    }
+  ]
+}

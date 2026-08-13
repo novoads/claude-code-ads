@@ -1,0 +1,102 @@
+#! section: gate-8-captions
+#! title:   Gate 8: captions, the preset choice, and the BLOCKING caption gate
+#! read:    after the master exists, and before anything is called finished
+#!
+## Gate 8 — captions
+
+Captions are burned SERVER-side, and the source has to be an asset the API can
+reach. A local file is not a caption source until it is uploaded.
+
+```bash
+# 1. mint a presigned PUT for the master
+curl -sS -X POST https://api.novoads.ai/v1/uploads \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"contentType":"video/mp4","sizeBytes":<n>}'
+# → { assetId, uploadUrl, method, headers } — then PUT the bytes to uploadUrl,
+#   sending `headers` VERBATIM. Content-Type and Content-Length are signed into
+#   the URL, so an omitted or library-inferred Content-Type is a 403, not an
+#   upload.
+
+# 2. burn
+curl -sS -X POST https://api.novoads.ai/v1/captions \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" -H 'Content-Type: application/json' \
+  -d '{"assetId":"<the master>","preset":"<a style>"}'
+# → 202 { jobId } — poll GET /v1/generations/{jobId}
+```
+
+`GET /v1/caption-presets` lists the styles with their tier and rate, and an ad
+this length bills the one-minute minimum on either tier. **Read the list rather
+than trusting the names below** — presets are added, and the rate is the list's
+to state, not this file's.
+
+Two things worth knowing before you iterate: **re-captioning the same video in
+the same preset is free and idempotent**, and the second call returns the first
+job's id — but **a different preset is a new job and a new charge**. And a source
+rendered with `audioEnabled: false` comes back `409`, because there is no speech
+to transcribe.
+
+### Which preset, and why it is not a free choice
+
+The genre's caption look is a specific thing: heavy sans-serif, white fill, a
+thick dark outline, roughly 7% of frame height, sitting in the lower third but
+clear of the platform UI, changing per phrase rather than per word. That is what
+a hand-burned caption track was built to produce, and it is what to match when
+picking from the list.
+
+| You want | Reach for | Note |
+|---|---|---|
+| The default heavy-outline social look | a basic-tier preset such as `hustle`, `slay` or `flex` | Fixed styling, which is the point: it will not surprise you |
+| Per-phrase emphasis, a punchline that pops | a dynamic-tier preset such as `glide` or `fusion` | Context-aware animation, worth it on a hook beat. Read its rate off the list |
+| A quiet, typographic register | `simple`, `plain` or `lowkey` | Basic tier. Right when the ad is doing the work and the captions should not |
+
+Two things the preset cannot do for you, and both are yours:
+
+- **Placement against the frame.** The preset picks a band; your role D still is
+  what leaves the lower third clean for it. Ask for the negative space in the
+  still prompt, not in the caption call.
+- **The words.** Presets style a transcript; they do not correct one. See the
+  gate below.
+
+**Burning locally is the fallback, not the default.** Take it when the transcript
+keeps mangling a name you cannot move to the card, or when a brand's caption
+styling is contractual. `shared/skills/caption-video/SKILL.md` is that path: free,
+any style you can write, and you own the timing, the font licence and the safe
+area. At this length that is five phrases of timing to get right by hand, which
+is why it is the fallback.
+
+```
+╔═══════════════════════════════════════════════════════════════════════╗
+║  CAPTION GATE — BLOCKING. Read every caption against the script.      ║
+║  A garbled brand name is a FAILED RUN, not a note in the report.      ║
+╚═══════════════════════════════════════════════════════════════════════╝
+```
+
+**Captions are TRANSCRIBED, not taken from your script**, so they inherit every
+mishearing the transcript does — and brand names are what they mishear. Measured
+on real runs: a voice-over saying "Owala FreeSip" was captioned **"Olaf. Free sip
+water"**; "bottles" came back "bootles"; and a run whose own transcript read
+`NoseFrida 1499` shipped captions reading **"Nos Frida 1499."** — the brand split
+in half and the price read as a number nobody says out loud.
+
+**The check is the burned frames, not the transcript you already have.** The
+captions endpoint returns a new MP4 and nothing else: no caption text, no SRT,
+and `GET /v1/generations/{jobId}` on a caption job carries neither. A clean
+transcript of the audio is not evidence the burn is clean, because the burn ran
+its own transcription. So you look at the video.
+
+**That class of defect blocks the ship.** Do not deliver a master with it and
+mention it in the notes; that is what happened to T12 and the caption was the
+first thing a viewer read. Compare the burned captions word by word against the
+board's script. If a brand name, a product name or a number is wrong in even one
+frame, the run is not finished.
+
+Three fixes, in order of preference:
+
+1. **Keep the brand name out of the NARRATION entirely** and put it on screen as
+   the composited end card, which is where a wordmark belongs anyway. This is the
+   only fix that removes the failure mode rather than catching it.
+2. **Keep numbers out of the narration too.** A price spoken aloud is a price the
+   transcript writes as digits. Put it on the card.
+3. **Burn the captions locally from your own script**, where you own every
+   character. The server pass is the cheap default, not the safe one.
+

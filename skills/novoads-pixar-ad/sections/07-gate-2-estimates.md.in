@@ -1,0 +1,66 @@
+#! section: gate-2-estimates
+#! title:   Gate 2: price every kind once, then announce the total
+#! read:    before the first charged call, and again if the shape of the run changes
+#!
+### Gate 2 — price the whole board, then announce it
+
+Price each KIND once and multiply. `POST /v1/estimates` is discriminated on
+`kind` and takes one at a time, so four calls describe the whole run:
+
+```bash
+E=https://api.novoads.ai/v1/estimates
+H="Authorization: Bearer $NOVOADS_API_KEY"
+J='Content-Type: application/json'
+
+curl -sS -X POST $E -H "$H" -H "$J" \
+  -d '{"kind":"image","model":"gpt-image-2","prompt":"<a beat still prompt>"}'
+curl -sS -X POST $E -H "$H" -H "$J" \
+  -d '{"kind":"video","model":"seedance-2.0","durationSeconds":5,"prompt":"<a beat prompt>"}'
+curl -sS -X POST $E -H "$H" -H "$J" \
+  -d '{"kind":"voiceover","script":"<the longest VO line>"}'
+curl -sS -X POST $E -H "$H" -H "$J" \
+  -d '{"kind":"music"}'
+```
+
+**Each arm is strict and takes only what moves the price.** The `music` arm takes
+`kind` and nothing else — sending it a `prompt` is a `400`. The video arm never
+sees `aspectRatio`, `startImageAssetId`, `referenceAssetIds` or `audioEnabled`,
+and rejects all four. Send the `model` you will actually render, or you are
+pricing a different ad.
+
+Then announce in one line and proceed:
+
+> Cast sheet + 5 stills + 5 clips + 5 VO lines + music + captions ≈ <the total
+> the estimates returned> credits (balance: <what they reported>). Starting.
+
+This is an announcement, not a question. Two cases change it:
+
+- **`sufficient: false` on any kind** — stop. Name what is short and give the
+  `topUpUrl`. That is a blocker.
+- **The balance covers the run and no retry.** Say so in one clause before
+  firing: "this covers one pass, not a re-render." At this length a re-render is
+  a beat, not the whole ad — which is worth saying too, because it is the good
+  news: a bad beat is one still and one clip to redo, not the whole board.
+
+**The `warnings` array is advice.** `POST /v1/estimates` is the only call that
+lints a prompt — `POST /v1/videos` and `POST /v1/images` return no such field —
+and it lints against the UGC talking-head rules; nothing here refuses anything. A
+prompt written the way this file says comes back clean; a warning usually means
+you drifted, not that the lint is confused.
+
+Two clauses are what make it come back clean, and both are in the style lock and
+the worked prompt for this reason. Measured on a beat prompt without them: the
+VOICE STYLE casting line answers `missing_actor_descriptor` (the rule looks for
+an age or gender token anywhere in the prompt), and the labelHold clause answers
+`label_without_hold`, which fires on the word "bottle" alone. Drop either and the
+same beat comes back with a warning that is telling you the truth.
+
+**The one warning to ignore: `missing_actor_descriptor` on a beat with no human
+in it.** The lint reads prompts as talking-head UGC, where a shot without an age
+or gender token gets a randomly cast person. A role-A beat is a hair clump with
+eyes, or a blob of congestion, and it has no age and no gender to state. The rule
+is answering a question the beat does not ask. This is the only lint output this
+skill tells you to overrule, and only on a beat whose subject is genuinely not a
+person — a beat that merely FORGOT to describe its human is the case the rule
+exists for, and it looks identical from here. Check which one you wrote.
+

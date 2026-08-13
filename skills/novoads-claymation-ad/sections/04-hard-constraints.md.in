@@ -1,0 +1,23 @@
+#! section: hard-constraints
+#! title:   Hard constraints: the three this genre changes from the Pixar set
+#! read:    while writing the board, and again before every render call
+#!
+## Hard constraints
+
+Everything in `novoads-pixar-ad`'s Hard constraints section applies unchanged:
+one call per beat, 4 to 15 seconds, 9:16, `audioEnabled: true`, a narrator line
+in the prompt OR the VO track and never both, one continuous voice, no
+`styleFamily` field. Read them there.
+
+Three are different here:
+
+- **Five to eight beats**, not four to six. The arc is a story and a story needs
+  its middle. Below five beats it is a Pixar-shaped ad in clay, and the Pixar
+  skill will render it better and cheaper.
+- **The narrator carries the ad.** This genre is third-person storytelling, and
+  the narration is not filler between spoken lines the way it is in the Pixar
+  skill. Most beats are VO beats and that is correct here.
+- **At least one beat is still SYNC.** Usually beat 3, the social beat, where a
+  second character says the thing the protagonist has been avoiding. A whole ad
+  of narration over silent faces is the failure this rule exists to prevent.
+

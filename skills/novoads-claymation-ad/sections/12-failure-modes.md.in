@@ -1,0 +1,21 @@
+#! section: failure-modes
+#! title:   Failure modes this genre owns, on top of the Pixar list
+#! read:    when a clip, a face or a transformation comes back wrong
+#!
+## Failure modes
+
+Everything in `novoads-pixar-ad`'s Failure modes list applies. Four are this
+skill's own:
+
+- **The clay turned into plastic by the end of the clip.** The most common
+  failure here. The material detail block was thin or the negative block was
+  missing its anti-smoothing lines. Re-render with both, and add "clay texture
+  held to the last frame" to the constraints.
+- **The eyes went wet.** A Pixar-style multi-catchlight eye leaked in. `no
+  wet-eye highlights` in the negative block and `a single soft highlight, no wet
+  shine` in the material block. Both, not either.
+- **The transformation beat produced a different person.** The improvement was
+  described on the whole face. Name the one thing and pin the rest.
+- **Eight beats and no mouth ever moved.** Every beat went to the narrator. Beat
+  3 is a SYNC beat; if you dropped it for the short, beat 6 is.
+

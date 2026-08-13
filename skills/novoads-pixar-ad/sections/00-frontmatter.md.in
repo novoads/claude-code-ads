@@ -1,0 +1,23 @@
+#! section: frontmatter
+#! title:   Frontmatter: name, packVersion stamp, and the routing description
+#! read:    always, and before the body exists: it is the only thing the router matches a sentence against
+#!
+---
+name: novoads-pixar-ad
+metadata: {packVersion: {{PACK_VERSION}}}
+description: >-
+  Builds a stylized 3D animated ad on the Novoads REST API as a STORYBOARD:
+  four to six beats, each rendered from its own key frame, narration laid into
+  the gaps, a music bed, captions burned on, assembled locally with ffmpeg.
+  Carries the genre's beat formulas (anthropomorphized problem character,
+  protagonist reveal, mascot mechanism scene, composited end card) and produces
+  a product read, cast sheet, beat board, per-beat still and clip, and the
+  exact curl calls. Use for ANY Pixar-style, Disney-style, 3D animated or
+  animated-film-look ad at ANY length: "Pixar style ad", "3D animated ad",
+  "animated movie look", "cute 3D character ad", "a quick animated ad", "15
+  second animated ad", "30 second animated ad", "storyboard ad", "several
+  scenes", "animated ad with a voice-over", "little mascots", or a product URL
+  or photo for an emotional animated spot. No one-call tier, so ffmpeg is
+  required. Not for stop-motion clay (use novoads-claymation-ad), talking-head
+  UGC (novoads-api), video cloning, or static image ads.
+---

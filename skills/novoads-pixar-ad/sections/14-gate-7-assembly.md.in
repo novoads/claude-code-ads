@@ -1,0 +1,167 @@
+#! section: gate-7-assembly
+#! title:   Gate 7: trim, concat, the voice mix, the composited end card, the transcript
+#! read:    when every clip and every line is on disk and the master is being cut
+#!
+## Gate 7 — local assembly
+
+This is where the seams either disappear or announce themselves.
+
+**Do the assembly in `outputs/<ad-name>/`, not in the directory you started in.** The
+downloaded beats, `beats.txt`, the trimmed clips, the placed VO lines and the master are one
+run's working set — a dozen of them loose in a repo root is a diff somebody else has to
+explain. Make the directory before the first download and stay in it; every path below is
+relative to it.
+
+### Trim to the narration, not to the clip
+
+For each beat: the clip is as long as you asked for, and the line inside it is
+whatever length it is. **Trim the clip to the voice-over plus 0.5 seconds**, not
+the other way round. Dead air at the end of a beat is the single most common tell
+that an ad was assembled rather than shot.
+
+```bash
+# VO duration, to two decimals
+ffprobe -v error -show_entries format=duration -of csv=p=0 beat2-vo.mp3
+# trim the clip to it, +0.5s of air
+ffmpeg -i beat2.mp4 -t <vo+0.5> -c:v libx264 -c:a aac beat2-trimmed.mp4
+```
+
+**Trimming is the default, not the only option.** A beat with no narration keeps
+its own length; otherwise measure both and pick per beat. **A**, most beats: the
+VO is shorter, so re-encode the clip to `vo + 0.5s` — 0.25s of lead, 0.25s of
+tail, and anything past that is dead air. **B**, when the visual needs its full
+length for a long camera move, the mascot mechanism or a CTA hold: extend the VO
+instead, a word or two or a second short line, re-rendered and re-measured.
+
+**If the VO is LONGER than the clip, never speed it up.** No `atempo`. Split the
+line across two beats, or re-render the beat at a longer duration. A voice at
+1.1x is audible as a voice at 1.1x, and it costs the ad its calm.
+
+**Re-check the caption's vertical position after trimming.** The frame at the new
+cut is not the frame that was there before, so a caption band that sat over clean
+floor can land on a face or a label. This is why captions are burned AFTER the
+trim and the mix, never before: the timings and the safe area both move.
+
+### Concatenate, then build ONE voice track
+
+The picture and the voice are assembled here. **The bed is not** — Gate 6 says why.
+
+```bash
+FMT="aformat=sample_rates=48000:channel_layouts=stereo"   # one shape for all
+
+# 1. concat the trimmed beats
+printf "file '%s'\n" beat*-trimmed.mp4 > beats.txt
+ffmpeg -f concat -safe 0 -i beats.txt -c copy stitched.mp4
+
+# 2. place each VO line at its beat's start. adelay is MILLISECONDS and takes one
+#    delay PER CHANNEL: `adelay=5000|5000` on a MONO take delays the single
+#    channel it has and drops the second value. `all=1` delays whatever it finds.
+ffmpeg -i beat2-vo.mp3 -af "adelay=5000:all=1,$FMT" vo2-placed.wav
+
+# 3. the beats' own audio, placed the same way, split by track type
+ffmpeg -i beat1-sync.mp4 -vn -af "adelay=0:all=1,$FMT" sync1.wav
+ffmpeg -i beat2-vo.mp4   -vn -af "volume=0.28,adelay=5000:all=1,$FMT" amb2.wav
+
+# 4. one voice track. duration=longest, NEVER `first` — `first` ends the mix when
+#    input 0 ends: measured, the audio stopped 2.4s before the picture and the
+#    hero card played silent. normalize=0 stops amix dividing by the input count.
+ffmpeg -i vo2-placed.wav -i sync1.wav -i amb2.wav -filter_complex \
+  "[0:a][1:a][2:a]amix=inputs=3:duration=longest:normalize=0:dropout_transition=0[a]" \
+  -map "[a]" voice.wav
+
+# 5. the voice onto the picture. Read its duration back against stitched.mp4.
+ffmpeg -i stitched.mp4 -i voice.wav -map 0:v -map 1:a -c:v copy -c:a aac voiced.mp4
+```
+
+**The clip track is TWO different things and one level cannot serve both.** On a
+VO beat the clip audio is ambience and belongs at about 28%, which is what step 3
+does to it. **On a SYNC beat the clip audio IS the dialogue and belongs at 100%**,
+because attenuating it is attenuating the only line in the shot. Measured, and
+the reason this is a rule: a run mixed at a flat 28% buried its SYNC beat so far
+down that an independent judge measured the line at -36 dB, under a caption
+spelling out words the viewer could not hear. That is worse than no line.
+
+If the narration is fighting something, lower the AMBIENCE track before you raise
+the voice. Never lower a SYNC beat's own track to make room. **The order from
+here is fixed:** end card → concat → voice mix → transcribe → captions (Gate 8) →
+the bed, laid by `music_mix.py`.
+
+**If you hear a line twice, the mix is not the problem.** That beat's prompt
+carried the narrator's words and Seedance rendered them, and no level will fix
+it — re-render the beat with the narration removed from the prompt. The
+transcribe-verify step below is what catches this, and it is why that step is not
+optional.
+
+### The end card is composited, never rendered
+
+The last beat ends on the real product photograph, dropped over the render. Do
+not ask the model to draw the card: asking it to draw a card is asking it to
+regenerate a wordmark from scratch, and it will get it wrong. Measured on this
+family of runs — `Novoads.ai` came back as `Novads.ai` in every frame with the
+label-hold clause present and the key frame spelled correctly, and `Owala` came
+back as `ovola`. The model carries a MARK, which is a shape, and destroys TYPE.
+
+```bash
+# 1. find the cut to the card (expect a dissolve, not the hard cut you asked for)
+ffmpeg -i beat5-trimmed.mp4 -vf "select='gt(scene,0.3)',showinfo" -f null - 2>&1 | grep pts_time
+# 2. measure the product's bounding box in BOTH the rendered card and the real
+#    photo, then scale and position the real one to match. Matching by eye jumps.
+# 3. fade the real card in on the render's own dissolve curve, at full opacity
+#    BEFORE the wordmark becomes legible, or the misspelling ghosts through.
+#    `-loop 1` is an INFINITE input and overlay runs to its LONGEST one, so
+#    without `shortest=1` and `-shortest` this repeats the last frame forever:
+#    measured, a 155 MB end card on a 5-second beat.
+ffmpeg -i beat5-trimmed.mp4 -loop 1 -i endcard.png -filter_complex \
+  "[1:v]scale=<w>:-1,format=rgba,fade=t=in:st=<t0>:d=0.4:alpha=1[card];\
+   [0:v][card]overlay=<x>:<y>:shortest=1:enable='gte(t,<t0>)'" \
+  -shortest -c:a copy beat5-carded.mp4
+# 4. card BEFORE the concat, and add this to beats.txt: that glob wants -trimmed
+```
+
+**Match the card's background to the render before you composite it.** A retail
+photo shot on near-white dropped onto a warm cream field leaves a visible
+rectangle seam, and the seam is the first thing a viewer sees on the last frame.
+Sample the render's own background colour and pad the card to it, or key the
+photo's white out entirely.
+
+**Do not let the card be a frozen frame in silence.** Hold the beat's own room
+tone under it and let the music resolve rather than cut. A warm animated film
+that ends on a still, silent packshot ends on the worst-made object in the ad.
+
+**Then read the wordmark at full crop.** Pull the frame, crop the label, look at
+it at full size. A contact sheet at thumbnail size is too small to catch a single
+missing letter, which is exactly how the first one shipped.
+
+**And review the CLIPS at full size, not on the contact sheet.** Measured on a
+run that used this file: a payoff beat rendered TWO cots and TWO babies, and it
+survived a contact-sheet review because at thumbnail width the second cot reads
+as furniture. The contact sheet is for judging whether beat 3 follows beat 2. It
+is not for judging whether beat 3 is correct.
+
+### Verify what it actually says, before it ships
+
+> Doctrine: [shared/references/craft.md](../../shared/references/craft.md) § 1.
+> The call below is this surface's; the rule is not this skill's.
+
+The render can gain or lose a word, and a script that survived in your head is
+not evidence. Upload the master and transcribe it, then read it back against the
+script:
+
+```bash
+curl -sS -X POST https://api.novoads.ai/v1/transcripts \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"assetId":"<the uploaded master>"}' | jq -r '.text'
+```
+
+**`POST /v1/transcripts` is synchronous and charged** — the words are in the
+response, billed per minute of source with a one-minute minimum, so an ad this
+length bills the minimum. It returns `text`, `words[]` with per-word timings
+**in seconds**, `segments[]` and an `srt`. **Transcribing the same source twice
+is free**, so a retry after a timeout is not a second charge. It sits behind the
+`TRANSCRIPT_API` flag: where it is off the path answers `400` naming what the
+deployment does render, and you transcribe locally instead.
+
+Read the transcript against the board. A dropped word in the offer line is worth
+a re-render of that beat.
+

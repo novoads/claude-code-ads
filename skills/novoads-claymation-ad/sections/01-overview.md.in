@@ -1,0 +1,33 @@
+#! section: overview
+#! title:   What this skill builds, and how it differs from its Pixar sibling
+#! read:    at the top of every run, and whenever the choice between the two skills is live
+#!
+
+# Novoads Claymation Ad
+
+One product in. A 40 to 70 second hand-sculpted clay ad out, cut from five to
+eight separately rendered beats, with narration, music and captions.
+
+This is the **sibling** of `novoads-pixar-ad` and it runs the same pipeline: the
+same gates, the same calls, the same still gate, the same local assembly. Read
+that skill for the pipeline. **This file owns two things it does not: the clay
+look, and a narrative arc that is longer and quieter than the Pixar one.**
+
+The two are not interchangeable, and the difference is not decoration:
+
+| | Pixar storyboard | Claymation storyboard |
+|---|---|---|
+| Hook | an anthropomorphized problem with eyes, speaking | a named person in their kitchen, and a narrator |
+| Arc | 4 to 6 beats, a want and a turn | 5 to 8 beats, a small life story |
+| Voice | in-scene SYNC plus narration | a storyteller carrying almost all of it |
+| Surface | smooth, wet-eyed, subsurface scattering | matte clay, thumbprints, tool marks |
+| Runs on | want, then relief | affection for a character |
+
+Picking the wrong one is not a style mistake, it is a story mistake. If the
+product's pain is a moment, that is the Pixar skill. If it is a season of
+someone's life, it is this one.
+
+**Every clay ask lands here, including the short ones.** There is no one-call
+clay tier. A five-beat short is the small end of this pipeline, not a different
+door: still per-beat renders, still ffmpeg, still an assembly.
+

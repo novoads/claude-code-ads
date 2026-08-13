@@ -1,0 +1,45 @@
+#! section: hard-constraints
+#! title:   Hard constraints: beat count, one call per beat, VO against SYNC, one voice
+#! read:    while writing the board, and again before every render call
+#!
+## Hard constraints
+
+- **Four to six beats.** Fewer than four and there is no arc to assemble; more
+  than six and the seams outnumber the story. A 15-second ask is four short
+  beats, not one long call.
+- **Each beat is its own `POST /v1/videos` call from its own start frame.** Never
+  ask one call for multiple scenes.
+- **4 to 15 seconds per beat**, and in practice 4 to 6. A beat is one action.
+- **9:16** unless the operator says otherwise.
+- **`audioEnabled: true` on every beat.** The clip's own audio is the SFX bed
+  and the in-scene voices; there is no SFX endpoint and none is needed.
+- **A narrator line goes in the PROMPT or in the VO track. Never both.** Getting
+  this wrong is silent: Seedance renders any `NARRATOR: "…"` line in the prompt
+  into the clip's own audio, so laying a `POST /v1/voiceovers` take of the same
+  words on top plays every line twice. Measured — a raw beat clip transcribed on
+  its own came back saying the narrator's line, and the finished mix said it
+  twice. Decide per beat:
+  - **Narration from the VO track** (the default here, because it is the only way
+    to get ONE voice across five separate renders): the prompt carries in-scene
+    dialogue only, or states that the shot has no speech. Keep `audioEnabled:
+    true` for ambience.
+  - **Narration native to the clip**: put `NARRATOR: "…"` in the prompt and
+    generate NO voice-over for that beat. Its voice will not match the others.
+- **At least one beat must be SYNC.** The rule above is a warning against
+  doubling a line, and it is easy to over-obey: make every beat a VO beat and the
+  ad becomes a slideshow with a voice talking over it. Measured — T12 shipped
+  three beats, all VO, no character ever spoke, and it lost to the reference ad
+  on exactly that. The genre's opening move is a problem character saying its own
+  complaint out loud, and it only lands when the voice comes out of the face.
+- **The product appears in its own beats and on the end card. Nowhere else.** A
+  product held in every shot reads as a catalogue. Roles B and D show it; the
+  hook and the mechanism scene do not. See `references/formulas.md`.
+- **One continuous voice.** Pick the narrator voice ONCE, from `GET /v1/voices`,
+  and use that same `voiceId` for every line. A voice that changes between beats
+  reads as a different ad — which is also why native per-beat narration does not
+  work across a storyboard: each render casts its own.
+- **There is no `styleFamily` field.** It was deleted from the whole API, and the
+  `/v1` request bodies are strict, so sending it is a `400 Unrecognized key`.
+  Nothing on the generation path refuses a prompt on style grounds any more; the
+  only prompt refusal left is content moderation.
+

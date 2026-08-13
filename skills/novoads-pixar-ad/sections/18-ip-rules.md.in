@@ -1,0 +1,17 @@
+#! section: ip-rules
+#! title:   IP rules for a look that belongs to specific studios
+#! read:    while writing any prompt, still or clip
+#!
+## IP rules
+
+The trademark risk here is higher than for any material-based style, because this
+aesthetic belongs to specific studios and the models will hand you near-copies of
+their characters.
+
+- **Never name a studio or a franchise in a prompt.** Write "stylized 3D animated
+  feature film look."
+- Never depict named or recognisable characters. Original designs only.
+- Do not reproduce a studio's mascot or signature motifs, even by allusion.
+- The negative block above carries the four negatives that enforce this, and it
+  is pasted into every prompt, still and clip alike.
+

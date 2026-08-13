@@ -1,0 +1,45 @@
+#! section: two-ways-in
+#! title:   Two ways in: from a product, or from a found clay ad
+#! read:    at the start, once it is clear what the operator actually handed over
+#!
+## Two ways in
+
+### A. From a product
+
+Run `novoads-pixar-ad`'s Gate 0 and Gate 1 unchanged: is the pain emotional,
+visible on a face, in a relationship, impulse-priced; then the product read. One
+extra question at this length: **does this product have a before and an after
+that a viewer would recognise a month apart?** The transformation beat is the
+spine of the clay arc, and a product with no visible change does not have one.
+
+### B. From a found video
+
+The other entry, and the one this genre is usually asked for: someone shows you a
+clay ad and wants theirs. Do not guess at its structure from the thumbnail.
+
+**Read the reference locally.** Follow
+[`skills/analyze-video/SKILL.md`](../analyze-video/SKILL.md):
+frames out with ffmpeg, dialogue out with Whisper, then read the beats off what
+you extracted. It costs nothing, needs no key, and — unlike a fixed-window
+reader — it covers the whole runtime, which is what a 60-second arc needs.
+
+**There is a hosted alternative, and it is not the default.**
+`POST /v1/analyses` returns the structured hook/beat/casting breakdown in one
+synchronous call, priced through `POST /v1/estimates` with
+`{"kind":"analysis"}`. Reach for it only when ffmpeg is missing or the local
+read has already failed: the local path costs nothing, ffmpeg is a hard
+dependency of the assembly anyway, and `/analyses` defaults to reading the
+first 20 seconds, which is exactly the setup third a clay arc cannot afford to
+lose. If you do offer it, price it first and let the user choose. See
+[`reference.md`](../novoads-api/reference.md) § *Ad analysis is on this API now*.
+
+Two things to hold on to whichever way you read it:
+
+- **Sample the whole video, not its opening.** A clay ad spends its first third
+  on setup, so a read that stops early gives you the hook, the casting and the
+  palette and none of the arc. A board that claims eight beats from a partial
+  read is a board with invented beats in it.
+- **Write our own story.** Recreate the FORMAT, never the script: their
+  protagonist, their brand and their claims are theirs. What transfers is the
+  shape, the palette, the pacing and the narrator persona.
+

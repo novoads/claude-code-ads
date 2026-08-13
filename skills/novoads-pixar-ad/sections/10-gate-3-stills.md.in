@@ -1,0 +1,72 @@
+#! section: gate-3-stills
+#! title:   Gate 3: every still before any clip, then STOP at the board gate
+#! read:    when rendering the cast sheet and the beat stills
+#!
+## Gate 3 — stills first, all of them, then STOP
+
+Render every beat still BEFORE any clip. Sequentially, each referencing the cast
+sheet and the previous still:
+
+```
+POST /v1/uploads (product photo) → PUT the bytes with the returned `headers` VERBATIM
+      │
+      ▼
+POST /v1/images  cast sheet   1:1   ref [product]
+      │  ← returns images[].assetId. Pass it straight to the next call.
+      ▼
+POST /v1/images  beat 1       9:16  ref [castSheet, product]
+POST /v1/images  beat 2       9:16  ref [castSheet, beat1]
+POST /v1/images  beat 3       9:16  ref [castSheet, beat2]        ← sequential,
+POST /v1/images  beat 4       9:16  ref [castSheet, beat3]          each on the
+POST /v1/images  beat 5       9:16  ref [castSheet, beat4]          one before
+      │  ← each one's assetId feeds the next, no upload in between
+      ▼
+╔═══════════════════════════════════════════════════════════════════════╗
+║  BOARD GATE — show all six images in order. Wait for the operator.    ║
+║  Six images spent, every clip still unspent — and the clips are       ║
+║  most of the run. A wrong character, a wrong palette or a wrong       ║
+║  location caught here is the cheapest fix this pipeline has.          ║
+╚═══════════════════════════════════════════════════════════════════════╝
+```
+
+One still call in full. Every other call in this file is the same shape:
+
+```bash
+curl -sS -X POST https://api.novoads.ai/v1/images \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"gpt-image-2","prompt":"<style lock + beat 1 + negatives>",
+       "aspectRatio":"9:16","referenceAssetIds":["<castSheet>","<product>"]}'
+```
+
+**`POST /v1/images` is SYNCHRONOUS.** The finished image is in the response,
+there is no job to poll, and the call blocks for 60 to 90 seconds while it
+renders. **Write each image to disk as you read the response** — on a
+`numImages > 1` call only the first image is recoverable afterwards, and the rest
+exist nowhere but that response body.
+
+**A generated image IS an assetId — chain it directly.** The response carries
+`images[].assetId` alongside `images[].url`, and that id is what
+`referenceAssetIds`, `startImageAssetId` and `sourceAssetId` take. No download,
+no re-upload, nothing in between:
+
+```
+POST /v1/images → images[0].assetId  ← pass this to the next call, as-is
+```
+
+**Chain from `assetId`, not from `url`.** The URL is a one-hour presign for
+fetching the bytes; the assetId does not expire that way. Still download each
+still as it lands if you want the files locally — a slow board review will
+outlive the URLs.
+
+**Chain each still on the previous one, not just on the cast sheet.** That is
+what carries the location, the light and the wardrobe forward. `gpt-image-2`
+takes up to 4 reference images, so cast sheet plus previous still plus the
+product leaves room for one more; use it for the product when the product is in
+frame. That cap is per model and the bodies are strict, so a fifth reference is
+`400 Too big` rather than a silently dropped image.
+
+**This gate is one stop, not five.** Do not ask after each still. A board is
+approved as a board — the operator is judging whether beat 3 follows beat 2,
+which they cannot do one image at a time.
+

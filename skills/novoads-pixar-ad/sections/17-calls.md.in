@@ -1,0 +1,93 @@
+#! section: calls
+#! title:   The calls, and the worked beat prompt the house test reads
+#! read:    whenever a request body or a response shape is in question
+#!
+## The calls
+
+The fields that matter to a beat. Auth, strict-body rules, status codes and error
+envelopes are in [`skills/novoads-api/reference.md`](../novoads-api/reference.md).
+
+```
+POST /v1/uploads      { contentType: "image/jpeg" | "video/mp4", sizeBytes: <n> }
+                      → 201 { assetId, uploadUrl, method, headers } — PUT the
+                        bytes with `headers` VERBATIM. Free. The upload URL
+                        expires in 900s; the assetId does not expire at all.
+
+POST /v1/estimates    { kind: "image" | "video" | "voiceover" | "music" | "caption", … }
+                      → { credits, balance, sufficient, shortBy?, topUpUrl?,
+                          warnings? }   Strict per arm. `warnings` is advice and
+                        refuses nothing; this is the ONLY endpoint that returns it.
+
+POST /v1/images       { model: "gpt-image-2", prompt, aspectRatio: "1:1" | "9:16",
+                        referenceAssetIds: [castSheet, previousStill, product?] }
+                      → 200 { jobId, images: [{ url, expiresInSeconds, assetId }] }
+                        SYNCHRONOUS — the finished image is in the response, and
+                        the call blocks ~60-90s. `assetId` chains straight into
+                        the next call. Max 4 references on gpt-image-2. Its own
+                        concurrency budget of 12.
+
+POST /v1/videos       { model: "seedance-2.0", prompt, durationSeconds: 4-15,
+                        aspectRatio: "9:16", startImageAssetId: <this beat's still>,
+                        audioEnabled: true }
+                      → 202 { jobId, status, creditsCharged, model } — not ready
+                        yet. `creditsCharged` is HERE and nowhere else.
+
+GET  /v1/voices       → { voices: [{ id, name, source, languages?, category?, labels? }] }
+                        Read once. Pick one. Reuse it for every line. Unpaginated
+                        and LARGE — filter it in your own code, do not print it.
+
+POST /v1/voiceovers   { script: <=1000 chars, voiceId (REQUIRED), language? }
+                      → 200 { url, assetId, characters, creditsCharged, voiceId }
+                        ALREADY DONE — no jobId to poll. Download `url` now.
+
+POST /v1/music        { prompt: <=500 chars, instrumental: true }
+                      → 202 { jobId } — poll, then read audio[] (two takes, one
+                        charge). Flag-gated: absent from openapi.json when off.
+
+POST /v1/captions     { assetId | jobId, preset }
+                      → 202 { jobId } — poll. Same video + same preset is free.
+
+GET  /v1/caption-presets → { presets: [{ id, tier, credits }] }
+
+POST /v1/transcripts  { assetId | jobId }
+                      → 200 { text, words[], segments[], srt, creditsCharged }
+                        SYNCHRONOUS and charged. Timings in SECONDS. The same
+                        source twice is free. Flag-gated.
+
+GET  /v1/generations/{jobId}        → { status, kind, outputUrl?, audio? }
+GET  /v1/generations/{jobId}/watch  → 302 to a freshly signed download URL
+GET  /v1/generations?limit=&kind=   → the recovery path when a call times out and
+                        you never received the jobId. Reads only, spends nothing.
+```
+
+### Worked beat prompt
+
+A finished **beat 4** (the turn) `POST /v1/videos` prompt — one action, style lock
+included, negatives at the end.
+`lib/generation/__tests__/pixar-storyboard-skill-prompts.test.ts` reads this exact
+block and runs it through the same rule engine `POST /v1/estimates` lints with, so
+the worked example cannot drift into one the lint has real complaints about.
+
+<!-- eval:beat-prompt:start -->
+```
+Stylized 3D animated feature film look, 9:16. A warm kitchen in late afternoon,
+one window low and to the left as the only light source, honey and clay palette,
+35mm at chest height, shallow focus band on the counter.
+
+The grandmother sits at the table with the copper kettle in front of her. She
+lifts the lid in a single frame and the steam catches the window light across her
+face. She says, half to herself: "There you are."
+
+No other speech in this shot. This beat's narration is laid in afterwards from
+the voice-over track, so nobody here speaks it.
+
+The kettle is exactly as shown in the reference: same shape, same colour, same
+proportions, same finish. Do not redesign or restyle it. Hold the printed markings
+on the base sharp and legible. The woman is a warm, unhurried grandmother in her
+seventies in a grey cardigan.
+
+no named or copyrighted animated film characters, no photorealistic humans, no
+uncanny faces, no dead eyes
+```
+<!-- eval:beat-prompt:end -->
+

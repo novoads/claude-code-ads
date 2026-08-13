@@ -1,0 +1,34 @@
+#! section: account
+#! title:   Account, API key and ffmpeg preflight
+#! read:    before any generation work, to prove the run can happen at all
+#!
+## Before anything: this runs on a Novoads account
+
+1. A Novoads account with credits. https://novoads.ai — the entry offer is a **$1
+   trial**, never call it free.
+2. **An API key in `.env` at the repo root**, as `NOVOADS_API_KEY=novo_…`. Check
+   it with `./scripts/check-novoads-env.sh`; if it is missing, run
+   `./scripts/setup.sh`. That is the whole setup: `curl` and `jq`, one key, no
+   connector to add and no session to restart.
+3. **ffmpeg on your machine.** The assembly happens here, not on the server.
+   `ffmpeg -version` before you start.
+
+> **REST key required. A Novoads MCP connector is not a substitute.** If
+> `NOVOADS_API_KEY` is missing or still the placeholder, stop before any
+> generation work and tell the user: "Before continuing, create an API key at
+> <https://novoads.ai/dashboard/settings?tab=api> and paste it into `.env`."
+> That holds even when `mcp__novoads__*` tools are connected and authenticated in
+> the session. Never call `mcp__novoads__*` tools from this repo's workflows: they
+> are a different surface with different behavior, including the units they quote
+> costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
+> install checks `NOVOADS_API_KEY` in the environment.
+
+**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/claude-code-ads> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
+
+**Every HTTP mechanic here belongs to the pack, not to this skill.** Auth, strict
+bodies, status codes, the poll loop, rate limits and error envelopes are written
+out once in [`skills/novoads-api/SKILL.md`](../novoads-api/SKILL.md) and its
+[`reference.md`](../novoads-api/reference.md). The per-call fields this genre
+needs are in `novoads-pixar-ad`'s *The calls* section, which this file shares
+unchanged.
+

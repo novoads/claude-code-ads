@@ -1,0 +1,54 @@
+#! section: gate-6-music
+#! title:   Gate 6: generating the music bed, which is laid last
+#! read:    after the voice-over, and again at the very end when the bed goes on
+#!
+## Gate 6 — the music bed
+
+```bash
+curl -sS -X POST https://api.novoads.ai/v1/music \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"<what it sits under>","instrumental":true}'
+# → 202 { jobId } — poll GET /v1/generations/{jobId}, then read audio[]
+```
+
+**Generating the bed is this gate. LAYING it is the LAST thing that happens**, and
+never as hand-written ffmpeg — it goes through
+[music-mix](../../shared/skills/music-mix/SKILL.md) *after* Gate 8's burn, because
+the script stream-copies the picture and the burn's own transcription of the voice
+should never have music under it:
+
+```bash
+python3 shared/skills/music-mix/scripts/music_mix.py \
+  captioned.mp4 music.mp3 master-lofi-warm.mp4
+```
+
+Read that skill first. What it does that a hand-written chain did not: it
+**measures** the bed rather than multiplying it — `volume=0.10` is -20 dB on a
+level nobody checked, measured on a real run at -33 to -40 dB, a bed paid for and
+never heard — refuses a silent track or an inaudible gain before rendering, ducks
+under the voice, masters, and verifies. Report its verification line verbatim.
+
+One request returns TWO takes for one charge. Listen to both and use the one that
+sits better under the voice; they differ in length and arrangement, not price.
+Two takes is also what makes 2 or 3 named variants free — another `music_mix.py`
+pass each, no second generation. Expect one to two minutes of audio whatever you
+ask for; the script trims it. `audio[]` on the polled job is the only place the
+second take is published.
+
+`prompt` is capped at 500 characters, and the cap applies to the **composed**
+prompt: `style` and the instrumental sentence are concatenated into it before
+submission. A music job spends one of the five shared video slots.
+
+**If `/v1/music` is absent from `GET /v1/openapi.json`, skip this step.** It sits
+behind a deployment flag; where music is off the path answers `400 invalid_input`
+rather than a `404`, and the `music` estimate arm is gone too. Say one sentence —
+"no music bed on this account, mixing without one" — and carry on. The ad works
+without it; clip audio plus narration is a complete mix. No bed means no script
+pass either, so master the captioned cut by hand, to the target the mixer uses:
+
+```bash
+ffmpeg -i captioned.mp4 -af loudnorm=I=-14:TP=-1.5:LRA=11 -c:v copy master.mp4
+ffmpeg -i master.mp4 -af ebur128=framelog=quiet -f null -    # read Integrated
+```
+

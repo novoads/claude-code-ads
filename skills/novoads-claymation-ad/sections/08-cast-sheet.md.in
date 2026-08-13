@@ -1,0 +1,24 @@
+#! section: cast-sheet
+#! title:   The cast sheet: named characters and the narrator persona
+#! read:    before the cast sheet image is rendered
+#!
+## The cast sheet
+
+Same call, same single image, different contents. Clay ads usually carry **two
+named characters**, and the narrator is a third presence who is never on screen.
+
+Write the sheet text first from the template in
+[`references/formulas.md`](references/formulas.md), then render it. The template's
+slots that matter most here:
+
+- **A name.** The narrator says it out loud, and a named protagonist is most of
+  why this genre works. "Diane" is a person. "A woman in her 50s" is a stock
+  photo.
+- **Middle-aged or older.** The look flatters sculpted laugh lines and hooded
+  eyelids, and the arc needs a life already in progress.
+- **The terse tag**, 11 to 30 characters, anchored on wardrobe. Our renders
+  re-cast on every cut, so this is what carries one face across eight beats.
+- **A narrator persona**, chosen once from `GET /v1/voices` and reused for every
+  line. Warm storyteller and wry observer are the two that fit; pick one and say
+  which.
+

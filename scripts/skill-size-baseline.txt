@@ -13,7 +13,18 @@
 # down 2 (758 -> 756 pre-stamp). Recomputed from the file, not from either side
 # of the rebase conflict — HEAD's 761 had not seen the shrink and the branch's
 # 756 had not seen the stamp, so both were wrong by the other's delta.
-1121 skills/novoads-pixar-ad/SKILL.md
+#
+# Raised again by exactly +3 on novoads-pixar-ad when its SKILL.md became a build
+# artifact of sections/ (scripts/build-skill-md.py). The three lines are the
+# AUTO-GENERATED banner the generator injects under the frontmatter, and they are
+# the ONLY bytes that changed: strip the banner and the sha256 equals the file
+# that was on main. Written by hand for the same reason as the block above --
+# --update-baseline refuses a raise, correctly, and would drop these comments.
+# novoads-claymation-ad took the same +3 and is not listed because it is still
+# under 500 (494 -> 497), which is the guard working as intended: the banner buys
+# no headroom, so the next section that pushes it over 500 has to earn a row here
+# on its own merits.
+1124 skills/novoads-pixar-ad/SKILL.md
 839 skills/clone-video-ad/SKILL.md
 759 skills/novoads-api/SKILL.md
 510 skills/analyze-video/SKILL.md

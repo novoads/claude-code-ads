@@ -1,0 +1,101 @@
+#! section: clay-look
+#! title:   The clay look: style lock, negatives, material detail, quirky faces, judder
+#! read:    when writing any prompt, and when a clip drifts toward smooth plastic
+#!
+## The clay look
+
+### Style lock — one paragraph, pasted verbatim into every prompt
+
+<!-- eval:style-lock:start -->
+```
+Hand-sculpted stop-motion clay look. Plasticine characters with visible
+fingerprint impressions and sculpting-tool marks, matte clay surfaces with
+subtle micro-bumps, slightly asymmetric features, painted-on or sculpted
+eyebrows. Real knit-fabric clothing with visible wool weave and stitch lines,
+wooden and ceramic miniature-set props with hand-painted finishes. Warm tungsten
+interior lighting, shallow macro depth of field, soft photographic bokeh.
+Subtle imperfection in every surface. Vertical 9:16 composition.
+```
+<!-- eval:style-lock:end -->
+
+**Never name a studio or a franchise.** The lineage this look comes from belongs
+to two specific studios, and naming either is both an IP problem and a
+worse prompt: the model reaches for their characters instead of your sculpt.
+"Hand-sculpted stop-motion clay" is what the words above are doing.
+
+### The negative block
+
+<!-- eval:negative-block:start -->
+```
+no live-action footage, no photorealistic humans, no uncanny faces, no dead eyes,
+no smooth 3D digital render, no glossy surfaces, no ray-traced reflections,
+no subsurface scattering, no wet-eye highlights, no anime style,
+no 2D illustration, no named or copyrighted animated film characters,
+no extra fingers, no melted features, no morphing between frames,
+no warped product labels, no on-screen text, no subtitles, no captions
+```
+<!-- eval:negative-block:end -->
+
+Half of this block is doing a job the Pixar one does not: **holding the render
+away from its own default.** The video models smooth clay into 3D plastic over
+the length of a clip, so `no smooth 3D digital render`, `no glossy surfaces` and
+`no subsurface scattering` are load-bearing, not boilerplate.
+
+### Material detail — paste the lines that apply to what is in frame
+
+<!-- eval:material-detail:start -->
+```
+Skin: matte plasticine, visible thumbprint impressions on cheeks and forehead,
+small sculpting-knife creases at the corners of the eyes, slight asymmetry
+between the left and right side of the face.
+Hair: sculpted in distinct ribbon-strands of plasticine, individual strand
+grooves carved with a tool, slightly stiff and not flowing.
+Eyes: small matte clay orbs set into sculpted sockets, a single soft highlight,
+no wet shine.
+Knitwear: real chunky wool yarn, individual stitches visible, slight wear at the
+cuffs and hems.
+Wood props: hand-painted matte finish, visible grain, small dents and scratches
+that suggest age.
+Ceramic: hand-thrown irregular form, glaze pooling at the bottom edges, slightly
+off-round.
+Product packaging: a clay-shaded prop with a hand-painted label, the paint
+slightly uneven and matte.
+```
+<!-- eval:material-detail:end -->
+
+This block is the difference between clay and a cartoon of clay. Paste the
+relevant lines into every still prompt. Drop the ones for materials that are not
+in the frame; a knitwear line on a product close-up buys nothing.
+
+### Faces here may be quirky. That is a licence, not a defect
+
+The Pixar sibling chases APPEAL: symmetrical, soft, a moment before a smile. This
+genre does the opposite and it is the single easiest thing to lose when the two
+skills sit side by side. **Clay characters are allowed to be odd.** Oversized
+noses, deep wrinkles where the sculptor pressed, eyes set slightly unevenly,
+a jaw that is not quite level. Quirky beats appealing here, and a clay
+protagonist rendered pretty reads as a 3D render wearing a clay texture.
+
+Say it in the prompt, per character, or the model will smooth it out: "an
+oversized nose, deep sculpted wrinkles at the eyes, slightly uneven eye
+placement."
+
+### Smooth motion or stop-motion judder
+
+Real stop-motion carries a 12 to 15 fps judder. Our renders come out smooth at 24
+or 30, and **smooth is the default** because it is what the genre's own reference
+ads do.
+
+If the operator wants the judder, it is a post step and never a prompt:
+
+```bash
+ffmpeg -i captioned.mp4 -filter:v "fps=12,fps=24" -c:a copy captioned-judder.mp4
+```
+
+**Run it before the music bed goes on.** `music_mix.py` stream-copies the
+picture, so every pass that re-encodes the picture belongs ahead of it — and then
+the file the mixer measures and verifies is the file you ship.
+
+Asking the render for "stop-motion judder" does not control frame rate and does
+break the look. Do not put it in a prompt.
+

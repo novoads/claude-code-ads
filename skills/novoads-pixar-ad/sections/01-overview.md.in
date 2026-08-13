@@ -1,0 +1,30 @@
+#! section: overview
+#! title:   What this skill builds, and where the craft and the HTTP mechanics live
+#! read:    at the top of every run, before anything is decided
+#!
+
+# Novoads Pixar Ad
+
+One product in. A 30 to 60 second stylized 3D animated ad out, cut from four to
+six separately rendered beats, with narration, music and captions.
+
+**Every animated ask lands here, including the short ones.** There is no
+one-call 15-second tier in this repo. A request for "a quick animated ad" is a
+request for a four-beat board rendered beat by beat and assembled locally:
+longer to make, more calls, more credits, and it needs ffmpeg. Say that in one
+clause before you start, then start. If the story genuinely fits in a single
+shot, make it a four-beat board with short beats rather than pretending there is
+a cheaper door.
+
+**The beat formulas live in [`references/formulas.md`](references/formulas.md).**
+That file is the craft: the four genre roles, the variable tables, and a worked
+still prompt and a worked clip prompt for each. This file is the pipeline. Read
+the formulas before you write the board, because the board is where the roles
+are assigned and it is the last cheap place to get them wrong.
+
+**Every HTTP mechanic here belongs to the pack, not to this skill.** Auth,
+strict bodies, status codes, the poll loop, rate limits and error envelopes are
+written out once in [`skills/novoads-api/SKILL.md`](../novoads-api/SKILL.md) and
+its [`reference.md`](../novoads-api/reference.md). Read those for mechanics; this
+file names the endpoint and the fields that matter to a beat.
+
