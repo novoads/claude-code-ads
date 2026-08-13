@@ -1,4 +1,13 @@
-1118 skills/novoads-pixar-ad/SKILL.md
-836 skills/clone-video-ad/SKILL.md
-758 skills/novoads-api/SKILL.md
-507 skills/analyze-video/SKILL.md
+# Raised by exactly +3 on every entry in PR #94 (pack upgrade system, spec §6).
+# Each SKILL.md gained the same three mechanical lines: `metadata: {packVersion}`
+# in the frontmatter, plus the pack-version note and its blank separator. All 16
+# skills grew by +3, not only these four — `git diff origin/main --numstat --
+# '*/SKILL.md'` shows it, and the whole diff contains 4 distinct added lines.
+# scripts/check-skill-frontmatter.sh --update-baseline REFUSED the raise, as it
+# should; these numbers were written by hand. It is one-time: release.sh rewrites
+# the stamp in place from now on. NOTE: --update-baseline regenerates this file
+# and will drop these comments.
+1121 skills/novoads-pixar-ad/SKILL.md
+839 skills/clone-video-ad/SKILL.md
+761 skills/novoads-api/SKILL.md
+510 skills/analyze-video/SKILL.md
