@@ -526,15 +526,88 @@ gitignored. The `SessionStart` hook runs it automatically when Claude Code opens
 
 ## Staying current
 
-- **At session start**, the banner hook runs `git fetch origin` (10s timeout, never blocks). If your
-  clone is behind, it lists the pending commits and tells you to pull. No surprise pulls.
-- **To update:** `git pull origin main`. With local edits to tracked files, `git stash && git pull
-  && git stash pop`.
-- **Your data survives updates:** `.env`, `MASTER_CONTEXT.md`, `references/` and `outputs/` are all
-  gitignored. `logs/` is *not* — latency and failure history across sessions is worth keeping, which
-  is exactly why the log never records keys, presigned URLs, or prompt text.
-- **Customizing a shipped skill file** invites merge conflicts on pull. Keep heavily customized
-  versions under a non-tracked path if you would rather not deal with them.
+**At session start**, the banner hook runs `git fetch origin` (10 second ceiling, never blocks). If
+your clone is behind it lists the pending commits and points at the update command. The banner only
+notifies. Applying anything is opt-in, and by default nothing lands on your clone unless you say so.
+
+**To update, run `./scripts/update.sh`.** Not `git pull`, and the difference is not cosmetic. A
+plain pull silently deletes a gitignored `.env` the moment upstream starts tracking that path, and
+`git pull --autostash` can exit `0` having left `<<<<<<<` conflict markers inside a skill file,
+which your agent then reads as instructions. `update.sh` copies `.env` aside before it touches the
+tree and restores it afterwards, including when you interrupt it; decides whether to stash by
+reading `git status --porcelain`, so an untracked collision counts too; fast-forwards only; and if
+restoring your work conflicts, rolls the tree back and leaves that work in a stash it names for you.
+It never leaves a conflict marker behind.
+
+Three more things it does that a pull does not:
+
+- **It installs what has been public for about a day**, not the newest commit. The tip of `main` is
+  the least reviewed code in the repo, and this pack runs shell scripts on your machine. `--fresh`
+  takes the tip instead, and says so when it does.
+- **It re-syncs your skills and runs any pending migrations** after a successful update, so
+  `.claude/skills/` and `.cursor/skills/` match what just landed. Neither of those failing undoes
+  the update.
+- **It ends in one machine-readable `STATUS=` line.** Exit `0` means the clone is in a usable state.
+  A `blocked` status exits `1` and leaves the clone exactly as it was found, with the decision
+  yours. An interrupted run can exit nonzero too, and promises something narrower: `.env` restored
+  and no merge half-applied. The full vocabulary is in [AGENTS.md](AGENTS.md), for the agent
+  reading it.
+
+**If an update goes wrong, `./scripts/update.sh --rollback`** puts the clone back on the commit it
+was on, `.env` and all. It refuses on a dirty worktree rather than steamrolling what you were doing.
+
+**The `novoads-update` skill** is the same update with a conversation around it. Ask your agent to
+run it and it offers four answers: update now, always keep me up to date, not now, or never ask
+again. "Not now" snoozes the banner on an escalating ladder (a day, then two, then a week), and a
+genuinely new version resets it. Snoozing quiets the nag only: the skill and
+`./scripts/update.sh` both still run whenever you ask them to.
+
+**Auto-apply is opt-in and stays that way.** "Always keep me up to date" is a standing grant to run
+upstream code on your machine, so it is never on by default and no agent may switch it on for you.
+Your answer to that question is what writes `auto_apply=on`. Once it is on, the hook applies updates
+at session start without holding the session up, never takes the tip, tries at most once an hour,
+and asks the session to reload its skills when something lands, where the harness supports that.
+
+**Turning the whole thing off.** `.update-state/config` takes `update_check=off`, which silences the
+banner's fetch and the auto-updater together, and `NOVOADS_PACK_NO_UPDATE_CHECK=1` does the same
+from the environment. `./scripts/update.sh` still runs when you ask it to, because a kill switch
+that strands the manual path is not a kill switch. `auto_apply` defaults to `off`.
+
+**What survives an update.** Everything your sessions write is gitignored and left alone: `.env`,
+`MASTER_CONTEXT.md`, `references/`, `outputs/`, `generated/`, `prompts/`, `iterations/`, and
+`logs/*.jsonl` (latency and failure history across sessions is worth keeping, which is exactly why
+the log never records keys, presigned URLs, or prompt text). `.env` gets belt and braces on top of
+that, backed up and restored around every merge, because being gitignored is precisely the
+protection that failed.
+
+**Customizing a shipped skill file** is the one thing that collides. Those files are tracked, so
+your edits are real diffs and every update has to stash and restore them. If a customization is
+meant to last, keep the customized copy in `local-skills/` at the repo root and point your agent at
+it there, rather than editing under `skills/`. That directory is gitignored, so nothing you keep in
+it is ever a diff to stash. One caveat if you would rather install your copy into `.claude/skills/`
+directly: give it a different name from the pack skill. The session sync deletes and re-copies
+every live pack skill name each time it runs, so a copy sitting under the same name is overwritten.
+
+### If you installed a skill on its own
+
+Everything above assumes you cloned the repo. If you installed through the `skills` CLI instead:
+
+- **Pin to a release with a tag:** `npx skills add novoads/claude-code-ads#v1.0.0`, naming the
+  latest release tag (`v1.0.0` today). Tags work. 40-character commit SHAs do not, because the CLI
+  installs by cloning a branch or a tag. A pinned install moves only when you point it at a newer
+  tag. Releases are tagged `vX.Y.Z` and written up in [CHANGELOG.md](CHANGELOG.md).
+- **Update with `npx skills update`**, and read this before you do. **The reinstall is `rm -rf` on
+  the skill folder followed by a fresh copy: no backup, no prompt, no diff.** A file you added
+  inside the skill folder is deleted, and an edit you made to `SKILL.md` is reverted. Copy anything
+  you customized out of the folder first. The command is also undocumented on skills.sh and has no
+  notifier, so nothing will tell you an update exists.
+- **Four skills cannot be installed this way at all.** `broll-overlay`, `caption-video`,
+  `meta-ad-builder` and `music-mix` live under `shared/skills/`, which the CLI does not walk, so
+  they are invisible to it. That is a known limitation, deliberately unchanged for now: clone the
+  repo if you want them.
+- **The skills say so themselves when they go stale.** Each one is stamped with the pack version it
+  shipped in and compares that against the `X-Novoads-Pack-Version` header the API returns on `/v1`
+  calls. If a newer pack exists it mentions it once. It never blocks a call and never nags.
 
 ## Security
 
