@@ -113,6 +113,16 @@ EOF
 esac
 is_semver "$NEXT" || die "'$NEXT' is not an X.Y.Z semver"
 
+# Normalize whichever path produced it. The bump path already normalizes to do
+# arithmetic; an EXPLICIT argument reached the tag verbatim, so `release.sh 01.2.3`
+# published a tag `v01.2.3` and stamped `01.2.3` into sixteen skills — a version
+# the migration runner orders as 1.2.3 while the tag spells it differently. The
+# two clocks this script exists to keep together must agree on spelling too.
+IFS=. read -r _NA _NB _NC <<EOF
+$NEXT
+EOF
+NEXT="$((10#$_NA)).$((10#$_NB)).$((10#$_NC))"
+
 # --stamp-only never bumps: it reconciles the skills with the VERSION already on
 # disk, which is the only version any of them may honestly claim.
 ((STAMP_ONLY)) && NEXT="$CURRENT"
@@ -317,40 +327,78 @@ git symbolic-ref -q HEAD >/dev/null || die "HEAD is detached; check out a branch
 [ -z "$(git status --porcelain)" ] || die "the working tree is dirty. Commit or stash first — a release commit carries the release and nothing else."
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && die "tag $TAG already exists"
 
+# Everything from here on is undoable, and `abort` is what undoes it. The tree
+# was verified CLEAN two lines up, so the pre-release state is exactly this sha
+# with nothing uncommitted — which is what makes `reset --hard` safe here and
+# nowhere else in this script.
+PRE_SHA="$(git rev-parse HEAD)"
+
+# A refused release must leave NOTHING behind. Not a commit, not a tag, and not
+# a half-rewritten CHANGELOG — the changelog rewrite is the one that poisons a
+# retry, because once `## Unreleased` has been dated the next run reports "the
+# changelog is not ready" and blames the author for the script's mess.
+abort() {
+  git rev-parse -q --verify "refs/tags/$TAG" >/dev/null 2>&1 && git tag -d "$TAG" >/dev/null 2>&1
+  git reset -q --hard "$PRE_SHA" >/dev/null 2>&1
+  printf 'release: %s\n' "$*" >&2
+  printf 'release: rolled back to %s — no commit, no tag, no edits. Re-run when it is fixed.\n' \
+    "${PRE_SHA:0:12}" >&2
+  exit 1
+}
+
 printf '\napplying…\n'
 printf '%s\n' "$NEXT" > "$VERSION_FILE"
-frontmatter apply | sed 's/^/  /' || die "stamping failed"
-changelog  apply | sed 's/^/  /' || die "changelog rewrite failed"
+frontmatter apply | sed 's/^/  /' || abort "stamping failed"
+changelog  apply | sed 's/^/  /' || abort "changelog rewrite failed"
 
-git add -- VERSION CHANGELOG.md skills shared/skills || die "git add failed"
-git commit -q -m "release: $TAG" || die "commit failed"
-git tag -a "$TAG" -m "$TAG" || die "tag failed"
+git add -- VERSION CHANGELOG.md skills shared/skills || abort "git add failed"
 
-# ── The invariant, asserted against the TAG'S OWN CONTENTS ───────────────────
-# Not "does the tag point at HEAD" — this script just created the tag on HEAD,
-# so that question answers itself and proves nothing. The claim worth checking
-# is the one the solo channel depends on: **the commit this tag names is the
-# commit that carries the version change.** Ask the tag, by name, what it
-# contains, and require VERSION and the stamps to be in it.
+# ── The invariant, asserted BEFORE anything becomes a ref ─────────────────────
+# Two things this must not be. It must not ask whether a tag this script just
+# created on HEAD points at HEAD — that question answers itself. And it must not
+# run after the commit and the tag, because then its own error message describes
+# an artifact it has just left on disk: an annotated tag pointing at a
+# VERSION-less commit, which checklist step 1 would cheerfully publish.
+#
+# So it runs against the INDEX. `git commit` without `-a` writes exactly the
+# index, so proving the staged change carries VERSION and the stamps proves it
+# of the commit that is about to exist — while refusing still costs nothing,
+# because there is nothing yet to undo.
+STAGED="$(git diff --cached --name-only)"
+printf '%s\n' "$STAGED" | grep -qx 'VERSION' \
+  || abort "INVARIANT: the staged release does not change VERSION. A tag whose commit does not carry the version is the two-clocks bug."
+STAGED_STAMPS="$(printf '%s\n' "$STAGED" | grep -c 'SKILL\.md$')"
+[ "$STAGED_STAMPS" -gt 0 ] \
+  || abort "INVARIANT: the staged release carries no SKILL.md stamps, so the skills would claim a version their tag never shipped."
+# The bytes, not just the filename: the staged VERSION blob must be the version
+# the tag will be named for.
+IN_INDEX="$(git show :VERSION 2>/dev/null | tr -d '[:space:]')"
+[ "$IN_INDEX" = "$NEXT" ] \
+  || abort "INVARIANT: the staged VERSION reads '$IN_INDEX', but the tag would be named for $NEXT"
+
+git commit -q -m "release: $TAG" || abort "commit failed"
+git tag -a "$TAG" -m "$TAG" || abort "tag failed"
+
+# Read it back off the tag as a final confirmation. This can only fail if git
+# committed something other than the index, so it is a belt on top of the
+# braces above — but it is the exact claim the solo channel depends on, and if
+# it ever does fail, `abort` removes the tag and the commit rather than leaving
+# the artifact the message describes.
 TAGGED="$(git rev-parse -q --verify "$TAG^{commit}")"
-[ -n "$TAGGED" ] || die "INVARIANT BROKEN: $TAG does not resolve to a commit"
-
+[ -n "$TAGGED" ] || abort "INVARIANT BROKEN: $TAG does not resolve to a commit"
 # `$TAG^{commit}`, never a bare `$TAG`: `git show` on an ANNOTATED tag prints the
 # tag header first, so the file list would carry the tag message with it and a
-# message containing a line `VERSION` would satisfy the check below without a
-# single file being in the commit.
+# message containing a line `VERSION` would satisfy this without a single file
+# being in the commit.
 TAG_FILES="$(git show --pretty=format: --name-only "$TAG^{commit}" | sed '/^$/d')"
 printf '%s\n' "$TAG_FILES" | grep -qx 'VERSION' \
-  || die "INVARIANT BROKEN: the commit tagged $TAG does not change VERSION. A tag whose commit does not carry the version is the two-clocks bug."
+  || abort "INVARIANT BROKEN: the commit tagged $TAG does not change VERSION."
 STAMPED_IN_TAG="$(printf '%s\n' "$TAG_FILES" | grep -c 'SKILL\.md$')"
 [ "$STAMPED_IN_TAG" -gt 0 ] \
-  || die "INVARIANT BROKEN: the commit tagged $TAG carries no SKILL.md stamps, so the skills claim a version their tag never shipped."
-
-# And the bytes, not just the filename: VERSION inside the tagged tree must be
-# the version the tag is named for.
-IN_TAG="$(git show "$TAG:VERSION" 2>/dev/null | tr -d '[:space:]')"
+  || abort "INVARIANT BROKEN: the commit tagged $TAG carries no SKILL.md stamps."
+IN_TAG="$(git show "$TAG^{commit}:VERSION" 2>/dev/null | tr -d '[:space:]')"
 [ "$IN_TAG" = "$NEXT" ] \
-  || die "INVARIANT BROKEN: $TAG:VERSION reads '$IN_TAG', but the tag is named for $NEXT"
+  || abort "INVARIANT BROKEN: $TAG:VERSION reads '$IN_TAG', but the tag is named for $NEXT"
 
 git show --stat --oneline "$TAGGED" | head -1 | sed 's/^/  commit  /'
 printf '  tag     %s -> %s\n' "$TAG" "${TAGGED:0:12}"

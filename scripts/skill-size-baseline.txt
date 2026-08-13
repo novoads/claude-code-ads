@@ -2,7 +2,7 @@
 # Each SKILL.md gained the same three mechanical lines: `metadata: {packVersion}`
 # in the frontmatter, plus the pack-version note and its blank separator. All 16
 # skills grew by +3, not only these four — `git diff origin/main --numstat --
-# '*/SKILL.md'` shows it, and the whole diff contains 4 distinct added lines.
+# '*/SKILL.md'` shows it, and the whole diff contains 3 distinct added lines.
 # scripts/check-skill-frontmatter.sh --update-baseline REFUSED the raise, as it
 # should; these numbers were written by hand. It is one-time: release.sh rewrites
 # the stamp in place from now on. NOTE: --update-baseline regenerates this file
