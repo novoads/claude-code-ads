@@ -142,7 +142,7 @@ real failure — surface it, don't retry blindly.
 
 ## Evals
 
-`EVALS.md` defines the six scenarios this skill is held to (MM1–MM6).
+`evals.md` defines the six scenarios this skill is held to (MM1–MM6).
 `scripts/test_music_mix.py` implements the five mixing ones mechanically against
 synthetic fixtures, in 15 cases — run it after touching the script. MM6 (sourcing on the
 Novoads key alone) is a text-and-flow eval; the script has no part in it.

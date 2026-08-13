@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Executable test for broll_overlay.py — synthetic fixtures, no credits.
 
-Covers the mechanical evals in EVALS.md: OV1 (duration equals base), OV2 (base
+Covers the mechanical evals in evals.md: OV1 (duration equals base), OV2 (base
 audio passes through byte-identical, overlay audio ignored), OV4 (geometric and
 structural validation, every error collected in one round-trip), OV5 (the
 verifier catches a tampered output *and* an output that never had an overlay

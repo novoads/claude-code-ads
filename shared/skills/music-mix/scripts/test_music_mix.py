@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Executable test for music_mix.py — synthetic fixtures, no credits.
 
-Covers the mechanical evals in EVALS.md: MM1 (duration equals input, short
+Covers the mechanical evals in evals.md: MM1 (duration equals input, short
 music rejected), MM2 (video stream not re-encoded), MM3 (ducking delta, and
 --no-duck really skipping it), MM4 (loudness in range), MM5 (the verifier
 catches a truncated output, an unmixed copy and a re-encoded picture) — plus
@@ -51,7 +51,7 @@ TRUE_PEAK_CEILING = mm.TRUE_PEAK_CEILING
 MAX_MUSIC_GAIN_DB = mm.MAX_MUSIC_GAIN_DB
 MAX_MASTER_GAIN_DB = mm.MAX_MASTER_GAIN_DB
 
-# TEST-SIDE threshold, deliberately NOT imported: EVALS.md MM3 says music under
+# TEST-SIDE threshold, deliberately NOT imported: evals.md MM3 says music under
 # the voice must be at least this far below music in the gaps. One clear halving
 # of perceived level — low enough that any real ducking clears it, high enough
 # that measurement noise does not. It belongs to the test, not to the mix.

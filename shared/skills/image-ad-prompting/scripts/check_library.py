@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Executable evals for the shared image-ad prompt library. No network, no credits.
 
-Runs the mechanical half of EVALS-image-ad-prompting.md against
+Runs the mechanical half of evals.md against
 `prompting/prompt-library.md` and the skills that consume it:
 
   L1  every template + the always-on suffixes fits the prompt cap of the model it
@@ -94,7 +94,7 @@ REQUIRED_FIELDS = ("When to use", "Aspect ratio", "Reference image", "Variables"
 # block. Each value is the template's prompt-body length; the entry is
 # grandfathered only while the body is unchanged. Fixing one means trimming the
 # body AND re-rendering it to prove the trim was cosmetic, then deleting the row.
-# See EVALS-image-ad-prompting.md L1.
+# See evals.md L1.
 #
 # The set did not change when spec 2.16.0 landed, but its meaning did. These were
 # three templates nobody could send anywhere; they are now three templates that
@@ -425,7 +425,7 @@ def main() -> int:
             f"L1: every template fits {DEFAULT_MODEL} and nano-banana-pro. "
             f"{len(over_tightest)} exceed {TIGHTEST_MODEL}'s tighter cap as written "
             f"({', '.join(sorted(over_tightest, key=lambda s: int(s[1:])))}) — "
-            f"grandfathered, see EVALS L1"
+            f"grandfathered, see evals.md L1"
         )
 
     # ── L1b — the published pin-block headroom is the measured one ───────────

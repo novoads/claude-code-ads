@@ -187,7 +187,7 @@ That model is reachable only from the `clone-image-ad` validator, so this is a c
 constraint rather than a production one. The refusal is free either way: the scripts measure
 the final prompt against the model you named and die pre-network, naming the exact overage.
 Run `python3 ../scripts/check_library.py --verbose` for every template's current headroom per
-model, and read [EVALS-image-ad-prompting.md](../EVALS-image-ad-prompting.md) L1 for why the
+model, and read [evals.md](../evals.md) L1 for why the
 long ones have not simply been shortened.
 
 Every generation is charged and there are no free re-rolls, so price the run with a live

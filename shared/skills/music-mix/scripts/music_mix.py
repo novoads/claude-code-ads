@@ -4,7 +4,7 @@
 Lays a music track UNDER a finished video: the video stream is copied packet
 for packet, the voice keeps its own level, and the music ducks beneath it. The
 output duration always equals the input video's — the music is trimmed and
-faded to fit, never looped (see EVALS.md MM1).
+faded to fit, never looped (see evals.md MM1).
 
 Copying the video stream is the whole point of the step's position in the
 pipeline: this can run AFTER captions are burned without touching a pixel of
@@ -44,7 +44,7 @@ MUSIC_SHORTFALL_EPSILON = 0.01
 
 # Music tail fade, seconds. A bed that stops dead on the last frame reads as a
 # dropout; ~2s is long enough to sound deliberate on a 15s ad without eating the
-# closing beat. EVALS.md MM1 pins the range at 1.5-2s.
+# closing beat. evals.md MM1 pins the range at 1.5-2s.
 FADE_OUT = 2.0
 
 # Bed level before ducking, dB relative to the track's own level. -18 dB puts a
@@ -60,7 +60,7 @@ DEFAULT_MUSIC_GAIN_DB = -18.0
 # and burns a full render before the loudness check catches it.
 MAX_MUSIC_GAIN_DB = 60.0
 
-# Loudness target for vertical social delivery (EVALS.md MM4). TikTok/Reels/
+# Loudness target for vertical social delivery (evals.md MM4). TikTok/Reels/
 # Shorts all normalize playback: louder than target gets turned DOWN, quieter
 # than target just plays quiet and sounds weak in the feed. -14 LUFS integrated
 # is the published cluster. +/-2 LU because a 15s integrated measurement is
@@ -334,7 +334,7 @@ def check_output_path(output, inputs):
 
 
 def validate(video, music, output, music_gain):
-    """Everything checkable before a render runs (EVALS.md MM1). Collects what
+    """Everything checkable before a render runs (evals.md MM1). Collects what
     it can so one bad invocation costs one round-trip."""
     errors = []
     video, music, output = Path(video), Path(music), Path(output)
@@ -536,7 +536,7 @@ def render(cmd, output):
 # --------------------------------------------------------------------------
 
 def verify(video, output, exit_code=EXIT_VERIFY):
-    """Loud, measured verification (EVALS.md MM1/MM2/MM4/MM5).
+    """Loud, measured verification (evals.md MM1/MM2/MM4/MM5).
 
     Always returns a 3-tuple (problems, lufs, true_peak); lufs/tp are None when
     there was nothing measurable. What this proves: the duration is unchanged,

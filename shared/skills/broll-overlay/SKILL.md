@@ -116,7 +116,7 @@ stress → product macro → dose/usage → relief — 2 product shots to 3 emot
 beats. Adapt the imagery to the script, keep the ratio.
 
 Evidence: one measured edit (n=1) — a default, not a law; depart deliberately and
-say why (EVALS.md OV3/OV6). Every run prints its own cadence against this
+say why (evals.md OV3/OV6). Every run prints its own cadence against this
 envelope; `--stats` prints it without rendering.
 
 ## Hard rule: assembly always goes through the script
@@ -158,6 +158,6 @@ leaves a half-written or unverified file at the output path.
 
 ## Evals
 
-`EVALS.md` defines the six scenarios this skill is held to (OV1–OV6).
+`evals.md` defines the six scenarios this skill is held to (OV1–OV6).
 `scripts/test_broll_overlay.py` implements the mechanical ones against synthetic
 fixtures — run it after touching the script.

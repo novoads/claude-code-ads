@@ -89,7 +89,7 @@ as an intermediate artifact rather than a shippable ad.
 about b-roll (how to make a clip silent) and nothing about what it is for or how it is
 assembled — every existing pipeline in the repo concatenated, so the agent concatenated.
 That gap is closed: **`shared/skills/broll-overlay/`** is a real skill with its own
-`EVALS.md` (OV1–OV6) and an executable test suite.
+`evals.md` (OV1–OV6) and an executable test suite.
 
 **The merged skill is the authority. Do not restate its contract here** — a second copy
 drifts, and this one already had: it said the reference generates *"~10 silent shots"*,
@@ -99,7 +99,7 @@ one charge each.
 
 For the overlay contract — duration invariance, audio pass-through, transcript-driven
 placement, window geometry, verification, and the measured cadence envelope — read
-`shared/skills/broll-overlay/EVALS.md`. Its placement judgment (A-B-A-B alternation,
+`shared/skills/broll-overlay/evals.md`. Its placement judgment (A-B-A-B alternation,
 4–6 windows per 15s, never cover the hook, end on the person, and the casting rule that
 every human cutaway carries the base's identity references) lives in that skill's
 `SKILL.md`.
@@ -144,7 +144,7 @@ mid-beat-list without the user asking for it.
 
 - E1 and E2 are **well-evidenced**: observed in our run and cross-checked against the
   reference implementation's own on-screen prompt and narration. E3's evidence moved with
-  its contract into `shared/skills/broll-overlay/EVALS.md`, which measured the reference
+  its contract into `shared/skills/broll-overlay/evals.md`, which measured the reference
   edit frame by frame rather than describing it.
 - E4's single-location rule rests on the reference prompt plus one contrasting render of
   ours. Treat it as a strong default with the reasoning attached, not a law, until a

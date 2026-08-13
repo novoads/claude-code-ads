@@ -15,21 +15,22 @@ made you improvise, which is more useful than a proposed file layout.
 
 ## Eval cases
 
-Most skills carry an evals file of real failure modes: things this pack actually produced, or
-shapes the flow was rebuilt to prevent. A new case is one of the cheapest contributions here,
-because it states a red or green that no script can hold.
+Every routable skill carries an evals file of real failure modes: things this pack actually
+produced, or shapes the flow was rebuilt to prevent. A new case is one of the cheapest
+contributions here, because it states a red or green that no script can hold.
 
 A good case names the scenario, the run that produced it, and what a correct result looks like.
 If it spends credits, say so at the top of the case, the way the existing ones do.
 
-Naming follows the directory: `evals.md` under `skills/`, `EVALS.md` under `shared/skills/`.
-Several skills have none yet, and those are the best place to start. This lists them, so no
-hand-kept list here goes stale the moment one lands:
+Every eval file is named `evals.md`, lowercase, in the skill's own directory — under `skills/`
+and under `shared/skills/` alike. `EVALS.md` is a different file on a case-sensitive filesystem
+and does not count.
+
+That coverage is enforced rather than remembered, so a new skill arrives with its evals or it
+does not arrive:
 
 ```bash
-for d in skills/*/ shared/skills/*/; do
-  [ -f "$d/SKILL.md" ] && ! ls "$d" | grep -qi '^evals.*\.md$' && echo "$d"
-done
+./scripts/check-evals-present.sh
 ```
 
 ## Pull requests to skills

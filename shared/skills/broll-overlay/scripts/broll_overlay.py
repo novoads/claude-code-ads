@@ -4,7 +4,7 @@
 Lays silent cutaway clips OVER a base video: the base audio runs untouched
 underneath while the picture cuts away and returns. The final duration always
 equals the base duration — that is the contract that separates overlay from
-concatenation (see EVALS.md OV1).
+concatenation (see evals.md OV1).
 
 Usage:
   python3 broll_overlay.py edl.json              validate + render + verify
@@ -86,7 +86,7 @@ FFMPEG_STDERR_TAIL_CHARS = 2000
 # each, ~40-45% b-roll coverage, strict A-B-A-B alternation. n=1, contrasted
 # against our own two renders (2 windows of 2.5s/2.0s, ~30% coverage).
 # These numbers are INFORMATIONAL: cadence is judgment, and deviation never
-# changes the exit code (EVALS.md OV3/OV6).
+# changes the exit code (evals.md OV3/OV6).
 REF_BASE_SECONDS = 15.0        # the reference ad's runtime, the scaling unit
 REF_WINDOWS_MIN = 4            # cutaways per REF_BASE_SECONDS, low end
 REF_WINDOWS_MAX = 6            # cutaways per REF_BASE_SECONDS, high end
@@ -298,7 +298,7 @@ def load_edl(path):
         if "covers" in ov and not (isinstance(covers, str) and covers.strip()):
             errors.append(f'overlays[{i}] "covers" must be a non-empty string: '
                           "the one-line rationale quoting the spoken line this "
-                          "window illustrates (EVALS.md OV3)")
+                          "window illustrates (evals.md OV3)")
     if errors:
         die(EXIT_VALIDATION, *errors)
     return edl
@@ -357,7 +357,7 @@ def validate(edl):
 
     No check aborts the pass: a missing file, an unreadable file, a bad number,
     a bad window and an overlap are all reported together, so one bad EDL costs
-    exactly one round-trip (EVALS.md OV4). The only early exits are the EDL's
+    exactly one round-trip (evals.md OV4). The only early exits are the EDL's
     own shape (load_edl) and a base with no picture or no voice — with either
     of those missing there is no overlay job left to describe.
 
@@ -561,7 +561,7 @@ def build_command(edl, fps_expr, dest):
 
 
 def verify(base, output, windows=None):
-    """Loud, measured verification (EVALS.md OV1/OV2/OV5). Returns error list.
+    """Loud, measured verification (evals.md OV1/OV2/OV5). Returns error list.
 
     Duration and audio alone cannot tell a finished render from a copy of the
     base — both pass on a plain remux. With `windows`, each one's midpoint frame

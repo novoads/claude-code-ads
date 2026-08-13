@@ -61,10 +61,10 @@ ALLOW=(
   #      are A/B measurements used to argue that one generation with beats beats
   #      three stitched clips — an ORDERING claim that survives losing its
   #      numbers, which is what the rewrite should do.
-  'skills/novoads-api/prompting/prompt-library/EVALS-ugc-base-and-broll\.md::one generation with beats \(7\.0 credits, 15s, no post-production\)'
-  'skills/novoads-api/prompting/prompt-library/EVALS-ugc-base-and-broll\.md::stitched \(13\.8 credits, 24s, voice absent for half the runtime\)'
-  'skills/novoads-api/prompting/prompt-library/EVALS-ugc-base-and-broll\.md::Result: 24s, 13\.8 credits'
-  'skills/novoads-api/prompting/prompt-library/EVALS-ugc-base-and-broll\.md::cost 7\.0 credits, needed no editing'
+  'skills/novoads-api/prompting/prompt-library/evals\.md::one generation with beats \(7\.0 credits, 15s, no post-production\)'
+  'skills/novoads-api/prompting/prompt-library/evals\.md::stitched \(13\.8 credits, 24s, voice absent for half the runtime\)'
+  'skills/novoads-api/prompting/prompt-library/evals\.md::Result: 24s, 13\.8 credits'
+  'skills/novoads-api/prompting/prompt-library/evals\.md::cost 7\.0 credits, needed no editing'
   'skills/novoads-api/prompting/prompt-library/seedance-2-ugc-v2\.md::generation with beats cost \*\*7\.0 credits, 15s, no post-production\*\*'
   'skills/novoads-api/prompting/prompt-library/seedance-2-ugc-v2\.md::stitched cost \*\*13\.8 credits, 24s\*\*'
   'skills/novoads-api/prompting/prompt-library/seedance-2-ugc-v2\.md::Cost \(measured\) \| 7\.0cr / 15s \| 13\.8cr / 24s'
