@@ -269,9 +269,9 @@ Show `credits`, the count, the total, and `balance`. Get a yes. Then generate.
 
 ## Script length → duration
 
-Count the words in the spoken line and round **up**. Delivery was measured at **2.0 spoken words per second** — about **13 characters per second, spaces included**, if you would rather count those — with **~0.5s of leading silence** before the first word (2026-08-11 render, n=5 leading-silence samples). Plan on 2.0 and give the line air; the older 2.5-to-3 figure was an estimate nobody had timed, and it over-filled every clip it touched.
+Count the words in the spoken line and round **up**. Delivery was measured at **2.0 spoken words per second** — about **13 characters per second, spaces included**, if you would rather count those — with **~0.5s of leading silence** before the first word on reference and start-frame renders (2026-08-11, n=5). Plan on 2.0 and give the line air; the older 2.5-to-3 figure was an estimate nobody had timed, and it over-filled every clip it touched.
 
-**These tables are speech time. Seedance needs a silence budget on top of them.**
+**These tables already pay for that ~0.5s.** Whether it is the right budget depends on the render mode — read the scoping note under the first one before you trust it on another.
 
 ### `seedance-2.0` and `seedance-2.0-mini` — any integer 4 to 15
 
@@ -283,22 +283,18 @@ Count the words in the spoken line and round **up**. Delivery was measured at **
 | 24–29 words | 13–15s |
 | **30+ words** | **Too long** — offer to split |
 
-**Seedance spends time on dead air, and how much is a draw, not a constant. Reserve room for it because you MIGHT get it — not because you will.**
+**Leading silence is mode-dependent, and the two things measured here disagree by seconds. Scope the budget to the mode you are actually rendering — do not add both.**
 
-Measured across six `seedance-2.0` renders: leading silence ran **3.2–3.7s in `en`**, and in `es` it came back **5.24s, 0.97s and 4.80s on three byte-identical prompts** (2026-08-02/03). Same body, same duration, same language, three different answers. On the worst, 40% of a 13s ad was gone before the hook landed; on the best, the silence moved to the *tail* instead.
+| What was measured | Leading silence observed | Plan on |
+|---|---|---|
+| **Reference or start-frame renders** — `referenceAssetIds` or `startImageAssetId` | 0.0s and 0.44s (n=2), then 0.515s, 0.529s and 0.482s (2026-08-11, n=5 total) | **~0.5s.** The tables above already pay it |
+| **Six `seedance-2.0` renders whose mode nobody wrote down** (2026-08-02/03) | **3.2–3.7s in `en`**; in `es`, **5.24s, 0.97s and 4.80s on three byte-identical prompts** — same body, same duration, three answers | **+4s `en`, +5s `es`** and any unmeasured language, on top of speech |
 
-**So this is a distribution to budget against, not a number to add.** Reserve the worst plausible draw and accept that most renders will not use it:
+**The working rule: budget ~0.5s when you have a reference or a start frame, and check the render.** In that mode the table and the arithmetic already agree — **`2.0 × (D − 0.5)`** is exactly the word cap on every rung from 9 words up, and the 1–8 row is deliberately one word tighter than the formula's 9 at 5s — so there is nothing to add. If the result runs past 15s on these two models, the fix is a shorter line, a split, or `seedance-2.5` — not a longer clip on a model that does not render one.
 
-| Language | Reserve on top of speech |
-|---|---|
-| `en` | **+4s** (observed 3.2–3.7s) |
-| `es`, and any language nobody has measured | **+5s** (observed up to 5.24s) |
+**When a render does come back with multi-second silence, trim is the remedy, not a bigger budget.** Leading silence is trimmable in post; a line clipped by an over-long draw is not. The reserve in the second row is the *planning* allowance for that mode — reach for it when you have neither a reference nor a start frame, or when you are committing to a duration you cannot re-cut. It costs words: **`words ÷ 2.0` plus the reservation, rounded into the grid, leaves 22 words at 15s in `en` and 20 in `es`, against the table's 29.** That gap is the mode, not a rounding error.
 
-When the line is tight, do the arithmetic rather than reading the table alone: **`words ÷ 2.0`, plus the reservation, rounded up into the grid** — equivalently, a `D`-second clip holds **`2.0 × (D − 0.5)`** words once the leading silence is paid for. The table is the shortcut; this is the check. If the result runs past 15s on these two models, the fix is a shorter line, a split, or `seedance-2.5` — not a longer clip on a model that does not render one.
-
-A render that comes back with 1s of silence instead of 5s has not wasted the reservation — it has spent it on air at the end, which is trimmable in post. A render that draws 5s against a 4s budget has clipped the line, which is not.
-
-**How close this gets is not theoretical.** The first `es` render fit only because rounding up took 12.4s to 13s, and the line finished at **12.88s of 13.07s** — a fifth of a second of margin, on a budget that happened to draw near its worst. Because the silence is drawn fresh every time, **the only thing that tells you what you actually got is the QA step in §7.** Check the first `silence_end` on every render; do not assume the reservation held.
+**How close the reserved case gets is not theoretical.** The first `es` render fit only because rounding up took 12.4s to 13s, and the line finished at **12.88s of 13.07s** — a fifth of a second of margin, on a budget that drew near its worst. The silence is drawn fresh every time, in either mode, so **the only thing that tells you what you got is the QA step in §7.** Check the first `silence_end` on every render.
 
 If the hook has to land in the first second, drop the eye-contact-break beat from the prompt — that is the beat being paid for. `sora-2` measured **no leading silence at all** on the same prompt, so it is the other way out.
 
@@ -307,9 +303,9 @@ For no-dialogue styles (product hero, premium reveal), default to **15s**. The s
 ### `seedance-2.5` — any integer 4 to 30
 
 Same family, same craft, twice the room. The table above still holds for anything up to 15s; past
-it, keep planning at **2.0 words per second** and keep the same silence reserve — it is the same
-model family and nobody has measured 2.5's leading silence separately, so budget `en` +4s and
-everything else +5s until someone has.
+it, keep planning at **2.0 words per second** — the rows below are the same `2.0 × (D − 0.5)`
+arithmetic. Nobody has measured 2.5's leading silence separately, so the mode scoping above is the
+working rule here too: budget ~0.5s with a reference or start frame, the reserve without one.
 
 | Script length | Duration |
 |---|---|
@@ -334,6 +330,8 @@ fleet range for it; say the wait is unknown and poll.
 | 13–16 words | 8s |
 | 17–20 words | 10s |
 | **21+ words** | **Too long** — split, or move to Seedance |
+
+Silence behavior is unmeasured on this model, so this is the 2.0-words-per-second arithmetic and nothing more: the budget is a flat `2.0 × duration`, which assumes no leading silence rather than having found none. Verify against your first render — if it front-loads the way Seedance can, the last line is what gets clipped.
 
 ### `sora-2` — enum 4, 8, 12
 

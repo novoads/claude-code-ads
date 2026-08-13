@@ -7,7 +7,13 @@
 # should; these numbers were written by hand. It is one-time: release.sh rewrites
 # the stamp in place from now on. NOTE: --update-baseline regenerates this file
 # and will drop these comments.
+#
+# novoads-api is 759 rather than 761: the +3 stamp above landed on it like every
+# other skill, and the silence-reserve mode-scoping rewrite then took the body
+# down 2 (758 -> 756 pre-stamp). Recomputed from the file, not from either side
+# of the rebase conflict — HEAD's 761 had not seen the shrink and the branch's
+# 756 had not seen the stamp, so both were wrong by the other's delta.
 1121 skills/novoads-pixar-ad/SKILL.md
 839 skills/clone-video-ad/SKILL.md
-761 skills/novoads-api/SKILL.md
+759 skills/novoads-api/SKILL.md
 510 skills/analyze-video/SKILL.md
