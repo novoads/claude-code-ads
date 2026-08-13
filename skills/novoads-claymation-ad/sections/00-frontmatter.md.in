@@ -1,0 +1,22 @@
+#! section: frontmatter
+#! title:   Frontmatter: name, packVersion stamp, and the routing description
+#! read:    always, and before the body exists: it is the only thing the router matches a sentence against
+#!
+---
+name: novoads-claymation-ad
+metadata: {packVersion: {{PACK_VERSION}}}
+description: >-
+  Builds a hand-sculpted stop-motion CLAY ad on the Novoads REST API as a
+  STORYBOARD: five to eight beats, each rendered from its own key frame, a
+  storyteller narration laid into the gaps, a music bed, captions burned on,
+  assembled locally with ffmpeg. Carries the genre's arc (named protagonist,
+  inciting moment, social beat, quiet despair, sculpted clay infographic,
+  discovery, transformation, resolution card), and also recreates a found clay
+  ad by reading the reference video locally with ffmpeg and Whisper. Use for
+  ANY clay or stop-motion ask at ANY length: "claymation ad", "stop-motion
+  ad", "clay ad", "a quick clay ad", "plasticine characters", "make an ad like
+  this clay one", or a reference video with sculpted clay characters in it.
+  There is no one-call tier here, so ffmpeg is required. Not for the smooth 3D
+  animated look (use novoads-pixar-ad, which covers every Pixar-style length),
+  talking-head UGC (novoads-api), or a static image ad.
+---

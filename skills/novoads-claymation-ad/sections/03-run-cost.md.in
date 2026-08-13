@@ -1,0 +1,31 @@
+#! section: run-cost
+#! title:   What one run costs: the 5-beat short against the 8-beat full
+#! read:    when the operator picks the arc length, ahead of Gate 2
+#!
+## What one run costs
+
+Two shapes, and the choice is the operator's. What changes between them is the
+COUNT of the same components, never their kind:
+
+| Component | 5-beat short | 8-beat full |
+|---|---|---|
+| Cast sheet image | 1 | 1 |
+| Beat stills | 5 | 8 |
+| Beat clips | 5 × 6s | 8 × 7s |
+| Voice-over lines | 5 | 8 |
+| Music bed | 1 | 1 |
+| Transcript, then one caption pass | 1 each | 1 each |
+
+**There is no price column, on purpose.** Every credit number this run shows a
+user comes from `POST /v1/estimates`, in this session, before anything is
+charged: price each KIND once, multiply by the counts above, and quote what came
+back. A rate written into a skill file goes on being quoted long after it moved.
+
+**The clips are most of the bill either way**, and a still is a small fraction of
+the clip it seeds. That is the whole economic argument for the board gate.
+
+**Say the shape out loud before pricing it.** An 8-beat clay ad is the most
+expensive thing in this family, and the honest question at Gate 0 is whether
+beats 3, 4 and 5 are earning the three extra clips they cost. They often are; the
+arc is what this genre is for. But the operator decides that, not you.
+

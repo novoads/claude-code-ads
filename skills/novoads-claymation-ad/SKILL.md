@@ -16,6 +16,9 @@ description: >-
   animated look (use novoads-pixar-ad, which covers every Pixar-style length),
   talking-head UGC (novoads-api), or a static image ad.
 ---
+<!-- AUTO-GENERATED FILE. Do not edit it: the next build overwrites you.
+     Source of truth is sections/, registered in sections/manifest.json.
+     Edit the section, then run: python3 scripts/build-skill-md.py -->
 
 # Novoads Claymation Ad
 

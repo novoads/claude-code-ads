@@ -1,0 +1,147 @@
+#! section: board
+#! title:   The board: cast sheet, style lock, VOICE STYLE block, beat table
+#! read:    after the treatment is chosen and before any image is rendered
+#!
+## The board
+
+Before a single call, write the board. It is the artifact the operator approves,
+and it is cheaper to argue with than any render.
+
+### Cast sheet — one image, referenced by every still
+
+`POST /v1/images` on `gpt-image-2`, `aspectRatio: "1:1"`, the product photo in
+`referenceAssetIds`. On one canvas: the lead in three emotional states readable
+in the eyes, any secondary character, the product in 2 to 3 views, and a scale
+line-up at true relative size.
+
+This single image is what makes five separately-rendered beats look like one
+film. Every beat still references it. Skipping it is the most expensive shortcut
+available here — five beats with five differently-imagined characters is not an
+ad, and no amount of prompt discipline recovers it afterwards.
+
+Write the cast sheet TEXT first, from the template in
+[`references/formulas.md`](references/formulas.md), and render the image from it.
+The template has the slots that matter — including the **terse tag**, the 11 to
+30 character wardrobe-anchored phrase repeated verbatim in every later beat. Our
+renders re-cast on every cut, so "the same woman" names nobody; one measured run
+came back with three visibly different women across five beats.
+
+If the ad has a mascot scene, the cast sheet carries the mascots too: one canvas
+with the lead, the problem character and the mascot trio settles all three
+designs for the price of one image.
+
+### Style lock — one paragraph, pasted verbatim into every prompt
+
+Write it once. Location palette, one named practical light source, lens and
+camera height, the finish of the world. Paste it into every still prompt and
+every beat prompt, unchanged, character for character. Rewording it between
+beats is how the grade drifts.
+
+Never name a studio or a franchise. Write "stylized 3D animated feature film
+look." The trademark risk is higher for this aesthetic than for any other,
+because it belongs to specific studios and the models will hand you near-copies
+of their characters if invited.
+
+This is the genre default. Change the palette and the light source to the
+product's world; keep the structure and the render vocabulary.
+
+<!-- eval:style-lock:start -->
+```
+Stylized 3D animated feature film look. Soft volumetric golden-hour lighting from
+a large window, warm cosy palette of cream, butter yellow, dusty pink and soft
+sage. Subsurface scattering on skin, painterly background, shallow depth of field
+with creamy bokeh. Characters have large expressive eyes with multiple specular
+catchlights, stylized but believable proportions, smooth simplified hands, soft
+hair strands with subsurface glow. Rich material detail: waffle-knit fabric
+weave, ceramic glaze, glass refraction. Slightly desaturated colour grade.
+Every character reads mid-emotion, caught a moment before a smile or a sigh,
+never blank-staring. Vertical 9:16 composition.
+```
+<!-- eval:style-lock:end -->
+
+**The mid-emotion line is the genre's oldest craft rule and the easiest to
+lose.** A character rendered at rest reads as a mannequin however good the
+lighting is; the whole look depends on faces caught between expressions. It sits
+in the style lock rather than in prose because that is the block that actually
+reaches every prompt.
+
+And the negative block, pasted at the end of every prompt, still and clip alike:
+
+<!-- eval:negative-block:start -->
+```
+no live-action footage, no photorealistic humans, no uncanny faces, no dead eyes,
+no anime style, no 2D cel-shaded look, no flat illustration,
+no named or copyrighted animated film characters, no harsh fluorescent lighting,
+no extra fingers, no melted features, no morphing between frames,
+no warped product labels, no on-screen text, no subtitles, no captions
+```
+<!-- eval:negative-block:end -->
+
+`no named or copyrighted animated film characters` is the IP line and it is not
+optional. `no on-screen text, no subtitles, no captions` is what stops the render
+inventing its own captions, which it does unprompted and which then collide with
+the ones burned on in Gate 8.
+
+### VOICE STYLE block — required in every prompt that carries a voice
+
+Cast the narrator as concretely as the style lock casts the look: age, gender,
+register, pace, and what it must NOT sound like.
+
+> The NARRATOR is a warm, low, unhurried woman in her forties, close and
+> confessional, the tone of someone telling you something true rather than
+> selling. Never bright, never announcer-like. The IN-SCENE voices are ordinary
+> and unperformed.
+
+Always include the negative **`no upbeat announcer voice`**. Models drift toward
+radio-ad delivery, and that single drift kills the emotional register. On a beat
+whose narration comes from the VO track rather than from the render, this block
+describes the in-scene voices only — the narrator is cast once, at Gate 5.
+
+### Beat board — the table you get approved
+
+Two things are decided here: what happens (the skeleton) and how the genre says
+to shoot it (the role). The roles are in
+[`references/formulas.md`](references/formulas.md); this is where they are
+assigned.
+
+| # | Beat | Genre role | Seconds | Track | Visual |
+|---|---|---|---|---|---|
+| 1 | Hook — the want, stated out loud | A. anthropomorphized problem | 5 | SYNC | … |
+| 2 | Problem — the attempt fails | A. second problem character, or the human low | 5 | VO | … |
+| 3 | Low point — the private defeat | B. protagonist reveal | 4 | SYNC | … |
+| 4 | Turn — the product arrives and is used | C. mascot mechanism | 6 | VO | … |
+| 5 | Payoff — warmth, then the hero card | D. CTA and end card | 5 | VO closes | … |
+
+That mapping is the default, not the only one. Role A can hold two beats as a
+montage; role B can take the SYNC beat as a first-person testimonial. What does
+not move: **role A opens** and **role D closes**, and at least one of them is
+SYNC.
+
+Rules for the board:
+
+1. **One action per beat.** Two actions in one prompt is the single most reliable
+   way to get glitched physics. Splitting them is what a storyboard is FOR.
+2. **Give each beat its own setup.** Five beats in one location at one shot size
+   reads as boring no matter how clean the arc is. Change location at least once;
+   vary shot size (medium → close → wide). Measured against the reference ad this
+   skill was rebuilt to match: its beats each had their own world — a macro
+   problem shot, a lit interior, a stylized interior cross-section, a card — and
+   T12's three all shared one. That is the difference a viewer names first.
+3. **The low point is the shortest beat and the most important one.** Everything
+   rides on that face.
+4. **Word budget is per beat, not per ad.** Two spoken lines per 5-second beat is
+   the ceiling: at the measured 2.0 words/sec that is ~10 words a beat, so five
+   beats make a **45–50 word** script for 25s (60 needs 30s). Count before you write.
+5. **VO and SYNC never overlap in the same beat.** Write the SYNC lines first;
+   fit the narration into beats that have none. And keep the narrator's words out
+   of the prompt for any beat you are giving a VO line — see the hard constraint
+   above. The board's Track column is what records that decision per beat.
+6. **The two tracks own different things.** VO owns the problem, the mechanism,
+   the offer and the brand: that track carries the selling. SYNC owns proof that
+   the feeling is real. Never give SYNC the offer. Sign-off under 6 words (~3s at
+   the measured rate — read it against its gap), hero card at least 2 seconds.
+7. **Prefer escalating specifics over comparisons.** "Four times. Four and a
+   half. Five. All the way to six" argues the same point as "most stop at three"
+   without asserting a competitor fact you cannot verify.
+8. No em dashes in ad copy. Never say "free" — the entry offer is the $1 trial.
+

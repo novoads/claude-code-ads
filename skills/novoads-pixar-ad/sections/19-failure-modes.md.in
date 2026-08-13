@@ -1,0 +1,68 @@
+#! section: failure-modes
+#! title:   Failure modes, and what each one is actually telling you
+#! read:    when a render, a call or a mix comes back wrong
+#!
+## Failure modes
+
+- **The prompt is rejected.** Only content moderation can refuse a render, and it
+  answers `422`. There is no rule-id rejection any more, so a refusal is not a
+  wording problem to lint your way out of — read what it says. Nothing is
+  charged.
+- **`429` with `details.reason: concurrency_limit` on the sixth clip.** Not an
+  error in your request: five video generations are already in flight. Wait for
+  one, then submit. This is why the waves are five. Branch on `details.reason` —
+  `image_concurrency_limit`, `voiceover_concurrency_limit`,
+  `caption_concurrency_limit` and `transcript_concurrency_limit` are four
+  separate budgets, and none of them means "stop rendering".
+- **A `403` carrying Cloudflare's `error code: 1010`.** Not your key. The edge
+  refuses Python's stdlib `urllib` User-Agent outright, and the body is an edge
+  page rather than the API's `{"error":{…}}` envelope. Use `curl`. Do not
+  regenerate the key or tell the user their plan lapsed.
+- **The character changed between beats.** The cast sheet was not referenced, or
+  a still was chained on the cast sheet alone rather than on the previous still.
+  Re-render the stills, not the clips.
+- **The grade drifted across beats.** The style lock was reworded. Paste it
+  verbatim and re-render the affected stills.
+- **Two props in one clause glitch physics.** "Swallows capsules with water"
+  rendered capsules on the counter and an empty palm. Split into sequential
+  single-action sentences, name the actor in each, and add explicit negatives.
+- **A stray reference became a shot.** Every reference passed to a render is a
+  shot the model may spend time on; an unneeded product still produced a 0.13s
+  flash insert. Pass only what the beat needs.
+- **The render gained or lost a word.** Measured: "And wake up, we're rested" for
+  a scripted "And wake up rested". Transcribe before shipping; never assume the
+  script survived.
+- **The wordmark on the rendered product is garbled.** Expected, and the
+  labelHold clause does not fully fix it — measured on a run carrying the
+  canonical clause verbatim that still rendered "Owala" as "ovola". The model
+  carries a MARK (a shape) and destroys TYPE. Do not re-roll hoping for a clean
+  one: keep the label small and out of focus in the beats, and composite the real
+  product photo over the final beat, which is what Doctrine C does and why.
+- **The product grew eyes under Doctrine D.** State the negatives explicitly and
+  re-render. If it happens twice, switch to Doctrine C.
+- **The captions renamed the product.** They are transcribed from the audio, not
+  from your script. Blocking, not a note. See Gate 8.
+- **Every beat is a VO beat and the ad feels flat.** The doubling rule was
+  over-obeyed. At least one beat must be SYNC, and role A is the one that wants
+  it: a problem character speaking its own complaint is the genre's opening move.
+- **The beats all look like the same shot.** No role was assigned, so every beat
+  became a setup shot. Each beat gets its own world and its own shot size, and
+  the roles in `references/formulas.md` are what produce that variety for free.
+- **The product is in every frame.** It belongs in roles B and D and on the end
+  card. In the hook and the mechanism scene it is a distraction from the only
+  thing carrying the ad, which is a face.
+- **Dead air between beats.** The clips were not trimmed to their narration. Go
+  back to Gate 7.
+- **A caption for a line nobody can hear.** The SYNC beat's own audio was mixed
+  at the ambience level. Its track goes at 100%, not 28%. See Gate 7.
+- **The music bed cannot be heard at all**, or **the whole ad plays quiet.** The
+  bed was laid by hand: a multiplier instead of a measurement, and no mastering
+  pass. Lay it with `music_mix.py`, which refuses an inaudible bed before it
+  renders and masters and verifies afterwards.
+- **The audio ends before the picture.** `amix=duration=first`. Use `longest`.
+- **The render duplicated a prop or a character.** Measured: one cot and one baby
+  came back as two. Name the count in the prompt ("exactly one cot, exactly one
+  baby") and negate the clone, and review the clip at full size.
+- **`402`.** Not enough credits. `error.details` carries `required` and
+  `available` — report both and the top-up path. Do not retry.
+

@@ -17,6 +17,9 @@ description: >-
   required. Not for stop-motion clay (use novoads-claymation-ad), talking-head
   UGC (novoads-api), video cloning, or static image ads.
 ---
+<!-- AUTO-GENERATED FILE. Do not edit it: the next build overwrites you.
+     Source of truth is sections/, registered in sections/manifest.json.
+     Edit the section, then run: python3 scripts/build-skill-md.py -->
 
 # Novoads Pixar Ad
 

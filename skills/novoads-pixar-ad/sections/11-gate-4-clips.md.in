@@ -1,0 +1,75 @@
+#! section: gate-4-clips
+#! title:   Gate 4: the clips in waves of five, and the per-clip QA
+#! read:    after the operator approves the board
+#!
+## Gate 4 — the clips, in waves of five
+
+```bash
+curl -sS -X POST https://api.novoads.ai/v1/videos \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"seedance-2.0","prompt":"<beat N>","durationSeconds":5,
+       "aspectRatio":"9:16","startImageAssetId":"<beat N still>","audioEnabled":true}'
+```
+
+Returns `202` with `jobId`, `status`, `creditsCharged` and `model`.
+
+**Submit in waves of at most five.** Five video generations may be in flight per
+organization; a sixth comes back `429` with `error.details.reason` of
+`concurrency_limit`, which is a real refusal and not a queue. Five beats is
+exactly one wave. Six beats is one wave of five, then one. The stills are not
+part of that budget — images have their own ceiling of 12 — but they are chained
+sequentially anyway, so it never comes up.
+
+**Write every jobId down the moment it comes back**, before you start waiting —
+id, which beat, and `creditsCharged` from this `202`. **The charge is on the
+submit response and nowhere else**; the poll payload does not carry it, so a line
+written without it can never be completed. A job whose id you recorded is a
+lookup when something goes wrong. A job whose id you did not is an investigation.
+
+**Poll `GET /v1/generations/{jobId}` every 15 seconds, until TERMINAL.**
+`succeeded`, `failed`, `blocked` and `canceled` are all terminal; a loop that
+waits only for `succeeded` spins forever on a render that is already dead. Not
+every 3 seconds: five jobs on a 3-second interval spends the whole per-key rate
+budget on polling. `queued` means charged and submitted but not yet rendering,
+which is normal and not a stall. Expect 3 to 8 minutes per Seedance beat.
+
+Download the finished clip through `GET /v1/generations/{jobId}/watch`, which
+`302`s to a URL signed at request time, so it never hands you an expired link:
+
+```bash
+mkdir -p outputs/<ad-name>
+curl -sSL -o outputs/<ad-name>/beat1.mp4 \
+  https://api.novoads.ai/v1/generations/$JOB_ID/watch \
+  -H "Authorization: Bearer $NOVOADS_API_KEY"
+```
+
+The `mkdir -p` is not boilerplate: `outputs/` is gitignored and absent in a fresh
+clone, and curl's failure on a missing directory reads like a broken download of
+a render that already succeeded and was already billed.
+
+**If a call times out, do NOT generate again.** The work usually completed and
+was charged; what timed out was the response carrying its id. Call
+`GET /v1/generations?limit=10&kind=video`, find the job by `createdAt` and its
+prompt, and take it from there. There are no idempotency keys, so a blind retry
+renders and charges a second time.
+
+### Per-clip QA, before you spend a voice-over on it
+
+Check each clip as it lands. A beat that fails here is one still and one clip to
+redo; a beat that fails after the mix has cost the mix too.
+
+1. The character is the same character as the cast sheet.
+2. The action in the prompt is the action on screen, and it is ONE action.
+3. Nothing grew eyes, limbs or a mouth that the design does not have.
+4. The product's identifying details survived, and any printed label is legible.
+5. The clip's own audio is usable — ambience and in-scene voices, not a music bed
+   competing with the narration you are about to lay over it.
+
+**The repair depends on the failure, and the two repairs are opposites.** A beat
+that did two things, smeared its action or glitched its physics gets a SHORTER
+prompt: fewer clauses, one action, the actor named in it. A beat that grew a
+sixth finger, melted a feature or drifted a label gets ONE added negative naming
+that artefact exactly. Getting it backwards is why a beat gets re-rolled three
+times. The table in `references/formulas.md` has both cases.
+

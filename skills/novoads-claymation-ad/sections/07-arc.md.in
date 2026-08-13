@@ -1,0 +1,49 @@
+#! section: arc
+#! title:   The eight-beat arc, and which beats earn their place by category
+#! read:    when writing the beat board and choosing what to drop
+#!
+## The arc
+
+Eight beats, and the operator picks how many of them get made. The beat formulas,
+the variable tables and the worked prompts are in
+[`references/formulas.md`](references/formulas.md).
+
+| # | Beat | Seconds | Track | Drop for the short? |
+|---|---|---|---|---|
+| 1 | Setup — the protagonist in their own world | 7 | VO | keep |
+| 2 | Inciting moment — they notice the problem | 6 | VO | keep |
+| 3 | Social validation — someone else says it out loud | 8 | **SYNC** | drop |
+| 4 | Quiet despair — alone, at a mirror or a window | 6 | VO | drop |
+| 5 | Clay infographic — the mechanism, sculpted | 7 | VO | drop |
+| 6 | Discovery — they find the product | 6 | VO | keep |
+| 7 | Transformation — weeks pass, the change is visible | 9 | VO | keep |
+| 8 | Resolution — confident, then the end card | 6 | VO closes | keep |
+
+**The 5-beat short is 1, 2, 6, 7, 8** and lands around 34 seconds. It is the
+right call for a first run with a brand, and it is what the dry run below uses.
+
+**Beat 3 is where the SYNC line goes** when the short is not being made. When it
+is, promote the SYNC line to beat 6: the protagonist says one short thing to
+themselves when they find the product. Do not ship an ad where no mouth ever
+moves.
+
+**Beat 5 is optional even in the full arc.** A sculpted clay chart sells a
+mechanism; it wastes 7 seconds on a product that has none.
+
+### Which beats earn their place, by category
+
+| Category | Arc | What changes |
+|---|---|---|
+| Supplement, stress, sleep | the full 8 | Beat 5 is the one that sells it. Keep the chart |
+| Beauty and skincare | 8, chart optional | Beats 2 and 4 carry it: the mirror, then the reflection alone |
+| Office or B2B | the full 8 | **Beats 1 to 4 in cool fluorescent light**, warm only from the discovery on. The palette is the story |
+| Food and kitchen | the 5-beat short | Beats 1, 6 and 7 dominate; if you keep beat 3, make it a family table rather than a cafe |
+
+The office row is the one worth reading twice. Everywhere else this genre is
+warm tungsten throughout; a fluorescent first half and a tungsten second half
+tells the arc in light before a word is spoken.
+
+Everything else about the board — one action per beat, its own setup, the word
+budget, VO and SYNC never overlapping in the same beat, no em dashes, never
+"free" — is the Pixar skill's board section, unchanged.
+

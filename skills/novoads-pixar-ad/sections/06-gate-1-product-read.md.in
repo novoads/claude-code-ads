@@ -1,0 +1,30 @@
+#! section: gate-1-product-read
+#! title:   Gate 1: the product read, summarised under 200 words
+#! read:    after the fit passes, against the product URL or the listing text
+#!
+### Gate 1 — product read, then summarise in under 200 words
+
+**A product photo alone is not a sufficient input.** Price, specs, rating,
+rating count and buyer language are what this gate asks for, and a photograph
+carries none of them. If you have only an image, **ask once** for a URL or the
+listing text and say why in one clause. That is the single question this skill
+opens with, and it costs nothing. If the operator says there is no listing,
+proceed on the photo and state plainly that price and reviews were unavailable
+rather than implying they were checked.
+
+Source from the product URL or listing text, with the photo as corroboration.
+Then state:
+
+1. **Verified facts:** name, price, key specs, rating and rating count. Quote
+   only what the source says.
+2. **Buyer language:** recurring phrases from real reviews, in the buyer's words.
+3. **Who actually buys.** Reviews often reveal the purchaser is not the user — an
+   adult child buying for a parent, a spouse for a partner. If so, put the
+   product into the purchaser's hand on screen. This is usually worth more than
+   any feature beat.
+4. **What you will NOT claim, and why.** Check negative reviews and the fine
+   print. If reviews contradict durability, the ad does not say "built to last."
+5. **Anything unbuyable.** No buy box, out of stock, region-locked, or a newer
+   model at the same price. A perfect ad pointed at a dead listing converts at
+   zero.
+

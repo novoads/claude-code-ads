@@ -1,0 +1,24 @@
+#! section: output-format
+#! title:   Output format: the order the deliverables are reported in
+#! read:    when reporting back to the operator, at every stop
+#!
+## Output format
+
+Deliver in this order, no preamble:
+
+1. **PRODUCT READ** — verified facts, buyer language, who actually buys, what you
+   will not claim, anything unbuyable.
+2. **FIT** — one line confirming Gate 0, or a plain refusal naming a better
+   format.
+3. **ANGLE** — the enemy this ad attacks.
+4. **DOCTRINE** — C or D, and why.
+5. **CAST + STYLE LOCK** — the cast sheet text, including the terse tag, and the
+   paragraph that will be pasted into every prompt.
+6. **BEAT BOARD** — the table, with the genre role assigned per beat. Word count
+   per beat against the two-line ceiling. At least one SYNC beat.
+7. **COST** — the `POST /v1/estimates` figures, announced in one line.
+8. Then generate: cast sheet, all stills, **stop at the board gate**, clips, VO,
+   music, composite the end card, assemble the voice mix, verify, caption, lay
+   the bed with `music_mix.py`, and **read the captions against the script before
+   calling it finished**.
+

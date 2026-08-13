@@ -1,0 +1,52 @@
+#! section: gate-5-voiceover
+#! title:   Gate 5: one voice, one line per beat that needs narration
+#! read:    once the clips are down and their real lengths are known
+#!
+## Gate 5 — the voice-over
+
+One line per beat that needs narration. Pick the voice once:
+
+```bash
+# read the catalog once and filter in your own code — do not print it
+curl -sS https://api.novoads.ai/v1/voices -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  | jq -r '.voices[] | select(.source=="platform") | "\(.id)  \(.name)"'
+
+curl -sS -X POST https://api.novoads.ai/v1/voiceovers \
+  -H "Authorization: Bearer $NOVOADS_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"script":"<beat 2 VO line>","voiceId":"<the one>"}'
+```
+
+**This call returns the finished mp3, not a job.** `200`, with `url`, `assetId`,
+`characters` and `creditsCharged` in the response. There is nothing to poll —
+download the `url` immediately, because it is time-limited and minted per
+response. If a call times out, do NOT retry it: the audio was probably rendered
+and charged, and `GET /v1/generations` will show it with its cost.
+
+**`voiceId` is required and has no default** — a default would be a performance
+you are charged for without having heard it. `GET /v1/voices` returns the
+platform voices plus your own organization's clones; an id belonging to another
+organization is a `404`.
+
+**Write the lines to the gaps, not to the beats.** A beat with a SYNC line has no
+room for narration. Read each line aloud against the beat's length before
+generating it: **13 characters per second** of speech — so a 5-second beat holds
+~**65 characters**, and the hard 1,000-character ceiling is ~**75 seconds**,
+refused with a `400` before anything is charged. (Measured 13.2 = the 2.0
+words/sec rate written out: 29 words/188 chars over a 14.2s span, 2026-08-11, one
+render, spaces counted. This read 15/sec yet called 1,000 chars 40s, implying 25.)
+
+**The script is read VERBATIM**, including anything in square brackets — the
+model interprets those as performance tags rather than skipping them. Keep stage
+directions out.
+
+**Language**, if the ad is not in English: pass `language` and pick a voice whose
+`languages` include it. A mismatch is refused before anything is charged, which
+is the good outcome; picking a voice that does not speak the language and getting
+a charged take in the wrong accent is the bad one. Voices with no recorded
+languages — typically your own clones — accept any value.
+
+Voice-overs have their own concurrency budget of **10**, counted separately from
+the five video slots, so a batch of lines can never refuse a render. A `429` here
+carries `details.reason: voiceover_concurrency_limit` and clears in seconds.
+

@@ -1,0 +1,133 @@
+{
+  "skill": "novoads-pixar-ad",
+  "version": 1,
+  "note": "PASSIVE registry. Fields are ids, file paths, human titles and human-readable trigger text ONLY. Nothing here decides anything at runtime: the agent reads the generated SKILL.md, never this file. It exists so a human can find the one section to edit without opening a 1,000-line document, and so the generator has a deterministic order to concatenate in. scripts/build-skill-md.py asserts that every section file is listed here exactly once and that its own header matches this row.",
+  "sections": [
+    {
+      "id": "frontmatter",
+      "file": "00-frontmatter.md.in",
+      "title": "Frontmatter: name, packVersion stamp, and the routing description",
+      "trigger": "always, and before the body exists: it is the only thing the router matches a sentence against"
+    },
+    {
+      "id": "overview",
+      "file": "01-overview.md.in",
+      "title": "What this skill builds, and where the craft and the HTTP mechanics live",
+      "trigger": "at the top of every run, before anything is decided"
+    },
+    {
+      "id": "account",
+      "file": "02-account.md.in",
+      "title": "Account, API key and ffmpeg preflight",
+      "trigger": "before any generation work, to prove the run can happen at all"
+    },
+    {
+      "id": "run-cost",
+      "file": "03-run-cost.md.in",
+      "title": "What one run costs, and why no rate is written here",
+      "trigger": "when the operator asks what it will cost, ahead of Gate 2"
+    },
+    {
+      "id": "hard-constraints",
+      "file": "04-hard-constraints.md.in",
+      "title": "Hard constraints: beat count, one call per beat, VO against SYNC, one voice",
+      "trigger": "while writing the board, and again before every render call"
+    },
+    {
+      "id": "gate-0-fit",
+      "file": "05-gate-0-fit.md.in",
+      "title": "Gate 0: is this product right for stylized 3D at all",
+      "trigger": "first of all, because it is the gate that can end the run with a refusal"
+    },
+    {
+      "id": "gate-1-product-read",
+      "file": "06-gate-1-product-read.md.in",
+      "title": "Gate 1: the product read, summarised under 200 words",
+      "trigger": "after the fit passes, against the product URL or the listing text"
+    },
+    {
+      "id": "gate-2-estimates",
+      "file": "07-gate-2-estimates.md.in",
+      "title": "Gate 2: price every kind once, then announce the total",
+      "trigger": "before the first charged call, and again if the shape of the run changes"
+    },
+    {
+      "id": "product-treatment",
+      "file": "08-product-treatment.md.in",
+      "title": "Product treatment: Doctrine C or Doctrine D, and why",
+      "trigger": "when deciding how the product appears on screen, before the cast sheet"
+    },
+    {
+      "id": "board",
+      "file": "09-board.md.in",
+      "title": "The board: cast sheet, style lock, VOICE STYLE block, beat table",
+      "trigger": "after the treatment is chosen and before any image is rendered"
+    },
+    {
+      "id": "gate-3-stills",
+      "file": "10-gate-3-stills.md.in",
+      "title": "Gate 3: every still before any clip, then STOP at the board gate",
+      "trigger": "when rendering the cast sheet and the beat stills"
+    },
+    {
+      "id": "gate-4-clips",
+      "file": "11-gate-4-clips.md.in",
+      "title": "Gate 4: the clips in waves of five, and the per-clip QA",
+      "trigger": "after the operator approves the board"
+    },
+    {
+      "id": "gate-5-voiceover",
+      "file": "12-gate-5-voiceover.md.in",
+      "title": "Gate 5: one voice, one line per beat that needs narration",
+      "trigger": "once the clips are down and their real lengths are known"
+    },
+    {
+      "id": "gate-6-music",
+      "file": "13-gate-6-music.md.in",
+      "title": "Gate 6: generating the music bed, which is laid last",
+      "trigger": "after the voice-over, and again at the very end when the bed goes on"
+    },
+    {
+      "id": "gate-7-assembly",
+      "file": "14-gate-7-assembly.md.in",
+      "title": "Gate 7: trim, concat, the voice mix, the composited end card, the transcript",
+      "trigger": "when every clip and every line is on disk and the master is being cut"
+    },
+    {
+      "id": "gate-8-captions",
+      "file": "15-gate-8-captions.md.in",
+      "title": "Gate 8: captions, the preset choice, and the BLOCKING caption gate",
+      "trigger": "after the master exists, and before anything is called finished"
+    },
+    {
+      "id": "output-format",
+      "file": "16-output-format.md.in",
+      "title": "Output format: the order the deliverables are reported in",
+      "trigger": "when reporting back to the operator, at every stop"
+    },
+    {
+      "id": "calls",
+      "file": "17-calls.md.in",
+      "title": "The calls, and the worked beat prompt the house test reads",
+      "trigger": "whenever a request body or a response shape is in question"
+    },
+    {
+      "id": "ip-rules",
+      "file": "18-ip-rules.md.in",
+      "title": "IP rules for a look that belongs to specific studios",
+      "trigger": "while writing any prompt, still or clip"
+    },
+    {
+      "id": "failure-modes",
+      "file": "19-failure-modes.md.in",
+      "title": "Failure modes, and what each one is actually telling you",
+      "trigger": "when a render, a call or a mix comes back wrong"
+    },
+    {
+      "id": "hard-rules",
+      "file": "20-hard-rules.md.in",
+      "title": "Hard rules: the lines that end a run rather than bend",
+      "trigger": "before delivering, as the last read of the run"
+    }
+  ]
+}

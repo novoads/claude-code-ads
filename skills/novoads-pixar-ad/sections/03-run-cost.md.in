@@ -1,0 +1,21 @@
+#! section: run-cost
+#! title:   What one run costs, and why no rate is written here
+#! read:    when the operator asks what it will cost, ahead of Gate 2
+#!
+## What one run costs
+
+**There is no rate table here, on purpose.** Every credit number this run shows a
+user comes from `POST /v1/estimates`, in this session, before anything is
+charged: a price written into a skill file goes on being quoted long after it has
+moved.
+
+What Gate 2 prices, for a five-beat board: **1 cast sheet image · 1 still per
+beat · 1 clip per beat · 1 voice-over line per VO beat · 1 music bed · 1
+transcript of the master · 1 caption pass.** Four calls cover all of it, because
+the arms repeat — price each KIND once (`image`, `video`, `voiceover`, `music`),
+multiply by those counts, and quote what came back. The one shape worth holding
+is an ordering rather than a number: **the clips are most of the bill, and a
+still is a small fraction of the clip it seeds.** That is the whole economic
+argument for the still gate, and for never re-rendering a beat you have not first
+tried to fix in its still.
+

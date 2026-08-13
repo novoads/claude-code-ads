@@ -1,0 +1,58 @@
+#! section: calls
+#! title:   The calls, and the worked SYNC beat prompt the house test reads
+#! read:    whenever a request body or a response shape is in question
+#!
+## The calls
+
+Identical to `novoads-pixar-ad`'s call list — `POST /v1/uploads`,
+`/v1/estimates`, `/v1/images`, `/v1/videos`, `GET /v1/voices`,
+`POST /v1/voiceovers`, `/v1/music`, `/v1/captions`, `/v1/transcripts`, and
+`GET /v1/generations/{jobId}` with its `/watch` — with the fields each one takes.
+Entry B adds no endpoint: the reference read is local ffmpeg and Whisper, and
+spends nothing.
+
+### Worked beat prompt
+
+A finished **beat 3** (social validation) `POST /v1/videos` prompt: the SYNC beat,
+one action, style lock and material detail included, negatives at the end.
+`lib/generation/__tests__/claymation-storyboard-skill-prompts.test.ts` reads this
+exact block and runs it through the same rule engine `POST /v1/estimates` lints
+with.
+
+<!-- eval:beat-prompt:start -->
+```
+Hand-sculpted stop-motion clay look, vertical 9:16, animating the two characters
+in the reference image. A sunlit miniature clay kitchen, green-painted wooden
+cabinets, a red gingham tablecloth, warm tungsten light from a window on
+camera-left.
+
+Diane, a woman in her late 50s in a cream chunky knit cardigan, matte plasticine
+skin with visible thumbprint impressions and deep sculpted laugh lines, sits
+across the table from her friend in a sage-green cable-knit sweater.
+
+From zero to three seconds Diane lowers her cup and her sculpted brow furrows.
+From three to eight seconds her friend leans in and says: "You have not been
+sleeping, have you." Diane holds still and her eyes drop to the table.
+
+Camera: locked medium two-shot at table height, gentle handheld breathing motion,
+no dolly, no zoom. Shallow macro depth of field with the window softly out of
+focus.
+
+Skin: matte plasticine, visible thumbprint impressions on cheeks and forehead,
+small sculpting-knife creases at the corners of the eyes. Knitwear: real chunky
+wool yarn, individual stitches visible, slight wear at the cuffs. Ceramic:
+hand-thrown irregular cups, glaze pooling at the bottom edges.
+
+Audio: two warm, unhurried voices at a kitchen table, close and intimate, with
+faint kettle and street ambience behind them.
+
+Both characters stay visually unchanged from the reference image: same face
+proportions, same hair, same wool weave, same clay texture held to the last
+frame. no live-action footage, no photorealistic humans, no uncanny faces, no
+dead eyes, no smooth 3D digital render, no glossy surfaces, no ray-traced
+reflections, no subsurface scattering, no wet-eye highlights, no anime style, no
+named or copyrighted animated film characters, no extra fingers, no melted
+features, no on-screen text, no subtitles, no captions
+```
+<!-- eval:beat-prompt:end -->
+
