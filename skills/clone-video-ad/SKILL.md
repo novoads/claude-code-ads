@@ -460,7 +460,7 @@ composing, and the closest formula for structure —
 a fast demo, [seedance-2-premium-reveal.md](../novoads-api/prompting/prompt-library/seedance-2-premium-reveal.md)
 or [seedance-2-product-hero.md](../novoads-api/prompting/prompt-library/seedance-2-product-hero.md) for a
 product-only source, [seedance-2-studio-lookbook.md](../novoads-api/prompting/prompt-library/seedance-2-studio-lookbook.md)
-for a polished voiceover source.
+for a polished voiceover source. Cloning onto a different model reads that model's own grid first, never a Seedance formula carried across: [sora-2.md](../novoads-api/prompting/prompt-library/sora-2.md) when the source's hook speaks from frame one (it measured no leading silence, where Seedance front-loads 3–5s of it), [veo-3-1.md](../novoads-api/prompting/prompt-library/veo-3-1.md) when the user names Veo — neither takes `referenceAssetIds`, so a clone carrying both the actor and the product stays on Seedance. [ugc-selfie-style.md](../novoads-api/prompting/prompt-library/ugc-selfie-style.md) is the cross-model UGC guide: its *Core principles* transfer, its per-model formulas do not.
 
 **If the mode is a one-shot compression, read
 [seedance-2-ugc-v2.md](../novoads-api/prompting/prompt-library/seedance-2-ugc-v2.md) as well — for structure and

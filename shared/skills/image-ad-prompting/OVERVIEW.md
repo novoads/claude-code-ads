@@ -246,7 +246,7 @@ Every generator script auto-appends three guards to the prompt:
 2. **`SAFE_ZONE_SUFFIX`** — keeps text + focal subjects inside the central 84% of the canvas. Eliminates clipped headlines.
 3. **`GLYPH_SAFETY_SUFFIX`** — forbids emoji and unicode glyphs inside body-text blocks (chat bubbles, comment threads, ChatGPT responses); enforces the exact count of conversation elements.
 
-Full text in `prompting/safety-suffixes.md`. **Do not silently disable these** — they fix
+Full text in [safety-suffixes.md](prompting/safety-suffixes.md). **Do not silently disable these** — they fix
 recurring rendering failures across every modern image model. If you need to disable one for a
 specific run, use `--allow-chrome` or `--no-safe-zone` flags and document why.
 

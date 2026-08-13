@@ -249,6 +249,14 @@ unknown rather than lending it `seedance-2.0`'s range. Full sequence in
 
 If the still needs building or rebuilding first, generate it before animating. A crisp, correctly-composed, correctly-lettered source frame is the foundation of the whole shot — the video stage carries forward what it is handed. Both [`chatgpt-image-ad`](../chatgpt-image-ad/SKILL.md) (`gpt-image-2`) and [`nano-banana-image-ad`](../nano-banana-image-ad/SKILL.md) (`nano-banana-pro`) are available, and the decision tree between them is in [OVERVIEW.md](../../shared/skills/image-ad-prompting/OVERVIEW.md); when it matters, run the same prompt through both and compare rather than assuming. `POST /v1/images` is synchronous, and the `assetId` it returns goes straight into `startImageAssetId` with no download-and-re-upload hop.
 
+Both of those generators auto-append three always-on guard clauses to whatever prompt you
+hand them — no platform chrome, an 84% edge-safe zone, no glyph soup inside body text — so do
+not write those constraints into the prompt yourself. Read
+[safety-suffixes.md](../../shared/skills/image-ad-prompting/prompting/safety-suffixes.md)
+when a still comes back with clipped text, invented emoji or in-feed UI in it, and **before
+passing `--allow-chrome` or `--no-safe-zone`** to turn one off. A start frame with a headline
+running off the edge animates into a video with a headline running off the edge.
+
 **This API takes no video input.** There is no restyle of existing footage and no
 multi-turn edit: `omni-flash` here is one stateless call, not the conversational editor its
 vendor documentation describes. If the ask is to restyle a clip, say so and stop. A **timed
