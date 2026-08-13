@@ -23,6 +23,37 @@ the question, not the update. Ask, then do exactly what was answered.
 unattended updating unless the user picks the option that says so, in their own
 words, in the dialog below.
 
+## Step 0 — confirm this is the pack clone, before anything else
+
+This skill manages a **cloned** pack: a git repository with `scripts/update.sh`
+in it. It can also be installed on its own, copied into someone's `~/.claude/`
+alongside skills that have nothing to do with this repo — and in that shape
+every instruction below is pointed at the wrong repository. Step 1's git
+commands would report on the **user's own project**, and option 2 would write a
+consent flag into a directory no hook will ever read.
+
+```bash
+if git remote get-url origin 2>/dev/null | grep -q 'novoads/claude-code-ads' \
+   || [ -f shared/scripts/auto-update.sh ]; then
+  echo "pack clone confirmed"
+else
+  echo "NOT the pack clone — stop here"
+fi
+```
+
+If neither probe fires, **stop here and offer none of the four options.** Say
+plainly:
+
+> This skill manages the cloned pack — the git repository with the skills and
+> `scripts/update.sh` in it. This looks like a solo install, so there is no
+> clone here to update. Solo-installed skills update with
+> `npx skills update`. Be aware before running it: it replaces the installed
+> files outright, with no backup, so copy any local edits somewhere safe first.
+
+Then stop. Nothing here can update a solo install, and running the dialog would
+record consent that nothing reads — which is the exact failure this pack's
+design exists to make impossible. Do not offer to "try anyway".
+
 ## Step 1 — find out where the clone actually stands
 
 Run these from the repo root. None of them changes anything:
@@ -104,29 +135,58 @@ in the same breath as any conflict: `./scripts/update.sh --rollback`.
 
 ## Option 2 — "Always keep me up to date"
 
-Two things happen, and **both** are required. The second is the one that matters.
+Three things happen, and **all three** are required. Writing the flag is the
+easy one; the other two are what make the flag mean anything.
 
-**a. Write the flag.** In `.update-state/config`, set `auto_apply=on`, keeping
-any other keys already in the file:
+**a. Write `auto_apply=on`, and clear any standing `update_check=off`.**
+
+Granting "always keep me up to date" **is** revoking "never ask again". They are
+separate keys, and the hook checks the kill switch *first* and exits before it
+ever reads `auto_apply` — correctly, because off means off. So a user who once
+picked option 4 and now picks option 2 would otherwise end up with consent
+recorded, the reader registered, and nothing ever updating. Set both keys:
 
 ```bash
 mkdir -p .update-state
 touch .update-state/config
-# preserve every other key; replace or append auto_apply
-grep -v '^[[:space:]]*auto_apply[[:space:]]*=' .update-state/config > .update-state/config.tmp 2>/dev/null || true
-printf 'auto_apply=on\n' >> .update-state/config.tmp
+# preserve every other key; replace or append the two this option owns
+grep -vE '^[[:space:]]*(auto_apply|update_check)[[:space:]]*=' .update-state/config > .update-state/config.tmp 2>/dev/null || true
+printf 'update_check=on\nauto_apply=on\n' >> .update-state/config.tmp
 mv .update-state/config.tmp .update-state/config
 ```
 
-**b. Verify the reader is live, and say so out loud.**
+If `update_check` was `off` before this, **tell the user you turned it back on**
+and why: they had previously asked not to be reminded, and asking for automatic
+updates supersedes that. Silently reversing an earlier decision is the kind of
+thing that has to be said out loud, even when it is obviously what they meant.
+
+**b. Verify BOTH halves, and say so out loud.** The flag and the reader are
+different facts, and either one alone is a promise that will not be kept:
 
 ```bash
-grep -q 'auto-update' .claude/settings.json && echo "reader registered"
+grep -q 'auto-update' .claude/settings.json && echo "reader: registered"
+grep -qE '^[[:space:]]*auto_apply[[:space:]]*=[[:space:]]*on' .update-state/config && echo "flag: auto_apply=on"
+grep -qE '^[[:space:]]*update_check[[:space:]]*=[[:space:]]*off' .update-state/config && echo "PROBLEM: kill switch still off"
 ```
 
-Report the result to the user in plain words: the flag is on, **and** the
-SessionStart hook that reads it is registered in `.claude/settings.json`, so it
-takes effect at the next session start.
+Report the result in plain words: the flag is on, the kill switch is not
+standing in its way, **and** the SessionStart hook that reads it is registered
+in `.claude/settings.json` — so it takes effect at the next session start. Only
+claim that when all three checks agree.
+
+**c. Check for the machine-wide veto.**
+
+```bash
+[ -n "${NOVOADS_PACK_NO_UPDATE_CHECK:-}" ] && echo "env veto is set: $NOVOADS_PACK_NO_UPDATE_CHECK"
+```
+
+`NOVOADS_PACK_NO_UPDATE_CHECK=1` in the environment overrides the config file
+and silences the hook no matter what was just written. If it is set, say so:
+the setting is recorded and will take effect once that variable is unset, and
+until then nothing will apply. **Name it; do not fight it.** Never unset it from
+here — it lives in the user's shell profile or their environment for a reason
+this repo cannot see, and a skill that quietly clears a machine-wide switch is
+worse than one that reports it.
 
 This verification is not ceremony. The design it learned from shipped this exact
 dialog option, wrote this exact flag, and installed its reader only under a
@@ -200,6 +260,13 @@ this skill. Updating stays available on request, forever; only the asking stops.
 
 Name the way back in the same breath: `update_check=on` in that file, or
 invoking this skill.
+
+If `auto_apply=on` was already set, say that too. This option does not erase it
+— the kill switch simply wins over it, which is why everything goes quiet — but
+it stays recorded, so turning the check back on later resumes unattended
+updates. A user who wants both off should be told to set `auto_apply=off` as
+well. Better to say it now than to have automatic updates reappear later as a
+surprise.
 
 `NOVOADS_PACK_NO_UPDATE_CHECK=1` in the environment does the same thing without
 editing a file, and it wins over whatever the config says. Mention it when

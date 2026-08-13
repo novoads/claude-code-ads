@@ -199,13 +199,48 @@ cleanup() {
 trap cleanup EXIT INT TERM HUP
 
 # Bound the child ourselves. `timeout(1)` is not on stock macOS, so the fallback
-# is the one that has to be right. TERM first, so update.sh's own trap runs and
-# restores .env and drops its lock; KILL only if it ignores that.
+# is the one that has to be right.
+#
+# The child runs in its OWN PROCESS GROUP (`set -m` gives a background job a
+# group whose id is its pid), because signalling the single pid does NOT work
+# and fails in the worst available direction. Measured on bash 3.2/macOS:
+# update.sh spends the budget blocked in a foreground `git`/`sleep`, and bash
+# DEFERS a trapped signal until the foreground child it is waiting on exits —
+# so `kill -TERM <pid>` neither stops the work nor fires the trap. Observed end
+# state: the hook returned, the session went live, and update.sh carried on
+# rewriting the tree behind it with .env still clobbered and its lock dir still
+# held. Signalling the GROUP reaches the blocking grandchild too, which is what
+# lets update.sh's own trap run and restore .env and drop the lock.
+set -m 2>/dev/null
 (
   cd "$ROOT" 2>/dev/null || exit 97
   bash "$UPDATE_SH" >"$OUT_F" 2>"$ERR_F"
 ) &
 child=$!
+set +m 2>/dev/null
+
+# Confirm the job REALLY landed in its own group before using a group-wide kill.
+# `set -m` is a request, and this matters more than a belt-and-braces check
+# usually does: if the job stayed in our group, `kill -TERM -$child` would be
+# aimed at the process group this hook is running IN — the session's own. So
+# group-signalling is used only where isolation is proven, and the single-pid
+# path (imperfect, but incapable of hitting the session) is the fallback.
+child_pgid="$(ps -o pgid= -p "$child" 2>/dev/null | tr -d ' ')"
+my_pgid="$(ps -o pgid= -p $$ 2>/dev/null | tr -d ' ')"
+case "$child_pgid" in
+  ''|*[!0-9]*) child_pgid="" ;;
+  *) [ "$child_pgid" = "$my_pgid" ] && child_pgid="" ;;
+esac
+[ -n "$child_pgid" ] || log "child not isolated into its own process group; falling back to single-pid signalling"
+
+# TERM first, so update.sh's trap runs; KILL only if the group ignores that.
+signal_child() {
+  local sig="$1"
+  if [ -n "$child_pgid" ]; then
+    kill -"$sig" -"$child_pgid" 2>/dev/null && return 0
+  fi
+  kill -"$sig" "$child" 2>/dev/null
+}
 
 waited=0
 limit=$(( BUDGET_SECONDS * 5 ))
@@ -215,12 +250,13 @@ while kill -0 "$child" 2>/dev/null && [ "$waited" -lt "$limit" ]; do
 done
 
 if kill -0 "$child" 2>/dev/null; then
-  kill -TERM "$child" 2>/dev/null
+  signal_child TERM
+  # Give the trap room to restore .env and drop the lock before escalating.
   grace=0
-  while kill -0 "$child" 2>/dev/null && [ "$grace" -lt 10 ]; do sleep 0.1; grace=$(( grace + 1 )); done
-  kill -KILL "$child" 2>/dev/null
+  while kill -0 "$child" 2>/dev/null && [ "$grace" -lt 30 ]; do sleep 0.1; grace=$(( grace + 1 )); done
+  signal_child KILL
   wait "$child" 2>/dev/null
-  log "update.sh exceeded the ${BUDGET_SECONDS}s budget; signalled and stood down"
+  log "update.sh exceeded the ${BUDGET_SECONDS}s budget; signalled its process group and stood down"
   exit 0
 fi
 wait "$child" 2>/dev/null
@@ -249,7 +285,7 @@ fi
 field() {
   local k="$1" tok
   for tok in $status_line; do
-    case "$tok" in "$k"=*) printf '%s' "${tok#$k=}" | tr -cd '0-9a-fA-F' | head -c 40; return 0 ;; esac
+    case "$tok" in "$k"=*) printf '%s' "${tok#"$k"=}" | tr -cd '0-9a-fA-F' | head -c 40; return 0 ;; esac
   done
   return 1
 }
