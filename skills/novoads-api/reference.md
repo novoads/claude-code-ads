@@ -4,6 +4,53 @@ Companion to `SKILL.md`. Read that first for the call sequence. This file is the
 
 **The authority is <https://api.novoads.ai/v1/openapi.json>.** Where this file and the spec disagree, the spec wins, except in *Known discrepancies* below, where the spec is wrong and this file says so.
 
+## Contents
+
+**Before your first call**
+
+- [Base URL and auth](#base-url-and-auth)
+  - [Use `curl`. A `403` with `error code: 1010` is Cloudflare, not your key](#use-curl-a-403-with-error-code-1010-is-cloudflare-not-your-key) · [Ad analysis is on this API now](#ad-analysis-is-on-this-api-now)
+- [Endpoints](#endpoints)
+
+**Endpoint reference**
+
+- [POST /uploads](#post-uploads)
+- [POST /estimates](#post-estimates)
+- [POST /videos](#post-videos)
+  - [`audioEnabled`](#audioenabled) · [`startImageAssetId` and `referenceAssetIds` are two modes, not two fields](#startimageassetid-and-referenceassetids-are-two-modes-not-two-fields) · [`resolution` — on `seedance-2.0` and `seedance-2.5`, and it is a price field](#resolution--on-seedance-20-and-seedance-25-and-it-is-a-price-field)
+- [POST /images](#post-images)
+  - [Chain from `images[].assetId`, never from `images[].url`](#chain-from-imagesassetid-never-from-imagesurl) · [`sourceAssetId` — editing an image (spec 2.10.0, `gpt-image-2` only)](#sourceassetid--editing-an-image-spec-2100-gpt-image-2-only) · [The response is the only copy of images 2..N](#the-response-is-the-only-copy-of-images-2n)
+- [POST /captions, POST /videos/{jobId}/captions](#post-captions-post-videosjobidcaptions)
+  - [Presets and pricing](#presets-and-pricing) · [Failure modes](#failure-modes)
+- [POST /transcripts](#post-transcripts)
+  - [Pricing](#pricing) · [Failure modes](#failure-modes-1) · [What it does not do](#what-it-does-not-do) · [One thing it does that you cannot see](#one-thing-it-does-that-you-cannot-see)
+- [POST /music](#post-music)
+  - [Failure modes](#failure-modes-2)
+- [GET /voices](#get-voices)
+  - [Pricing](#pricing-1) · [Failure modes](#failure-modes-3) · [What it does not do](#what-it-does-not-do-1)
+- [POST /voiceovers](#post-voiceovers)
+  - [Pricing](#pricing-2) · [Failure modes](#failure-modes-4) · [What it does not do](#what-it-does-not-do-2)
+- [POST /voice-changes](#post-voice-changes)
+  - [Pricing](#pricing-3) · [Failure modes](#failure-modes-5) · [What it does not do](#what-it-does-not-do-3)
+- [GET /generations](#get-generations)
+- [GET /generations/{jobId}](#get-generationsjobid)
+- [GET /generations/{jobId}/watch](#get-generationsjobidwatch)
+- [GET /products, POST /products](#get-products-post-products)
+- [GET /models](#get-models)
+
+**Operating and troubleshooting**
+
+- [Status lifecycle](#status-lifecycle)
+- [Limits](#limits)
+- [Errors](#errors)
+  - [A 400 has one shape](#a-400-has-one-shape) · [The causes of a 429](#the-causes-of-a-429) · [The 500 rule](#the-500-rule)
+- [Known discrepancies](#known-discrepancies)
+- [Prompt rules](#prompt-rules)
+
+*Hand-maintained: update it when you add, rename or reorder a heading, until CI generates this list.*
+
+---
+
 ## Base URL and auth
 
 ```

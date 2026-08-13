@@ -31,6 +31,80 @@ struggles, the note tells the consuming skill which model to prefer.
 
 ---
 
+## Contents
+
+**Before you pick a template**
+
+- [Aspect-ratio compatibility (read before picking a template)](#aspect-ratio-compatibility-read-before-picking-a-template)
+- [How to use this file](#how-to-use-this-file)
+  - [The standard pin block](#the-standard-pin-block) · [What actually fits](#what-actually-fits)
+
+**Templates** (40, numbered T1 to T42; there is no T16 or T22). Each entry carries its number and its plain name, so either finds it.
+
+*Screen and chat UI mimicry*
+
+- [T1 — Apple Notes listicle aesthetic](#t1--apple-notes-listicle-aesthetic)
+- [T3 — Story tweet+UGC composite](#t3--story-tweetugc-composite)
+- [T4 — "Fake Google search" mosaic](#t4--fake-google-search-mosaic)
+- [T11 — Fake comment thread (user → brand)](#t11--fake-comment-thread-user--brand)
+- [T12 — Fake ChatGPT conversation](#t12--fake-chatgpt-conversation)
+- [T14 — Fake Slack team conversation](#t14--fake-slack-team-conversation)
+- [T19 — Fake AirDrop dialog (with before/after)](#t19--fake-airdrop-dialog-with-beforeafter)
+- [T20 — IG Story Q&A sticker over lifestyle photo](#t20--ig-story-qa-sticker-over-lifestyle-photo)
+- [T23 — POV calendar timeline of pain points](#t23--pov-calendar-timeline-of-pain-points)
+- [T24 — Phone-in-phone Reel composite](#t24--phone-in-phone-reel-composite)
+- [T28 — Dating app swipe card (Hinge-style)](#t28--dating-app-swipe-card-hinge-style)
+- [T29 — TikTok creator video screenshot](#t29--tiktok-creator-video-screenshot)
+- [T34 — iMessage conversation (with rich link card)](#t34--imessage-conversation-with-rich-link-card)
+- [T37 — Weather-app forecast UI](#t37--weather-app-forecast-ui)
+- [T41 — Brutalist headline over a social-post embed](#t41--brutalist-headline-over-a-social-post-embed)
+
+*Comparison, data and proof*
+
+- [T5 — Comparison table (light)](#t5--comparison-table-light)
+- [T6 — Comparison table (dark, hooky)](#t6--comparison-table-dark-hooky)
+- [T8 — Handwritten whiteboard / posterboard comparison](#t8--handwritten-whiteboard--posterboard-comparison)
+- [T13 — Before/After two-panel split](#t13--beforeafter-two-panel-split)
+- [T17 — Stacked-bar with vs without comparison](#t17--stacked-bar-with-vs-without-comparison)
+- [T18 — Flowchart "old way" vs "new way"](#t18--flowchart-old-way-vs-new-way)
+- [T38 — Big stat hero with chart](#t38--big-stat-hero-with-chart)
+- [T40 — Scratch-off ticket stat grid](#t40--scratch-off-ticket-stat-grid)
+
+*Handwritten and physical props*
+
+- [T7 — Sticky-note + product flatlay](#t7--sticky-note--product-flatlay)
+- [T10 — Letter board sign + product](#t10--letter-board-sign--product)
+- [T21 — Handwritten testimonial on napkin / paper](#t21--handwritten-testimonial-on-napkin--paper)
+- [T25 — Newspaper crossword puzzle](#t25--newspaper-crossword-puzzle)
+- [T26 — Cash register receipt](#t26--cash-register-receipt)
+- [T27 — Handwritten founder letter](#t27--handwritten-founder-letter)
+- [T31 — Scratch-off lottery ticket](#t31--scratch-off-lottery-ticket)
+
+*Editorial, print and out-of-home*
+
+- [T2 — Editorial article hero](#t2--editorial-article-hero)
+- [T30 — Billboard / OOH placement mockup](#t30--billboard--ooh-placement-mockup)
+- [T33 — Bold typography hero quote](#t33--bold-typography-hero-quote)
+- [T35 — Magazine cover](#t35--magazine-cover)
+- [T39 — Museum exhibit display](#t39--museum-exhibit-display)
+- [T42 — Editorial testimonial card](#t42--editorial-testimonial-card)
+
+*Product-forward and lifestyle*
+
+- [T9 — Annotated product features (arrow callouts)](#t9--annotated-product-features-arrow-callouts)
+- [T15 — Ingredient list + collage (left/right split)](#t15--ingredient-list--collage-leftright-split)
+- [T32 — Pain-point checklist + product](#t32--pain-point-checklist--product)
+- [T36 — Lifestyle "operator's daily kit" flatlay](#t36--lifestyle-operators-daily-kit-flatlay)
+
+**Maintaining the library**
+
+- [Adding new templates](#adding-new-templates)
+- [Known rendering limits (mitigated by always-on suffixes)](#known-rendering-limits-mitigated-by-always-on-suffixes)
+
+*Hand-maintained: update it when you add, rename or reorder a heading, until CI generates this list.*
+
+---
+
 ## Aspect-ratio compatibility (read before picking a template)
 
 Each template recommends an aspect ratio in its **Aspect ratio:** field. Two grids, sourced
