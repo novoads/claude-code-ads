@@ -8,7 +8,7 @@
 One product in. A 40 to 70 second hand-sculpted clay ad out, cut from five to
 eight separately rendered beats, with narration, music and captions.
 
-This is the **sibling** of `novoads-pixar-ad` and it runs the same pipeline: the
+This is the **sibling** of `pixar-ad` and it runs the same pipeline: the
 same gates, the same calls, the same still gate, the same local assembly. Read
 that skill for the pipeline. **This file owns two things it does not: the clay
 look, and a narrative arc that is longer and quieter than the Pixar one.**

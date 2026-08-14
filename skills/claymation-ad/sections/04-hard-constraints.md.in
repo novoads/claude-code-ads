@@ -4,7 +4,7 @@
 #!
 ## Hard constraints
 
-Everything in `novoads-pixar-ad`'s Hard constraints section applies unchanged:
+Everything in `pixar-ad`'s Hard constraints section applies unchanged:
 one call per beat, 4 to 15 seconds, 9:16, `audioEnabled: true`, a narrator line
 in the prompt OR the VO track and never both, one continuous voice, no
 `styleFamily` field. Read them there.

@@ -13,7 +13,7 @@ description: >-
   which. **Among cloners the source's medium decides**: a still, or nothing attached, lands
   here; "clone this ad" plus a VIDEO is clone-video-ad. NOT for generating an ad from a brief
   (chatgpt-image-ad, nano-banana-image-ad), nor animating a still as-is
-  (novoads-image-to-motion). Refuses to render your product without a real photo of it.
+  (image-to-motion). Refuses to render your product without a real photo of it.
 ---
 
 # clone-image-ad

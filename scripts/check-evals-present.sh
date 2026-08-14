@@ -56,7 +56,7 @@ for dir in skills/*/ shared/skills/*/; do
       echo "nothing to review the change against." >&2
       echo "" >&2
       echo "Write ${dir}evals.md — scenarios from real failures, not" >&2
-      echo "hypotheticals. skills/novoads-pixar-ad/evals.md and" >&2
+      echo "hypotheticals. skills/pixar-ad/evals.md and" >&2
       echo "skills/clone-video-ad/evals.md are the house pattern: scenario, what" >&2
       echo "the agent should do, what failure looks like, how to check it." >&2
       echo "" >&2

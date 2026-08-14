@@ -29,6 +29,6 @@
 bodies, status codes, the poll loop, rate limits and error envelopes are written
 out once in [`skills/novoads-api/SKILL.md`](../novoads-api/SKILL.md) and its
 [`reference.md`](../novoads-api/reference.md). The per-call fields this genre
-needs are in `novoads-pixar-ad`'s *The calls* section, which this file shares
+needs are in `pixar-ad`'s *The calls* section, which this file shares
 unchanged.
 

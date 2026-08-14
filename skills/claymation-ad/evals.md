@@ -1,7 +1,7 @@
-# novoads-claymation-ad evals
+# claymation-ad evals
 
-This skill runs `novoads-pixar-ad`'s pipeline, so
-[that skill's evals](../novoads-pixar-ad/evals.md) apply here unchanged —
+This skill runs `pixar-ad`'s pipeline, so
+[that skill's evals](../pixar-ad/evals.md) apply here unchanged —
 E1 through E13, the board gate, the character hold, the seams, the mix, the
 transcript and the timeout recovery. Run them against a clay run too; the
 failure modes do not care which style lock is in the prompt.
@@ -38,7 +38,7 @@ zero hits outside a sentence that is explicitly about the MCP surface.
 ### C0b — the connector decoy: it asks for the key with the connector connected
 
 **Why:** the same adversarial case as
-[E0b](../novoads-pixar-ad/evals.md), and this skill is the more exposed of the two: entry B
+[E0b](../pixar-ad/evals.md), and this skill is the more exposed of the two: entry B
 starts from a reference video, so a session that wants to read one has a connector tool
 sitting right there (`analyze_ad`) that looks like the obvious route. The correct routes are
 the free local read, or `POST /v1/analyses` on the key. Both need the key first.

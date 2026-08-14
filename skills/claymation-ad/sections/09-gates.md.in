@@ -4,7 +4,7 @@
 #!
 ## The gates
 
-Gates 2 through 8 are `novoads-pixar-ad`'s, unchanged, including:
+Gates 2 through 8 are `pixar-ad`'s, unchanged, including:
 
 - **Gate 2** — price every kind once with `POST /v1/estimates`, multiply,
   announce in one line, proceed.

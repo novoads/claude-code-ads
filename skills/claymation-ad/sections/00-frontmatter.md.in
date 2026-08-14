@@ -3,7 +3,7 @@
 #! read:    always, and before the body exists: it is the only thing the router matches a sentence against
 #!
 ---
-name: novoads-claymation-ad
+name: claymation-ad
 metadata: {packVersion: {{PACK_VERSION}}}
 description: >-
   Builds a hand-sculpted stop-motion CLAY ad on the Novoads REST API as a
@@ -17,6 +17,6 @@ description: >-
   ad", "clay ad", "a quick clay ad", "plasticine characters", "make an ad like
   this clay one", or a reference video with sculpted clay characters in it.
   There is no one-call tier here, so ffmpeg is required. Not for the smooth 3D
-  animated look (use novoads-pixar-ad, which covers every Pixar-style length),
+  animated look (use pixar-ad, which covers every Pixar-style length),
   talking-head UGC (novoads-api), or a static image ad.
 ---

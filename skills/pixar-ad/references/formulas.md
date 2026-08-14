@@ -1,6 +1,6 @@
 # Beat formulas — the genre library
 
-The per-beat prompt formulas for `novoads-pixar-ad`. `SKILL.md` owns
+The per-beat prompt formulas for `pixar-ad`. `SKILL.md` owns
 the pipeline: the gates, the costs, the calls, the SYNC/VO track rule. This file
 owns the CRAFT: what each beat is, the variables it takes, and a worked prompt
 for the still and for the clip.

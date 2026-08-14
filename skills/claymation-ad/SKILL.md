@@ -1,5 +1,5 @@
 ---
-name: novoads-claymation-ad
+name: claymation-ad
 metadata: {packVersion: 1.1.0}
 description: >-
   Builds a hand-sculpted stop-motion CLAY ad on the Novoads REST API as a
@@ -13,7 +13,7 @@ description: >-
   ad", "clay ad", "a quick clay ad", "plasticine characters", "make an ad like
   this clay one", or a reference video with sculpted clay characters in it.
   There is no one-call tier here, so ffmpeg is required. Not for the smooth 3D
-  animated look (use novoads-pixar-ad, which covers every Pixar-style length),
+  animated look (use pixar-ad, which covers every Pixar-style length),
   talking-head UGC (novoads-api), or a static image ad.
 ---
 <!-- AUTO-GENERATED FILE. Do not edit it: the next build overwrites you.
@@ -25,7 +25,7 @@ description: >-
 One product in. A 40 to 70 second hand-sculpted clay ad out, cut from five to
 eight separately rendered beats, with narration, music and captions.
 
-This is the **sibling** of `novoads-pixar-ad` and it runs the same pipeline: the
+This is the **sibling** of `pixar-ad` and it runs the same pipeline: the
 same gates, the same calls, the same still gate, the same local assembly. Read
 that skill for the pipeline. **This file owns two things it does not: the clay
 look, and a narrative arc that is longer and quieter than the Pixar one.**
@@ -75,7 +75,7 @@ door: still per-beat renders, still ffmpeg, still an assembly.
 bodies, status codes, the poll loop, rate limits and error envelopes are written
 out once in [`skills/novoads-api/SKILL.md`](../novoads-api/SKILL.md) and its
 [`reference.md`](../novoads-api/reference.md). The per-call fields this genre
-needs are in `novoads-pixar-ad`'s *The calls* section, which this file shares
+needs are in `pixar-ad`'s *The calls* section, which this file shares
 unchanged.
 
 ## What one run costs
@@ -107,7 +107,7 @@ arc is what this genre is for. But the operator decides that, not you.
 
 ## Hard constraints
 
-Everything in `novoads-pixar-ad`'s Hard constraints section applies unchanged:
+Everything in `pixar-ad`'s Hard constraints section applies unchanged:
 one call per beat, 4 to 15 seconds, 9:16, `audioEnabled: true`, a narrator line
 in the prompt OR the VO track and never both, one continuous voice, no
 `styleFamily` field. Read them there.
@@ -128,7 +128,7 @@ Three are different here:
 
 ### A. From a product
 
-Run `novoads-pixar-ad`'s Gate 0 and Gate 1 unchanged: is the pain emotional,
+Run `pixar-ad`'s Gate 0 and Gate 1 unchanged: is the pain emotional,
 visible on a face, in a relationship, impulse-priced; then the product read. One
 extra question at this length: **does this product have a before and an after
 that a viewer would recognise a month apart?** The transformation beat is the
@@ -329,7 +329,7 @@ slots that matter most here:
 
 ## The gates
 
-Gates 2 through 8 are `novoads-pixar-ad`'s, unchanged, including:
+Gates 2 through 8 are `pixar-ad`'s, unchanged, including:
 
 - **Gate 2** — price every kind once with `POST /v1/estimates`, multiply,
   announce in one line, proceed.
@@ -400,7 +400,7 @@ Deliver in this order, no preamble:
    saying how much of it was actually read.
 2. **FIT** — one line confirming Gate 0, or a plain refusal naming a better
    format. If the pain is a moment rather than a season, hand off to
-   `novoads-pixar-ad` and say so.
+   `pixar-ad` and say so.
 3. **ARC LENGTH** — 5-beat short or 8-beat full, and why, with both prices.
 4. **CAST + STYLE LOCK** — the cast sheet text including the name and the terse
    tag, and the paragraph pasted into every prompt.
@@ -413,7 +413,7 @@ Deliver in this order, no preamble:
 
 ## The calls
 
-Identical to `novoads-pixar-ad`'s call list — `POST /v1/uploads`,
+Identical to `pixar-ad`'s call list — `POST /v1/uploads`,
 `/v1/estimates`, `/v1/images`, `/v1/videos`, `GET /v1/voices`,
 `POST /v1/voiceovers`, `/v1/music`, `/v1/captions`, `/v1/transcripts`, and
 `GET /v1/generations/{jobId}` with its `/watch` — with the fields each one takes.
@@ -467,7 +467,7 @@ features, no on-screen text, no subtitles, no captions
 
 ## Failure modes
 
-Everything in `novoads-pixar-ad`'s Failure modes list applies. Four are this
+Everything in `pixar-ad`'s Failure modes list applies. Four are this
 skill's own:
 
 - **The clay turned into plastic by the end of the clip.** The most common

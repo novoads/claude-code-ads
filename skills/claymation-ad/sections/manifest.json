@@ -1,5 +1,5 @@
 {
-  "skill": "novoads-claymation-ad",
+  "skill": "claymation-ad",
   "version": 1,
   "note": "PASSIVE registry. Fields are ids, file paths, human titles and human-readable trigger text ONLY. Nothing here decides anything at runtime: the agent reads the generated SKILL.md, never this file. It exists so a human can find the one section to edit without opening a 1,000-line document, and so the generator has a deterministic order to concatenate in. scripts/build-skill-md.py asserts that every section file is listed here exactly once and that its own header matches this row.",
   "sections": [

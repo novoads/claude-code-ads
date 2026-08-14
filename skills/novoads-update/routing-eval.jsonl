@@ -15,7 +15,7 @@
 {"intent":"just git pull this repo for me and re-sync the skills","expected_skill":"novoads-update"}
 // A named skill misbehaving reads two ways: a fault in that skill, or a clone old
 // enough to predate its fix. The sibling owns the craft; this owns the version.
-{"intent":"the pixar skill is doing something odd, is there a newer one by now","expected_skill":"novoads-update","ambiguous_with":["novoads-pixar-ad"]}
+{"intent":"the pixar skill is doing something odd, is there a newer one by now","expected_skill":"novoads-update","ambiguous_with":["pixar-ad"]}
 // A model the catalog does not offer is either an API question or a stale clone,
 // and the sentence almost never says which.
 {"intent":"I want the model that launched last week and I do not see it here","expected_skill":"novoads-update","ambiguous_with":["novoads-api"]}

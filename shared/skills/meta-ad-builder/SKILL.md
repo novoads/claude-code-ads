@@ -43,8 +43,8 @@ Trigger on phrases like:
 - "pull my top-performing ads" / "what are my best ads by ROAS"
 - "research competitor ads" / "pull <brand>'s ads from the Ad Library"
 
-Do **not** use this skill to *generate* creative — that's `novoads-pixar-ad`,
-`novoads-claymation-ad`, `chatgpt-image-ad`, `nano-banana-image-ad`,
+Do **not** use this skill to *generate* creative — that's `pixar-ad`,
+`claymation-ad`, `chatgpt-image-ad`, `nano-banana-image-ad`,
 `generate-youtube-thumbnail`, etc. Do not use it to write ad-table rows. This
 skill is the *direct Meta Marketing API* deployment step.
 
