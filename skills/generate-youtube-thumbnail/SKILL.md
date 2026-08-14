@@ -76,9 +76,10 @@ Two facts still shape how you spend them:
 1. **An `assetId` is durable and reusable.** Upload once, reference forever, across runs and across
    sessions. Uploading is free and unlimited — only *generations* are charged. So keep a library of
    uploaded face angles and brand assets and pick from it.
-2. **The other image models are lower.** `reve-2.1` takes 8; `gpt-image-2` is still 4, because
-   nobody has found a published figure for it and it has not been probed. If you route a likeness
-   run to either, the fork's 5+ advice does not survive the trip.
+2. **The other image models are lower.** `reve-2.1` takes 8; `gpt-image-2` takes 4, and that 4 is
+   measured, not assumed — a 5-reference body was refused on the same 2026-08-04 probe run. If you
+   route a likeness run to `gpt-image-2`, the 5+ advice does not survive the trip; say so rather
+   than silently citing four.
 
 **Always use 5+ face references for character work.** With 1-2 the model generalizes to a
 generic face; with 5+ from different angles it locks in the specific person. Spend them: headshot,
@@ -115,7 +116,8 @@ descriptions for brand-specific items** (logos, branded products, branded appare
 generic AI approximations that don't match the brand. Generic descriptions are OK for
 backgrounds, expressions, and clothing.
 
-Then pick the 4 that will be cited (see the cap section above).
+Then pick the ones that will be cited — 5+ face angles for character work, up to 14 in all
+(see the cap section above).
 
 ### 3. Price the batch and confirm (MANDATORY)
 
@@ -169,8 +171,9 @@ Style: [aesthetic notes]
 Avoid: distorted face, extra fingers, hands visible, blurry logos, generic face
 ```
 
-**Always include the CRITICAL CHARACTER LIKENESS block** when the subject is a real person —
-and lean on it harder than you used to, since it is now carrying work the 5th reference used to do.
+**Always include the CRITICAL CHARACTER LIKENESS block** when the subject is a real person. It
+and the references do different jobs: the refs fix what the face IS, the block fixes what the
+prompt must not let drift. Neither substitutes for the other, so write both.
 
 Prompts are capped per generation; the API names the limit if you exceed it. Reference the uploaded images positionally ("the face in
 the first reference image") — order is preserved.
@@ -231,7 +234,8 @@ the 422 claim to a user as an API rule. (Flagged for confirmation in the Phase 4
 ### `referenceAssetIds` is an array of plain strings
 
 Not objects, and not file paths — the `assetId` values returned by `POST /v1/uploads`.
-Maximum 4.
+Maximum 14 on `nano-banana-pro`, which is the model this skill runs on. The other image
+models are lower and the number does not travel: `reve-2.1` takes 8, `gpt-image-2` takes 4.
 
 ### Chat-pasted images are NOT files
 

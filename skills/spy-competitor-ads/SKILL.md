@@ -415,9 +415,12 @@ Then offer the next step **once**, in one line, naming a skill that exists in th
 
 - A **static** you want rebuilt as your own ads, or turned into a reusable template, or both
   → `clone-image-ad`.
+- A **video** you want rebuilt for a different product, delivered as a finished MP4
+  → `clone-video-ad`. Hand over the downloaded file path; it reads the source itself.
 
-Offer, do not start. It spends, and it is not what was asked for here. There is no video
-equivalent in this pack yet — for a video you found, hand over the file path and say so.
+Offer, do not start. Either one spends, and neither is what was asked for here. There is no
+hook-only skill in this pack, so an opening on its own routes to `clone-video-ad` too — clone
+the whole ad and cut.
 
 **Skip the offer entirely when this skill was invoked as a sub-step of something else.** If
 another skill or workflow asked for a swipe file, hand back the file paths **and the ranked top

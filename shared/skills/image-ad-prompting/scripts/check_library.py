@@ -121,7 +121,7 @@ NUMERIC_ART_PHRASE = "approximat"
 # brand name three different wrong ways while every on-screen glyph was perfect.
 SPOKEN_AUDIO_SKILLS = (
     "skills/novoads-api/SKILL.md",
-    "skills/novoads-api/prompting/clone-video-ad/SKILL.md",
+    "skills/clone-video-ad/SKILL.md",
     "skills/novoads-pixar-ad/SKILL.md",
     "skills/novoads-claymation-ad/SKILL.md",
 )

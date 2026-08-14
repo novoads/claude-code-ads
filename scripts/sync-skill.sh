@@ -66,3 +66,49 @@ link_agents_skills() {
 }
 
 link_agents_skills
+
+# The two storyboard skills' SKILL.md files are BUILD ARTIFACTS of their own
+# sections/*.md.in (scripts/build-skill-md.py), and the delegate copies a skill
+# directory wholesale with `cp -R`. So every install carried the sections too,
+# and that is wrong in three separate ways:
+#
+#   1. It is a full second copy of the skill. The sections concatenate INTO
+#      SKILL.md, so a 1,123-line skill shipped as roughly twice that in one
+#      directory, the same prose either side of a build step. This pack competes
+#      for context with everything else a user has installed; paying twice for
+#      one document is the cheapest thing here to stop doing.
+#   2. It is an edit trap. An agent that opens the installed skill, finds
+#      sections/, and correctly infers "this is the source, edit it here" makes a
+#      change that reaches nothing — the mirror is rewritten from the repo on the
+#      next sync, and the builder only ever reads the repo's sections. The
+#      failure is silent and looks exactly like a change that worked.
+#   3. `.md.in` exists so the guards that glob `*.md` cannot see build inputs
+#      whose relative links are written for a different directory depth. Shipping
+#      them past that boundary hands the installed tree files whose links do not
+#      resolve from where they sit.
+#
+# Only directories the delegate WROTE are touched, identified by the marker file
+# it drops on every sync — the same test its own prune_orphans uses, for the same
+# reason: a skill someone hand-placed in .claude/skills/ is theirs, and if it has
+# a sections/ of its own that is theirs too.
+#
+# Pack-local, like link_agents_skills above and for the identical reason: the
+# delegate is propagated from gen-ai-core, so policy written there is policy the
+# next propagation quietly reverts.
+prune_installed_sections() {
+  local removed=0
+  for root in "$ROOT/.claude/skills" "$ROOT/.cursor/skills"; do
+    [[ -d "$root" ]] || continue
+    for installed in "$root"/*/; do
+      [[ -d "$installed" ]] || continue
+      [[ -f "$installed/.synced-from-pack" ]] || continue
+      [[ -d "$installed/sections" ]] || continue
+      rm -rf "$installed/sections"
+      removed=$((removed + 1))
+    done
+  done
+  [[ "$removed" -gt 0 ]] && echo "Build inputs: removed sections/ from $removed installed skill(s)"
+  return 0
+}
+
+prune_installed_sections

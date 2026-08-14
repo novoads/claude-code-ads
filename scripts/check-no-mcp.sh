@@ -114,6 +114,20 @@ ALLOW=(
   #     cite its sibling" exemption as entries 7 and 8, and the same line anchor
   #     rather than a whole-file wildcard.
   'scripts/check-no-rates\.sh::^# the reasoning check-no-mcp\.sh carries for its own allowlist\. Warn rather than$'
+
+  # 11. The doctor's dimension registry. It runs every guard in this repo as a
+  #     named dimension, so it has to name THIS one twice: once as the command it
+  #     shells out to, once as the paste-ready fix hint it prints when that
+  #     command fails. Same "a rule has to name the thing it forbids" exemption as
+  #     entries 7, 8 and 10 — and note the doctor asserts nothing about which
+  #     surface this repo runs on, it only invokes the script that does.
+  #
+  #     Two exact lines, anchored, never `scripts/doctor\.sh::.*`. The whole-file
+  #     exemption shipped twice in this repo's guards and was proved a hole both
+  #     times; the doctor is a 280-line file that will keep growing, which makes it
+  #     the worst possible place to leave one. Editing either line un-exempts it.
+  'scripts/doctor\.sh::^core no-mcp +"\./scripts/check-no-mcp\.sh" \\$'
+  'scripts/doctor\.sh::^ +"\./scripts/check-no-mcp\.sh    # point the sentence at its /v1 endpoint'
 )
 
 # NOTE for anyone verifying a change here: `git grep` searches TRACKED files

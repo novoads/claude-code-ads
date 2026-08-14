@@ -33,6 +33,28 @@ does not arrive:
 ./scripts/check-evals-present.sh
 ```
 
+## Two SKILL.md files are generated
+
+`skills/novoads-pixar-ad/SKILL.md` and `skills/novoads-claymation-ad/SKILL.md` are built from
+their own `sections/*.md.in` files by `scripts/build-skill-md.py`, in the order
+`sections/manifest.json` gives. Both carry an AUTO-GENERATED banner under the frontmatter.
+
+Edit the section, not the artifact:
+
+```bash
+$EDITOR skills/novoads-pixar-ad/sections/09-board.md.in
+python3 scripts/build-skill-md.py
+git add skills/novoads-pixar-ad/sections skills/novoads-pixar-ad/SKILL.md
+```
+
+A change typed straight into the generated file is not a style problem — it is a change that
+ships nothing, because the next build reverts it. The reverse mistake is quieter and more
+expensive: a section edited correctly and never rebuilt reads perfectly in review and reaches
+no reader at all. The `generated` CI job catches both.
+
+Nothing else here is generated. The rest of the pack is short enough to edit directly and is
+deliberately not wired through the builder.
+
 ## Pull requests to skills
 
 These get a careful review, and it is not about style. Everything an agent reads at runtime is
@@ -52,14 +74,19 @@ So a change to any of those is reviewed as spend, and three things get checked e
 
 ## Before you push
 
-CI runs `.github/workflows/guard.yml`, and all ten of its checks run locally: none need an API key
+CI runs `.github/workflows/guard.yml`, and every check in it runs locally: none need an API key
 and none spend anything.
+
+The short way is `./scripts/doctor.sh` — it runs all of them and prints one scored table with a
+paste-ready fix line under anything red. Run that if you want one answer. The list below is the
+same checks by hand, for when you want to watch one of them in particular:
 
 ```bash
 git add -A && git status          # stage, then look at what you are about to push
 for f in ./scripts/check-no-*.sh; do "$f"; done
 ./scripts/check-links.sh
 ./scripts/check-skill-frontmatter.sh
+python3 scripts/build-skill-md.py --check
 ./scripts/test-brand-context.sh
 ./scripts/test-rank-ads.sh
 ./scripts/test-make-picker.sh
@@ -67,6 +94,10 @@ for f in ./scripts/check-no-*.sh; do "$f"; done
 ./scripts/test-placeholder-lint.sh
 ./scripts/test-parity-i2m.sh
 ```
+
+`build-skill-md.py --check` is the one to run after touching either storyboard skill. It is a
+pure read — it builds in memory and compares — so it tells you the artifact is stale without
+writing anything. Drop the `--check` to fix it.
 
 Three things about that, each of which has bitten someone:
 
