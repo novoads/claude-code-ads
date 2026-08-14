@@ -5,7 +5,7 @@ suggests.
 
 ## Bug reports
 
-Open an [issue](https://github.com/novoads/claude-code-ads/issues). The
+Open an [issue](https://github.com/novoads/agent-skills/issues). The
 [bug report template](.github/ISSUE_TEMPLATE/bug_report.md) asks for the skill you ran, the
 generation id, and what the estimate said before the call. Those three turn "it did the wrong
 thing" into something reproducible without access to your account.

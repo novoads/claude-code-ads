@@ -7,7 +7,7 @@
      the user anything you judge useful. The contract is AGENTS.md,
      "First-time setup". -->
 
-# Novoads AI Video & Image Ad Skill Pack *(claude-code-ads)*
+# Novoads AI Video & Image Ad Skill Pack *(agent-skills)*
 
 AI video and image ads for marketers, built in Claude Code or Cursor and priced by a live estimate first.
 
@@ -17,11 +17,21 @@ AI video and image ads for marketers, built in Claude Code or Cursor and priced 
      screen above a page that says eleven. The listing LINK stays, because the
      solo-install path runs through it. Restore the badge once their index
      reflects the current skill set:
-     [![Skills on skills.sh](https://skills.sh/b/novoads/claude-code-ads)](https://skills.sh/novoads/claude-code-ads)
-     Tracking: https://github.com/vercel-labs/skills/issues -->
+     [![Skills on skills.sh](https://skills.sh/b/novoads/agent-skills)](https://skills.sh/novoads/agent-skills)
+     Tracking: https://github.com/vercel-labs/skills/issues
+
+     Second staleness, from the repo rename (claude-code-ads -> agent-skills,
+     2026-08-13): skills.sh keys its pages on the slug it crawled, and it has
+     not re-crawled. `https://www.skills.sh/novoads/agent-skills` 404s today
+     while the old slug still serves a snapshot — and that old page will never
+     update, so pointing at it would be pinning the README to a document that
+     stopped tracking this repo. The link below names the new slug and is
+     correct the moment they re-index. GitHub's own 301 covers the old URL, and
+     `npx skills add novoads/agent-skills` never touches skills.sh at all: the
+     CLI clones from GitHub, so the install path works regardless. -->
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-docs.novoads.ai-black.svg)](https://docs.novoads.ai)
-[Skills on skills.sh](https://skills.sh/novoads/claude-code-ads)
+[Skills on skills.sh](https://skills.sh/novoads/agent-skills)
 
 ![Make AI video & image ads from Claude Code](assets/readme-banner.png)
 
@@ -38,7 +48,7 @@ skills carry the part that decides whether the render is any good: the prompt.
 In **Claude Code** or **Cursor**, open a new empty folder and paste:
 
 ```text
-https://github.com/novoads/claude-code-ads help me set this up
+https://github.com/novoads/agent-skills help me set this up
 ```
 
 The agent clones this repo, runs `./scripts/setup.sh`, and stops at the one step only you
@@ -126,7 +136,7 @@ Fastest path: in **Claude Code** or **Cursor**, open a new empty folder and past
 agent clones the repo, runs setup, and stops at your API key.
 
 ```text
-https://github.com/novoads/claude-code-ads help me set this up
+https://github.com/novoads/agent-skills help me set this up
 ```
 
 Prefer the terminal? The same setup the pasted prompt above runs, by hand:
@@ -134,8 +144,8 @@ Prefer the terminal? The same setup the pasted prompt above runs, by hand:
 ### 1. Clone
 
 ```bash
-git clone https://github.com/novoads/claude-code-ads.git
-cd claude-code-ads
+git clone https://github.com/novoads/agent-skills.git
+cd agent-skills
 ```
 
 ### 2. Run setup
@@ -592,7 +602,7 @@ every live pack skill name each time it runs, so a copy sitting under the same n
 
 Everything above assumes you cloned the repo. If you installed through the `skills` CLI instead:
 
-- **Pin to a release with a tag:** `npx skills add novoads/claude-code-ads#v1.0.0`, naming the
+- **Pin to a release with a tag:** `npx skills add novoads/agent-skills#v1.0.0`, naming the
   latest release tag (`v1.0.0` today). Tags work. 40-character commit SHAs do not, because the CLI
   installs by cloning a branch or a tag. A pinned install moves only when you point it at a newer
   tag. Releases are tagged `vX.Y.Z` and written up in [CHANGELOG.md](CHANGELOG.md).
@@ -655,7 +665,7 @@ the API like any other live plan:
 
 ## Support
 
-- **A bug, or a skill you wish existed:** [open an issue](https://github.com/novoads/claude-code-ads/issues). [CONTRIBUTING.md](CONTRIBUTING.md) covers eval cases and prompt-library PRs.
+- **A bug, or a skill you wish existed:** [open an issue](https://github.com/novoads/agent-skills/issues). [CONTRIBUTING.md](CONTRIBUTING.md) covers eval cases and prompt-library PRs.
 - **What the API does:** [docs.novoads.ai](https://docs.novoads.ai), and [`GET /v1/openapi.json`](https://api.novoads.ai/v1/openapi.json) when a file here disagrees with it.
 - **Your account, your key, or a charge:** the [Novoads dashboard](https://novoads.ai/dashboard?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack). Nobody here can see your billing from a GitHub issue.
 

@@ -12,6 +12,22 @@ as Added / Changed / Fixed, or as dated `###` subsections like the ones below.
 
 ## Unreleased
 
+### Changed
+
+**The repo is `novoads/agent-skills`.** It was `novoads/claude-code-ads`; the name described the
+one host it started on, and the pack now installs into Claude Code, Cursor and Codex alike.
+
+- Install is `npx skills add novoads/agent-skills`, and the clone is
+  `git clone https://github.com/novoads/agent-skills.git`. GitHub serves a permanent redirect from
+  the old slug, so existing links, clones and pinned tags keep working — the sweep is about
+  pointing at the name that will still be here, not about repairing something broken.
+- `novoads-update`'s "is this the pack clone?" probe matches **both** slugs. A clone made before
+  the rename keeps the old URL in its git config forever (the redirect moves fetches, not
+  `origin`), and matching only the new name would have told exactly those users they were not in
+  the pack — the population that skill exists to update.
+- Not swept: the 2026-08-07 entry below, which records adopting the `claude-code-ads` identity.
+  That happened, and history is not a link.
+
 ## v1.2.0 — 2026-08-13
 
 ### Changed

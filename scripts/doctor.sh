@@ -106,7 +106,7 @@ detail() {
 row() { printf '  %-6s %-16s %s\n' "$1" "$2" "$3"; }
 
 echo
-echo "novoads/claude-code-ads — doctor"
+echo "novoads/agent-skills — doctor"
 echo "$(git rev-parse --short HEAD 2>/dev/null || echo '?') on $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')  ·  pack v$(cat VERSION 2>/dev/null || echo '?')"
 echo
 

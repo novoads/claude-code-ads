@@ -14,7 +14,7 @@ pack, or when something in the flow makes you wonder why it is shaped the way it
 This skill ships in the Novoads ad skill pack. To install just this one:
 
 ```bash
-npx skills add novoads/claude-code-ads@spy-competitor-ads
+npx skills add novoads/agent-skills@spy-competitor-ads
 ```
 
 Installed solo, it expects four things the pack normally provides. None of them are large:
