@@ -4,7 +4,7 @@
 #!
 ## The calls
 
-Identical to `novoads-pixar-ad`'s call list — `POST /v1/uploads`,
+Identical to `pixar-ad`'s call list — `POST /v1/uploads`,
 `/v1/estimates`, `/v1/images`, `/v1/videos`, `GET /v1/voices`,
 `POST /v1/voiceovers`, `/v1/music`, `/v1/captions`, `/v1/transcripts`, and
 `GET /v1/generations/{jobId}` with its `/watch` — with the fields each one takes.

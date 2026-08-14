@@ -10,7 +10,7 @@ Deliver in this order, no preamble:
    saying how much of it was actually read.
 2. **FIT** — one line confirming Gate 0, or a plain refusal naming a better
    format. If the pain is a moment rather than a season, hand off to
-   `novoads-pixar-ad` and say so.
+   `pixar-ad` and say so.
 3. **ARC LENGTH** — 5-beat short or 8-beat full, and why, with both prices.
 4. **CAST + STYLE LOCK** — the cast sheet text including the name and the terse
    tag, and the paragraph pasted into every prompt.

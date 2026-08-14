@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Parity guard for skills/novoads-image-to-motion/.
+# Parity guard for skills/image-to-motion/.
 #
 # That skill is a PORT. Its craft arrived whole from a vendor-connector skill of
 # the same shape and only the transport was rewritten, so it has two failure
@@ -23,8 +23,8 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-SKILL=skills/novoads-image-to-motion/SKILL.md
-EVALS=skills/novoads-image-to-motion/evals.md
+SKILL=skills/image-to-motion/SKILL.md
+EVALS=skills/image-to-motion/evals.md
 fail=0
 pass=0
 
@@ -55,7 +55,7 @@ bad()  { echo "FAIL  $1"; fail=$((fail + 1)); }
 while IFS='|' read -r scope pattern why; do
   [ -z "$pattern" ] && continue
   case "$scope" in
-    all)   target="skills/novoads-image-to-motion/" ;;
+    all)   target="skills/image-to-motion/" ;;
     skill) target="$SKILL" ;;
     *)     bad "unknown scope '$scope' in the PATTERNS table"; continue ;;
   esac

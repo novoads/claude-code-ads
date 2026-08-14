@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the storyboard skills' SKILL.md from their sections/ directories.
 
-Why a generator, and why only for these two: novoads-pixar-ad is 1,124 lines.
+Why a generator, and why only for these two: pixar-ad is 1,124 lines.
 Nobody hand-edits a document that size safely -- a change to Gate 7's mix levels
 lands in the same file as the routing description, the diff is unreadable, and
 two people editing different gates conflict over a file neither of them touched
@@ -61,8 +61,8 @@ VERSION_FILE = REPO_ROOT / "VERSION"
 # The skills whose SKILL.md is generated. Adding one here is a deliberate act:
 # it takes that file out of hand-editing for good.
 GENERATED_SKILLS = [
-    "novoads-pixar-ad",
-    "novoads-claymation-ad",
+    "pixar-ad",
+    "claymation-ad",
 ]
 
 SECTION_GLOB = "*.md.in"

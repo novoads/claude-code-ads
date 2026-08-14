@@ -1,6 +1,6 @@
 # Beat formulas — the clay narrative library
 
-The per-beat prompt formulas for `novoads-claymation-ad`. `SKILL.md`
+The per-beat prompt formulas for `claymation-ad`. `SKILL.md`
 owns the pipeline, the style lock, the negative block and the material detail
 block. This file owns the eight beats: what each is, the variables it takes, and
 worked prompts.

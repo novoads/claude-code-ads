@@ -87,7 +87,7 @@ jobs:
       # Name" over "agency.com", beside an empty card and two grey bars.
       - name: placeholder lint
         run: ./scripts/test-placeholder-lint.sh
-      # novoads-image-to-motion is a PORT, so it can fail in two directions at
+      # image-to-motion is a PORT, so it can fail in two directions at
       # once: craft quietly thinned in the move, or a retired vendor tool name
       # left in place. The second is the dangerous one — it reads as correct and
       # the agent follows it into a tool that does not exist or a live-verified

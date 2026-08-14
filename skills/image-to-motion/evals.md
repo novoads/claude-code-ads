@@ -1,4 +1,4 @@
-# novoads-image-to-motion evals
+# image-to-motion evals
 
 This skill is a **port**. Its craft came in whole from an Arcads-connector skill of the
 same shape, and only the transport was rewritten. So the cases below split cleanly in two:
@@ -27,7 +27,7 @@ user handed in**:
 
 | The image they gave you | becomes | Skill |
 |---|---|---|
-| that exact image, preserved and set in motion | one video of it moving | **novoads-image-to-motion** |
+| that exact image, preserved and set in motion | one video of it moving | **image-to-motion** |
 | a reference to reverse-engineer | new stills, and a reusable template | `clone-image-ad` |
 | one ingredient in a scene that did not exist | a new video featuring their product | `novoads-api` |
 | (a video, not a still) | that ad re-shot for their product | `clone-video-ad` |

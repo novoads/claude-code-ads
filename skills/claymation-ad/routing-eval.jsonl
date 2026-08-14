@@ -1,0 +1,22 @@
+// claymation-ad owns clay and stop-motion at any length. It also owns the
+// RECREATION of a found clay ad, which is the one place a reference video does not
+// go to the video cloner.
+{"intent":"I want it to look handmade, little clay people on a tiny set","expected_skill":"claymation-ad"}
+{"intent":"an aardman style spot for the launch","expected_skill":"claymation-ad"}
+{"intent":"stop motion, fingerprints visible in the plasticine, about twenty seconds","expected_skill":"claymation-ad"}
+{"intent":"our mascot sculpted in clay, telling the story of the problem","expected_skill":"claymation-ad"}
+{"intent":"characters on a miniature set, shot frame by frame","expected_skill":"claymation-ad"}
+// Indirect: no clay word at all, only the texture that implies it.
+{"intent":"something handmade and lumpy, the opposite of slick 3D","expected_skill":"claymation-ad"}
+// A reference video with clay in it. The medium rule would send a video to the
+// cloner; this is the stated exception, because the skill reads the reference
+// locally and rebuilds it inside the genre.
+{"intent":"here's a clay ad I found, make ours in the same style","expected_skill":"claymation-ad","ambiguous_with":["clone-video-ad"]}
+// Sculpted, but the style word is missing and the sibling covers every other
+// animated look. Texture is what decides it.
+{"intent":"a sculpted little character ad with a handmade feel","expected_skill":"claymation-ad","ambiguous_with":["pixar-ad"]}
+// Near-misses: physical fabrication and stock footage, both one step from a clay
+// ad and neither of them a render.
+{"intent":"commission a sculptor to build our mascot in real clay","expected_skill":null}
+{"intent":"find stock stop motion footage we can license","expected_skill":null}
+{"intent":"3D print the mascot for the trade show booth","expected_skill":null}

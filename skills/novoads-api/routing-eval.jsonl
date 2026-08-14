@@ -13,14 +13,14 @@
 // A product photo forks two ways and only the SCENE decides: inventing a kitchen
 // the photo does not contain seeds a new scene, so it lands here rather than on
 // the skill that moves the picture it was handed.
-{"intent":"here is a photo of our jar, make an ad where someone uses it in a kitchen","expected_skill":"novoads-api","ambiguous_with":["novoads-image-to-motion"]}
+{"intent":"here is a photo of our jar, make an ad where someone uses it in a kitchen","expected_skill":"novoads-api","ambiguous_with":["image-to-motion"]}
 // No model named and no craft anchor — no dense type, no photoreal lifestyle cue —
 // so the still stays on the catch-all instead of going to either image specialist.
 {"intent":"one static creative for Meta, pick whichever model suits it","expected_skill":"novoads-api","ambiguous_with":["chatgpt-image-ad","nano-banana-image-ad"]}
 // "Several scenes" and "a start frame for each scene" are literal triggers in the
 // pixar skill's description. With no animated-style cue this is the API's own
 // per-scene startImage mode instead, and it is priced one call per scene.
-{"intent":"do it as four scenes, each one starting from its own frame","expected_skill":"novoads-api","ambiguous_with":["novoads-pixar-ad"]}
+{"intent":"do it as four scenes, each one starting from its own frame","expected_skill":"novoads-api","ambiguous_with":["pixar-ad"]}
 // There is no b-roll endpoint: a silent ambient clip is an ordinary render here.
 // The overlay skill only enters once there is a finished base to cut away from.
 {"intent":"a silent clip of the bottle on a marble counter, no people in it","expected_skill":"novoads-api","ambiguous_with":["broll-overlay"]}

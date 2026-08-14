@@ -3,7 +3,7 @@
 Three rules keep getting restated in whichever skill needs them next, and a
 restatement is where they go wrong.
 
-Measured 2026-08-06: `novoads-claymation-ad` was found carrying the
+Measured 2026-08-06: `claymation-ad` was found carrying the
 mix recipe **exactly as it read before it was fixed** in the skill it was ported
 from — the fix and the copy were merged the same day, and the regression guard
 was scoped to the file being fixed, so it could not see the copy. Nothing failed.
@@ -86,7 +86,7 @@ Two corollaries that travel with it:
 If the narration is fighting something, lower the AMBIENCE track before raising
 the voice. **Never lower a SYNC beat's own track to make room.**
 
-**Canonical home:** `skills/novoads-pixar-ad/SKILL.md`, Gate 7 — the
+**Canonical home:** `skills/pixar-ad/SKILL.md`, Gate 7 — the
 filter graphs, the split-before-you-mix recipe and the `loudnorm`/`ebur128`
 commands. It is stated there rather than here on purpose; see *Why two of these
 point* below.
@@ -117,14 +117,14 @@ model-level dead-air budget in `skills/novoads-api/SKILL.md` — that one is abo
 Seedance spending part of a single render on silence, which is a draw you reserve
 against, not something you trim.
 
-**Canonical home:** `skills/novoads-pixar-ad/SKILL.md`, § Trim to the
+**Canonical home:** `skills/pixar-ad/SKILL.md`, § Trim to the
 narration — the ffmpeg recipe.
 
 ---
 
 ## Why two of these point instead of restating
 
-Rules 2 and 3 are stated in full inside `novoads-pixar-ad` rather than
+Rules 2 and 3 are stated in full inside `pixar-ad` rather than
 here, and that is deliberate rather than lazy.
 
 That skill is **published into two repos**. It is canonical in `novoads.ai` under
@@ -154,8 +154,8 @@ Skills that point here today:
 | `skills/clone-video-ad` | 1 — transcribe-verify (step 12.3) |
 | `skills/novoads-api` | 1 — transcribe-verify (the QA step) |
 | `shared/skills/caption-video` | 1, 3 — read the burned frames; trim before captioning |
-| `skills/novoads-pixar-ad` | 2, 3 — canonical home for both |
-| `skills/novoads-claymation-ad` | 2, 3 — points at its Pixar sibling |
+| `skills/pixar-ad` | 2, 3 — canonical home for both |
+| `skills/claymation-ad` | 2, 3 — points at its Pixar sibling |
 
 When you add a skill that needs one of these, add a one-line pointer to this file
 and a row above. Do not paste the rule in. The copy is the failure mode.

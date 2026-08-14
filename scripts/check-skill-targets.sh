@@ -30,10 +30,20 @@
 #      could predict, because it shares nothing with our vocabulary.
 #
 #   B. it is bare (no backticks) and shaped like one of this pack's skill names:
-#      starts with novoads- / clone- / spy-, or ends in -ad / -ads. Bare names do
-#      get written ("a STATIC IMAGE ad is clone-image-ad"), but bare prose is
-#      where the false positives live, so the shape requirement earns its keep
-#      here and only here.
+#      starts with novoads- / clone- / spy-, or ends in -ad / -ads / -to-motion.
+#      Bare names do get written ("a STATIC IMAGE ad is clone-image-ad"), but
+#      bare prose is where the false positives live, so the shape requirement
+#      earns its keep here and only here.
+#
+#      `-to-motion` joined the list when `novoads-image-to-motion` de-prefixed to
+#      `image-to-motion`: the old name was covered by the `novoads-` arm, and
+#      without a replacement the bare arm went blind to the whole family, so
+#      "use still-to-motion" would route nowhere and pass. Measured: the suffix
+#      must be `-to-motion` and not `-motion`, because `stop-motion` is ordinary
+#      prose in the clay skill and appears inside routing sentences ("use
+#      stop-motion clay"), which a `-motion` arm would report as 20+ dangling
+#      routes on its first run — a guard that arrives red gets deleted rather
+#      than satisfied.
 #
 # Measured on this corpus: rule B's shape test over ALL bare tokens returns 250
 # candidates and would be ignored within a week; adding the routing cue takes it
@@ -90,7 +100,8 @@ KNOWN_NON_SKILLS = {
 }
 
 FAMILY = (r'(?:novoads|clone|spy)-[a-z0-9]+(?:-[a-z0-9]+)*'
-          r'|[a-z][a-z0-9]*(?:-[a-z0-9]+)*-ads?')
+          r'|[a-z][a-z0-9]*(?:-[a-z0-9]+)*-ads?'
+          r'|[a-z][a-z0-9]*(?:-[a-z0-9]+)*-to-motion')
 ANY_HYPHENATED = r'[a-z][a-z0-9]*(?:-[a-z0-9]+)+'
 
 CUE = (r'\buse\s+(?:the\s+)?|\bthat(?:\'|’)s\s+|\bswitch\s+to\s+'

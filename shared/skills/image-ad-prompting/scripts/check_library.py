@@ -122,8 +122,8 @@ NUMERIC_ART_PHRASE = "approximat"
 SPOKEN_AUDIO_SKILLS = (
     "skills/novoads-api/SKILL.md",
     "skills/clone-video-ad/SKILL.md",
-    "skills/novoads-pixar-ad/SKILL.md",
-    "skills/novoads-claymation-ad/SKILL.md",
+    "skills/pixar-ad/SKILL.md",
+    "skills/claymation-ad/SKILL.md",
 )
 TRANSCRIBE_PATTERN = re.compile(r"transcri(be|pt)", re.I)
 

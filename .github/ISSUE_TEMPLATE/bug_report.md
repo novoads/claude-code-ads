@@ -10,7 +10,7 @@ assignees: ''
      Nobody reading this tracker can see your billing. -->
 
 **Which skill?**
-<!-- e.g. clone-image-ad, spy-competitor-ads, novoads-pixar-ad -->
+<!-- e.g. clone-image-ad, spy-competitor-ads, pixar-ad -->
 
 **What did you ask for, and what happened instead?**
 <!-- Describe the ask in a sentence. No need to paste the prompt text itself. -->

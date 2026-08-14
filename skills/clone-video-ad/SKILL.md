@@ -11,7 +11,7 @@ description: >-
   a video, "clone my competitors' VIDEO ads", or a video ad handed over with a product
   photo. **Among cloners the source's medium decides, not the wording**: "clone this ad" plus a
   video lands here; a still, or nothing attached, is clone-image-ad, and animating a still
-  as-is is novoads-image-to-motion. This pack has no hook-only skill: for the opening alone,
+  as-is is image-to-motion. This pack has no hook-only skill: for the opening alone,
   clone the whole ad and cut. If it does not move, wrong skill.
 ---
 
@@ -398,7 +398,7 @@ series described below, so it does not measure this route at all.
 its output in as clip 2's reference video — has no path here: references are images only.
 That is not a downgrade. This repo's own animation rule says the same thing on its own
 merits: *"Don't chain by using an animated end-frame as the next beat's anchor — drift
-compounds"* (`skills/novoads-claymation-ad/references/formulas.md`). Every clip
+compounds"* (`skills/claymation-ad/references/formulas.md`). Every clip
 anchoring to the same approved stills is the more stable pattern, and because the `assetId`
 is **durable across calls, models and sessions**, it costs one upload for the whole series.
 Re-uploading the same bytes mints a second asset and throws away the anchor.

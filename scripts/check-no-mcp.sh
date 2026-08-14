@@ -54,10 +54,10 @@ ALLOW=(
 
   # 5. The anti-MCP evals. E0/C0 are the original ratchet; E0b/C0b are the
   #    connector-decoy variants. They describe the failure in order to test for it.
-  'skills/novoads-(pixar|claymation)-ad/evals\.md::(E0|C0|E0b|C0b) . it runs on|connector decoy'
-  'skills/novoads-(pixar|claymation)-ad/evals\.md::(no MCP connector configured|Novoads MCP server|MCP surface|`mcp__novoads__\*`|via MCP so we.re fine)'
-  'skills/novoads-(pixar|claymation)-ad/evals\.md::this skill was MCP-native until the REST port'
-  'skills/novoads-claymation-ad/evals\.md::A reader with a key and no connector must still be able to'
+  'skills/(pixar|claymation)-ad/evals\.md::(E0|C0|E0b|C0b) . it runs on|connector decoy'
+  'skills/(pixar|claymation)-ad/evals\.md::(no MCP connector configured|Novoads MCP server|MCP surface|`mcp__novoads__\*`|via MCP so we.re fine)'
+  'skills/(pixar|claymation)-ad/evals\.md::this skill was MCP-native until the REST port'
+  'skills/claymation-ad/evals\.md::A reader with a key and no connector must still be able to'
 
   # 6. The SessionStart banner. It states the rule to the agent at the one moment
   #    it can still be acted on: key missing, before the first request.

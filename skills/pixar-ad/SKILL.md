@@ -1,5 +1,5 @@
 ---
-name: novoads-pixar-ad
+name: pixar-ad
 metadata: {packVersion: 1.1.0}
 description: >-
   Builds a stylized 3D animated ad on the Novoads REST API as a STORYBOARD:
@@ -13,7 +13,7 @@ description: >-
   second animated ad", "30 second animated ad", "storyboard ad", "several
   scenes", "animated ad with a voice-over", "little mascots", or a product URL
   or photo for an emotional animated spot. No one-call tier, so ffmpeg is
-  required. Not for stop-motion clay (use novoads-claymation-ad), talking-head
+  required. Not for stop-motion clay (use claymation-ad), talking-head
   UGC (novoads-api), video cloning, or static image ads.
 ---
 <!-- AUTO-GENERATED FILE. Do not edit it: the next build overwrites you.

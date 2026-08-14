@@ -35,16 +35,16 @@ does not arrive:
 
 ## Two SKILL.md files are generated
 
-`skills/novoads-pixar-ad/SKILL.md` and `skills/novoads-claymation-ad/SKILL.md` are built from
+`skills/pixar-ad/SKILL.md` and `skills/claymation-ad/SKILL.md` are built from
 their own `sections/*.md.in` files by `scripts/build-skill-md.py`, in the order
 `sections/manifest.json` gives. Both carry an AUTO-GENERATED banner under the frontmatter.
 
 Edit the section, not the artifact:
 
 ```bash
-$EDITOR skills/novoads-pixar-ad/sections/09-board.md.in
+$EDITOR skills/pixar-ad/sections/09-board.md.in
 python3 scripts/build-skill-md.py
-git add skills/novoads-pixar-ad/sections skills/novoads-pixar-ad/SKILL.md
+git add skills/pixar-ad/sections skills/pixar-ad/SKILL.md
 ```
 
 A change typed straight into the generated file is not a style problem — it is a change that

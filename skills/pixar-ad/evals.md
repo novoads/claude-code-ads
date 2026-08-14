@@ -1,4 +1,4 @@
-# novoads-pixar-ad evals
+# pixar-ad evals
 
 Every scenario is a real failure mode of MULTI-SHOT assembly — the class of
 problem a single-call render avoids by construction, and the price this skill

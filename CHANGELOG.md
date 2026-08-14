@@ -12,6 +12,19 @@ as Added / Changed / Fixed, or as dated `###` subsections like the ones below.
 
 ## Unreleased
 
+### Changed
+
+**The naming standard is complete: a product surface carries the brand, a job does not.**
+
+- `novoads-pixar-ad` → `pixar-ad`, `novoads-claymation-ad` → `claymation-ad`,
+  `novoads-image-to-motion` → `image-to-motion`. A skill directory name is the slash command
+  the user types, and these three name a JOB — the ad they want made — not a Novoads surface.
+  `novoads-api` and `novoads-update` keep the prefix, because those two genuinely are the
+  surface: one is our REST API, the other updates this pack. Existing installs are repaired
+  by `prune_orphans` in `shared/scripts/sync-skill.sh`, which removes a synced skill whose
+  source is gone, so nobody ends up with the old name and the new one both answering the
+  router.
+
 ## v1.1.0 — 2026-08-13
 
 ### 2026-08-13

@@ -6,7 +6,7 @@
 >
 > **Come here instead of the API when** the user wants a style outside the 30 presets, needs to hand-correct the wording (invented brand names are the usual reason — Whisper mishears them and the API gives you no way to fix it), wants to **hand-edit the wording before rendering** (the API transcribes, it does not let you author — and note that as of 2026-08-04 `POST /v1/transcripts` DOES return text, word timings and an SRT, so "I want the timings" on its own is no longer a reason to come here), is captioning enough footage that per-minute credits add up, or the source was rendered with `audioEnabled: false` — which the API refuses with a `409` and this skill can still caption if you supply the words.
 
-> ⚠️ **Trim before captioning.** (Doctrine: [craft.md](../../../references/craft.md) § 3.) If the source video has any beats with VO followed by silent visual ("dead space"), trim those beats *before* captioning — re-encode each beat to `vo_dur + 0.5s`, re-concat, and only then transcribe. Whisper timestamps applied to a tightened master line up; timestamps from a dead-space master will drift when the source is later trimmed. See [novoads-pixar-ad § Trim to the narration](../../../../skills/novoads-pixar-ad/SKILL.md) for the canonical rule and ffmpeg recipe — it applies to every video-ad style.
+> ⚠️ **Trim before captioning.** (Doctrine: [craft.md](../../../references/craft.md) § 3.) If the source video has any beats with VO followed by silent visual ("dead space"), trim those beats *before* captioning — re-encode each beat to `vo_dur + 0.5s`, re-concat, and only then transcribe. Whisper timestamps applied to a tightened master line up; timestamps from a dead-space master will drift when the source is later trimmed. See [pixar-ad § Trim to the narration](../../../../skills/pixar-ad/SKILL.md) for the canonical rule and ffmpeg recipe — it applies to every video-ad style.
 
 Anchors on **HyperFrames** (HTML-based composition framework) + **Whisper** (word-level transcription) + **ffmpeg alpha compositing**. This pattern was tuned across multiple production runs — follow it exactly or expect the bugs listed below.
 
@@ -415,8 +415,8 @@ next to the file you were given:
 
 - The `novoads-api` skill — the upstream pipeline that produces the source videos, and the
   home of `POST /v1/captions`, the default captioning path this skill is the fallback to
-- [`novoads-pixar-ad`](../../../../skills/novoads-pixar-ad/SKILL.md) and
-  [`novoads-claymation-ad`](../../../../skills/novoads-claymation-ad/SKILL.md)
+- [`pixar-ad`](../../../../skills/pixar-ad/SKILL.md) and
+  [`claymation-ad`](../../../../skills/claymation-ad/SKILL.md)
   — produce the kind of source video this skill captions, and carry the "no dead space"
   trimming rule referenced at the top
 - The `meta-ad-builder` skill — publishes the captioned result as a Meta ad. It opts out of

@@ -1,5 +1,5 @@
 ---
-name: novoads-image-to-motion
+name: image-to-motion
 metadata: {packVersion: 1.1.0}
 description: >-
   Turn any still image into a professional motion graphic through the Novoads API on
