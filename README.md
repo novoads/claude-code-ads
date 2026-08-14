@@ -11,27 +11,38 @@
 
 AI video and image ads for marketers, built in Claude Code or Cursor and priced by a live estimate first.
 
-<!-- The skills.sh count badge is parked, not dropped. Their index still holds a
-     pre-rename snapshot of this repo: it lists 8 skills, three of them under
-     names that no longer exist here, so the badge rendered "Skills: 8" one
-     screen above a page that says eleven. The listing LINK stays, because the
-     solo-install path runs through it. Restore the badge once their index
-     reflects the current skill set:
-     [![Skills on skills.sh](https://skills.sh/b/novoads/agent-skills)](https://skills.sh/novoads/agent-skills)
-     Tracking: https://github.com/vercel-labs/skills/issues
+<!-- The skills.sh count badge stays parked, and on 2026-08-14 the reason for
+     parking it INVERTED. It is no longer rename staleness: skills.sh has
+     re-crawled, their page is titled novoads/agent-skills, and the old
+     claude-code-ads slug now serves that same page, so the 404 this comment
+     used to record is gone. What replaced it is an over-count. The live badge
+     reads "Skills: 40" against the 13 skills in skills/ (17 routable counting
+     shared/), one screen above a banner that says "11+ skills". Their own page
+     lists 19 entries: the 13
+     current ones plus 6 names this repo renamed away (novoads-pixar-ad,
+     novoads-claymation-ad, novoads-image-to-motion, image-ad-clone,
+     novoads-pixar-storyboard-ad, novoads-claymation-storyboard-ad). They
+     indexed the new names without dropping the old, so 40 matches nothing:
+     not this repo, not their page, not the banner. As a public claim that is
+     worse than the "Skills: 8" undercount which parked the badge originally.
 
-     Second staleness, from the repo rename (claude-code-ads -> agent-skills,
-     2026-08-13): skills.sh keys its pages on the slug it crawled, and it has
-     not re-crawled. `https://www.skills.sh/novoads/agent-skills` 404s today
-     while the old slug still serves a snapshot — and that old page will never
-     update, so pointing at it would be pinning the README to a document that
-     stopped tracking this repo. The link below names the new slug and is
-     correct the moment they re-index. GitHub's own 301 covers the old URL, and
-     `npx skills add novoads/agent-skills` never touches skills.sh at all: the
-     CLI clones from GitHub, so the install path works regardless. -->
+     The badge below is therefore STATIC. It names the slug instead of a count,
+     so there is nothing in it that can rot, and it keeps the row three images
+     wide. A bare markdown link renders as blue underlined text among black
+     pills, which reads as an orphan rather than a badge. The listing LINK is
+     the load-bearing part either way, because the solo-install path runs
+     through it, and `npx skills add novoads/agent-skills` never touches
+     skills.sh at all: the CLI clones from GitHub, so install works regardless.
+
+     Restore the dynamic badge once their count matches this repo. Check with
+     `curl -s https://skills.sh/b/novoads/agent-skills` and read the aria-label
+     (a slug they do not know answers "resource not found", so a plausible
+     number really is their answer, not a fallback):
+     [![Skills on skills.sh](https://skills.sh/b/novoads/agent-skills)](https://skills.sh/novoads/agent-skills)
+     Tracking: https://github.com/vercel-labs/skills/issues -->
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-docs.novoads.ai-black.svg)](https://docs.novoads.ai)
-[Skills on skills.sh](https://skills.sh/novoads/agent-skills)
+[![skills.sh](https://img.shields.io/badge/skills.sh-novoads%2Fagent--skills-black.svg)](https://skills.sh/novoads/agent-skills)
 
 ![Make AI video & image ads from Claude Code](assets/readme-banner.png)
 
