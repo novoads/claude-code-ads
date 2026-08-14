@@ -12,6 +12,8 @@ as Added / Changed / Fixed, or as dated `###` subsections like the ones below.
 
 ## Unreleased
 
+## v1.2.0 — 2026-08-13
+
 ### Changed
 
 **The naming standard is complete: a product surface carries the brand, a job does not.**
