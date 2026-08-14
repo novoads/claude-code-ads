@@ -40,13 +40,21 @@ this is the one thing that silently changes what the commands mean:
 ```bash
 root="$(git rev-parse --show-toplevel 2>/dev/null)" && [ -n "$root" ] && cd "$root"
 
-if git remote get-url origin 2>/dev/null | grep -q 'novoads/claude-code-ads' \
+if git remote get-url origin 2>/dev/null | grep -qE 'novoads/(claude-code-ads|agent-skills)' \
    || [ -f shared/scripts/auto-update.sh ]; then
   echo "pack clone confirmed"
 else
   echo "NOT the pack clone — stop here"
 fi
 ```
+
+**Both slugs, on purpose.** The repo was `novoads/claude-code-ads` until
+2026-08-13 and is `novoads/agent-skills` now. GitHub's 301 keeps every clone
+made before the rename working — `git fetch` follows it — but it does not
+rewrite `origin` in that clone's config, so those users' remote still reads the
+old slug and always will until they re-point it. Matching only the new name
+would tell every pre-rename clone it is not the pack, which is exactly the
+population this skill exists to update.
 
 Git commands walk up to find the repository; **plain paths do not.** From a
 subdirectory `./scripts/update.sh` is simply not found, `[ -f shared/scripts/... ]`

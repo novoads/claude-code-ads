@@ -14,13 +14,13 @@ skill does not upload to Meta itself.
 ## If the `shared/` files are not on disk
 
 Then this skill was installed on its own from skills.sh and the rest of the pack stayed behind.
-Fetch each missing file from `https://raw.githubusercontent.com/novoads/claude-code-ads/main/<path>`,
+Fetch each missing file from `https://raw.githubusercontent.com/novoads/agent-skills/main/<path>`,
 where `<path>` is one of `shared/skills/image-ad-prompting/OVERVIEW.md`,
 `shared/skills/image-ad-prompting/prompting/prompt-library.md`,
 `shared/skills/image-ad-prompting/prompting/safety-suffixes.md`,
 `shared/skills/image-ad-prompting/prompting/template-format.md` and
 `shared/skills/chatgpt-image-ad/prompting/guide.md`. Or take everything at once with
-`git clone https://github.com/novoads/claude-code-ads.git`. That install has no
+`git clone https://github.com/novoads/agent-skills.git`. That install has no
 `scripts/check-novoads-env.sh` either, so set `NOVOADS_API_KEY` in the environment yourself and
 let the first call report the key.
 
@@ -66,7 +66,7 @@ concurrency, the upload contract — the `novoads-api` skill's `reference.md` is
 > costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
 > install checks `NOVOADS_API_KEY` in the environment.
 
-**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/claude-code-ads> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
+**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/agent-skills> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
 
 ## Configuration
 

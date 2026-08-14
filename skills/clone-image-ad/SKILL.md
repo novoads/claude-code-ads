@@ -26,12 +26,12 @@ round-tripping it through a Novoads image model and comparing against the origin
 
 Then this skill was installed on its own from skills.sh, and the library it is supposed to append
 to came with nothing. Fetch each missing file from
-`https://raw.githubusercontent.com/novoads/claude-code-ads/main/<path>`, where `<path>` is one of
+`https://raw.githubusercontent.com/novoads/agent-skills/main/<path>`, where `<path>` is one of
 `shared/skills/clone-image-ad/prompting/guide.md`,
 `shared/skills/image-ad-prompting/prompting/template-format.md`,
 `shared/skills/image-ad-prompting/prompting/prompt-library.md` and
 `shared/skills/image-ad-prompting/OVERVIEW.md`. Cloning the whole pack with
-`git clone https://github.com/novoads/claude-code-ads.git` is the better move here, because the
+`git clone https://github.com/novoads/agent-skills.git` is the better move here, because the
 deliverable is an entry written back into `prompt-library.md` and a raw fetch gives you nowhere to
 save it. That install has no `scripts/check-novoads-env.sh` either, so set `NOVOADS_API_KEY` in the
 environment yourself and let the first call report the key.
@@ -374,7 +374,7 @@ becomes at the provider.
 > costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
 > install checks `NOVOADS_API_KEY` in the environment.
 
-**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/claude-code-ads> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
+**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/agent-skills> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
 
 The generator skills are **not** required to run a clone. They're where the finished template
 gets used afterwards.

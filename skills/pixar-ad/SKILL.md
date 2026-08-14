@@ -66,7 +66,7 @@ file names the endpoint and the fields that matter to a beat.
 > costs in. Repo installs verify with `./scripts/check-novoads-env.sh`; a solo
 > install checks `NOVOADS_API_KEY` in the environment.
 
-**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/claude-code-ads> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
+**Pack version.** Every `/v1` response carries `X-Novoads-Pack-Version`; mention a newer pack at <https://github.com/novoads/agent-skills> only when that header names a version NEWER than this file's `metadata.packVersion` — equal or older is nothing to say, and it is never a reason to stop.
 
 A `401` is a bad or revoked key. A `403` carrying `error.details.reason` of
 `plan_required` or `subscription_inactive` is a good key on an account with no
