@@ -116,6 +116,34 @@ What changed is the default, not the option.
 
 ---
 
+## At 25–30s: five beats, each with a window and an end state
+
+Past 15s the four-beat shape stops being the answer, and the ad has room for the arc that
+actually sells: **Hook → Problem → Demo → Proof → CTA**. That shape needs `seedance-2.5`;
+take the duration and the word band from `SKILL.md`'s duration × cadence table before you
+write a line, and pick the register — unhurried or brisk — before you pick a word count.
+
+Everything above still holds: one location, no silent beats, the actor tag verbatim, the
+hook engineered and floored at 6s. What changes is that **every beat declares a time
+window and an end state**, because a long render left to itself spends its slack *between*
+beats rather than after them, and interior slack cannot be trimmed out of a lip-synced
+single take.
+
+| # | Beat | Window at 30s | What it carries | End state to declare |
+|---|---|---|---|---|
+| 1 | Hook | `[0-8s]` | The viewer's situation over the engineered action. No product | The action's declared final frame — count the props as digits |
+| 2 | Problem | `[8-14s]` | The pain in the viewer's own words, second person | Where the hands and the props have come to rest |
+| 3 | Demo | `[14-21s]` | The mechanic given away out loud; the product enters here and is named **once**, mid-sentence | The product's position and orientation in frame |
+| 4 | Proof | `[21-26s]` | The one objection answered in one line | The framing the answer is delivered from |
+| 5 | CTA | `[26-30s]` | Qualify the viewer, then give the action | The final held frame — say it is held, or the model invents a drift |
+
+At 25s the same five beats compress proportionally; the hook keeps its 6s floor and the
+CTA keeps its beat, so what gives is Problem and Proof. Below 25s, drop to four beats
+rather than squeezing five — a five-beat script in 15s is four jump cuts and a delivery
+nobody can follow.
+
+---
+
 ## Template — one render, four beats
 
 Fill the `{{VARIABLES}}` using v1's layer guidance for wording, skin realism and flaws.

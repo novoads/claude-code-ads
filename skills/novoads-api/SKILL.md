@@ -135,7 +135,7 @@ Use this structure:
   3. [DEMO]    (silent beat — thumb brushing the suede, small nod)
   4. [VERDICT] "I'm wearing these to the gym tomorrow. You have to see them in person."
 
-Total spoken words: ~28  |  Target duration: 15s  |  language: en  |  Fits at natural pace: ✅
+Total spoken words: ~28  |  Target duration: 15s (4 beats, nothing performed on camera)  |  language: en  |  Fits at natural pace: ✅
 
 Approve this dialogue? (yes / edit / rewrite)
 ```
@@ -256,7 +256,13 @@ Show `credits`, the count, the total, and `balance`. Get a yes. Then generate.
 
 **Ask, every time:**
 
-- **Seedance tier, once per workflow.** Before the first Seedance video call: *"Use default `seedance-2.0`, `seedance-2.0-mini` (half price), or `seedance-2.5` (the only one that goes past 15s, and the dearest)?"* No preference means `seedance-2.0`. Whichever they pick goes into the estimate, so the quoted number is the one they pay. **Ask before you assume the script needs 2.5** — a 30-second ad is a format decision, not a longer version of a 15-second one.
+- **Seedance tier AND length, once per workflow, in one ask.** Before the first Seedance video call: *"Use default `seedance-2.0`, `seedance-2.0-mini` (half price), or `seedance-2.5` (the only one that goes past 15s, and the dearest)?"* No preference means `seedance-2.0`. Whichever they pick goes into the estimate, so the quoted number is the one they pay. **Ask before you assume the script needs 2.5** — a 30-second ad is a format decision, not a longer version of a 15-second one. **Arrive with the length already worked out**, and put it in the same sentence with **one** reason: *"I'd suggest {{N}}s on {{MODEL}}, because {{REASON}}."* Five questions compute it:
+  1. **Which of Hook / Problem / Demo / Proof / CTA does this message actually need?** Two or three of them fit 15s. The full five-beat arc wants **25–30s**, which is `seedance-2.5` and nothing else.
+  2. **Is there an action the actor performs on camera** — applying, pouring, assembling, wearing? Performed time is real time, and it is the one thing that genuinely buys seconds.
+  3. **Cold audience or warm?** A cold viewer needs the problem stated before the product exists; a warm one is already past it, and the beat is spend with nothing behind it.
+  4. **Where does it run?** Stories plays an ad under 16s whole and splits a longer one into separate cards (as of 2026-08); a TikTok **reservation** buy recommends 9–15s (as of 2026-08). Nothing else prescribes a length — do not invent one from a platform that never published it.
+  5. **Does the deliverable need more than `720p`?** `seedance-2.5` has no `1080p` and no `4k`, so a high-resolution ad is 15s in one `seedance-2.0` call, or a **reference-locked** split into two — never "cut it to fit".
+  **Do not buy 16–19s for WORDS** — cut the words instead. An on-camera action is the only reason to buy seconds in that band, and every integer 4 to 30 is legal, so an 18s action lands at 18s rather than rounding up to 20. **When the answer is not obvious, price BOTH candidate lengths at gate 2** and show the difference rather than choosing for them.
 - **How many variations**, for every prompt. Default 1. N variations means N identical calls — there is no batch parameter — and the results come back as a numbered list so they can compare and pick.
 
 **Infer, and state what you inferred rather than asking:**
@@ -271,28 +277,34 @@ Show `credits`, the count, the total, and `balance`. Get a yes. Then generate.
 
 Count the words in the spoken line and round **up**. Delivery was measured at **2.0 spoken words per second** — about **13 characters per second, spaces included**, if you would rather count those — with **~0.5s of leading silence** before the first word on reference and start-frame renders (2026-08-11, n=5). Plan on 2.0 and give the line air; the older 2.5-to-3 figure was an estimate nobody had timed, and it over-filled every clip it touched.
 
-**These tables already pay for that ~0.5s.** Whether it is the right budget depends on the render mode — read the scoping note under the first one before you trust it on another.
+**The table already pays for that ~0.5s.** Whether it is the right budget depends on the render mode — read the scoping note under it before you trust it on another.
 
-### `seedance-2.0` and `seedance-2.0-mini` — any integer 4 to 15
+### Seedance — duration × cadence (`seedance-2.0` and mini to 15s, `seedance-2.5` to 30)
 
-| Script length | Duration |
-|---|---|
-| 1–8 words | 4–5s |
-| 9–15 words | 6–8s |
-| 16–23 words | 9–12s |
-| 24–29 words | 13–15s |
-| **30+ words** | **Too long** — offer to split |
+**Cadence is a choice, not a rate.** The same 30s canvas has carried a 66-word script and a 114-word one, and neither clipped. So pick the register first and then read the row: a word count means nothing except next to the pace it is spoken at.
+
+| Duration | Unhurried — ~2.0–2.2 words/sec | Brisk — ~3.8–3.9 words/sec |
+|---|---|---|
+| 10s | 19–21 words | ~36 words |
+| 15s | **29–32 words** | ~55 words |
+| 20s | 39–43 words | ~74 words |
+| 25s | 49–54 words | ~93 words |
+| 30s | 59–65 words | **~100–110 words** |
+
+**Both columns are now measured on this API, each at one duration, each n=1.** Unhurried: 29 words filled a 15s `seedance-2.0` render exactly (2026-08-11). Brisk: **114 words came back verbatim from a 30s `seedance-2.5` t2v render at 3.86 words/sec, zero gaps over 0.8s** (2026-08-15) — and the same prompt on a different backend delivered 3.85, i.e. **0.4% apart, so cadence is a property of the model, the mode and the script's own density rather than of who serves it**. Every other cell in both columns is that rate carried across `2.0 × (D − 0.5)`. **114 words is the measured 30s ceiling and it left a 0.12s tail** — that is the entire margin, which is why the row plans **~100–110**. Enter either band **from below**: the line a too-long draw clips is the CTA, and it is the one defect that cannot be fixed in post.
+
+**Only `seedance-2.5` renders past 15s, and nothing renders past 30.** Beyond 30s is **out of this route's scope today** — a reference-locked assembly is the only candidate and it is unproven, while the naive stitch has been measured and lost (below). Below 10s, run the same unhurried arithmetic — `2.0 × (D − 0.5)` — down to the 4s floor.
 
 **Leading silence is mode-dependent, and the two things measured here disagree by seconds. Scope the budget to the mode you are actually rendering — do not add both.**
 
 | What was measured | Leading silence observed | Plan on |
 |---|---|---|
-| **Reference or start-frame renders** — `referenceAssetIds` or `startImageAssetId` | 0.0s and 0.44s (n=2), then 0.515s, 0.529s and 0.482s (2026-08-11, n=5 total) | **~0.5s.** The tables above already pay it |
+| **Reference or start-frame renders** — `referenceAssetIds` or `startImageAssetId` | 0.0s and 0.44s (n=2), then 0.515s, 0.529s and 0.482s (2026-08-11, n=5 total) | **~0.5s.** The table above already pays it |
 | **Six `seedance-2.0` renders whose mode nobody wrote down** (2026-08-02/03) | **3.2–3.7s in `en`**; in `es`, **5.24s, 0.97s and 4.80s on three byte-identical prompts** — same body, same duration, three answers | **+4s `en`, +5s `es`** and any unmeasured language, on top of speech |
 
-**The working rule: budget ~0.5s when you have a reference or a start frame, and check the render.** In that mode the table and the arithmetic already agree — **`2.0 × (D − 0.5)`** is exactly the word cap on every rung from 9 words up, and the 1–8 row is deliberately one word tighter than the formula's 9 at 5s — so there is nothing to add. If the result runs past 15s on these two models, the fix is a shorter line, a split, or `seedance-2.5` — not a longer clip on a model that does not render one.
+**The working rule: budget ~0.5s when you have a reference or a start frame, and check the render.** In that mode the table and the arithmetic already agree — the unhurried column is **`2.0 × (D − 0.5)`** at its floor — so there is nothing to add. If the result runs past 15s on `seedance-2.0` or mini, the fix is a shorter line, a reference-locked split, or `seedance-2.5` — not a longer clip on a model that does not render one.
 
-**When a render does come back with multi-second silence, trim is the remedy, not a bigger budget.** Leading silence is trimmable in post; a line clipped by an over-long draw is not. The reserve in the second row is the *planning* allowance for that mode — reach for it when you have neither a reference nor a start frame, or when you are committing to a duration you cannot re-cut. It costs words: **`words ÷ 2.0` plus the reservation, rounded into the grid, leaves 22 words at 15s in `en` and 20 in `es`, against the table's 29.** That gap is the mode, not a rounding error.
+**When a render does come back with multi-second silence, trim is the remedy, not a bigger budget.** Leading silence is trimmable in post; a line clipped by an over-long draw is not. The reserve in the second row is the *planning* allowance for that mode — reach for it when you have neither a reference nor a start frame, or when you are committing to a duration you cannot re-cut. It costs words: **`words ÷ 2.0` plus the reservation, rounded into the grid, leaves 22 words at 15s in `en` and 20 in `es`, against the unhurried column's 29.** That gap is the mode, not a rounding error.
 
 **How close the reserved case gets is not theoretical.** The first `es` render fit only because rounding up took 12.4s to 13s, and the line finished at **12.88s of 13.07s** — a fifth of a second of margin, on a budget that drew near its worst. The silence is drawn fresh every time, in either mode, so **the only thing that tells you what you got is the QA step in §7.** Check the first `silence_end` on every render.
 
@@ -300,23 +312,9 @@ If the hook has to land in the first second, drop the eye-contact-break beat fro
 
 For no-dialogue styles (product hero, premium reveal), default to **15s**. The silence budget does not apply: there is no speech to delay.
 
-### `seedance-2.5` — any integer 4 to 30
+**`seedance-2.5` now has one measurement of its own, and it lands on the budget rather than the reserve: 0.464s** on a 30s t2v render with neither a reference nor a start frame (2026-08-15, n=1) — the very mode the +4s reserve was written for. Do not generalise it: the same day, a `seedance-2.0` t2v clip in the same mode drew **3.63s**. So plan ~0.5s on `seedance-2.5`, keep the reserve for `seedance-2.0` without a reference or start frame, and check the render either way.
 
-Same family, same craft, twice the room. The table above still holds for anything up to 15s; past
-it, keep planning at **2.0 words per second** — the rows below are the same `2.0 × (D − 0.5)`
-arithmetic. Nobody has measured 2.5's leading silence separately, so the mode scoping above is the
-working rule here too: budget ~0.5s with a reference or start frame, the reserve without one.
-
-| Script length | Duration |
-|---|---|
-| 30–39 words | 16–20s |
-| 40–49 words | 21–25s |
-| 50–59 words | 26–30s |
-| **60+ words** | **Too long even here** — split, or cut the script |
-
-**A longer clip is not a longer script poured into the same ad.** Thirty seconds wants more beats,
-not slower delivery: a second location, a demo the actor actually performs, a reaction. If the
-script only fills 15s, render 15s — on `seedance-2.0`, which is cheaper at that length.
+**A longer clip is not a longer script poured into the same ad.** Thirty seconds wants more beats, not slower delivery: a demo the actor actually performs, a reaction, a proof line. If the script only fills 15s, render 15s — on `seedance-2.0`, which is cheaper at that length. **And do not stitch to dodge the long model.** Measured 2026-08-15, same 114 words, same API: three t2v `seedance-2.0` clips concatenated ran **longer and cost more** than the one 30s call, came back **35.6% non-speech against the one-call render's 18.7%** with **4.4s of seam dead air nobody wrote**, a **12dB level jump between clips**, and **three visibly different women out of a byte-identical character block**. A stitch that holds identity has to pass the same `referenceAssetIds` to every clip, and nobody has rendered that.
 
 **Do not borrow `seedance-2.0`'s 3-to-8-minute fleet range for `seedance-2.5`.** Nothing in
 this session has timed one, so quote its wait as unknown to you, and poll.
