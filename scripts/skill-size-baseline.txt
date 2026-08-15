@@ -31,7 +31,15 @@
 # both blocks above -- --update-baseline regenerates this file and drops these
 # comments, and the ratchet only goes down, so recording the smaller number by
 # hand is the whole point rather than a shortcut around it.
+#
+# Lowered by 2 on novoads-api (759 -> 757, 2026-08-15) when the two Seedance
+# script-length tables became one duration x cadence table and the length gate
+# was folded into the tier ask that already existed. The table replacement freed
+# 8 lines and the gate spent 6, so this is a shrink recorded rather than headroom
+# banked: the number goes down to what the file actually is, which is what makes
+# the next growth attempt fail. Hand-written for the same reason as every block
+# above -- --update-baseline regenerates this file and drops these comments.
 1123 skills/pixar-ad/SKILL.md
 839 skills/clone-video-ad/SKILL.md
-759 skills/novoads-api/SKILL.md
+757 skills/novoads-api/SKILL.md
 510 skills/analyze-video/SKILL.md
