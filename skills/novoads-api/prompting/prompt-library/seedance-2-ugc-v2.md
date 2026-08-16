@@ -101,6 +101,30 @@ an action needs that long to reach a declared end state and still be read at fee
 So a 15s ad spends its first 6s on the viewer and has ~9s left for the other three beats.
 That is what the hook costs, and it is why a five-beat script does not fit 15s.
 
+⚠️ **`referenceAssetIds` brands the whole scene, not just the object it was passed for.**
+A product photo in the reference array is read as a style input, and Seedance paints that
+wordmark, that palette and that packaging language onto *other* packaged objects in frame.
+Measured 2026-08-16: a Spanish 30s render whose hook beat says *"Ningún producto en
+cuadro"* came back with a legible brand wordmark on a counter bottle at **1.5s (5% of
+runtime)** and **all four** hook-prop bottles wearing four distinct SKUs of the brand's own
+type and colours by **5.0s (17%)**; the `en` 30s render leaked from 7.0s. The 15s
+`seedance-2.0` render in the same run did not leak — n=2 against n=1, so this is an
+observation and not a law, but the leak happened on `seedance-2.5`, which is the model a
+25–30s ad is routed to.
+
+**So while the product is withheld, the frame goes bare.** Write it into the hook beat, in
+these words or yours: *no other packaging, bottles, jars, tubes, labels or printed text of
+any kind are in frame; the only branded object in this video is `{{PRODUCT_DESCRIPTION}}`,
+and it enters at `{{PRODUCT_WINDOW}}`.* Then choose the `{{HOOK_PROP}}` from a category the
+reference cannot bleed into — index cards, keys, a phone face-down, laundry, a cup of
+coffee, hands — rather than from anything the model can put a label on. If the brief needs
+a labelled prop in the hook, say **plain, unbranded, no printed text** on it explicitly and
+check the render.
+
+**"Withheld" is a property of the render, not of the prompt.** All four prompts in that run
+passed the checklist below and three renders broke this rule, so rule 3 is verified by the
+brand scan in `SKILL.md` §7 QA, item 2 — not by re-reading your own prompt.
+
 **4. Prop discipline.** Every object a beat introduces is **owned by a named hand**, its
 count is written as a **digit** ("3 index cards", never "three" and never "some"), and
 that count is **re-pinned in every beat the prop appears in** — a prop named once and
@@ -114,6 +138,35 @@ a hook rate, a watch curve or a sale for any opening shape. A product-in-hand op
 stays available and correct when the brief asks for one (a reveal, a drop, an unboxing).
 What changed is the default, not the option.
 
+**The escape hatch has a template, because composing it freehand cost an actor 37% of an
+ad.** Asked for the pack on screen from the first second, one render put the product dead
+centre and the woman nowhere: **no person on camera from 0.0s to 5.5s**, only a forearm
+reaching in from frame right, against this file's own *"every beat has the person on
+camera"*. The cause is mechanical — rule 2's salience command was moved off the hook prop
+and onto the product, and the camera followed it to the counter. So keep both:
+
+```
+The video opens on {{ACTOR_TAG}} already holding {{PRODUCT_DESCRIPTION}} in {{NAMED_HAND}},
+{{ACTOR_TAG}}'s face and upper body in frame for the whole beat — {{ACTOR_TAG}} {{HOOK_ACTION}},
+and {{HOOK_PROP}} stays the brightest, most readable object in the lower third.
+{{ACTOR_TAG}} says: "{{HOOK_LINE}}"
+By the end of this beat, {{HOOK_END_STATE}}, with {{ACTOR_TAG}} still in frame.
+```
+
+The product being present does not make it the subject: `{{ACTOR_TAG}}` appears in every
+clause, the salience command stays on `{{HOOK_PROP}}`, and rule 1 still holds — the opening
+line names the viewer's situation even when the product is visible.
+
+⚠️ **A long, close hold on the product buys hallucinated label copy.** That same render
+held the pack large and close for ~7s and produced a **fabricated, misspelled Supplement
+Facts panel** which does not exist on the real product, plus a pack count that read 23 in
+one frame and 25 in the next against the true 28. The three renders in that run which held
+the product briefly kept their headline block clean, from a **label-hold clause identical
+to this file's** — so the clause is not the control, screen time is. Keep product holds
+short and mid-shot, and run the label check in `SKILL.md` §7 QA, item 6. On a supplement, a
+medical device or anything with a regulated panel, a hallucinated facts table is a
+compliance problem and the ad does not ship.
+
 ---
 
 ## At 25–30s: five beats, each with a window and an end state
@@ -122,6 +175,9 @@ Past 15s the four-beat shape stops being the answer, and the ad has room for the
 actually sells: **Hook → Problem → Demo → Proof → CTA**. That shape needs `seedance-2.5`;
 take the duration and the word band from `SKILL.md`'s duration × cadence table before you
 write a line, and pick the register — unhurried or brisk — before you pick a word count.
+**Plan from the middle of the unhurried band upward.** Its floor is where the dead air
+lives: four renders written to the bottom of that column came back 27–43% non-speech
+(2026-08-16), because the column buys silence between beats, not slower delivery.
 
 Everything above still holds: one location, no silent beats, the actor tag verbatim, the
 hook engineered and floored at 6s. What changes is that **every beat declares a time
@@ -131,8 +187,8 @@ single take.
 
 | # | Beat | Window at 30s | What it carries | End state to declare |
 |---|---|---|---|---|
-| 1 | Hook | `[0-8s]` | The viewer's situation over the engineered action. No product | The action's declared final frame — count the props as digits |
-| 2 | Problem | `[8-14s]` | The pain in the viewer's own words, second person | Where the hands and the props have come to rest |
+| 1 | Hook | `[0-8s]` | The viewer's situation over the engineered action. No product, **and no other branded or labelled object either** — rule 3 | The action's declared final frame — count the props as digits |
+| 2 | Problem | `[8-14s]` | The pain in the viewer's own words, second person. Still nothing branded in frame | Where the hands and the props have come to rest |
 | 3 | Demo | `[14-21s]` | The mechanic given away out loud; the product enters here and is named **once**, mid-sentence | The product's position and orientation in frame |
 | 4 | Proof | `[21-26s]` | The one objection answered in one line | The framing the answer is delivered from |
 | 5 | CTA | `[26-30s]` | Qualify the viewer, then give the action | The final held frame — say it is held, or the model invents a drift |
@@ -158,7 +214,10 @@ only light, {{FIXED_DETAILS}}. Only the framing changes between cuts.
 
 The video opens on the @Image1 framing — {{ACTOR_TAG}} {{HOOK_ACTION}}:
 {{ACTOR_TAG}}'s {{NAMED_HAND}} {{HOOK_ACTION_DETAIL}}, and {{HOOK_PROP}} stays
-the brightest, most readable object in the lower third. No product in frame.
+the brightest, most readable object in the lower third. No product in frame,
+and no other packaging, bottles, jars, tubes, labels or printed text of any
+kind either — the only branded object anywhere in this video is
+{{PRODUCT_DESCRIPTION}}, and it does not enter until {{PRODUCT_WINDOW}}.
 {{ACTOR_TAG}} says: "{{HOOK_LINE}}"
 By the end of this beat, {{HOOK_END_STATE}}.
 
@@ -192,7 +251,9 @@ Vertical 9:16.
 **Notes on the tokens.** `@ImageN` refers to the reference array positionally — the
 order you send them. Not every beat needs a reference; two or three carry the look and
 the rest inherit it. A token pointing past the end of the array is refused before the
-charge.
+charge. `{{PRODUCT_WINDOW}}` is the beat's declared time window at 25–30s (`[14-21s]`);
+at 15s, where beats carry no windows, write it as *"the second beat"* — it still gives
+the model a place the product is not allowed to arrive before.
 
 **At least one reference must show the person.** Identity inside this render is earned by
 the actor tag, but the reference set has a second job downstream: `broll-overlay` casts
@@ -206,37 +267,49 @@ here; they are an input to the next step, not scratch.
 
 ## Checklist before you price it
 
-- [ ] **Four beats**, each with the person on camera and a spoken line
+This reads the **prompt**, and passing it is not evidence the render obeyed. Four prompts
+that cleared every line below produced three renders that broke rules 3 and 4
+(2026-08-16), so it is half the gate: the other half is the render-side battery in
+`SKILL.md` §7 QA, item 4, which you run after the file comes back and before you hand it over.
+
+- [ ] **Four beats at 15s, five at 25–30s**, each with the person on camera and a spoken line
 - [ ] **Hook line names the viewer's situation**, not the product — reframe (default),
       label, yes-question or if-then
 - [ ] **One engineered physical action** on the hook beat, carrying a salience command
-      and an explicit **END STATE**, running most of the beat
+      and an explicit **END STATE**, running most of the beat. At 25–30s **every** beat
+      declares a time window and an end state
 - [ ] **Hook beat ≥6s**, and the product neither shown nor named inside the first
       **~25–30%** of the runtime
+- [ ] **Nothing else branded in the withheld beats** — no other packaging, bottle, jar,
+      tube, label or printed text in frame, stated in the prompt, because the reference
+      asset brands every prop it can (rule 3). Hook props chosen from a category it
+      cannot bleed into, or written **plain, unbranded, no printed text**
 - [ ] **Prop counts written as digits** and re-pinned in every beat the prop appears in;
       every object owned by a named hand; the ban list ends "nothing appears out of thin air"
-- [ ] **Actor tag verbatim** in all four; no `the same woman` / `as before`
+- [ ] **Actor tag verbatim in every beat**; no `the same woman` / `as before`
 - [ ] **Setting declared unchanged**; only framing varies
-- [ ] Script read aloud at an unhurried pace **fits the runtime** — timed, not estimated
-- [ ] …and **fills** it: **~2.0 words/sec** of delivered speech, so a 15s ad wants
-      **27–30 spoken words**. Measured 2026-08-11: a 29-word script filled a 15s
-      `seedance-2.0` render exactly — speech from 0.48s to 14.72s of 15.07s, with no
-      tail room left. One render, so treat it as the working figure. The **35–40**
-      that stood here was 2.5-words/sec arithmetic, and at that rate the last line
-      runs past the end: 35 words needs about 18s, so the verdict beat gets clipped
-- [ ] **Dead air is a delivery problem, not a word-count one.** An under-written script
-      does render its slack as silence (measured 2026-08-03: 5.9s across 5 gaps in a 15s
-      render built from ~27 words) — but 29 words filled the same runtime on 2026-08-11,
-      so two words are plainly not what separated them. The variable is pausing, and the
-      item below is the fix. Never pad a script to reach a word count: the padding is
-      what gets clipped
+- [ ] **Word count taken from `SKILL.md`'s duration × cadence table**, at the register you
+      picked, and **entered from the middle of the band rather than its floor.** The old
+      figure here — *"~2.0 words/sec of delivered speech, so a 15s ad wants 27–30 words"* —
+      confused two different things. **2.0 words/sec is a span-fill constant, not a delivery
+      rate**: four renders on 2026-08-16 all came back at 1.94–1.99 wps across the span
+      while *articulating* at 2.55–3.32. The words always fit; what the low end of the band
+      buys is **27–43% of the runtime in silence**
+- [ ] **Dead air is not a word-count problem and it is not promptable.** Two matched pairs
+      — same words, same duration, same model, same instruction — landed 13–15 points apart
+      on non-speech. **Do not rely on *"a steady delivery from first frame to last"*:** the
+      prompt that carried exactly that, plus *"no dead air between beats"*, drew the largest
+      hole of the run (3.18s) and its highest non-speech figure. Write more words if the ad
+      must be dense; never pad to reach a count, because the padding is what gets clipped
 - [ ] **No "pause after each sentence" instruction.** Correct for a single-shot testimonial,
-      harmful across four beats where every pause compounds. Ask for a steady delivery from
-      first frame to last instead
+      harmful across four beats where every pause compounds
 - [ ] `@ImageN` tokens ≤ the number of references actually sent
-- [ ] Label-hold clause present if the product carries printed text
+- [ ] Label-hold clause present if the product carries printed text — **and the product is
+      not held large and close for seconds at a time**, which is when label copy gets invented
 - [ ] Ratio restated in the prompt (`Vertical 9:16.`)
-- [ ] Invented or coined brand name spelled phonetically inside the quotes
+- [ ] Invented or coined brand name spelled phonetically inside the quotes, **and the render
+      will be transcribed** — a one-syllable coined name has no syllable boundary to mark and
+      the respelling is a guess; see `SKILL.md` gate 1
 - [ ] Priced with a live `POST /v1/estimates`; warnings read and cleared
 
 ---

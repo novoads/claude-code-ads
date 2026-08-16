@@ -54,7 +54,7 @@ The entry offer is a **$1 trial**. Never call it free.
 
 When `./scripts/check-novoads-env.sh` returns 200 and the user has not yet said what they want, offer starting points in chat and stop. Nothing is printed by a script for you: a banner cannot see their product, their `references/` folder, or their language, so it suggests nothing.
 
-1. **A UGC video built from their own product photo.** Ask them to drop it into `references/`. Route: `seedance-2.0` plus `startImageAssetId`.
+1. **A UGC video built from their own product photo.** Ask them to drop it into `references/`. Route: the photo goes into **`referenceAssetIds`** on one Seedance render — that is the one-shot default in [seedance-2-ugc-v2.md](prompting/prompt-library/seedance-2-ugc-v2.md), and it is what lets the opening beat belong to the viewer rather than to the product. A start frame **is** frame one, so `startImageAssetId` is the *other* mode: one call per scene, and only when the brief asks for the product in the first frame.
 2. **The same idea on `seedance-2.0-mini` first**, to get the prompt right before the final render. Price both at `POST /v1/estimates` and show the difference rather than quoting one from memory.
 3. **A static image ad**, when what they need is a still and not a clip. Route: `gpt-image-2` for heavy text or a mimicked UI, `nano-banana-pro` for a photoreal scene.
 
@@ -119,7 +119,7 @@ Two separate approvals stand between a request and a charge, and **neither impli
 Seedance renders the audio and the lip-sync in the same call, so the line inside the double quotes is what the actor says, out loud, in the finished video. It cannot be changed afterward without paying for the render again.
 
 1. **Extract the dialogue from the drafted prompt** and show it on its own, separate from the visual description.
-2. **Spell any invented brand name phonetically inside the quoted line** — see the rule below. Do this before you present the line, and show the phonetic form in the block, because it is what the model will be sent.
+2. **Spell any invented brand name phonetically inside the quoted line** — see the rule below. Do this before you present the line, and show the phonetic form in the block, because it is what the model will be sent. **Say in the same block that you will transcribe the render**: outside the one validated cell the respelling is a guess, so the transcript in §7 is not optional for a coined name, and in `es` it is not optional at all — a clean take is not evidence the next one is clean.
 3. **Present it as a numbered list** with beat labels (hook / show / demo / verdict, or similar). Mark silent beats `(silent beat — no dialogue)`.
 4. **Count the spoken words**, state the target duration, and say whether it fits at a natural pace.
 5. **State the `language`** you are going to send, because that is the language the ad is rendered in.
@@ -155,6 +155,8 @@ If they say edit, revise and re-present the block until they approve. The gate a
 ```
 
 Use it for names that are invented, run two words together, or that a reader would have to guess at. Leave ordinary words alone — `Nike` and `CeraVe` do not need it.
+
+**When there is nothing to hyphenate, the rule has no form — and the intent applied freehand failed 4 for 4.** A one-syllable coined name has no syllable boundary to mark, so all you can do is respell the vowel and hope. Measured 2026-08-16 across four renders of one such name: the `en` respelling came back **"grins"**, **"greens"** and **"Grenz"**, and a third `es` spelling came back **"Greens"**. Three of the four collapsed into ordinary words and two into *the product's own category*, which erases the brand more completely than mangling it does. So: outside the one validated cell (`NO-vo-ads`, `seedance-2.0`, `en`) treat the respelling as unproven, **transcribe every render of any coined name** rather than only the `es` ones, and when two attempts miss, take the real fallback — **rewrite the line so the brand is never spoken.** The wordmark on the packshot carries the name, and a name the viewer reads is better than a name they hear as something else.
 
 **This form is validated in `en` only. See the `es` limit below before you reach for it in another language** — the same brand fails there for a different phonetic reason, and the English spelling does not fix it.
 
@@ -275,15 +277,13 @@ Show `credits`, the count, the total, and `balance`. Get a yes. Then generate.
 
 ## Script length → duration
 
-Count the words in the spoken line and round **up**. Delivery was measured at **2.0 spoken words per second** — about **13 characters per second, spaces included**, if you would rather count those — with **~0.5s of leading silence** before the first word on reference and start-frame renders (2026-08-11, n=5). Plan on 2.0 and give the line air; the older 2.5-to-3 figure was an estimate nobody had timed, and it over-filled every clip it touched.
-
-**The table already pays for that ~0.5s.** Whether it is the right budget depends on the render mode — read the scoping note under it before you trust it on another.
+Count the words in the spoken line and round **up**. Delivery was measured at **2.0 spoken words per second** — about **13 characters per second, spaces included**, if you would rather count those — with **~0.5s of leading silence** before the first word on reference and start-frame renders (2026-08-11, n=5). Plan on 2.0 and give the line air; the older 2.5-to-3 figure was an estimate nobody had timed, and it over-filled every clip it touched. **The table below already pays that ~0.5s** — but only in that mode, and the scoping note under it is where that stops being true.
 
 ### Seedance — duration × cadence (`seedance-2.0` and mini to 15s, `seedance-2.5` to 30)
 
-**Cadence is a choice, not a rate.** The same 30s canvas has carried a 66-word script and a 114-word one, and neither clipped. So pick the register first and then read the row: a word count means nothing except next to the pace it is spoken at.
+**Cadence is a choice about how many words you write, not about how fast they are said.** The same 30s canvas has carried a 66-word script and a 114-word one, and neither clipped. But the column you pick does not slow the model down — it decides how much of the runtime is silence. **For speech-led UGC, plan from the middle of the unhurried band upward, or from the brisk one**: the bottom of the unhurried column is where the dead air lives.
 
-| Duration | Unhurried — ~2.0–2.2 words/sec | Brisk — ~3.8–3.9 words/sec |
+| Duration | Unhurried — ~2.0–2.2 words/sec (**27–43% of the clip comes back non-speech**) | Brisk — ~3.8–3.9 words/sec (**zero gaps over 0.8s at the one cell measured**) |
 |---|---|---|
 | 10s | 19–21 words | ~36 words |
 | 15s | **29–32 words** | ~55 words |
@@ -293,31 +293,24 @@ Count the words in the spoken line and round **up**. Delivery was measured at **
 
 **Both columns are now measured on this API, each at one duration, each n=1.** Unhurried: 29 words filled a 15s `seedance-2.0` render exactly (2026-08-11). Brisk: **114 words came back verbatim from a 30s `seedance-2.5` t2v render at 3.86 words/sec, zero gaps over 0.8s** (2026-08-15) — and the same prompt on a different backend delivered 3.85, i.e. **0.4% apart, so cadence is a property of the model, the mode and the script's own density rather than of who serves it**. Every other cell in both columns is that rate carried across `2.0 × (D − 0.5)`. **114 words is the measured 30s ceiling and it left a 0.12s tail** — that is the entire margin, which is why the row plans **~100–110**. Enter either band **from below**: the line a too-long draw clips is the CTA, and it is the one defect that cannot be fixed in post.
 
+**What the bottom of the unhurried band actually buys is dead air, not slower speech.** Four renders on 2026-08-16, every one written to the unhurried column and entered from below, came back at **1.94–1.99 words/sec across the span** — the arithmetic is exact and nothing clipped — while **articulation**, words divided by the time speech is actually happening, ran **2.55 to 3.32**. The model never speaks at 2.0. It speaks at roughly 3 and pads the rest, so non-speech ran **27% to 43%** of the runtime. And the register is not yours to set: two matched pairs — same words, same duration, same model, same instruction — came back **13–15 points apart** on non-speech, so a reader planning against one cell is wrong by a third of the clip half the time. **The prompt-side remedy is refuted:** *"speaking steadily from the first frame to the last"* plus *"no dead air between beats"* were both in the prompt that drew the run's largest hole (3.18s) and its highest non-speech figure. Write more words if the ad has to be dense — the pause instruction is not a lever.
+
 **Only `seedance-2.5` renders past 15s, and nothing renders past 30.** Beyond 30s is **out of this route's scope today** — a reference-locked assembly is the only candidate and it is unproven, while the naive stitch has been measured and lost (below). Below 10s, run the same unhurried arithmetic — `2.0 × (D − 0.5)` — down to the 4s floor.
 
 **Leading silence is mode-dependent, and the two things measured here disagree by seconds. Scope the budget to the mode you are actually rendering — do not add both.**
 
 | What was measured | Leading silence observed | Plan on |
 |---|---|---|
-| **Reference or start-frame renders** — `referenceAssetIds` or `startImageAssetId` | 0.0s and 0.44s (n=2), then 0.515s, 0.529s and 0.482s (2026-08-11, n=5 total) | **~0.5s.** The table above already pays it |
-| **Six `seedance-2.0` renders whose mode nobody wrote down** (2026-08-02/03) | **3.2–3.7s in `en`**; in `es`, **5.24s, 0.97s and 4.80s on three byte-identical prompts** — same body, same duration, three answers | **+4s `en`, +5s `es`** and any unmeasured language, on top of speech |
+| **Reference or start-frame renders** — `referenceAssetIds` or `startImageAssetId` | 0.0s and 0.44s (n=2), then 0.515s, 0.529s and 0.482s (2026-08-11, n=5); **0.819s on both `seedance-2.5` reference renders** (2026-08-16, n=2) | **~0.5s on `seedance-2.0`, ~0.8s on `seedance-2.5`.** The table above pays the first; the second is the newer, smaller sample and the reason to check |
+| **Six `seedance-2.0` renders whose mode nobody wrote down** (2026-08-02/03) | **3.2–3.7s in `en`**; in `es`, **5.24s, 0.97s and 4.80s on three byte-identical prompts** — same body, same duration, three answers | **+4s `en`, +5s `es`** and any unmeasured language, on top of speech. A `seedance-2.5` t2v render drew **0.464s** in this mode (2026-08-15, n=1); a `seedance-2.0` one the same day drew **3.63s** |
 
-**The working rule: budget ~0.5s when you have a reference or a start frame, and check the render.** In that mode the table and the arithmetic already agree — the unhurried column is **`2.0 × (D − 0.5)`** at its floor — so there is nothing to add. If the result runs past 15s on `seedance-2.0` or mini, the fix is a shorter line, a reference-locked split, or `seedance-2.5` — not a longer clip on a model that does not render one.
+**The working rule: budget ~0.5s when you have a reference or a start frame, and check the render.** In that mode the table and the arithmetic already agree — the unhurried column is **`2.0 × (D − 0.5)`** at its floor — so there is nothing to add. If the result runs past 15s on `seedance-2.0` or mini, the fix is a shorter line, a reference-locked split, or `seedance-2.5` — not a longer clip on a model that does not render one. If the hook has to land in the first second, drop the eye-contact-break beat, or move to `sora-2`, which measured no leading silence at all on the same prompt.
 
-**When a render does come back with multi-second silence, trim is the remedy, not a bigger budget.** Leading silence is trimmable in post; a line clipped by an over-long draw is not. The reserve in the second row is the *planning* allowance for that mode — reach for it when you have neither a reference nor a start frame, or when you are committing to a duration you cannot re-cut. It costs words: **`words ÷ 2.0` plus the reservation, rounded into the grid, leaves 22 words at 15s in `en` and 20 in `es`, against the unhurried column's 29.** That gap is the mode, not a rounding error.
-
-**How close the reserved case gets is not theoretical.** The first `es` render fit only because rounding up took 12.4s to 13s, and the line finished at **12.88s of 13.07s** — a fifth of a second of margin, on a budget that drew near its worst. The silence is drawn fresh every time, in either mode, so **the only thing that tells you what you got is the QA step in §7.** Check the first `silence_end` on every render.
-
-If the hook has to land in the first second, drop the eye-contact-break beat from the prompt — that is the beat being paid for. `sora-2` measured **no leading silence at all** on the same prompt, so it is the other way out.
+**When a render does come back with multi-second silence, trim is the remedy, not a bigger budget** — leading silence comes out in post and a clipped CTA does not. The reserve in the second row is the *planning* allowance for its mode: reach for it when you have neither a reference nor a start frame, and know that it costs words — **`words ÷ 2.0` plus the reservation, rounded into the grid, leaves 22 words at 15s in `en` and 20 in `es`, against the unhurried column's 29.** That gap is the mode, not a rounding error, and it draws near its worst: the first `es` render fit only because rounding took 12.4s to 13s, and the line finished at **12.88s of 13.07s**. The silence is drawn fresh every render in either mode, so **the only thing that tells you what you got is the QA step in §7.** Check the first `silence_end` every time.
 
 For no-dialogue styles (product hero, premium reveal), default to **15s**. The silence budget does not apply: there is no speech to delay.
 
-**`seedance-2.5` now has one measurement of its own, and it lands on the budget rather than the reserve: 0.464s** on a 30s t2v render with neither a reference nor a start frame (2026-08-15, n=1) — the very mode the +4s reserve was written for. Do not generalise it: the same day, a `seedance-2.0` t2v clip in the same mode drew **3.63s**. So plan ~0.5s on `seedance-2.5`, keep the reserve for `seedance-2.0` without a reference or start frame, and check the render either way.
-
 **A longer clip is not a longer script poured into the same ad.** Thirty seconds wants more beats, not slower delivery: a demo the actor actually performs, a reaction, a proof line. If the script only fills 15s, render 15s — on `seedance-2.0`, which is cheaper at that length. **And do not stitch to dodge the long model.** Measured 2026-08-15, same 114 words, same API: three t2v `seedance-2.0` clips concatenated ran **longer and cost more** than the one 30s call, came back **35.6% non-speech against the one-call render's 18.7%** with **4.4s of seam dead air nobody wrote**, a **12dB level jump between clips**, and **three visibly different women out of a byte-identical character block**. A stitch that holds identity has to pass the same `referenceAssetIds` to every clip, and nobody has rendered that.
-
-**Do not borrow `seedance-2.0`'s 3-to-8-minute fleet range for `seedance-2.5`.** Nothing in
-this session has timed one, so quote its wait as unknown to you, and poll.
 
 ### `omni-flash` — enum 4, 6, 8, 10
 
@@ -363,8 +356,6 @@ Unmeasured here, so these are the 2.0-words-per-second arithmetic and nothing mo
 | `720p` (default) | base | base |
 | `1080p` | **≈2.5x** base | **`400` — does not exist on this model** |
 | `4k` | **≈5x** base | **`400` — does not exist on this model** |
-
-**`480p` used to cost the same as `720p` and no longer does** (family reprice, 2026-08-07). The old advice here — "no draft discount, so there is no reason to ask for it" — is retired: it is now roughly half, which makes it the honest tier for a rehearsal render whose only job is to check whether the prompt works.
 
 **2.5's missing high tiers are a provider fact, not a rollout gap.** Neither provider serves the model above 720p, so it is not coming. Never carry a `resolution` across a model switch: `1080p` that priced clean on `seedance-2.0` is a rejected request on `seedance-2.5`.
 
@@ -517,9 +508,7 @@ Present multiple variations as a numbered list. If a job came back `failed` or `
 
 ### 7. Video QA (mandatory)
 
-**Run this on every video before you hand it over.** It costs no credits and takes seconds. A video can be technically `succeeded` and still be undeliverable in ways that no frame and no waveform will show you: the brand name spoken as a different word, a third of the clip spent in silence before the hook, captions burned in, a silent track on an ad that was supposed to talk. Watching it back is not enough either — you will hear what you expect to hear, because you wrote the line.
-
-**The failure this catches is real and it is the expensive one.** On 2026-08-02 a `seedance-2.0` render spoke the approved 17-word line verbatim and pronounced "Novoads" as **"Nuvenov's"**. Every frame looked perfect. Only the transcript caught it.
+**Run this on every video before you hand it over.** It costs no credits and takes seconds. A video can be technically `succeeded` and still be undeliverable in ways that no frame and no waveform will show you: the brand name spoken as a different word, a third of the clip spent in silence before the hook, captions burned in, a silent track on an ad that was supposed to talk. Watching it back is not enough either — you will hear what you expect to hear, because you wrote the line. **The failure this catches is the expensive one:** on 2026-08-02 a `seedance-2.0` render spoke the approved 17-word line verbatim and pronounced "Novoads" as **"Nuvenov's"**; every frame looked perfect, and only the transcript caught it.
 
 #### 1. Container, stream and duration
 
@@ -541,7 +530,7 @@ ffmpeg -i ad.mp4 -map 0:a -af silencedetect=noise=-35dB:d=0.3 -f null -
 >
 > `ffprobe` in step 1 is the opposite case: `-v error` there is correct, because `-show_entries` writes to stdout.
 
-Check `mean_volume` is not near-silent (the renders measured here came back −19 to −25 dB), and read the **first `silence_end`** — that is when the first word actually lands. Compare it against the silence budget in *Script length → duration*: on Seedance expect **3–4s in `en`**, and anywhere from 1s to 5s in `es`, drawn fresh each render. Much more than that on a short ad means the hook is gone.
+Check `mean_volume` is not near-silent (the renders measured here came back −19 to −25 dB), and read the **first `silence_end`** — that is when the first word actually lands. Compare it against the silence budget **for the mode you rendered** in *Script length → duration* — under a second with a reference or a start frame, 3–4s in `en` and 1–5s in `es` without one. Much more than that on a short ad means the hook is gone. Then read the **total** non-speech: `silencedetect` reports every gap, and 27–43% of the runtime coming back silent is the measured norm at the bottom of the unhurried band, not a defect you can prompt your way out of.
 
 #### 3. Transcribe — the only check that hears the brand name
 
@@ -564,6 +553,17 @@ Read the transcript against the line the user approved at gate 1, and check thre
 - **The brand name came out as the brand name.** This is the whole reason the step exists. If it did not, the fix is the phonetic spelling in gate 1 — not a re-roll of the same prompt.
 - **The words are the approved words.** A dropped or invented clause means the render does not match what was signed off.
 - **`language` matches** what was rendered.
+
+#### 4. The render against the doctrine — any ad composed from the UGC formula
+
+The formula file's checklist reads the **prompt**, before pricing. These six read the **render**, which is the only place the doctrine is either true or false. On the 2026-08-16 acceptance run all four prompts passed that checklist — actor tag verbatim, digits everywhere, ban list closed — and three renders broke the rules anyway. `ffmpeg -ss <t> -i ad.mp4 -frames:v 1 f.png` pulls a frame; bisect around an edge rather than trusting a contact sheet at tile resolution. A failure here is a re-render through gate 2, not a note in the handover.
+
+1. **The product — *or its branding* — first appears at or after 25–30% of runtime**, and inside the window the prompt declared for it. A branded prop counts as the product appearing; see the brand-bleed rule in the v2 formula.
+2. **No brand anywhere in the withheld beats.** One frame per second up to that window, reading every packaged object in each, not only the product. A reference asset paints its brand onto props it was never passed for: on one live run all four "supplement bottles" wore the reference product's own wordmark by 17% of runtime, in a beat whose prompt said "no product in frame".
+3. **Prop counts match the digits the prompt declared**, read in two frames of the same beat rather than one. Counts drift between adjacent frames (5 → 4 → 3 across one 15s render).
+4. **Frame 0 matches the declared opening action** (`-ss 0`). An action that *ends* at N objects begins at zero of them, and frame 0 is the whole hook at feed speed.
+5. **Each declared END STATE is actually in frame** at the end of its window. Two of five landed on one 30s render; one was inverted, and one dropped every prop it named.
+6. **The label reads what the reference photo reads**, on the frame where the product is largest and held longest — that is where invented copy appears. A ~7s close hold produced a fabricated, misspelled Supplement Facts panel and a pack count that changed between adjacent frames, from a label-hold clause identical to the ones that held fine on brief holds. For a supplement or a medical claim that is a compliance problem, not a craft nit.
 
 #### What to do when QA fails
 
