@@ -21,7 +21,7 @@ if [[ -z "${NOVOADS_API_KEY:-}" ]] || [[ "$NOVOADS_API_KEY" == "novo_your_key_he
   echo "No API key found in .env." >&2
   echo "" >&2
   echo "Need a Novoads account? Start your \$1 trial:" >&2
-  echo "  https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack" >&2
+  echo "  https://novoads.ai/en?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack" >&2
   echo "" >&2
   echo "Already have one? Create a key at:" >&2
   echo "  https://novoads.ai/dashboard/settings?tab=api" >&2

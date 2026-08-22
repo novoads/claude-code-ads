@@ -21,7 +21,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 # Host only — every request below appends /v1/…
 BASE_URL="${NOVOADS_BASE_URL:-https://api.novoads.ai}"
-SIGNUP_URL="https://novoads.ai/?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack"
+SIGNUP_URL="https://novoads.ai/en?utm_source=claude-code&utm_medium=github&utm_campaign=skill-pack"
 KEYS_URL="https://novoads.ai/dashboard/settings?tab=api"
 BILLING_URL="https://novoads.ai/dashboard/settings?tab=billing"
 KEY_PLACEHOLDER="novo_your_key_here"

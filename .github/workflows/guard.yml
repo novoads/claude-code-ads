@@ -56,6 +56,34 @@ jobs:
       - name: No credit rates written into skill files
         run: ./scripts/check-no-rates.sh
 
+  #   plugin-manifest — the plugin.json / marketplace.json pair drifted once
+  #             already: #101 shipped the plugin manifest with no CI coverage
+  #             at all, and plugin.json's own `skills` array fell out of sync
+  #             with marketplace.json's copy of the same field with nothing
+  #             red to say so. `claude plugin validate .` catches that class of
+  #             drift (bad skills paths, malformed manifests, a marketplace
+  #             entry that disagrees with the plugin it points at) structurally,
+  #             same spirit as the `docs` job above but for the manifest rather
+  #             than the skill files.
+  #
+  #             Deliberately non-strict. plugin.json carries no `version` field
+  #             on purpose — scripts/release.sh is the only writer of a
+  #             release, and a version typed into the manifest by hand would
+  #             freeze on the day it was typed while the tag moved on. `claude
+  #             plugin validate . --strict` treats that missing field as an
+  #             error and would be red on every PR forever. Do not add
+  #             `--strict` here — that is the point, not a gap to close.
+  plugin-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install claude CLI (pinned)
+        run: npm install -g @anthropic-ai/claude-code@2.1.239
+      - name: claude CLI is on PATH
+        run: command -v claude || { echo "::error::claude CLI install failed; plugin manifest NOT validated"; exit 1; }
+      - name: Validate plugin and marketplace manifests (non-strict)
+        run: claude plugin validate .
+
   #   brand-context — the field store every skill reads. Two of its cases are
   #             already regressions caught in review: a regex that swallowed a
   #             newline and made an empty template read as fully populated, and
