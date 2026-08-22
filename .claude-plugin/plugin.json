@@ -18,6 +18,7 @@
     "creative"
   ],
   "skills": [
+    "./skills",
     "./shared/skills"
   ]
 }

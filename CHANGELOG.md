@@ -28,6 +28,15 @@ one host it started on, and the pack now installs into Claude Code, Cursor and C
 - Not swept: the 2026-08-07 entry below, which records adopting the `claude-code-ads` identity.
   That happened, and history is not a link.
 
+- **The pack installs as a plugin.** `.claude-plugin/plugin.json` (#101, no entry at the time)
+  gives the pack an identity and a skill namespace alongside the marketplace entry: it installs
+  as `skills@novoads`, carries no `version` field on purpose (`scripts/release.sh` is the one
+  writer of a release; the installed version falls through to the commit SHA instead), and reads
+  correctly from a standalone `~/.claude/skills/` drop, not only through the marketplace.
+- `plugin.json`'s own `skills` array now reads `["./skills", "./shared/skills"]`, matching
+  `marketplace.json`'s copy of the same field. `guard.yml` gained a non-strict `claude plugin
+  validate .` step so the two manifests disagreeing again would be red instead of silent.
+
 ## v1.2.0 — 2026-08-13
 
 ### Changed
